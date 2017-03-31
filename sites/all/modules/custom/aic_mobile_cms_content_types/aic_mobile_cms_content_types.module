@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the AIC Mobile CMS Content Types feature.
+ */
+
+include_once 'aic_mobile_cms_content_types.features.inc';

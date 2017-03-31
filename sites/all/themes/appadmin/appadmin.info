@@ -1,0 +1,15 @@
+name = AppAdmin
+description = A custom Foundation 6 theme created by Wheelercreek Studio, Inc.
+core = 7.x
+screenshot = screenshot.png
+
+stylesheets[all][] = css/foundation-icons/foundation-icons.css
+stylesheets[all][] = css/app.css
+
+regions[header] = Header
+regions[content] = Content
+regions[content_2] = Content 2
+regions[sidebar_first] = Sidebar
+regions[home_content] = Home Content
+regions[footer] = Footer
+regions[overlay] = Overlay

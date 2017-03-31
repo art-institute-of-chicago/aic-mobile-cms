@@ -1,0 +1,11 @@
+name = Field Collection Table
+description = Provides a field-collection table formatter.
+core = 7.x
+dependencies[] = field_collection
+
+; Information added by Drupal.org packaging script on 2015-11-07
+version = "7.x-1.0-beta3"
+core = "7.x"
+project = "field_collection_table"
+datestamp = "1446939864"
+
