@@ -166,7 +166,7 @@ We also welcome bug reports and questions under GitHub's [Issues](issues).
 
 ## Acknowledgments
 
-Design and Development by [potion](http://www.potiondesign.com/).
+Design and development by [Potion](http://www.potiondesign.com/).
 
 
 ## Licensing
