@@ -17,7 +17,7 @@ product for your institution. You may need to substantially modify the CMS, beyo
 
 ## Features
 
-The Mobile App CMS has the following features
+The Mobile App CMS has the following features:
 
 * Create audio tours through the grouping of artworks
 * Tag artworks with latitude/longitude data for placement on the mobile app's map
