@@ -1,6 +1,6 @@
 ![Art Institute of Chicago](https://raw.githubusercontent.com/Art-Institute-of-Chicago/template/master/aic-logo.gif)
 
-# Mobile App CMS
+# Art Institute of Chicago Official Mobile App CMS
 > A Drupal 7 site to administer content
 
 The Art Insitute of Chicago [Official Mobile App](http://extras.artic.edu/new-mobile/) is your personal,
@@ -8,7 +8,7 @@ pocket-sized guide to our collection. The mobile experience merges location-awar
 storytelling, letting the art speak to you. The Art Institute offers nearly a million square feet to
 explore—the Official Mobile App will be your guide.
 
-The Art Institute's mobile app launched in the iOS App Store on August 10, 2016. It's
+The Art Institute of Chicago's mobile app launched in the iOS App Store on August 10, 2016. It's
 still in place today and is being maintained by a team of internal developers.
 
 Please note that while we took steps to generalize this project, it is not meant to be a plug-and-play 
