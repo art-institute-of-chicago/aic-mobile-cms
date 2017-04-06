@@ -1355,6 +1355,7 @@ function aicapp_search_form_validate($form, &$form_state) {
 *  implement hook_form_submit()
 **/
 function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) {
+  global $base_path;
   $field = 'title';
   if(!empty($form_state['values']['search_title'])) {
         $srchterm = $form_state['values']['search_title'] .'~';
@@ -1387,7 +1388,7 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
             $collect[] = aicapp_field_markup('object_id', $doc['object_id']);
             $collect[] = aicapp_field_markup('title', $doc['title']);
             $collect[] = aicapp_field_markup('main_reference_number', $doc['main_reference_number']);
-            $collect[] = '<a class="button small" href="/objects/object_add/'.$doc['object_id'].'">Add or Update Object</a>';
+			$collect[] = '<a class="button small" href="'.$base_path.'objects/object_add/'.$doc['object_id'].'">Add or Update Object</a>';
         }
     }
     $output = implode(' ',$collect);
