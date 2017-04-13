@@ -166,8 +166,11 @@ We also welcome bug reports and questions under GitHub's [Issues](issues).
 
 ## Acknowledgments
 
-Design and development by [Potion](http://www.potiondesign.com/).
+Supported by [Bloomberg Philanthropies](http://www.bloomberg.org/)
 
+Design and development by [Potion](http://www.potiondesign.com/)
+
+Additional development by [Josh Biillons](https://github.com/joshbillions/) at [MBLabs](http://www.mblabs.org/)
 
 ## Licensing
 
