@@ -619,7 +619,15 @@ function aicapp_gendata_form_submit($form, &$form_state) {
         $result = _runSolrQuery(AICAPP_GALLERY_QUERY, 'gallery_id', $gallery->gallery_id);
         if(!empty($result['response']['docs'])) {
             foreach($result['response']['docs'][0] as $key => $val) {
-                $gallery->$key = $val;
+                if ($val == '<NOT Closed>' || $val == '<Closed>') {
+					if ($val == '<NOT Closed>') {
+						$gallery->$key = 'False';
+					} elseif ($val == '<Closed>') {
+						$gallery->$key = 'True';
+					}
+				} else {
+					$gallery->$key = $val;
+				}
             }
         }
     }
