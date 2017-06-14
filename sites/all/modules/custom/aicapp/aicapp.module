@@ -1002,6 +1002,9 @@ function aicappSaveNode($object, $type) {
         }
     }
     if($type == 'gallery') {
+        if(isset($object['title_t'])) {
+            $node->title = $object['title_t'];
+        }
         if(isset($object['gallery_id'])) {
             $node->field_gallery_id[$node->language][0]['value'] = $object['gallery_id'];
         }
