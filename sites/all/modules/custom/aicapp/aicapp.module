@@ -1526,6 +1526,8 @@ function aicapp_check_for_object_problems($node) {
     $noLocs = array();
     $unpubs = array();
     $noaudio = array();
+    $noImage = array();
+    $inGallery = array();
     if(!empty($node->field_stops2['und'][0]['entity']->field_t_object['und'])){
         $stops = $node->field_stops2['und'][0]['entity']->field_t_object['und'];
         foreach($stops as $stop) {
@@ -1538,6 +1540,12 @@ function aicapp_check_for_object_problems($node) {
             }
             if(empty($node->field_object_audio['und'][0])) {
                 $noaudio[] = array('nid' => $node->nid, 'title' => $node->title);
+            }
+            if((empty($node->field_thumbnail_image) || empty($node->field_large_image)) && empty($node->field_image)) {
+                $noImage[] = array('nid' => $node->nid, 'title' => $node->title);
+            }
+            if($node->field_in_gallery['und'][0]['value'] != true) {
+                $inGallery[] = array('nid' => $node->nid, 'title' => $node->title);
             }
         }
     }
@@ -1565,6 +1573,22 @@ function aicapp_check_for_object_problems($node) {
         }
         $group .= '</ul>';
         drupal_set_message('The following object(s) have no default audio file:'.$group, 'error');
+    }
+    if(!empty($noImage)) {
+        $group = '<ul>';
+        foreach($noImage as $item) {
+            $group .= '<li>'.l($item['title'], 'node/'.$item['nid'].'/edit').'</li>';
+        }
+        $group .= '</ul>';
+        drupal_set_message('The following object(s) are missing images:'.$group, 'error');
+    }
+    if(!empty($inGallery)) {
+        $group = '<ul>';
+        foreach($inGallery as $item) {
+            $group .= '<li>'.l($item['title'], 'node/'.$item['nid'].'/edit').'</li>';
+        }
+        $group .= '</ul>';
+        drupal_set_message('The following objects\' \'in gallery\' setting is set to false:'.$group, 'error');
     }
 }
 
