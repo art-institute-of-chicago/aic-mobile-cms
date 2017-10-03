@@ -1,0 +1,3 @@
+name = Update Object Data
+description = This module obtains image data from the Art Institute’s instance of Solr to update object records.
+core = 7.x
