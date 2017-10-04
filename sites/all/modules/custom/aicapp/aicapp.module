@@ -25,7 +25,7 @@ function aicapp_init(){
 */
 function aicapp_menu(){
 	$items['objects/search'] = array(
-		'title' => 'Find Object to Add',
+		'title' => 'Add an Object',
 		'page callback' => 'aicapp_search_object',
 		'type' => MENU_CALLBACK,
 		'weight' => 20,
@@ -637,11 +637,11 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     foreach($objects as $key => $object) {
         _getSOLRdata($object);
         strip_drupal_from_node($object);
-
         //only show objects that are in a gallery, and have lat/long values, and that are published
         if(empty($object->in_gallery) || !$object->in_gallery || empty($object->location) || !$object->status) {
             unset($objects[$key]);
         }
+        
     }
 
     //format audio files
@@ -721,6 +721,19 @@ function _getSOLRdata(&$object, $object_id = null) {
     $entity = entity_metadata_wrapper('node', $object);
     if(empty($object_id)) {
         $object_id = $entity->field_object_id->value();
+        if (empty($object_id)) {
+          //if there is no object id, then we have a custom object. Reference values entered for object data.
+          $object->in_gallery = $entity->field_in_gallery->value();
+          $object->gallery_location = $entity->field_gallery_location->value();
+          $object->credit_line = $entity->field_credit_line->value();
+          $object->copyright_notice = $entity->field_copyright_notice->value();
+          if ($entity->field_artist_origin->value()) {
+            $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
+          } else {
+            $object->artist_culture_place_delim = $entity->field_artist_name->value();
+          }
+          return;
+        }
     }
 
     $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
@@ -885,17 +898,21 @@ function strip_drupal_from_node(&$node) {
     unset($node->field_in_gallery);
     unset($node->field_tour_duration);
     unset($node->field_tour_audio);
-	unset($node->field_tour_banner);
+	  unset($node->field_tour_banner);
     unset($node->field_object_audio);
     unset($node->field_object_selector_number);
-	unset($node->field_object_selector_numbers);
-	unset($node->field_thumbnail_image);
-	unset($node->field_large_image);
-	unset($node->field_thumbnail_crop_rect);
-	unset($node->field_large_image_crop_rect);
+	  unset($node->field_object_selector_numbers);
+	  unset($node->field_thumbnail_image);
+	  unset($node->field_large_image);
+	  unset($node->field_thumbnail_crop_rect);
+	  unset($node->field_large_image_crop_rect);
     unset($node->field_credits);
     unset($node->field_floor);
     unset($node->field_highlighted_object);
+    unset($node->field_artist_name);
+    unset($node->field_artist_origin);
+    unset($node->field_credit_line);
+    unset($node->field_copyright_notice);
 }
 
 
@@ -1037,8 +1054,9 @@ function aicapp_form_object_node_form_alter(&$form, &$form_state, $form_id) {
 	$drupal_path = base_path();
     $dest = drupal_get_path('module','aicapp');
     $coords = !empty($form['#node']->field_location['und'][0]['safe_value']) ? $form['#node']->field_location['und'][0]['safe_value']:0;
+
     $form['map'] = array(
-        '#markup' => '<iframe width="650" height="600" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="'.$drupal_path.''.$dest.'/map-page.php?nid='.$form['#node']->nid.'&coords='.$coords.'"></iframe>',
+        '#markup' => '<iframe width="650" height="600" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="'.$drupal_path.''.$dest.'/map-page.php?coords='.$coords.'"></iframe>',
         '#weight' => 10,
     );
 
@@ -1051,7 +1069,7 @@ function aicapp_form_object_node_form_alter(&$form, &$form_state, $form_id) {
 	  	'data' => drupal_get_path('module', 'aicapp') . '/jquery.imgareaselect.min.js',
 	);
 
-	if ($form['#node']->field_thumbnail_image) {
+	if (!empty($form['#node']->field_thumbnail_image)) {
 		$imageToCrop = $form['#node']->field_thumbnail_image;
 		$imageType = 'thumbnail';
 		cropImage($form, $imageToCrop, $imageType);
@@ -1070,7 +1088,7 @@ function aicapp_form_object_node_form_alter(&$form, &$form_state, $form_id) {
 		 );
 	}
 
-	if ($form['#node']->field_large_image) {
+	if (!empty($form['#node']->field_large_image)) {
 		$imageToCrop = $form['#node']->field_large_image;
 		$imageType = 'large';
 		cropImage($form, $imageToCrop, $imageType);
@@ -1252,7 +1270,7 @@ function setDefaults(&$form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2
 *  Just attach the SOLR data to the $node object for viewing.
 **/
 function aicapp_node_view($node, $view_mode, $langcode) {
-    if($node->type == 'object') {
+    if($node->type == 'object' && $node->field_object_id) {
         $ref_num = $node->field_object_id['und'][0]['value'];
         if(!empty($ref_num)) {
             $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $ref_num);
@@ -1308,7 +1326,7 @@ function aicapp_field_markup($key, $value) {
 **/
 function aicapp_search_form($form_state = array()) {
     $form['intro'] = array(
-        '#markup' => t('<p>Use this form to search the external Art Institute database (SOLR) for an object you wish
+        '#markup' => t('<p><a href="/node/add/object"><span class="button form-submit">Add a custom object</span></a><br /><b>Add via Solr</b><br />Use the form below to search the external Art Institute database (SOLR) for an object you wish
                 to add. If the object is found to already be in our system, this tool can be used to update the existing object.</p>'),
     );
     $form['search_title'] = array(
@@ -1503,7 +1521,7 @@ function aicapp_node_presave($node) {
         aicapp_check_for_object_problems($node);
     }
     if($node->type == 'object') {
-        if(isset($node->field_object_id)) {
+        if(isset($node->field_object_id['und'][0]['value'])) {
             $ref_num = $node->field_object_id['und'][0]['value'];
             if (!empty($ref_num)) {
                 $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $ref_num);
@@ -1526,6 +1544,8 @@ function aicapp_check_for_object_problems($node) {
     $noLocs = array();
     $unpubs = array();
     $noaudio = array();
+    $noImage = array();
+    $inGallery = array();
     if(!empty($node->field_stops2['und'][0]['entity']->field_t_object['und'])){
         $stops = $node->field_stops2['und'][0]['entity']->field_t_object['und'];
         foreach($stops as $stop) {
@@ -1538,6 +1558,12 @@ function aicapp_check_for_object_problems($node) {
             }
             if(empty($node->field_object_audio['und'][0])) {
                 $noaudio[] = array('nid' => $node->nid, 'title' => $node->title);
+            }
+            if((empty($node->field_thumbnail_image) || empty($node->field_large_image)) && empty($node->field_image)) {
+                $noImage[] = array('nid' => $node->nid, 'title' => $node->title);
+            }
+            if($node->field_in_gallery['und'][0]['value'] != true) {
+                $inGallery[] = array('nid' => $node->nid, 'title' => $node->title);
             }
         }
     }
@@ -1565,6 +1591,22 @@ function aicapp_check_for_object_problems($node) {
         }
         $group .= '</ul>';
         drupal_set_message('The following object(s) have no default audio file:'.$group, 'error');
+    }
+    if(!empty($noImage)) {
+        $group = '<ul>';
+        foreach($noImage as $item) {
+            $group .= '<li>'.l($item['title'], 'node/'.$item['nid'].'/edit').'</li>';
+        }
+        $group .= '</ul>';
+        drupal_set_message('The following object(s) are missing images:'.$group, 'error');
+    }
+    if(!empty($inGallery)) {
+        $group = '<ul>';
+        foreach($inGallery as $item) {
+            $group .= '<li>'.l($item['title'], 'node/'.$item['nid'].'/edit').'</li>';
+        }
+        $group .= '</ul>';
+        drupal_set_message('The following objects\' \'in gallery\' setting is set to false:'.$group, 'error');
     }
 }
 

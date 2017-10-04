@@ -345,7 +345,6 @@ $gmap_key = variable_get('aicapp_gmap_key');
 <?php endif; ?>
           >
     <?php if ($gmap_key): ?>
-      <?php if(!empty($_GET['nid'])) { ?>
           <div id="map"></div>
           <!-- this form is not needed, we write to the parent window on marker mouseup event!
            <form id="myform" method="post" target="_parent" onsubmit="return capture()" action="">
@@ -353,9 +352,6 @@ $gmap_key = variable_get('aicapp_gmap_key');
             <input type="hidden" id="marker_coords" name="marker_coords" value="" />
             <div class="form_item"><input id="savebtn" class="form-submit" type="submit" name="save" value="Save Pin Position" /></div>
           </form>-->
-      <?php } else { ?>
-       <p>No object selected (missing node->nid). You need to be editing an object in the CMS.</p>
-      <?php } ?>
       <?php else: ?>
         <p>Please enter a Google Maps API Key at /admin/settings/aic-api</p>
       <?php endif; ?>
