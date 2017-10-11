@@ -609,7 +609,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     $audio_files = node_load_multiple(array(), array('type' => 'audio', 'status' => 1));
 
     //load tours
-    $tours = node_load_multiple(array(), array('type' => 'tour', 'status' => 1));
+    $tours = node_load_multiple(array(), array('type' => 'tour'));
 
     //strip out Drupal native stuff we don't need in the JSON output
     foreach($galleries as $gallery) {
@@ -649,8 +649,27 @@ function aicapp_gendata_form_submit($form, &$form_state) {
         strip_drupal_from_node($audio);
     }
 
-    foreach($tours as $tour) {
-        strip_drupal_from_node($tour);
+    foreach($tours as $key => $tour) {
+      strip_drupal_from_node($tour);
+
+      //retrieve today's date
+      $today = date("Y-m-d H:i:s");  
+      if (!empty($tour->field_tour_dates) && !empty($tour->field_tour_dates['und'][0]['value'])) {
+        $tourStartDate = $tour->field_tour_dates['und'][0]['value'];
+        $tourEndDate = $tour->field_tour_dates['und'][0]['value2'];
+        //if today is greater than or equal to the start date and it's also less than or equal to the end date, publish the tour
+        if ($today >= $tourStartDate && $today <= $tourEndDate) {
+          db_query("UPDATE node SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
+          db_query("UPDATE node_revision SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
+        } else {
+          //unpublish the tour
+          db_query("UPDATE node SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
+          db_query("UPDATE node_revision SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
+          unset($tours[$key]);  
+        }
+      } else if (empty($tour->field_tour_dates) && $tour->status == 0) {
+          unset($tours[$key]); 
+      }
         //add the weight from the view page so we can sort
         $result = db_query('SELECT weight FROM draggableviews_structure WHERE entity_id = :d', array(':d' => $tour->nid));
         foreach($result as $item) {
@@ -662,6 +681,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
             $tour->stops = aicapp_collect_tour_stops($tour->stops);
         }
     }
+    
     usort($tours, 'sort_objects_by_weight');
 
     $data = array(
