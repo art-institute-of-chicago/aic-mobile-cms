@@ -1,0 +1,130 @@
+<?php
+
+/**
+ * @file
+ * A module that updates object records with Solr image data on cron.
+ */
+
+/**
+* Implements hook_cron() function
+* 
+**/
+function aic_update_object_cron() {
+    $fm = array();
+    $fm2 = array();
+    //update object image data
+    aic_update_object_imageData($fm, $fm2);
+}
+
+function aic_update_object_imageData($form, &$form_state) {
+  //get all object records
+  $objects = node_load_multiple(array(), array('type' => 'object'));
+
+  foreach($objects as $key => $object) {
+    
+    //if object is custom, no need to update with Solr data
+    if (!empty($object->field_artist_name)) {
+      unset($objects[$key]);
+    }
+
+    //get data from Solr, defined in aicapp.module
+    _getSOLRdata($object);
+
+    //if Solr data returns image data
+    if (isset($object->thumbnail_full_path)) {
+      //if images do not match
+      if (isset($object->field_thumbnail_image['und'][0]['value']) != $object->thumbnail_full_path) {
+        //update database with image data
+        $nid = db_insert('field_data_field_thumbnail_image')
+          ->fields(array(
+            'entity_type' => 'node', 
+            'bundle' => 'object', 
+            'deleted' => 0, 
+            'entity_id' => $object->nid, 
+            'revision_id' => $object->nid, 
+            'language' => 'und', 
+            'delta' => 0, 
+            'field_thumbnail_image_value' => $object->thumbnail_full_path, 
+            'field_thumbnail_image_format' => NULL,
+          ))
+          ->execute();
+
+        $nid = db_insert('field_revision_field_thumbnail_image')
+          ->fields(array(
+            'entity_type' => 'node', 
+            'bundle' => 'object', 
+            'deleted' => 0, 
+            'entity_id' => $object->nid, 
+            'revision_id' => $object->nid, 
+            'language' => 'und', 
+            'delta' => 0, 
+            'field_thumbnail_image_value' => $object->thumbnail_full_path, 
+            'field_thumbnail_image_format' => NULL,
+          ))
+          ->execute();
+
+        drupal_set_message('Object record ' . $object->nid . '\'s thumbnail image data was updated.');
+      }
+    } else {
+        drupal_set_message('No thumbnail image data found for object record ' . $object->nid . '.');
+    }
+
+    //if Solr data returns image data
+    if (isset($object->large_image_full_path)) {
+      //if images do not match
+      if (isset($object->field_large_image['und'][0]['value']) != $object->large_image_full_path) {
+        //update database with image data
+        $nid = db_insert('field_data_field_large_image')
+          ->fields(array(
+            'entity_type' => 'node', 
+            'bundle' => 'object', 
+            'deleted' => 0, 
+            'entity_id' => $object->nid, 
+            'revision_id' => $object->nid, 
+            'language' => 'und', 
+            'delta' => 0, 
+            'field_large_image_value' => $object->large_image_full_path, 
+            'field_large_image_format' => NULL,
+          ))
+          ->execute();
+
+        $nid = db_insert('field_revision_field_large_image')
+          ->fields(array(
+            'entity_type' => 'node', 
+            'bundle' => 'object', 
+            'deleted' => 0, 
+            'entity_id' => $object->nid, 
+            'revision_id' => $object->nid, 
+            'language' => 'und', 
+            'delta' => 0, 
+            'field_large_image_value' => $object->large_image_full_path, 
+            'field_large_image_format' => NULL,
+          ))
+          ->execute();
+
+        drupal_set_message('Object record ' . $object->nid . '\'s large image data was updated.');
+      }
+    } else {
+        drupal_set_message('No large image data found for object record ' . $object->nid . '.');
+    }
+  }
+}
+
+/**
+ * Implements hook_help().
+ *
+ * Displays help and module information.
+ *
+ * @param path 
+ *   Which path of the site we're using to display help
+ * @param arg 
+ *   Array that holds the current path as returned from arg() function
+ */
+
+function aic_update_object_help($path, $arg) {
+  switch ($path) {
+    case "admin/help#aic_update_object":
+      return t("This module obtains image data from the Art Institute’s instance of Solr to update object records.<br /> This module was created after the implementation of custom cropping of images, when it became required to have image data in the CMS. <br />This module runs on the Drupal cron. <br />A database backup is recommended before turning this module on.<br /> If not additional updates are needed, we recommend disabling the module after the update.");
+      break;
+  }
+}

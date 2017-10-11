@@ -94,19 +94,24 @@ function aicapp_search_object() {
 * page callback
 **/
 function aicapp_add_object($object_id = 0) {
+  $objectidArray = array();
+  $objectidArray = explode(",",$object_id);
+  //collecting information to present to the user
+  $collect = array();
+    
+  foreach ($objectidArray as $object_id) {
     // query SOLR to get the object
-    try {
-        $output = '';
-        $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
-        if($result['response']['numFound'] > 0) {
-            $nid = aicappSaveNode($result['response']['docs'][0], 'object'); //creates the new object or updates existing if it finds it in our Db.
-            drupal_set_message('Object saved.'. l('View object', '/node/'.$nid), 'status');
-        }
-        return $output;
-    } catch (Exception $e) {
-        drupal_set_message('Ran into a problem attempting SOLR query. '. $e, 'error');
-        return '';
+    $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
+    if($result['response']['numFound'] > 0) {
+      $nid = aicappSaveNode($result['response']['docs'][0], 'object'); //creates the new object or updates existing if it finds it in our Db.
+      $collect[] = '<strong>Object '.$object_id.' saved.</strong><br />'. l('View object', '/node/'.$nid).'<br /><br />';
+    } else {
+      $collect[] = 'Ran into a problem attempting SOLR query with object id '.$object_id.'<br />';
     }
+  }
+
+  $output = implode(' ',$collect);
+  return $output;
 }
 
 /**
@@ -1353,25 +1358,26 @@ function aicapp_search_form($form_state = array()) {
         '#type' => 'textfield',
         '#title' => t('Search by Title'),
         '#size' => 12,
-		'#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
+		    '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
     );
     $form['search_ref_num'] = array(
         '#type' => 'textfield',
         '#title' => t('Search by Reference Number'),
         '#size' => 12,
-		'#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
+		    '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
     );
      $form['search_object_id'] = array(
         '#type' => 'textfield',
         '#title' => t('Search by Object ID'),
+        '#description' => t('To enter multiple IDs, separate IDs with commas, i.e. 159135, 159135 - no comma at the end.<br /><br />'),
         '#size' => 12,
-		'#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
+		    '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
     );
     $form['submit'] = array(
-		'#type' => 'submit',
-		'#value' => t('Search'),
+		    '#type' => 'submit',
+		    '#value' => t('Search'),
         '#attributes' => array('class' => array('button')),
-	);
+	  );
     return $form;
 }
 /**
@@ -1389,11 +1395,16 @@ function aicapp_search_form_validate($form, &$form_state) {
         }
     }
     if(!empty($form_state['values']['search_object_id']))  {
-        if(!is_numeric($form_state['values']['search_object_id']))  {
-            form_set_error('search_object_id', 'Object ID should be numeric value.');
+        //regular expression to allow for one number/id value or more with commas between and not the end
+        $regex = '/^\d+(?:,\d+)*$/';
+        //collecting value, removing spaces
+        $objectValue = preg_replace('/\s+/', '', $form_state['values']['search_object_id']);
+        if (preg_match_all($regex, $objectValue, $matches, PREG_SET_ORDER, 0)) {
+          //great, value is valid
+        } else {
+          form_set_error('search_object_id', 'Object ID(s) should be a numeric value. If providing more than one ID, add a comma between IDs. Make sure there is no comma at the end.');
         }
     }
-
 }
 
 /**
@@ -1402,6 +1413,9 @@ function aicapp_search_form_validate($form, &$form_state) {
 function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) {
   global $base_path;
   $field = 'title_t';
+  $srchtermArray = array();
+  $objectIDs;
+  //determining if searching by title, ref number, or id
   if(!empty($form_state['values']['search_title'])) {
         $srchterm = $form_state['values']['search_title'] .'~';
         $field = 'title_t';
@@ -1409,38 +1423,54 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
         $srchterm = $form_state['values']['search_ref_num'];
         $field = 'main_reference_number';
     } else if(!empty($form_state['values']['search_object_id'])) {
-        $srchterm = $form_state['values']['search_object_id'];
+        //collecting value, removing spaces
+        $srchterm = preg_replace('/\s+/', '', $form_state['values']['search_object_id']);
+        //collecting IDs for add/update all function
+        $objectIDs = $srchterm;
         $field = 'object_id';
     } else {
         drupal_set_message('Problem running search.', 'error');
         return;
     }
 
-    $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, $field, $srchterm, $rows, $start);
-    $collect = array();
-    if(!empty($result['response']['numFound'])) {
-        $collect[] = '<p>'.$result['response']['numFound'].' objects found. Showing '.$start.' - '.($start + $rows).' | ';
-        if($start > 0) {
-            $start = $start - $rows;
-            $collect[] = '<a href="objects/search/'.($start + $rows).'">Prev page</a>';
-        }
-        if($start < $result['response']['numFound']) {
-            $collect[] = ' <a href="objects/search/'.($start + $rows).'">Next page</a>';
-        }
-        $collect[] = '</p>';
-        foreach($result['response']['docs'] as $doc) {
-            $collect[] = aicapp_field_markup('id', $doc['id']);
-            $collect[] = aicapp_field_markup('object_id', $doc['object_id']);
-            $collect[] = aicapp_field_markup('title', $doc['title_t']);
-            $collect[] = aicapp_field_markup('main_reference_number', $doc['main_reference_number']);
-			$collect[] = '<a class="button small" href="'.$base_path.'objects/object_add/'.$doc['object_id'].'">Add or Update Object</a>';
-        }
+    $srchtermArray = explode(",",$srchterm);
+    foreach ($srchtermArray as $key => $srchterm) {
+
+      $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, $field, $srchterm, $rows, $start);
+      
+      $collect = array();
+      if(!empty($result['response']['numFound'])) {
+          $collect[] = '<p>'.$result['response']['numFound'].' objects found. Showing '.$start.' - '.($start + $rows).' | ';
+          if($start > 0) {
+              $start = $start - $rows;
+              $collect[] = '<a href="objects/search/'.($start + $rows).'">Prev page</a>';
+          }
+          if($start < $result['response']['numFound']) {
+              $collect[] = ' <a href="objects/search/'.($start + $rows).'">Next page</a>';
+          }
+          $collect[] = '</p>';
+          foreach($result['response']['docs'] as $doc) {
+              $collect[] = aicapp_field_markup('object_id', $doc['object_id']);
+              $collect[] = aicapp_field_markup('title', $doc['title_t']);
+              $collect[] = aicapp_field_markup('main_reference_number', $doc['main_reference_number']);
+  			$collect[] = '<a class="button small" href="'.$base_path.'objects/object_add/'.$doc['object_id'].'">Add or Update Object</a>';
+          }
+      }
+      $output = implode(' ',$collect);
+    
+      if(!empty($output)) {
+          drupal_set_message($output, 'status');
+      } else {
+          drupal_set_message('You entered <em>'. $srchterm.'</em>, no matching object was found.', 'status');
+          unset($srchtermArray[$key]);
+      }
+
     }
-    $output = implode(' ',$collect);
-    if(!empty($output)) {
-        drupal_set_message($output, 'status');
-    } else {
-        drupal_set_message('You entered <em>'. $srchterm.'</em>, no matching object was found.', 'status');
+
+    //display update all button only if there's more than one object
+    $countArray = count($srchtermArray);
+    if ($countArray > 1) {
+      drupal_set_message('<a class="button updateObjects" href="'.$base_path.'objects/object_add/'.$objectIDs.'">Add or Update All</a>');
     }
 }
 
@@ -1480,6 +1510,7 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
 
     //Executes the URL and saves the content (json) in the variable.
     $content = file_get_contents($query);
+
     if($content) {
       return json_decode($content,true);
     }
