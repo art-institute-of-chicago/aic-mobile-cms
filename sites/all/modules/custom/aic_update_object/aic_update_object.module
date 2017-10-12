@@ -108,6 +108,8 @@ function aic_update_object_imageData($form, &$form_state) {
         drupal_set_message('No large image data found for object record ' . $object->nid . '.');
     }
   }
+  //flush drupal cache
+  drupal_flush_all_caches();
 }
 
 /**
