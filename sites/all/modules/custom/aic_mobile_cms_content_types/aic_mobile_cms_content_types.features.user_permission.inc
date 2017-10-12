@@ -23,7 +23,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['notify of path changes'] = array(
     'name' => 'notify of path changes',
     'roles' => array(
-      'administrator' => 'admininistrator',
+      'administrator' => 'administrator',
     ),
     'module' => 'pathauto',
   );
