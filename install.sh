@@ -167,6 +167,9 @@ echo "${W}Drush takes over from here...${W}"
 		   views_ui \
 		   node_reference \
 		   aicapp \
+		   date \
+		   date_api \
+		   date_popup \
 		   appadmin >> install.log 2>&1
 
 ./vendor/bin/drush --root=$DIR_ROOT cache-clear all >> install.log 2>&1
