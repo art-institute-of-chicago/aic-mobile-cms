@@ -876,6 +876,166 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'node-object-field_artist_name'.
+  $field_instances['node-object-field_artist_name'] = array(
+    'bundle' => 'object',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => 'Enter artist first and last name, i.e. Irving Penn',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 16,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_artist_name',
+    'label' => 'Artist Name',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 16,
+    ),
+  );
+
+  // Exported field_instance: 'node-object-field_artist_origin'.
+  $field_instances['node-object-field_artist_origin'] = array(
+    'bundle' => 'object',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => 'Enter artist\'s origin, i.e. American, 1917-2009',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 17,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_artist_origin',
+    'label' => 'Artist Origin',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 17,
+    ),
+  );
+
+  // Exported field_instance: 'node-object-field_copyright_notice'.
+  $field_instances['node-object-field_copyright_notice'] = array(
+    'bundle' => 'object',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 19,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_copyright_notice',
+    'label' => 'Copyright Notice',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 5,
+      ),
+      'type' => 'text_textarea',
+      'weight' => 19,
+    ),
+  );
+
+  // Exported field_instance: 'node-object-field_credit_line'.
+  $field_instances['node-object-field_credit_line'] = array(
+    'bundle' => 'object',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 18,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_credit_line',
+    'label' => 'Credit Line',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 5,
+      ),
+      'type' => 'text_textarea',
+      'weight' => 18,
+    ),
+  );
+
   // Exported field_instance: 'node-object-field_gallery_location'.
   $field_instances['node-object-field_gallery_location'] = array(
     'bundle' => 'object',
@@ -1774,6 +1934,61 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'node-tour-field_tour_dates'.
+  $field_instances['node-tour-field_tour_dates'] = array(
+    'bundle' => 'tour',
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'date',
+        'settings' => array(
+          'format_type' => 'long',
+          'fromto' => 'both',
+          'multiple_from' => '',
+          'multiple_number' => '',
+          'multiple_to' => '',
+          'show_remaining_days' => FALSE,
+        ),
+        'type' => 'date_default',
+        'weight' => 13,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_tour_dates',
+    'label' => 'Tour Dates',
+    'required' => 0,
+    'settings' => array(
+      'default_value' => 'blank',
+      'default_value2' => 'blank',
+      'default_value_code' => '',
+      'default_value_code2' => '',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'date',
+      'settings' => array(
+        'increment' => 15,
+        'input_format' => 'm/d/Y - g:i:sa',
+        'input_format_custom' => '',
+        'label_position' => 'above',
+        'no_fieldset' => 1,
+        'text_parts' => array(),
+        'year_range' => '-0:+3',
+      ),
+      'type' => 'date_popup',
+      'weight' => 12,
+    ),
+  );
+
   // Exported field_instance: 'node-tour-field_tour_duration'.
   $field_instances['node-tour-field_tour_duration'] = array(
     'bundle' => 'tour',
@@ -1817,12 +2032,18 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   // Translatables
   // Included for use with string extractors like potx.
   t('Add audio references in the same order as object selector numbers above.');
+  t('Artist Name');
+  t('Artist Origin');
   t('Audio');
   t('Audio File');
   t('Audio Transcript');
   t('Body');
+  t('Copyright Notice');
+  t('Credit Line');
   t('Credits');
   t('Description');
+  t('Enter artist first and last name, i.e. Irving Penn');
+  t('Enter artist\'s origin, i.e. American, 1917-2009');
   t('Floor');
   t('Gallery ID');
   t('Gallery Location');
@@ -1849,6 +2070,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   t('Thumbnail Image');
   t('Tour Audio');
   t('Tour Banner');
+  t('Tour Dates');
   t('Tour Duration');
   t('Tour Stops');
   t('Upload an image here if there is not a web image for the object coming in via SOLR.  ');
