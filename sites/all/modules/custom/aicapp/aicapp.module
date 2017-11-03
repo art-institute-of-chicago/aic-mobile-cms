@@ -98,7 +98,7 @@ function aicapp_add_object($object_id = 0) {
   $objectidArray = explode(",",$object_id);
   //collecting information to present to the user
   $collect = array();
-    
+
   foreach ($objectidArray as $object_id) {
     // query SOLR to get the object
     $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
@@ -646,7 +646,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
         if(empty($object->in_gallery) || !$object->in_gallery || empty($object->location) || !$object->status) {
             unset($objects[$key]);
         }
-        
+
     }
 
     //format audio files
@@ -658,7 +658,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       strip_drupal_from_node($tour);
 
       //retrieve today's date
-      $today = date("Y-m-d H:i:s");  
+      $today = date("Y-m-d H:i:s");
       if (!empty($tour->field_tour_dates) && !empty($tour->field_tour_dates['und'][0]['value'])) {
         $tourStartDate = $tour->field_tour_dates['und'][0]['value'];
         $tourEndDate = $tour->field_tour_dates['und'][0]['value2'];
@@ -670,10 +670,10 @@ function aicapp_gendata_form_submit($form, &$form_state) {
           //unpublish the tour
           db_query("UPDATE node SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
           db_query("UPDATE node_revision SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
-          unset($tours[$key]);  
+          unset($tours[$key]);
         }
       } else if (empty($tour->field_tour_dates) && $tour->status == 0) {
-          unset($tours[$key]); 
+          unset($tours[$key]);
       }
         //add the weight from the view page so we can sort
         $result = db_query('SELECT weight FROM draggableviews_structure WHERE entity_id = :d', array(':d' => $tour->nid));
@@ -686,7 +686,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
             $tour->stops = aicapp_collect_tour_stops($tour->stops);
         }
     }
-    
+
     usort($tours, 'sort_objects_by_weight');
 
     $data = array(
@@ -1075,217 +1075,234 @@ function aicappSaveNode($object, $type) {
 * to determine the location of the object. The map page is an iframe, with it's own form & javascript.  The values are captured and
 * sent back to the node edit form page.
 **/
-function aicapp_form_object_node_form_alter(&$form, &$form_state, $form_id) {
-	$drupal_path = base_path();
-    $dest = drupal_get_path('module','aicapp');
-    $coords = !empty($form['#node']->field_location['und'][0]['safe_value']) ? $form['#node']->field_location['und'][0]['safe_value']:0;
+function aicapp_form_alter(&$form, &$form_state, $form_id) {
+  // Only proceed if either object or tour node form
+  if ($form_id != 'object_node_form' && $form_id  != 'tour_node_form') {
+    return;
+  }
+  $drupal_path = base_path();
+  $dest = drupal_get_path('module','aicapp');
+  $coords = !empty($form['#node']->field_location['und'][0]['safe_value']) ? $form['#node']->field_location['und'][0]['safe_value'] : 0;
+  $map_markup = '<iframe width="650" height="600" frameborder="0" scrolling="no"';
+  $map_markup .= ' marginheight="0" marginwidth="0" src="' . $drupal_path;
+  $map_markup .= $dest . '/map-page.php?coords=' . $coords . '"></iframe>';
+  $form['map'] = array(
+    '#markup' => $map_markup,
+    '#weight' => 10,
+  );
+  // Attach CSS & JS assets to the form.
+  $form['#attached']['css'] = array(
+    drupal_get_path('module', 'aicapp') . '/css/imgareaselect-default.css',
+  );
+  $form['#attached']['js'][] = array(
+    'type' => 'file',
+    'data' => drupal_get_path('module', 'aicapp') . '/jquery.imgareaselect.min.js',
+  );
+  // options for how javascript is added to page
+  $js_options = array(
+    'type' => 'inline',
+    'scope' => 'footer',
+    'group' => JS_THEME,
+    'weight' => 5,
+  );
+  // If node form has a field called "field_thumbnail_image"
+  if (!empty($form['#node']->field_thumbnail_image)) {
+    $imageToCrop = $form['#node']->field_thumbnail_image;
+    // Crop the image
+    cropImage($form, $imageToCrop);
+  }
+  else {
+    $js_to_add = '(function($) { $("div#field-thumbnail-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p class=\"warning\">Thumbnail image unavailable.</p>" );
+              $("#field-thumbnail-crop-rect-add-more-wrapper input").prop("readonly", "readonly");} (jQuery))';
+    // Add JS to the page
+    drupal_add_js($js_to_add, $js_options);
+  }
 
-    $form['map'] = array(
-        '#markup' => '<iframe width="650" height="600" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="'.$drupal_path.''.$dest.'/map-page.php?coords='.$coords.'"></iframe>',
-        '#weight' => 10,
-    );
-
-	$form['#attached']['css'] = array(
-		drupal_get_path('module', 'aicapp') . '/css/imgareaselect-default.css',
-	);
-
-	$form['#attached']['js'][] = array(
-		'type' => 'file',
-	  	'data' => drupal_get_path('module', 'aicapp') . '/jquery.imgareaselect.min.js',
-	);
-
-	if (!empty($form['#node']->field_thumbnail_image)) {
-		$imageToCrop = $form['#node']->field_thumbnail_image;
-		$imageType = 'thumbnail';
-		cropImage($form, $imageToCrop, $imageType);
-	} else {
-		drupal_add_js(
-		  '(function($){
-			 $( "div#field-thumbnail-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p class=\"warning\">Thumbnail image unavailable.</p>" );
-			 $("#field-thumbnail-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
-			}(jQuery))',
-		  array(
-			'type' => 'inline',
-			'scope' => 'footer',
-			'group' => JS_THEME,
-			'weight' => 5,
-		  	)
-		 );
-	}
-
-	if (!empty($form['#node']->field_large_image)) {
-		$imageToCrop = $form['#node']->field_large_image;
-		$imageType = 'large';
-		cropImage($form, $imageToCrop, $imageType);
-	} else {
-		drupal_add_js(
-		  '(function($){
-			 $( "div#field-large-image-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p class=\"warning\">Large image unavailable.</p>" );
-			 $("#field-large-image-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
-			}(jQuery))',
-		  array(
-			'type' => 'inline',
-			'scope' => 'footer',
-			'group' => JS_THEME,
-			'weight' => 5,
-		  	)
-		 );
-	}
+  // If node form has a field called "field_large_image"
+  if (!empty($form['#node']->field_large_image)) {
+    $imageToCrop = $form['#node']->field_large_image;
+    // Set a image size to crop
+    $imageType = 'large';
+    cropImage($form, $imageToCrop, $imageType);
+  }
+  else {
+    $js_to_add = '(function($) { $("div#field-large-image-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p class=\"warning\">Large image unavailable.</p>" );
+              $("#field-large-image-crop-rect-add-more-wrapper input").prop("readonly", "readonly");}(jQuery))';
+    // Add JS to the page
+    drupal_add_js($js_to_add, $js_options);
+  }
 }
 
-function cropImage(&$form, $imageToCrop, $imageType) {
-	//initializing image
-	$thumbUrl = $imageToCrop['und'][0]['value'];
-	$thumbImageinfo = getimagesize($thumbUrl);
-	$thumbWidth = $thumbImageinfo[0];
-	$thumbHeight = $thumbImageinfo[1];
-	$thumbX1 = 0;
-	$thumbY1 = 0;
-	$thumbX2 = $thumbWidth;
-	$thumbY2 = $thumbHeight;
-	$thumbValues = array('x1' => 0, 'y1' =>0, 'x2' => 0, 'y2' => 0, 'width' => 0, 'height' => 0);
+/**
+ * Helper function to crop an Image.
+**/
+function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
+  // initializing image
+  $thumbUrl = $imageToCrop['und'][0]['value'];
+  $thumbImageinfo = getimagesize($thumbUrl);
+  $thumbWidth = $thumbImageinfo[0];
+  $thumbHeight = $thumbImageinfo[1];
+  $thumbX1 = 0;
+  $thumbY1 = 0;
+  $thumbX2 = $thumbWidth;
+  $thumbY2 = $thumbHeight;
+  $thumbValues = array('x1' => 0, 'y1' => 0, 'x2' => 0, 'y2' => 0, 'width' => 0, 'height' => 0);
+  // If cropping a thumnail image
+  if ($imageType == 'thumbnail') {
+    $formName = 'field_thumbnail_crop_rect';
+    $formID = 'field-thumbnail';
+    $formValue = 'field_thumbnail';
+    $aspectRatio = '1:1';
+    $resizable = 'false';
+    //original crops for thumbnail image
+    if ($thumbWidth > $thumbHeight) {
+      //if landscape image
+      $thumbX1 = round(($thumbWidth - $thumbHeight) / 2);
+      $thumbX2 = round($thumbX1 + $thumbHeight);
+    }
+    elseif ($thumbHeight > $thumbWidth) {
+      //if portrait image
+      $thumbY1 = round(($thumbHeight - $thumbWidth) / 2);
+      $thumbY2 = round($thumbY1 + $thumbWidth);
+    }
+  }
+  elseif ($imageType == 'large') {
+    $formName = 'field_large_image_crop_rect';
+    $formID = 'field-large-image';
+    $formValue = 'field_large_image';
+    $aspectRatio = '1.82:1';
+    $resizable = 'true';
+    // original crops for large image
+    $thumbCropHeight = round($thumbWidth/1.82);
+    $thumbY1 = round(($thumbHeight/2) -($thumbCropHeight/2));
+    $thumbY2 = round($thumbY1 + $thumbCropHeight);
+  }
 
-	if ($imageType == 'thumbnail') {
-		$formName = 'field_thumbnail_crop_rect';
-		$formID = 'field-thumbnail';
-		$formValue = 'field_thumbnail';
-		$aspectRatio = '1:1';
-		$resizable = 'false';
-		//original crops for thumbnail image
-		if ($thumbWidth > $thumbHeight) {
-			//if landscape image
-			$thumbX1 = round(($thumbWidth - $thumbHeight) / 2);
-			$thumbX2 = round($thumbX1 + $thumbHeight);
-		} elseif ($thumbHeight > $thumbWidth) {
-			//if portrait image
-			$thumbY1 = round(($thumbHeight - $thumbWidth) / 2);
-			$thumbY2 = round($thumbY1 + $thumbWidth);
-		}
-	} elseif ($imageType == 'large') {
-		$formName = 'field_large_image_crop_rect';
-		$formID = 'field-large-image';
-		$formValue = 'field_large_image';
-		$aspectRatio = '1.82:1';
-		$resizable = 'true';
-		//original crops for large image
-		$thumbCropHeight = round($thumbWidth/1.82);
-		$thumbY1 = round(($thumbHeight/2) -($thumbCropHeight/2));
-		$thumbY2 = round($thumbY1 + $thumbCropHeight);
-	}
+  if (isset($imageToCrop['und'][0])) {
+    $items = field_get_items('node', $form['#node'], $formValue.'_crop_rect');
+    if ($items) {
+      //get default crop values
+      foreach($items as $itemid) {
+        $item = field_collection_field_get_entity($itemid);
+      }
+      if ($item->field_x) {
+        //if an x value exists, get all the values
+        getDefaults($items, $thumbValues, $imageType);
+      }
+      else {
+        //otherwise set default crop values
+        setDefaults($form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, $thumbValues);
+      }
+    }
+    else {
+      //set default crop values
+      setDefaults($form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, $thumbValues);
+    }
+  }
+  // Add the Javascript to the page.
+  // @TODO use a file instead of adding JS inline. Only pass configurations for the file to act upon.
+  drupal_add_js(
+      '(function ($) {
+        $(document).ready(function () {
+          //display thumbnail and large images
+          $( "div#'.$formID.'-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p><img id=\"'.$formValue.'\" src=\"'.$thumbUrl.'\" /></p>" );
+          //make fields readonly
+          $("#field-thumbnail-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
+          $("#field-large-image-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
 
-	if(isset($imageToCrop['und'][0])) {
-		$items = field_get_items('node', $form['#node'], $formValue.'_crop_rect');
-		if ($items) {
-			//get default crop values
-			foreach($items as $itemid) {
-				$item = field_collection_field_get_entity($itemid);
-			}
-			if ($item->field_x) {
-				//if an x value exists, get all the values
-				getDefaults($items, $thumbValues, $imageType);
-			} else {
-				//otherwise set default crop values
-				setDefaults($form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, $thumbValues);
-			}
-		} else {
-			//set default crop values
-			setDefaults($form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, $thumbValues);
-		}
-	}
-
-	drupal_add_js(
-		  '(function ($) {
-				$(document).ready(function () {
-					//display thumbnail and large images
-					$( "div#'.$formID.'-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p><img id=\"'.$formValue.'\" src=\"'.$thumbUrl.'\" /></p>" );
-					//make fields readonly
-					$("#field-thumbnail-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
-					$("#field-large-image-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
-
-					var imageType = "'.$imageType.'";
-					var imageWidth = "'.$thumbValues['width'].'";
-					var imageHeight = "'.$thumbValues['height'].'";
-					if (imageType == "large") {
-						var imageWidthMin = 364;
-						var imageHeightMin = 200;
-					} else {
-					var imageWidthMin = "'.$thumbValues['width'].'";
-					var imageHeightMin = "'.$thumbValues['height'].'";
-					}
-					if ((imageType == "large" && (imageWidth < 364 || imageHeight < 200)) || (imageType == "thumbnail" && imageWidth < 50)) {
-						$( "div#'.$formID.'-crop-rect-add-more-wrapper .fieldset-wrapper" ).append( "<p class=\"warning\">WARNING: THIS IMAGE IS SMALLER THAN THE RECOMMENDED MINIMUM AND WILL BE SCALED TO FIT IN THE APP.</p>" );
-					}
-					$("img#'.$formValue.'").imgAreaSelect({
-						x1: '.$thumbValues['x1'].', y1: '.$thumbValues['y1'].', x2: '.$thumbValues['x2'].', y2: '.$thumbValues['y2'].',
-						aspectRatio: "'.$aspectRatio.'",
-						persistent: true,
-						handles: true,
-						minWidth: imageWidthMin,
-						minHeight: imageHeightMin,
-						resizable: '.$resizable.',
-						onSelectEnd: function (img, selection) {
-							$("input[name=\"'.$formValue.'_crop_rect[und][0][field_x][und][0][value]\"]").val(selection.x1);
-							$("input[name=\"'.$formValue.'_crop_rect[und][0][field_y][und][0][value]\"]").val(selection.y1);
-							$("input[name=\"'.$formValue.'_crop_rect[und][0][field_x2][und][0][value]\"]").val(selection.x2);
-							$("input[name=\"'.$formValue.'_crop_rect[und][0][field_y2][und][0][value]\"]").val(selection.y2);
-							$("input[name=\"'.$formValue.'_crop_rect[und][0][field_width][und][0][value]\"]").val(selection.width);
-							$("input[name=\"'.$formValue.'_crop_rect[und][0][field_height][und][0][value]\"]").val(selection.height);
-							}
-						});
-				});
-			})(jQuery);',
-		  array(
-			'type' => 'inline',
-			'scope' => 'footer',
-			'group' => JS_THEME,
-			'weight' => 15,
-		  )
-		);
+          var imageType = "'.$imageType.'";
+          var imageWidth = "'.$thumbValues['width'].'";
+          var imageHeight = "'.$thumbValues['height'].'";
+          if (imageType == "large") {
+            var imageWidthMin = 364;
+            var imageHeightMin = 200;
+          } else {
+          var imageWidthMin = "'.$thumbValues['width'].'";
+          var imageHeightMin = "'.$thumbValues['height'].'";
+          }
+          if ((imageType == "large" && (imageWidth < 364 || imageHeight < 200)) || (imageType == "thumbnail" && imageWidth < 50)) {
+            $( "div#'.$formID.'-crop-rect-add-more-wrapper .fieldset-wrapper" ).append( "<p class=\"warning\">WARNING: THIS IMAGE IS SMALLER THAN THE RECOMMENDED MINIMUM AND WILL BE SCALED TO FIT IN THE APP.</p>" );
+          }
+          $("img#'.$formValue.'").imgAreaSelect({
+            x1: '.$thumbValues['x1'].', y1: '.$thumbValues['y1'].', x2: '.$thumbValues['x2'].', y2: '.$thumbValues['y2'].',
+            aspectRatio: "'.$aspectRatio.'",
+            persistent: true,
+            handles: true,
+            minWidth: imageWidthMin,
+            minHeight: imageHeightMin,
+            resizable: '.$resizable.',
+            onSelectEnd: function (img, selection) {
+              $("input[name=\"'.$formValue.'_crop_rect[und][0][field_x][und][0][value]\"]").val(selection.x1);
+              $("input[name=\"'.$formValue.'_crop_rect[und][0][field_y][und][0][value]\"]").val(selection.y1);
+              $("input[name=\"'.$formValue.'_crop_rect[und][0][field_x2][und][0][value]\"]").val(selection.x2);
+              $("input[name=\"'.$formValue.'_crop_rect[und][0][field_y2][und][0][value]\"]").val(selection.y2);
+              $("input[name=\"'.$formValue.'_crop_rect[und][0][field_width][und][0][value]\"]").val(selection.width);
+              $("input[name=\"'.$formValue.'_crop_rect[und][0][field_height][und][0][value]\"]").val(selection.height);
+              }
+            });
+        });
+      })(jQuery);',
+      array(
+      'type' => 'inline',
+      'scope' => 'footer',
+      'group' => JS_THEME,
+      'weight' => 15,
+    )
+  );
 }
 
+/**
+ * Helper function to get crop defaults.
+**/
 function getDefaults($items, &$thumbValues, $imageType) {
-	foreach($items as $itemid) {
-		$item = field_collection_field_get_entity($itemid);
-	 	$thumbValues['x1'] = $item->field_x['und'][0]['value'];
-	 	$thumbValues['y1'] = $item->field_y['und'][0]['value'];
-	 	$thumbValues['x2'] = $item->field_x2['und'][0]['value'];
-	 	$thumbValues['y2'] = $item->field_y2['und'][0]['value'];
-		$thumbValues['width'] = $item->field_width['und'][0]['value'];
-		$thumbValues['height'] = $item->field_height['und'][0]['value'];
-	}
+  foreach ($items as $itemid) {
+    $item = field_collection_field_get_entity($itemid);
+    $thumbValues['x1'] = $item->field_x['und'][0]['value'];
+    $thumbValues['y1'] = $item->field_y['und'][0]['value'];
+    $thumbValues['x2'] = $item->field_x2['und'][0]['value'];
+    $thumbValues['y2'] = $item->field_y2['und'][0]['value'];
+    $thumbValues['width'] = $item->field_width['und'][0]['value'];
+    $thumbValues['height'] = $item->field_height['und'][0]['value'];
+  }
 }
 
+/**
+ * Helper function to set crop defaults.
+**/
 function setDefaults(&$form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, &$thumbValues) {
 	$thumbValues['x1'] = $thumbX1;
-	$form[$formName][LANGUAGE_NONE][0]['field_x'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x1'];
-	$thumbValues['y1'] = $thumbY1;
-	$form[$formName][LANGUAGE_NONE][0]['field_y'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y1'];
-	$thumbValues['x2'] = $thumbX2;
-	$form[$formName][LANGUAGE_NONE][0]['field_x2'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-	$thumbValues['y2'] = $thumbY2;
-	$form[$formName][LANGUAGE_NONE][0]['field_y2'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
-	if ($imageType == 'thumbnail') {
-		if ($thumbWidth > $thumbHeight) {
-			//if landscape image
-			$form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
-			$form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
-		} elseif ($thumbHeight > $thumbWidth) {
-			//if portrait image
-			$form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-			$form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-		} else {
-			//perfect square
-			$form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-			$form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-		}
-		$thumbValues['width'] = $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'];
-		$thumbValues['height'] = $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'];
-	} else if ($imageType == 'large') {
-		$form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-		$form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'] - $thumbValues['y1'];
-		$thumbValues['width'] = $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'];
-		$thumbValues['height'] = $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'];
-	}
+  $form[$formName][LANGUAGE_NONE][0]['field_x'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x1'];
+  $thumbValues['y1'] = $thumbY1;
+  $form[$formName][LANGUAGE_NONE][0]['field_y'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y1'];
+  $thumbValues['x2'] = $thumbX2;
+  $form[$formName][LANGUAGE_NONE][0]['field_x2'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
+  $thumbValues['y2'] = $thumbY2;
+  $form[$formName][LANGUAGE_NONE][0]['field_y2'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
+  if ($imageType == 'thumbnail') {
+    if ($thumbWidth > $thumbHeight) {
+      // if landscape image
+      $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
+      $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
+    }
+    elseif ($thumbHeight > $thumbWidth) {
+      //if portrait image
+      $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
+      $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
+    }
+    else {
+      //perfect square
+      $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
+      $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
+    }
+    $thumbValues['width'] = $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'];
+    $thumbValues['height'] = $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'];
+  }
+  else if ($imageType == 'large') {
+    $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
+    $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'] - $thumbValues['y1'];
+    $thumbValues['width'] = $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'];
+    $thumbValues['height'] = $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'];
+  }
 }
 
 /**
@@ -1437,7 +1454,7 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
     foreach ($srchtermArray as $key => $srchterm) {
 
       $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, $field, $srchterm, $rows, $start);
-      
+
       $collect = array();
       if(!empty($result['response']['numFound'])) {
           $collect[] = '<p>'.$result['response']['numFound'].' objects found. Showing '.$start.' - '.($start + $rows).' | ';
@@ -1457,7 +1474,7 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
           }
       }
       $output = implode(' ',$collect);
-    
+
       if(!empty($output)) {
           drupal_set_message($output, 'status');
       } else {
