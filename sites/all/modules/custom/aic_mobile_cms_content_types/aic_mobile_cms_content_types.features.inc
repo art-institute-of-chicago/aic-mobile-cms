@@ -11,6 +11,9 @@ function aic_mobile_cms_content_types_ctools_plugin_api($module = NULL, $api = N
   if ($module == "field_group" && $api == "field_group") {
     return array("version" => "1");
   }
+  if ($module == "strongarm" && $api == "strongarm") {
+    return array("version" => "1");
+  }
 }
 
 /**
@@ -41,10 +44,42 @@ function aic_mobile_cms_content_types_node_info() {
       'title_label' => t('Title'),
       'help' => '',
     ),
+    'event' => array(
+      'name' => t('Event'),
+      'base' => 'node_content',
+      'description' => '',
+      'has_title' => '1',
+      'title_label' => t('Title'),
+      'help' => '',
+    ),
+    'exhibition' => array(
+      'name' => t('Exhibition'),
+      'base' => 'node_content',
+      'description' => '',
+      'has_title' => '1',
+      'title_label' => t('Title'),
+      'help' => '',
+    ),
     'gallery' => array(
       'name' => t('Gallery'),
       'base' => 'node_content',
       'description' => t('The node type to hold gallery content'),
+      'has_title' => '1',
+      'title_label' => t('Title'),
+      'help' => '',
+    ),
+    'map_annotation' => array(
+      'name' => t('Map Annotation'),
+      'base' => 'node_content',
+      'description' => t('Options such as Restroom, Gift Shop, etc.'),
+      'has_title' => '1',
+      'title_label' => t('Title'),
+      'help' => '',
+    ),
+    'map_temporary_wall' => array(
+      'name' => t('Map Temporary Wall'),
+      'base' => 'node_content',
+      'description' => '',
       'has_title' => '1',
       'title_label' => t('Title'),
       'help' => '',
