@@ -640,7 +640,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'progress_indicator' => 'throbber',
       ),
       'type' => 'file_generic',
-      'weight' => 33,
+      'weight' => 2,
     ),
   );
 
@@ -681,7 +681,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 35,
+      'weight' => 3,
     ),
   );
 
@@ -722,7 +722,48 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 36,
+      'weight' => 4,
+    ),
+  );
+
+  // Exported field_instance: 'node-audio-field_descriptive_title'.
+  $field_instances['node-audio-field_descriptive_title'] = array(
+    'bundle' => 'audio',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => 'This is for the Admin to make it easier to select the right audio from the list in the CMS.',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 5,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_descriptive_title',
+    'label' => 'Descriptive Title',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 1,
     ),
   );
 
@@ -765,7 +806,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => -5,
+      'weight' => 0,
     ),
   );
 
@@ -2963,6 +3004,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   t('Credit Line');
   t('Credits');
   t('Description');
+  t('Descriptive Title');
   t('Enter artist first and last name, i.e. Irving Penn');
   t('Enter artist\'s origin, i.e. American, 1917-2009');
   t('Event ID');
@@ -2991,7 +3033,9 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   t('Object Selector Numbers');
   t('Reference Number');
   t('Start Location');
+  t('Start location of the Tour.');
   t('This field will be deprecated soon. For the time being, please enter first audio stop number here and also as the first number in the Object Selector Numbers fields below.');
+  t('This is for the Admin to make it easier to select the right audio from the list in the CMS.');
   t('Thumbnail Crop');
   t('Thumbnail Image');
   t('Title');
