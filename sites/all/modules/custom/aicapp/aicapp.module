@@ -983,7 +983,7 @@ function strip_drupal_from_node(&$node) {
   if (isset($node->field_highlighted_object['und'][0])) {
     $node->highlighted_object = $node->field_highlighted_object['und'][0]['value'];
   }
-  
+
   // Tour node field items.
   if (isset($node->field_tour_banner['und'][0]['value'])) {
     $node->tour_banner = $node->field_tour_banner['und'][0]['value'];
