@@ -474,10 +474,10 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
 
 /**
  * Helper function for aicapp_gendata_form_submit()
-* Compare 2 arrays of art objects. The first comes from current SOLR & are marked as not in gallery.
-* The 2nd is from the Drupal DB, and are marked as in gallery.
-* For any that are in both, they have recently been moved out of their gallery.
-* Shoot off email notice with a list - the admin may need to update tours.
+ * Compare 2 arrays of art objects. The first comes from current SOLR & are marked as not in gallery.
+ * The 2nd is from the Drupal DB, and are marked as in gallery.
+ * For any that are in both, they have recently been moved out of their gallery.
+ * Shoot off email notice with a list - the admin may need to update tours.
  */
 function _email_art_removed($art_gone) {
   global $base_url;
@@ -543,7 +543,7 @@ function _email_art_removed($art_gone) {
 
 /**
  * Helper function for aicapp_gendata_form_submit()
-* Similar to above, but the reverse. Notify of objects that are now on display in gallery.
+ * Similar to above, but the reverse. Notify of objects that are now on display in gallery.
  */
 function _email_art_gallery($art_in_gallery, $locations, $objects) {
   global $base_url;
@@ -638,14 +638,13 @@ function _update_object_galleries($recent_added, $locations) {
 
 /**
  * hook_form_submit() implementation
-
  * take all the data in the Drupal DB, and the data from matching records in SOLR, and
  * write them to JSON file.
-  */
+ */
 function aicapp_gendata_form_submit($form, &$form_state) {
   global $base_path;
 
-  // load the general info
+  // Load the general info by loading node number 1.
   $node_gen = node_load(1);
   strip_drupal_from_node($node_gen);
 
@@ -661,11 +660,14 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   // load tours
   $tours = node_load_multiple(array(), array('type' => 'tour'));
 
-  // strip out Drupal native stuff we don't need in the JSON output
+  // Load map annontations that are published.
+  $map_annotations = node_load_multiple(array(), array('type' => 'map_annotation', 'status' => 1));
+
+  // Strip out Drupal native stuff we don't need in the JSON output.
   foreach ($galleries as $gallery) {
     strip_drupal_from_node($gallery);
 
-    // add in other gallery fields from SOLR
+    // Add in other gallery fields from SOLR.
     $result = _runSolrQuery(AICAPP_GALLERY_QUERY, 'gallery_id', $gallery->gallery_id);
     if (!empty($result['response']['docs'])) {
       foreach ($result['response']['docs'][0] as $key => $val) {
@@ -685,7 +687,6 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   }
 
   // Now we build up the objects array for JSON output.
-
   foreach ($objects as $key => $object) {
     _getSOLRdata($object);
     strip_drupal_from_node($object);
@@ -713,7 +714,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
         db_query("UPDATE node SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
         db_query("UPDATE node_revision SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
       }
-    else {
+      else {
         // unpublish the tour
         db_query("UPDATE node SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
         db_query("UPDATE node_revision SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
@@ -734,9 +735,14 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       $tour->stops = aicapp_collect_tour_stops($tour->stops);
     }
   }
-
+  // Sort tours.
   usort($tours, 'sort_objects_by_weight');
 
+  // Format map annontations.
+  foreach ($map_annotations as $annontation) {
+    strip_drupal_from_node($annontation);
+  }
+  // Add all the entities to a single array for encoding.
   $data = array(
     'general_info' => $node_gen,
     'galleries' => $galleries,
@@ -744,11 +750,42 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'audio_files' => $audio_files,
     'tours' => $tours,
   );
-
+  // Current verions file output.
   $json_output = json_encode($data);
-  $num_bytes = file_put_contents('sites/default/files/appData.json', $json_output);
-  if ($num_bytes) {
-    drupal_set_message('Updated file: <a href="' . $base_path . 'sites/default/files/appData.json' . '">appData.json</a><br>When you click to view the file, be sure to refresh your browser as it might be cached. Best viewed in Chrome.', 'status');
+  $v1_filename = 'appData';
+  $v1_file = file_put_contents('sites/default/files/' . $v1_filename . '.json', $json_output);
+
+  // Version 2 JSON data.
+  // @TODO pupulate the featured tours, exhibitions and events.
+  $featured = array(
+    'tours' => array(),
+    'exhibitions' => array(),
+    'events' => array(),
+  );
+  $dashboard = array(
+    'featured_tours' => $featured['tours'],
+    'featured_exhibitions' => $featured['exhibitions'],
+    'featured_events' => $featured['events'],
+  );
+  // Create a new JSON output object for changes in version 2, starting with
+  // a dashboard.
+  $v2_data = array(
+    // Add a dashboard.
+    'dashboard' => $dashboard,
+  );
+  // Add the v1 data after the dashboard.
+  $v2_data += $data;
+  // Add the map annotations.
+  $v2_data += array(
+    'annontations' => $map_annotations,
+  );
+  // Version 2 file output.
+  $v2_json_output = json_encode($v2_data);
+  $v2_filename = 'appData-v2';
+  $v2_file = file_put_contents('sites/default/files/' . $v2_filename . '.json', $v2_json_output);
+
+  if ($v1_file && $v2_file) {
+    drupal_set_message('Updated files <strong>v1</strong>: <a href="' . $base_path . 'sites/default/files/appData.json' . '">appData.json</a> or <strong>v2</strong>: <a href="' . $base_path . 'sites/default/files/appData-v2.json' . '">appData-v2.json</a><br>When you click to view one of the files, be sure to refresh your browser as it might be cached. Best viewed in Chrome.', 'status');
     variable_set('aicapp_pending', 0);
   }
   else {
@@ -756,12 +793,15 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   }
 }
 
+/**
+ * Collect tour stops and return as a group.
+ */
 function aicapp_collect_tour_stops($stops = array()) {
   $full_stops = array();
   foreach ($stops as $stop) {
     $result = db_query("SELECT field_t_audio_nid, delta
       FROM field_revision_field_t_audio
-      WHERE revision_id = " . $stop['value']."
+      WHERE revision_id = " . $stop['value'] . "
       ORDER by delta");
     foreach ($result as $item) {
       $audio[] = array('nid' => $item->field_t_audio_nid, 'delta' => $item->delta);
@@ -769,7 +809,7 @@ function aicapp_collect_tour_stops($stops = array()) {
 
     $result = db_query("SELECT field_t_object_nid, delta
       FROM field_revision_field_t_object
-      WHERE revision_id = " . $stop['value']."
+      WHERE revision_id = " . $stop['value'] . "
       ORDER by delta");
     foreach ($result as $item) {
       $objects[] = array('nid' => $item->field_t_object_nid, 'delta' => $item->delta);
@@ -778,21 +818,30 @@ function aicapp_collect_tour_stops($stops = array()) {
     // now we should have 2 arrays of same length, sorted in order.
     if (count($audio) == count($objects)) {
       for ($i = 0; $i < count($audio); $i++) {
-        $full_stops[] = array('audio' => $audio[$i]['nid'], 'object' => $objects[$i]['nid'], 'sort' => $objects[$i]['delta']);
+        $full_stops[] = array(
+          'audio' => $audio[$i]['nid'],
+          'object' => $objects[$i]['nid'],
+          'sort' => $objects[$i]['delta'],
+        );
       }
     }
   }
   return $full_stops;
 }
 
+/**
+ * Helper to sort object by weight.
+ */
 function sort_objects_by_weight($a, $b) {
   if ($a->weight == $b->weight) {
-    return 0 ;
+    return 0;
   }
   return $a->weight - $b->weight;
 }
 
-// add the SOLR data to the node
+/**
+ * Add the SOLR data to the node.
+ */
 function _getSOLRdata(&$object, $object_id = null) {
   $entity = entity_metadata_wrapper('node', $object);
   if (empty($object_id)) {
@@ -826,9 +875,14 @@ function _getSOLRdata(&$object, $object_id = null) {
   }
 }
 
-// clear out all the Drupal stuff from the node, so we
-// can deliver bare JSON data.
+/**
+ * Clear out all the Drupal stuff from the node, so we can deliver bare JSON data.
+ */
 function strip_drupal_from_node(&$node) {
+
+  $node_copy = clone($node);
+  dsm($node_copy);
+
   unset($node->vid);
   unset($node->uid);
   unset($node->log);
@@ -848,14 +902,14 @@ function strip_drupal_from_node(&$node) {
   unset($node->picture);
   unset($node->data);
 
-  // Now add in the editable field data
+  // Now add in the editable field data.
   if (isset($node->field_museum_hours['und'][0]['safe_value'])) {
     $node->museum_hours = $node->field_museum_hours['und'][0]['safe_value'];
   }
   if (isset($node->field_gallery_id['und'][0]['safe_value'])) {
     $node->gallery_id = $node->field_gallery_id['und'][0]['safe_value'];
   }
-  // this is overriding the SOLR data.  This is why we sync.
+  // This is overriding the SOLR data.  This is why we sync.
   if (isset($node->field_gallery_number['und'][0]['safe_value'])) {
     $node->gallery_number = $node->field_gallery_number['und'][0]['safe_value'];
   }
@@ -887,7 +941,12 @@ function strip_drupal_from_node(&$node) {
     foreach ($items as $itemid) {
       $item = field_collection_field_get_entity($itemid);
       if ($item->field_x) {
-        $node->thumbnail_crop_rect = array('x' => $item->field_x['und'][0]['value'], 'y' => $item->field_y['und'][0]['value'], 'width' => $item->field_width['und'][0]['value'], 'height' => $item->field_height['und'][0]['value']);
+        $node->thumbnail_crop_rect = array(
+          'x' => $item->field_x['und'][0]['value'],
+          'y' => $item->field_y['und'][0]['value'],
+          'width' => $item->field_width['und'][0]['value'],
+          'height' => $item->field_height['und'][0]['value'],
+        );
         json_encode($node->thumbnail_crop_rect);
       }
     }
@@ -897,12 +956,17 @@ function strip_drupal_from_node(&$node) {
     foreach ($items as $itemid) {
       $item = field_collection_field_get_entity($itemid);
       if ($item->field_x) {
-        $node->large_image_crop_rect = array('x' => $item->field_x['und'][0]['value'], 'y' => $item->field_y['und'][0]['value'], 'width' => $item->field_width['und'][0]['value'], 'height' => $item->field_height['und'][0]['value'] );
+        $node->large_image_crop_rect = array(
+          'x' => $item->field_x['und'][0]['value'],
+          'y' => $item->field_y['und'][0]['value'],
+          'width' => $item->field_width['und'][0]['value'],
+          'height' => $item->field_height['und'][0]['value'],
+        );
         json_encode($node->large_image_crop_rect);
       }
     }
   }
-  // here we loop through audio files attached to objects.
+  // Here we loop through audio files attached to objects.
   if (isset($node->field_object_audio['und'][0]['nid'])) {
     foreach ($node->field_object_audio['und'] as $audiofld) {
       $node->audio[] = $audiofld['nid'];
@@ -911,7 +975,7 @@ function strip_drupal_from_node(&$node) {
   if (isset($node->field_object_audio['und'][0]['node']->field_audio_transcript['und'][0]['safe_value'])) {
     $node->audio_transcript = $node->field_object_audio['und'][0]['node']->field_audio_transcript['und'][0]['safe_value'];
   }
-  // this handles each separate audio file.
+  // This handles each separate audio file.
   if (isset($node->field_audio_file['und'][0]['uri'])) {
     $node->audio_filename = $node->field_audio_file['und'][0]['filename'];
     $node->audio_file_url = file_create_url($node->field_audio_file['und'][0]['uri']);
@@ -991,7 +1055,9 @@ function strip_drupal_from_node(&$node) {
   unset($node->field_copyright_notice);
 }
 
-
+/**
+ * Get gallery count.
+ */
 function aicapp_gallery_count() {
   $result = _runSolrQuery(AICAPP_GALLERY_QUERY, '*', '*', 500);
 
@@ -1003,8 +1069,8 @@ function aicapp_gallery_count() {
 }
 
 /**
- * hook_form_submit() implementation
-* Used to multi-load in the galleries.  Objects don't use this, they are loaded one at a time via search.
+ * Hook_form_submit() implementation
+ * Used to multi-load in the galleries.  Objects don't use this, they are loaded one at a time via search.
  */
 function aicapp_loadgalleries_form_submit($form, &$form_state) {
   $result = _runSolrQuery(AICAPP_GALLERY_QUERY, '*', '*', 500);
@@ -1033,7 +1099,8 @@ function aicapp_loadgalleries_form_submit($form, &$form_state) {
       }
     }
     drupal_set_message(t("Data has been loaded!"), 'status');
-  } catch (Exception $e) {
+  }
+  catch (Exception $e) {
     drupal_set_message(t("An error occurred: " . $e), 'error');
   }
 }
@@ -1044,10 +1111,9 @@ function aicapp_loadgalleries_form_submit($form, &$form_state) {
  * expects an $object array from SOLR lookup.
  */
 function aicappSaveNode($object, $type) {
-  // prepare for node_save().
-
+  // Prepare for node_save().
   if ($type == 'object') {
-    // check for nid by SOLR object_id
+    // Check for nid by SOLR object_id.
     $qres = db_query(
       'SELECT entity_id FROM field_data_field_object_id WHERE field_object_id_value = :id',
         array(':id' => $object['object_id'])
@@ -1057,7 +1123,7 @@ function aicappSaveNode($object, $type) {
 
   if ($type == 'gallery') {
     if (!empty($object['gallery_id'])) {
-      // check for nid by SOLR gallery_id
+      // Check for nid by SOLR gallery_id.
       $qres = db_query(
         'SELECT entity_id FROM field_data_field_gallery_id WHERE field_gallery_id_value = :id',
           array(':id' => $object['gallery_id'])
@@ -1070,7 +1136,7 @@ function aicappSaveNode($object, $type) {
     $node = node_load($record->entity_id);
   }
   else {
-    // create a new node
+    // Create a new node.
     $node = new stdClass();
     $node->title = $object['title_t'];
     $node->type = $type;
@@ -1089,25 +1155,25 @@ function aicappSaveNode($object, $type) {
     // @TODO build a dynamic path to the image using the Image Server URL and
     // the image ID using the following format:
     // {scheme}://{server}{/prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
-    $filename = AICAPP_IMAGE_CROP_QUALITY '.' AICAPP_IMAGE_CROP_FORMAT;
+    $filename = AICAPP_IMAGE_CROP_QUALITY . '.' . AICAPP_IMAGE_CROP_FORMAT;
     // Image server URL begins like this for both thumnail and full.
-    $URL = AICAPP_IMAGE_SERVER . '/' . $object['object_id'] . '/';
+    $url = AICAPP_IMAGE_SERVER . '/' . $object['object_id'] . '/';
 
     if (!empty($object['thumbnail_full_path'])) {
       $crop_size = variable_get('aicapp_image_thumb_crop', '!112,112');
       // @TODO build a dynamic path to the thumnail image.
-      $URL .= AICAPP_IMAGE_CROP_REGION . '/' . $crop_size . '/';
-      $URL .= AICAPP_IMAGE_CROP_ROTATION . '/' . $filename;
-      // $node->field_thumbnail_image[$node->language][0]['value'] = $URL;
+      $url .= AICAPP_IMAGE_CROP_REGION . '/' . $crop_size . '/';
+      $url .= AICAPP_IMAGE_CROP_ROTATION . '/' . $filename;
+      // $node->field_thumbnail_image[$node->language][0]['value'] = $url;
       // @TODO remove following after previous line is functioning.
       $node->field_thumbnail_image[$node->language][0]['value'] = $object['thumbnail_full_path'];
     }
     if (!empty($object['large_image_full_path'])) {
       $crop_size = variable_get('aicapp_image_full_crop', '!800,800');
       // @TODO build a dynamic path to the full image.
-      $URL .= AICAPP_IMAGE_CROP_REGION . '/' . $crop_size . '/';
-      $URL .= AICAPP_IMAGE_CROP_ROTATION . '/' . $filename;
-      // $node->field_large_image[$node->language][0]['value'] = $URL;
+      $url .= AICAPP_IMAGE_CROP_REGION . '/' . $crop_size . '/';
+      $url .= AICAPP_IMAGE_CROP_ROTATION . '/' . $filename;
+      // $node->field_large_image[$node->language][0]['value'] = $url;
       // @TODO remove following after previous line is functioning.
       $node->field_large_image[$node->language][0]['value'] = $object['large_image_full_path'];
     }
@@ -1419,7 +1485,7 @@ function aicapp_node_view($node, $view_mode, $langcode) {
   }
   if ($node->type == 'gallery') {
     if (!empty($node->field_gallery_id['und'])) {
-      $gallery_id =  $node->field_gallery_id['und'][0]['safe_value'];
+      $gallery_id = $node->field_gallery_id['und'][0]['safe_value'];
     }
     else {
       $gallery_id = 0;
@@ -1440,6 +1506,9 @@ function aicapp_node_view($node, $view_mode, $langcode) {
   }
 }
 
+/**
+ * Field markup helper function.
+ */
 function aicapp_field_markup($key, $value) {
   if (is_array($value)) {
     $value = implode(', ', $value);
@@ -1462,26 +1531,26 @@ function aicapp_search_form($form_state = array()) {
     '#type' => 'textfield',
     '#title' => t('Search by Title'),
     '#size' => 12,
-      '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
+    '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term'] : '',
   );
   $form['search_ref_num'] = array(
     '#type' => 'textfield',
     '#title' => t('Search by Reference Number'),
     '#size' => 12,
-      '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
+    '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term'] : '',
   );
   $form['search_object_id'] = array(
     '#type' => 'textfield',
     '#title' => t('Search by Object ID'),
     '#description' => t('To enter multiple IDs, separate IDs with commas, i.e. 159135, 159135 - no comma at the end.<br /><br />'),
     '#size' => 12,
-      '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
+    '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term'] : '',
   );
   $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Search'),
+    '#type' => 'submit',
+    '#value' => t('Search'),
     '#attributes' => array('class' => array('button')),
-    );
+  );
   return $form;
 }
 
@@ -1584,74 +1653,70 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
 
 /**
  *  Run a SOLR query.
-*  To run this locally you must be connected through VPN to the AIC domain, and run the SSH command to create
-*  a tunnel mapping localhost:8080 to the SOLR URL.
-*
+ *  To run this locally you must be connected through VPN to the AIC domain, and run the SSH command to create
+ *  a tunnel mapping localhost:8080 to the SOLR URL.
+ *
  *  Sample queries.  Get a specific record by main_reference_number
-*  $url = "http:// localhost:8080/solr/select?rows=50&start=0&fq=document_type%3Aartwork-webcoll&q=main_reference_number:1942.51&wt=json";
-*
+ *  $url = "http:// localhost:8080/solr/select?rows=50&start=0&fq=document_type%3Aartwork-webcoll&q=main_reference_number:1942.51&wt=json";
+ *
  *  Get all records in the Artwork web collection
-*  $url = "http:// localhost:8080/solr/select?rows=50&start=0&fq=document_type%3Aartwork-webcoll&q=*%3A*&wt=json";
+ *  $url = "http:// localhost:8080/solr/select?rows=50&start=0&fq=document_type%3Aartwork-webcoll&q=*%3A*&wt=json";
  */
-  function _runSolrQuery($query_type, $term, $value, $rows = 1, $start = 0)
-  {
-    $query = variable_get('aicapp_artwork_query');
-    if ($query_type == AICAPP_GALLERY_QUERY) {
-      $query = variable_get('aicapp_gallery_query');
-    }
-    elseif ($query_type == AICAPP_ARTWORK_QUERY) {
-      // all good
-    }
-    else {
-      drupal_set_message('Unsure what type of query to run: ' .$query_type, 'error');
-      return;
-    }
-
-    if (empty($query)) {
-      drupal_set_message('No queries to a collections API were set, so not all fields will be populated. Go to admin/settings/aic-api to add your settings.', 'warning');
-      return;
-    }
-
-    $query = str_replace('{{rows}}', $rows, $query);
-    $query = str_replace('{{start}}', $start, $query);
-    $query = str_replace('{{term}}', $term, $query);
-    $query = str_replace('{{value}}', $value, $query);
-
-    // Executes the URL and saves the content (json) in the variable.
-    $content = file_get_contents($query);
-
-    if ($content) {
-      return json_decode($content, TRUE);
-    }
+function _runSolrQuery($query_type, $term, $value, $rows = 1, $start = 0) {
+  $query = variable_get('aicapp_artwork_query');
+  if ($query_type == AICAPP_GALLERY_QUERY) {
+    $query = variable_get('aicapp_gallery_query');
+  }
+  elseif ($query_type == AICAPP_ARTWORK_QUERY) {
+    // all good
+  }
+  else {
+    drupal_set_message('Unsure what type of query to run: ' . $query_type, 'error');
+    return;
+  }
+  if (empty($query)) {
+    drupal_set_message('No queries to a collections API were set, so not all fields will be populated. Go to admin/settings/aic-api to add your settings.', 'warning');
     return;
   }
 
+  $query = str_replace('{{rows}}', $rows, $query);
+  $query = str_replace('{{start}}', $start, $query);
+  $query = str_replace('{{term}}', $term, $query);
+  $query = str_replace('{{value}}', $value, $query);
+  // Executes the URL and saves the content (json) in the variable.
+  $content = file_get_contents($query);
+  if ($content) {
+    return json_decode($content, TRUE);
+  }
+}
+
 /**
  * Implements hook_cron() function
-* set up nightly cron job
+ * Set up nightly cron job.
  */
 function aicapp_cron() {
-  // run the form submit functions.
+  // Run the form submit functions.
   // Send in empty arrays representing the form as these are not used in the function anyway.
-  // I guess I could have set these up as regular menu items with page callbacks..
-
+  // I guess I could have set these up as regular menu items with page callbacks.
   $fm = array();
   $fm2 = array();
-
-  if (date('G') == 22) { // At 10pm - assuming Cron is running every hour.
+  // At 10pm - assuming Cron is running every hour.
+  if (date('G') == 22) {
     aicapp_loadgalleries_form_submit($fm, $fm2);
   }
-  if (date('G') == 23) { // At 11pm - assuming Cron is running every hour.
+  // At 11pm - assuming Cron is running every hour.
+  if (date('G') == 23) {
     aicapp_objectGalleryStatus_submit($fm, $fm2);
   }
-  if (date('G') == 24) { // At 12pm - assuming Cron is running every hour.
+  // At 12pm - assuming Cron is running every hour.
+  if (date('G') == 24) {
     aicapp_gendata_form_submit($fm, $fm2);
   }
 }
 
 /**
- * create a text file that triggers the Apache cron job to sync the files
-* with external system
+ * Create a text file that triggers the Apache cron job to sync the files
+ * with external system.
  */
 function aicapp_file_sync_form_submit() {
   $filename = 'trigger/file_sync_trigger.txt';
@@ -1670,13 +1735,13 @@ function aicapp_file_sync_form_submit() {
 }
 
 /**
- * Implement hook_node_presave().
+ * Implements hook_node_presave().
  *
  * Warn user if attached stops on the tour don't have location values.  They
  * won't be sent to the app without them.
  */
 function aicapp_node_presave($node) {
-  // a general flag to indicate there are changes to be published.
+  // A general flag to indicate there are changes to be published.
   variable_set('aicapp_pending', 1);
 
   if ($node->type == 'tour') {
@@ -1693,8 +1758,8 @@ function aicapp_node_presave($node) {
         }
       }
     }
-    // also if an object is saved and is set to be published, but has no audio, set it back
-    // to unpublished and give warning.
+    // Also if an object is saved and is set to be published, but has no audio,
+    // set it back to unpublished and give warning.
     if (empty($node->field_object_audio['und'][0])) {
       $node->status = 0;
       drupal_set_message('The object ' . $node->title . ' has no audio file attached.', 'warning');
@@ -1702,6 +1767,9 @@ function aicapp_node_presave($node) {
   }
 }
 
+/**
+ * Check for problems with the object.
+ */
 function aicapp_check_for_object_problems($node) {
   $noLocs = array();
   $unpubs = array();
@@ -1772,12 +1840,13 @@ function aicapp_check_for_object_problems($node) {
   }
 }
 
-// cycle through every published CMS object and pull it up in SOLR
-// - show it here if no "large_image_full_path" is found AND if no
-// image has been added in the node.
+/**
+ * Cycle through every published CMS object and pull it up in SOLR.
+ * Show it here if no "large_image_full_path" is found AND,
+ * if no image has been added in the node.
+ */
 function aicapp_object_noimg() {
-
-  // grab object_ids and nid for every object node
+  // Grab object_ids and nid for every object node.
   $query = db_select('field_revision_field_object_id', 'fi')->extend('PagerDefault');
   $query->join('node', 'n', 'n.nid = fi.entity_id');
   $query->fields('fi', array('entity_id', 'field_object_id_value'))
@@ -1786,22 +1855,19 @@ function aicapp_object_noimg() {
     ->condition('n.status', 1)
     ->orderBy('field_object_id_value');
   $result = $query->execute();
-
-
-  // examine in SOLR and see if image is there
+  // Examine in SOLR and see if image is there.
   $rows = array();
   while ($record = $result->fetchAssoc()) {
     $json = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $record['field_object_id_value']);
     foreach ($json['response']['docs'] as $item) {
       if (empty($item['large_image_full_path'])) {
-
-        // there is no image in SOLR.  Check Drupal
+        // There is no image in SOLR,  Check Drupal.
         $node = node_load($record['entity_id']);
         if (empty($node->field_image[LANGUAGE_NONE][0]['uri'])) {
           $rows[] = l($item['object_id'] . ' - ' . substr($item['title_t'], 0, 50), 'node/' . $record['entity_id'] . '/edit') . ' -> <span class="red">[needs image]</span>';
         }
       }
-    else {
+      else {
         $rows[] = $item['object_id'] . ' - ' . substr($item['title_t'], 0, 50) . ' -> [good]';
       }
     }
@@ -1813,12 +1879,15 @@ function aicapp_object_noimg() {
       '#items' => $rows,
     ),
     array(
-    '#theme' => 'pager',
+      '#theme' => 'pager',
     ),
   );
   return $output;
 }
 
+/**
+ * Admin setting form callback.
+ */
 function aicapp_admin() {
   $form = array();
   $form['aicapp_artwork_query'] = array(
@@ -1871,6 +1940,9 @@ function aicapp_admin() {
   return system_settings_form($form);
 }
 
+/**
+ * Admin setting validation callback.
+ */
 function aicapp_admin_validate($form, &$form_state) {
   $query = $form_state['values']['aicapp_artwork_query'];
   if (substr($query, 0, 7) !== "http:// " && substr($query, 0, 8) !== "https:// ") {
