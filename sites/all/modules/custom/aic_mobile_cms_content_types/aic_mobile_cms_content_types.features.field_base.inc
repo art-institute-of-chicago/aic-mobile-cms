@@ -166,7 +166,7 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
       ),
       'uri_scheme' => 'public',
     ),
-    'translatable' => 1,
+    'translatable' => 0,
     'type' => 'file',
   );
 
@@ -190,7 +190,7 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'settings' => array(
       'entity_translation_sync' => FALSE,
     ),
-    'translatable' => 1,
+    'translatable' => 0,
     'type' => 'text_long',
   );
 
