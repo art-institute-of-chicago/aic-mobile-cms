@@ -879,10 +879,6 @@ function _getSOLRdata(&$object, $object_id = null) {
  * Clear out all the Drupal stuff from the node, so we can deliver bare JSON data.
  */
 function strip_drupal_from_node(&$node) {
-
-  $node_copy = clone($node);
-  dsm($node_copy);
-
   unset($node->vid);
   unset($node->uid);
   unset($node->log);
