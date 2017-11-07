@@ -797,7 +797,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
  * Collect tour stops and return as a group.
  */
 function aicapp_collect_tour_stops($stops = array()) {
-  $full_stops = array();
+  $full_stops = $audio = $objects = array();
   foreach ($stops as $stop) {
     $result = db_query("SELECT field_t_audio_nid, delta
       FROM field_revision_field_t_audio
@@ -833,7 +833,7 @@ function aicapp_collect_tour_stops($stops = array()) {
  * Helper to sort object by weight.
  */
 function sort_objects_by_weight($a, $b) {
-  if ($a->weight == $b->weight) {
+  if (!isset($a->weight) || $a->weight == $b->weight) {
     return 0;
   }
   return $a->weight - $b->weight;
@@ -897,8 +897,15 @@ function strip_drupal_from_node(&$node) {
   if (isset($node->translations) && isset($node->translations->data)) {
     $translations = $node->translations->data;
   }
-  // Empty $node->translations.
-  $node->translations = array();
+  if (!count($translations)) {
+    // unset $node->translations.
+    unset($node->translations);
+  }
+  else {
+    // Empty $node->translations.
+    $node->translations = array();
+  }
+
   // Now add in the editable field data.
   if (isset($node->field_museum_hours[$node->language][0]['safe_value'])) {
     $node->museum_hours = $node->field_museum_hours[$node->language][0]['safe_value'];
@@ -907,15 +914,15 @@ function strip_drupal_from_node(&$node) {
     $node->museum_hours = $node->field_museum_hours[LANGUAGE_NONE][0]['safe_value'];
   }
   // General Info translations
-
-  foreach ($translations as $lang_key => $details) {
-    $node->translations[] = array(
-      'language' => $lang_key,
-      'museum_hours' => isset($node->field_museum_hours[$lang_key][0]['safe_value']) ? $node->field_museum_hours[$lang_key][0]['safe_value'] : $node->museum_hours,
-    );
+  if (isset($node->museum_hours)) {
+    foreach ($translations as $lang_key => $details) {
+      $node->translations[] = array(
+        'language' => $lang_key,
+        'museum_hours' => isset($node->field_museum_hours[$lang_key][0]['safe_value']) ? $node->field_museum_hours[$lang_key][0]['safe_value'] : $node->museum_hours,
+      );
+    }
   }
-
-  // Tour
+  // Gallery node type field items.
   if (isset($node->field_gallery_id['und'][0]['safe_value'])) {
     $node->gallery_id = $node->field_gallery_id['und'][0]['safe_value'];
   }
@@ -929,6 +936,7 @@ function strip_drupal_from_node(&$node) {
   if (isset($node->field_floor['und'][0]['safe_value'])) {
     $node->floor = $node->field_floor['und'][0]['safe_value'];
   }
+  // Object node type field items..
   if (isset($node->field_object_id['und'][0]['value'])) {
     $node->object_id = $node->field_object_id['und'][0]['value'];
   }
@@ -938,8 +946,6 @@ function strip_drupal_from_node(&$node) {
   if (isset($node->field_tour_banner['und'][0]['value'])) {
     $node->tour_banner = $node->field_tour_banner['und'][0]['value'];
   }
-
-  // Object node fields.
   if (isset($node->field_object_selector_number['und'][0]['value'])) {
     $node->object_selector_number = $node->field_object_selector_number['und'][0]['value'];
   }
