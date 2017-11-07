@@ -1059,7 +1059,7 @@ function strip_drupal_from_node(&$node) {
     }
   }
   // Tour translations.
-  if ($node->type === 'tour') {
+  if ($node->type === 'tour' && isset($node->intro) && isset($node->description)) {
     foreach ($translations as $lang_key => $details) {
       $node->translations[] = array(
         'language' => $lang_key,
@@ -1111,14 +1111,20 @@ function strip_drupal_from_node(&$node) {
       );
     }
   }
-
-  // now can unset language, and the rest of the saved props
+  // Final Clean-up.
+  // Now can unset language, and the rest of the saved props.
   $to_skip = array('title', 'status', 'type', 'nid', 'translations');
-  foreach ($properties as $property) {
+  foreach ($properties + array('data', 'entity_translation_handler_id') as $property) {
     if (!in_array($property, $to_skip) && isset($node->{$property})) {
-      unset($node->{$property});
+      if ($property === 'translations' && count($node->translations)) {
+        // Leave the translations here.
+      }
+      else {
+        unset($node->{$property});
+      }
     }
   }
+
   // Data!
   unset($node->data);
 }
