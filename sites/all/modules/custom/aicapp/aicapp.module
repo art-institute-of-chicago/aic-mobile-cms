@@ -379,7 +379,7 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
       $ingallery = 0;
     }
     // Check if 'in gallery' statuses have changed and sync with Solr data.
-    if (isset($object->field_in_gallery['und'][0]['value']) && $ingallery != $object->field_in_gallery['und'][0]['value']) {
+    if (isset($object->field_in_gallery[LANGUAGE_NONE][0]['value']) && $ingallery != $object->field_in_gallery[LANGUAGE_NONE][0]['value']) {
       db_query("UPDATE field_data_field_in_gallery
         SET field_in_gallery_value = :ingal
         WHERE entity_id = :nid", array(':nid' => $object->nid, ':ingal' => $ingallery));
@@ -389,9 +389,9 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
         WHERE entity_id = :nid", array(':nid' => $object->nid, ':ingal' => $ingallery));
     }
     // Update gallery locations.
-    if (isset($object->field_gallery_location['und'][0]['value']) && $loc != $object->field_gallery_location['und'][0]['value']) {
+    if (isset($object->field_gallery_location[LANGUAGE_NONE][0]['value']) && $loc != $object->field_gallery_location[LANGUAGE_NONE][0]['value']) {
       // Track old gallery locations to compare with new locations.
-      $oldloc = $object->field_gallery_location['und'][0]['value'];
+      $oldloc = $object->field_gallery_location[LANGUAGE_NONE][0]['value'];
 
       db_query("UPDATE field_data_field_gallery_location
           SET field_gallery_location_value = :gal
@@ -552,7 +552,7 @@ function _email_art_gallery($art_in_gallery, $locations, $objects) {
   // Now collect all objects from our Drupal DB (field_in_gallery table) that are NOT in gallery
   $not_displayed = array();
   foreach ($objects as $obj) {
-    if ($obj->field_in_gallery['und'][0]['value'] == 0) {
+    if ($obj->field_in_gallery[LANGUAGE_NONE][0]['value'] == 0) {
       $not_displayed[] = $obj->nid;
     }
   }
@@ -706,9 +706,9 @@ function aicapp_gendata_form_submit($form, &$form_state) {
 
     // retrieve today's date
     $today = date("Y-m-d H:i:s");
-    if (!empty($tour->tour_dates) && !empty($tour->tour_dates['und'][0]['value'])) {
-      $tourStartDate = $tour->tour_dates['und'][0]['value'];
-      $tourEndDate = $tour->tour_dates['und'][0]['value2'];
+    if (!empty($tour->tour_dates) && !empty($tour->tour_dates[LANGUAGE_NONE][0]['value'])) {
+      $tourStartDate = $tour->tour_dates[LANGUAGE_NONE][0]['value'];
+      $tourEndDate = $tour->tour_dates[LANGUAGE_NONE][0]['value2'];
       $tour->tour_dates = array(
         'start_date' => $tourStartDate,
         'end_date' => $tourEndDate,
@@ -902,7 +902,7 @@ function strip_drupal_from_node(&$node) {
     $translations = $node->translations->data;
   }
   if (!count($translations)) {
-    // unset $node->translations.
+    // unset $node->translations property.
     unset($node->translations);
   }
   else {
@@ -912,27 +912,27 @@ function strip_drupal_from_node(&$node) {
 
   // Fields used in multiple content types.
   // Location field.
-  if (isset($node->field_location['und'][0]['safe_value'])) {
-    $node->location = $node->field_location['und'][0]['safe_value'];
+  if (isset($node->field_location[LANGUAGE_NONE][0]['safe_value'])) {
+    $node->location = $node->field_location[LANGUAGE_NONE][0]['safe_value'];
   }
-  // Location should be split into latitude and longitude properties
+  // Location should be split into latitude and longitude properties.
   if (!empty($node->location)) {
     $pieces = explode(',', $node->location);
     $node->latitude = $pieces[0];
-    $node->longitude = isset($pieces[1]) ? $pieces[1] : FALSE;
+    $node->longitude = isset($pieces[1]) ? $pieces[1] : '';
   }
   // Current Floor is used in Gallery, Map Annotation & Tour nodes.
-  if (isset($node->field_floor['und'][0]['safe_value'])) {
-    $node->floor = $node->field_floor['und'][0]['safe_value'];
+  if (isset($node->field_floor[LANGUAGE_NONE][0]['safe_value'])) {
+    $node->floor = $node->field_floor[LANGUAGE_NONE][0]['safe_value'];
   }
   // Image field is used in Object, Tour & Article nodes.
-  if (isset($node->field_image['und'][0]['uri'])) {
-    $node->image_filename = $node->field_image['und'][0]['filename'];
-    $node->image_url = file_create_url($node->field_image['und'][0]['uri']);
-    $node->image_filemime = $node->field_image['und'][0]['filemime'];
-    $node->image_filesize = $node->field_image['und'][0]['filesize'];
-    $node->image_width = $node->field_image['und'][0]['width'];
-    $node->image_height = $node->field_image['und'][0]['height'];
+  if (isset($node->field_image[LANGUAGE_NONE][0]['uri'])) {
+    $node->image_filename = $node->field_image[LANGUAGE_NONE][0]['filename'];
+    $node->image_url = file_create_url($node->field_image[LANGUAGE_NONE][0]['uri']);
+    $node->image_filemime = $node->field_image[LANGUAGE_NONE][0]['filemime'];
+    $node->image_filesize = $node->field_image[LANGUAGE_NONE][0]['filesize'];
+    $node->image_width = $node->field_image[LANGUAGE_NONE][0]['width'];
+    $node->image_height = $node->field_image[LANGUAGE_NONE][0]['height'];
   }
   // Fields that belong to only 1 content type.
   // General Info node field items.
@@ -953,40 +953,40 @@ function strip_drupal_from_node(&$node) {
   }
 
   // Gallery node field items.
-  if (isset($node->field_gallery_id['und'][0]['safe_value'])) {
-    $node->gallery_id = $node->field_gallery_id['und'][0]['safe_value'];
+  if (isset($node->field_gallery_id[LANGUAGE_NONE][0]['safe_value'])) {
+    $node->gallery_id = $node->field_gallery_id[LANGUAGE_NONE][0]['safe_value'];
   }
   // This is overriding the SOLR data.  This is why we sync.
-  if (isset($node->field_gallery_number['und'][0]['safe_value'])) {
-    $node->gallery_number = $node->field_gallery_number['und'][0]['safe_value'];
+  if (isset($node->field_gallery_number[LANGUAGE_NONE][0]['safe_value'])) {
+    $node->gallery_number = $node->field_gallery_number[LANGUAGE_NONE][0]['safe_value'];
   }
 
   // Object node type field items.
-  if (isset($node->field_object_id['und'][0]['value'])) {
-    $node->object_id = $node->field_object_id['und'][0]['value'];
+  if (isset($node->field_object_id[LANGUAGE_NONE][0]['value'])) {
+    $node->object_id = $node->field_object_id[LANGUAGE_NONE][0]['value'];
   }
-  if (isset($node->field_reference_num['und'][0]['safe_value'])) {
-    $node->reference_num = $node->field_reference_num['und'][0]['safe_value'];
+  if (isset($node->field_reference_num[LANGUAGE_NONE][0]['safe_value'])) {
+    $node->reference_num = $node->field_reference_num[LANGUAGE_NONE][0]['safe_value'];
   }
-  if (isset($node->field_object_selector_number['und'][0]['value'])) {
-    $node->object_selector_number = $node->field_object_selector_number['und'][0]['value'];
+  if (isset($node->field_object_selector_number[LANGUAGE_NONE][0]['value'])) {
+    $node->object_selector_number = $node->field_object_selector_number[LANGUAGE_NONE][0]['value'];
   }
-  if (isset($node->field_object_selector_numbers['und'][0]['value'])) {
-    foreach ($node->field_object_selector_numbers['und'] as $objselector) {
+  if (isset($node->field_object_selector_numbers[LANGUAGE_NONE][0]['value'])) {
+    foreach ($node->field_object_selector_numbers[LANGUAGE_NONE] as $objselector) {
       $node->object_selector_numbers[] = $objselector['value'];
     }
   }
   // Here we loop through audio files attached to objects.
-  if (isset($node->field_object_audio['und'][0]['nid'])) {
-    foreach ($node->field_object_audio['und'] as $audiofld) {
+  if (isset($node->field_object_audio[LANGUAGE_NONE][0]['nid'])) {
+    foreach ($node->field_object_audio[LANGUAGE_NONE] as $audiofld) {
       $node->audio[] = $audiofld['nid'];
     }
   }
-  if (isset($node->field_object_audio['und'][0]['node']->field_audio_transcript['und'][0]['safe_value'])) {
-    $node->audio_transcript = $node->field_object_audio['und'][0]['node']->field_audio_transcript['und'][0]['safe_value'];
+  if (isset($node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'])) {
+    $node->audio_transcript = $node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'];
   }
-  if (isset($node->field_highlighted_object['und'][0])) {
-    $node->highlighted_object = $node->field_highlighted_object['und'][0]['value'];
+  if (isset($node->field_highlighted_object[LANGUAGE_NONE][0])) {
+    $node->highlighted_object = $node->field_highlighted_object[LANGUAGE_NONE][0]['value'];
   }
   // Object node translations.
   if (isset($node->object_selector_number)) {
@@ -996,8 +996,8 @@ function strip_drupal_from_node(&$node) {
   }
 
   // Tour node field items.
-  if (isset($node->field_tour_banner['und'][0]['value'])) {
-    $node->tour_banner = $node->field_tour_banner['und'][0]['value'];
+  if (isset($node->field_tour_banner[LANGUAGE_NONE][0]['value'])) {
+    $node->tour_banner = $node->field_tour_banner[LANGUAGE_NONE][0]['value'];
   }
   // Tour description field.
   if (isset($node->field_description[$node->language][0]['value'])) {
@@ -1018,41 +1018,41 @@ function strip_drupal_from_node(&$node) {
     $node->intro = trim(strip_tags($intro));
     $node->intro_html = trim($intro);
   }
-  if (isset($node->field_stops2['und'][0])) {
-    $node->stops = $node->field_stops2['und'];
+  if (isset($node->field_stops2[LANGUAGE_NONE][0])) {
+    $node->stops = $node->field_stops2[LANGUAGE_NONE];
   }
   if (isset($node->field_tour_duration[$node->language][0])) {
     $node->tour_duration = $node->field_tour_duration[$node->language][0]['safe_value'];
   }
-  if (isset($node->field_tour_audio['und'][0])) {
-    $node->tour_audio = $node->field_tour_audio['und'][0]['nid'];
+  if (isset($node->field_tour_audio[LANGUAGE_NONE][0])) {
+    $node->tour_audio = $node->field_tour_audio[LANGUAGE_NONE][0]['nid'];
   }
   // Tour thumnail image.
-  if (isset($node->field_thumbnail_crop_rect['und'][0])) {
+  if (isset($node->field_thumbnail_crop_rect[LANGUAGE_NONE][0])) {
     $items = field_get_items('node', $node, 'field_thumbnail_crop_rect');
     foreach ($items as $itemid) {
       $item = field_collection_field_get_entity($itemid);
       if ($item->field_x) {
         $node->thumbnail_crop_rect = array(
-          'x' => $item->field_x['und'][0]['value'],
-          'y' => $item->field_y['und'][0]['value'],
-          'width' => $item->field_width['und'][0]['value'],
-          'height' => $item->field_height['und'][0]['value'],
+          'x' => $item->field_x[LANGUAGE_NONE][0]['value'],
+          'y' => $item->field_y[LANGUAGE_NONE][0]['value'],
+          'width' => $item->field_width[LANGUAGE_NONE][0]['value'],
+          'height' => $item->field_height[LANGUAGE_NONE][0]['value'],
         );
         json_encode($node->thumbnail_crop_rect);
       }
     }
   }
-  if (isset($node->field_large_image_crop_rect['und'][0])) {
+  if (isset($node->field_large_image_crop_rect[LANGUAGE_NONE][0])) {
     $items = field_get_items('node', $node, 'field_large_image_crop_rect');
     foreach ($items as $itemid) {
       $item = field_collection_field_get_entity($itemid);
       if ($item->field_x) {
         $node->large_image_crop_rect = array(
-          'x' => $item->field_x['und'][0]['value'],
-          'y' => $item->field_y['und'][0]['value'],
-          'width' => $item->field_width['und'][0]['value'],
-          'height' => $item->field_height['und'][0]['value'],
+          'x' => $item->field_x[LANGUAGE_NONE][0]['value'],
+          'y' => $item->field_y[LANGUAGE_NONE][0]['value'],
+          'width' => $item->field_width[LANGUAGE_NONE][0]['value'],
+          'height' => $item->field_height[LANGUAGE_NONE][0]['value'],
         );
         json_encode($node->large_image_crop_rect);
       }
@@ -1075,17 +1075,17 @@ function strip_drupal_from_node(&$node) {
 
   // Audio node field items.
   // This handles each separate audio file.
-  if (isset($node->field_audio_file['und'][0]['uri'])) {
-    $node->audio_filename = $node->field_audio_file['und'][0]['filename'];
-    $node->audio_file_url = file_create_url($node->field_audio_file['und'][0]['uri']);
-    $node->audio_filemime = $node->field_audio_file['und'][0]['filemime'];
-    $node->audio_filesize = $node->field_audio_file['und'][0]['filesize'];
+  if (isset($node->field_audio_file[LANGUAGE_NONE][0]['uri'])) {
+    $node->audio_filename = $node->field_audio_file[LANGUAGE_NONE][0]['filename'];
+    $node->audio_file_url = file_create_url($node->field_audio_file[LANGUAGE_NONE][0]['uri']);
+    $node->audio_filemime = $node->field_audio_file[LANGUAGE_NONE][0]['filemime'];
+    $node->audio_filesize = $node->field_audio_file[LANGUAGE_NONE][0]['filesize'];
   }
-  if (isset($node->field_audio_transcript['und'][0]['safe_value'])) {
-    $node->audio_transcript = $node->field_audio_transcript['und'][0]['safe_value'];
+  if (isset($node->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'])) {
+    $node->audio_transcript = $node->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'];
   }
-  if (isset($node->field_credits['und'][0]['safe_value'])) {
-    $node->credits = $node->field_credits['und'][0]['safe_value'];
+  if (isset($node->field_credits[LANGUAGE_NONE][0]['safe_value'])) {
+    $node->credits = $node->field_credits[LANGUAGE_NONE][0]['safe_value'];
   }
 
   // Map Annotation field items: label (field_annotation_label), icon (field_icon),
@@ -1117,7 +1117,7 @@ function strip_drupal_from_node(&$node) {
   foreach ($properties + array('data', 'entity_translation_handler_id') as $property) {
     if (!in_array($property, $to_skip) && isset($node->{$property})) {
       if ($property === 'translations' && count($node->translations)) {
-        // Leave the translations here.
+        // Leave the translations property on the node.
       }
       else {
         unset($node->{$property});
@@ -1161,12 +1161,12 @@ function aicapp_loadgalleries_form_submit($form, &$form_state) {
       // look for the Drupal gallery in the SOLR gallery
       $match = FALSE;
       foreach ($result['response']['docs'] as $item) {
-        if ($item['gallery_id'] == $gallery->field_gallery_id['und'][0]['value']) {
+        if ($item['gallery_id'] == $gallery->field_gallery_id[LANGUAGE_NONE][0]['value']) {
           $match = TRUE;
         }
       }
       // this would work if we had php 5.5 installed on server.
-      // $key = array_search($gallery->field_gallery_id['und'][0]['value'], array_column($result['response']['docs'], 'gallery_id'));
+      // $key = array_search($gallery->field_gallery_id[LANGUAGE_NONE][0]['value'], array_column($result['response']['docs'], 'gallery_id'));
       if (!$match) {
         // not found in SOLR, delete the Drupal gallery
         node_delete($gallery->nid);
@@ -1300,7 +1300,7 @@ function aicapp_form_alter(&$form, &$form_state, $form_id) {
   }
   $drupal_path = base_path();
   $dest = drupal_get_path('module', 'aicapp');
-  $coords = !empty($form['#node']->field_location['und'][0]['safe_value']) ? $form['#node']->field_location['und'][0]['safe_value'] : 0;
+  $coords = !empty($form['#node']->field_location[LANGUAGE_NONE][0]['safe_value']) ? $form['#node']->field_location[LANGUAGE_NONE][0]['safe_value'] : 0;
   $map_markup = '<iframe width="650" height="600" frameborder="0" scrolling="no"';
   $map_markup .= ' marginheight="0" marginwidth="0" src="' . $drupal_path;
   $map_markup .= $dest . '/map-page.php?coords=' . $coords . '"></iframe>';
@@ -1356,7 +1356,7 @@ function aicapp_form_alter(&$form, &$form_state, $form_id) {
  */
 function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
   // initializing image.
-  $thumbUrl = $imageToCrop['und'][0]['value'];
+  $thumbUrl = $imageToCrop[LANGUAGE_NONE][0]['value'];
   $thumbImageinfo = getimagesize($thumbUrl);
   $thumbWidth = $thumbImageinfo[0];
   $thumbHeight = $thumbImageinfo[1];
@@ -1403,7 +1403,7 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
     $thumbY2 = round($thumbY1 + $thumbCropHeight);
   }
 
-  if (isset($imageToCrop['und'][0])) {
+  if (isset($imageToCrop[LANGUAGE_NONE][0])) {
     $items = field_get_items('node', $form['#node'], $formValue . '_crop_rect');
     if ($items) {
       // Get default crop values.
@@ -1483,12 +1483,12 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
 function getDefaults($items, &$thumbValues, $imageType) {
   foreach ($items as $itemid) {
     $item = field_collection_field_get_entity($itemid);
-    $thumbValues['x1'] = $item->field_x['und'][0]['value'];
-    $thumbValues['y1'] = $item->field_y['und'][0]['value'];
-    $thumbValues['x2'] = $item->field_x2['und'][0]['value'];
-    $thumbValues['y2'] = $item->field_y2['und'][0]['value'];
-    $thumbValues['width'] = $item->field_width['und'][0]['value'];
-    $thumbValues['height'] = $item->field_height['und'][0]['value'];
+    $thumbValues['x1'] = $item->field_x[LANGUAGE_NONE][0]['value'];
+    $thumbValues['y1'] = $item->field_y[LANGUAGE_NONE][0]['value'];
+    $thumbValues['x2'] = $item->field_x2[LANGUAGE_NONE][0]['value'];
+    $thumbValues['y2'] = $item->field_y2[LANGUAGE_NONE][0]['value'];
+    $thumbValues['width'] = $item->field_width[LANGUAGE_NONE][0]['value'];
+    $thumbValues['height'] = $item->field_height[LANGUAGE_NONE][0]['value'];
   }
 }
 
@@ -1539,7 +1539,7 @@ function setDefaults(&$form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2
  */
 function aicapp_node_view($node, $view_mode, $langcode) {
   if ($node->type == 'object' && $node->field_object_id) {
-    $ref_num = $node->field_object_id['und'][0]['value'];
+    $ref_num = $node->field_object_id[LANGUAGE_NONE][0]['value'];
     if (!empty($ref_num)) {
       $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $ref_num);
 
@@ -1558,8 +1558,8 @@ function aicapp_node_view($node, $view_mode, $langcode) {
     }
   }
   if ($node->type == 'gallery') {
-    if (!empty($node->field_gallery_id['und'])) {
-      $gallery_id = $node->field_gallery_id['und'][0]['safe_value'];
+    if (!empty($node->field_gallery_id[LANGUAGE_NONE])) {
+      $gallery_id = $node->field_gallery_id[LANGUAGE_NONE][0]['safe_value'];
     }
     else {
       $gallery_id = 0;
@@ -1822,8 +1822,8 @@ function aicapp_node_presave($node) {
     aicapp_check_for_object_problems($node);
   }
   if ($node->type == 'object') {
-    if (isset($node->field_object_id['und'][0]['value'])) {
-      $ref_num = $node->field_object_id['und'][0]['value'];
+    if (isset($node->field_object_id[LANGUAGE_NONE][0]['value'])) {
+      $ref_num = $node->field_object_id[LANGUAGE_NONE][0]['value'];
       if (!empty($ref_num)) {
         $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $ref_num);
 
@@ -1834,7 +1834,7 @@ function aicapp_node_presave($node) {
     }
     // Also if an object is saved and is set to be published, but has no audio,
     // set it back to unpublished and give warning.
-    if (empty($node->field_object_audio['und'][0])) {
+    if (empty($node->field_object_audio[LANGUAGE_NONE][0])) {
       $node->status = 0;
       drupal_set_message('The object ' . $node->title . ' has no audio file attached.', 'warning');
     }
@@ -1850,8 +1850,8 @@ function aicapp_check_for_object_problems($node) {
   $noaudio = array();
   $noImage = array();
   $inGallery = array();
-  if (!empty($node->field_stops2['und'][0]['entity']->field_t_object['und'])) {
-    $stops = $node->field_stops2['und'][0]['entity']->field_t_object['und'];
+  if (!empty($node->field_stops2[LANGUAGE_NONE][0]['entity']->field_t_object[LANGUAGE_NONE])) {
+    $stops = $node->field_stops2[LANGUAGE_NONE][0]['entity']->field_t_object[LANGUAGE_NONE];
     foreach ($stops as $stop) {
       $node = node_load($stop['nid']);
       if (empty($node->field_location)) {
@@ -1860,13 +1860,13 @@ function aicapp_check_for_object_problems($node) {
       if (!$node->status) {
         $unpubs[] = array('nid' => $node->nid, 'title' => $node->title);
       }
-      if (empty($node->field_object_audio['und'][0])) {
+      if (empty($node->field_object_audio[LANGUAGE_NONE][0])) {
         $noaudio[] = array('nid' => $node->nid, 'title' => $node->title);
       }
       if ((empty($node->field_thumbnail_image) || empty($node->field_large_image)) && empty($node->field_image)) {
         $noImage[] = array('nid' => $node->nid, 'title' => $node->title);
       }
-      if ($node->field_in_gallery['und'][0]['value'] != TRUE) {
+      if ($node->field_in_gallery[LANGUAGE_NONE][0]['value'] != TRUE) {
         $inGallery[] = array('nid' => $node->nid, 'title' => $node->title);
       }
     }
