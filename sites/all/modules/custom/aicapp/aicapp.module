@@ -922,7 +922,32 @@ function strip_drupal_from_node(&$node) {
       );
     }
   }
-  // Gallery node type field items.
+  // Fields used in multiple content types.
+  // Location field.
+  if (isset($node->field_location['und'][0]['safe_value'])) {
+    $node->location = $node->field_location['und'][0]['safe_value'];
+  }
+  // Location should be split into latitude and longitude properties
+  if (!empty($node->location)) {
+    $pieces = explode(',', $node->location);
+    $node->latitude = $pieces[0];
+    $node->longitude = isset($pieces[1]) ? $pieces[1] : FALSE;
+  }
+  // Current Floor is used in Gallery, Map Annotation & Tour nodes.
+  if (isset($node->field_floor['und'][0]['safe_value'])) {
+    $node->floor = $node->field_floor['und'][0]['safe_value'];
+  }
+  // Image field is used in Object, Tour & Article nodes.
+  if (isset($node->field_image['und'][0]['uri'])) {
+    $node->image_filename = $node->field_image['und'][0]['filename'];
+    $node->image_url = file_create_url($node->field_image['und'][0]['uri']);
+    $node->image_filemime = $node->field_image['und'][0]['filemime'];
+    $node->image_filesize = $node->field_image['und'][0]['filesize'];
+    $node->image_width = $node->field_image['und'][0]['width'];
+    $node->image_height = $node->field_image['und'][0]['height'];
+  }
+  // Fields that belong to only 1 content type.
+  // Gallery node field items.
   if (isset($node->field_gallery_id['und'][0]['safe_value'])) {
     $node->gallery_id = $node->field_gallery_id['und'][0]['safe_value'];
   }
@@ -930,26 +955,13 @@ function strip_drupal_from_node(&$node) {
   if (isset($node->field_gallery_number['und'][0]['safe_value'])) {
     $node->gallery_number = $node->field_gallery_number['und'][0]['safe_value'];
   }
-  if (isset($node->field_location['und'][0]['safe_value'])) {
-    $node->location = $node->field_location['und'][0]['safe_value'];
-  }
-  if ($node->type === 'gallery' && !empty($node->location)) {
-    $pieces = explode(',', $node->location);
-    $node->latitude = $pieces[0];
-    $node->longitude = $pieces[1];
-  }
-  if (isset($node->field_floor['und'][0]['safe_value'])) {
-    $node->floor = $node->field_floor['und'][0]['safe_value'];
-  }
-  // Object node type field items..
+
+  // Object node type field items.
   if (isset($node->field_object_id['und'][0]['value'])) {
     $node->object_id = $node->field_object_id['und'][0]['value'];
   }
   if (isset($node->field_reference_num['und'][0]['safe_value'])) {
     $node->reference_num = $node->field_reference_num['und'][0]['safe_value'];
-  }
-  if (isset($node->field_tour_banner['und'][0]['value'])) {
-    $node->tour_banner = $node->field_tour_banner['und'][0]['value'];
   }
   if (isset($node->field_object_selector_number['und'][0]['value'])) {
     $node->object_selector_number = $node->field_object_selector_number['und'][0]['value'];
@@ -959,6 +971,48 @@ function strip_drupal_from_node(&$node) {
       $node->object_selector_numbers[] = $objselector['value'];
     }
   }
+  // Here we loop through audio files attached to objects.
+  if (isset($node->field_object_audio['und'][0]['nid'])) {
+    foreach ($node->field_object_audio['und'] as $audiofld) {
+      $node->audio[] = $audiofld['nid'];
+    }
+  }
+  if (isset($node->field_object_audio['und'][0]['node']->field_audio_transcript['und'][0]['safe_value'])) {
+    $node->audio_transcript = $node->field_object_audio['und'][0]['node']->field_audio_transcript['und'][0]['safe_value'];
+  }
+  if (isset($node->field_highlighted_object['und'][0])) {
+    $node->highlighted_object = $node->field_highlighted_object['und'][0]['value'];
+  }
+  
+  // Tour node field items.
+  if (isset($node->field_tour_banner['und'][0]['value'])) {
+    $node->tour_banner = $node->field_tour_banner['und'][0]['value'];
+  }
+  // Tour description field.
+  if (isset($node->field_description['und'][0]['value'])) {
+    $descriptions = field_get_items('node', $node, 'field_description');
+    $a_description = array_shift($descriptions);
+    $description = $a_description['value'];
+    $node->description = trim(strip_tags($description));
+    $node->description_html = trim($description);
+  }
+  if (isset($node->field_intro['und'][0]['value'])) {
+    $intros = field_get_items('node', $node, 'field_intro');
+    $an_intro = array_shift($intros);
+    $intro = $an_intro['value'];
+    $node->intro = trim(strip_tags($intro));
+    $node->intro_html = trim($intro);
+  }
+  if (isset($node->field_stops2['und'][0])) {
+    $node->stops = $node->field_stops2['und'];
+  }
+  if (isset($node->field_tour_duration['und'][0])) {
+    $node->tour_duration = $node->field_tour_duration['und'][0]['safe_value'];
+  }
+  if (isset($node->field_tour_audio['und'][0])) {
+    $node->tour_audio = $node->field_tour_audio['und'][0]['nid'];
+  }
+  // Tour thumnail image.
   if (isset($node->field_thumbnail_crop_rect['und'][0])) {
     $items = field_get_items('node', $node, 'field_thumbnail_crop_rect');
     foreach ($items as $itemid) {
@@ -989,15 +1043,8 @@ function strip_drupal_from_node(&$node) {
       }
     }
   }
-  // Here we loop through audio files attached to objects.
-  if (isset($node->field_object_audio['und'][0]['nid'])) {
-    foreach ($node->field_object_audio['und'] as $audiofld) {
-      $node->audio[] = $audiofld['nid'];
-    }
-  }
-  if (isset($node->field_object_audio['und'][0]['node']->field_audio_transcript['und'][0]['safe_value'])) {
-    $node->audio_transcript = $node->field_object_audio['und'][0]['node']->field_audio_transcript['und'][0]['safe_value'];
-  }
+
+  // Audio node field items.
   // This handles each separate audio file.
   if (isset($node->field_audio_file['und'][0]['uri'])) {
     $node->audio_filename = $node->field_audio_file['und'][0]['filename'];
@@ -1009,42 +1056,9 @@ function strip_drupal_from_node(&$node) {
     $node->audio_transcript = $node->field_audio_transcript['und'][0]['safe_value'];
   }
   if (isset($node->field_credits['und'][0]['safe_value'])) {
-    $node->audio_credits = $node->field_credits['und'][0]['safe_value'];
+    $node->credits = $node->field_credits['und'][0]['safe_value'];
   }
-  if (isset($node->field_image['und'][0]['uri'])) {
-    $node->image_filename = $node->field_image['und'][0]['filename'];
-    $node->image_url = file_create_url($node->field_image['und'][0]['uri']);
-    $node->image_filemime = $node->field_image['und'][0]['filemime'];
-    $node->image_filesize = $node->field_image['und'][0]['filesize'];
-    $node->image_width = $node->field_image['und'][0]['width'];
-    $node->image_height = $node->field_image['und'][0]['height'];
-  }
-  if (isset($node->field_description['und'][0]['value'])) {
-    $descriptions = field_get_items('node', $node, 'field_description');
-    $a_description = array_shift($descriptions);
-    $description = $a_description['value'];
-    $node->description = trim(strip_tags($description));
-    $node->description_html = trim($description);
-  }
-  if (isset($node->field_intro['und'][0]['value'])) {
-    $intros = field_get_items('node', $node, 'field_intro');
-    $an_intro = array_shift($intros);
-    $intro = $an_intro['value'];
-    $node->intro = trim(strip_tags($intro));
-    $node->intro_html = trim($intro);
-  }
-  if (isset($node->field_stops2['und'][0])) {
-    $node->stops = $node->field_stops2['und'];
-  }
-  if (isset($node->field_tour_duration['und'][0])) {
-    $node->tour_duration = $node->field_tour_duration['und'][0]['safe_value'];
-  }
-  if (isset($node->field_tour_audio['und'][0])) {
-    $node->tour_audio = $node->field_tour_audio['und'][0]['nid'];
-  }
-  if (isset($node->field_highlighted_object['und'][0])) {
-    $node->highlighted_object = $node->field_highlighted_object['und'][0]['value'];
-  }
+
   // now can unset language, and the rest of the saved props
   $to_skip = array('title', 'status', 'type', 'nid', 'translations');
   foreach ($properties as $property) {
