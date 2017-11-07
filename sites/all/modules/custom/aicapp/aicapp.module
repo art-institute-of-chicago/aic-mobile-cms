@@ -706,9 +706,13 @@ function aicapp_gendata_form_submit($form, &$form_state) {
 
     // retrieve today's date
     $today = date("Y-m-d H:i:s");
-    if (!empty($tour->field_tour_dates) && !empty($tour->field_tour_dates['und'][0]['value'])) {
-      $tourStartDate = $tour->field_tour_dates['und'][0]['value'];
-      $tourEndDate = $tour->field_tour_dates['und'][0]['value2'];
+    if (!empty($tour->tour_dates) && !empty($tour->tour_dates['und'][0]['value'])) {
+      $tourStartDate = $tour->tour_dates['und'][0]['value'];
+      $tourEndDate = $tour->tour_dates['und'][0]['value2'];
+      $tour->tour_dates = array(
+        'start_date' => $tourStartDate,
+        'end_date' => $tourEndDate,
+      );
       // if today is greater than or equal to the start date and it's also less than or equal to the end date, publish the tour
       if ($today >= $tourStartDate && $today <= $tourEndDate) {
         db_query("UPDATE node SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
@@ -721,7 +725,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
         unset($tours[$key]);
       }
     }
-    elseif (empty($tour->field_tour_dates) && $tour->status == 0) {
+    elseif (empty($tour->tour_dates) && $tour->status == 0) {
       unset($tours[$key]);
     }
     // add the weight from the view page so we can sort
@@ -883,7 +887,7 @@ function strip_drupal_from_node(&$node) {
     'vid', 'uid', 'log', 'comment', 'promote', 'sticky', 'created', 'changed',
     'tnid', 'translate', 'revision_timestamp', 'revision_uid', 'path', 'name',
     'picture', 'data', 'vuuid', 'uuid',
-    'body', 'title_original', 'entity_translation_handler_id'
+    'body', 'title_original', 'entity_translation_handler_id',
   );
   foreach ($to_unset as $property) {
     if (isset($node->{$property})) {
@@ -906,22 +910,6 @@ function strip_drupal_from_node(&$node) {
     $node->translations = array();
   }
 
-  // Now add in the editable field data.
-  if (isset($node->field_museum_hours[$node->language][0]['safe_value'])) {
-    $node->museum_hours = $node->field_museum_hours[$node->language][0]['safe_value'];
-  }
-  elseif (isset($node->field_museum_hours[LANGUAGE_NONE][0]['safe_value'])) {
-    $node->museum_hours = $node->field_museum_hours[LANGUAGE_NONE][0]['safe_value'];
-  }
-  // General Info translations
-  if (isset($node->museum_hours)) {
-    foreach ($translations as $lang_key => $details) {
-      $node->translations[] = array(
-        'language' => $lang_key,
-        'museum_hours' => isset($node->field_museum_hours[$lang_key][0]['safe_value']) ? $node->field_museum_hours[$lang_key][0]['safe_value'] : $node->museum_hours,
-      );
-    }
-  }
   // Fields used in multiple content types.
   // Location field.
   if (isset($node->field_location['und'][0]['safe_value'])) {
@@ -947,6 +935,23 @@ function strip_drupal_from_node(&$node) {
     $node->image_height = $node->field_image['und'][0]['height'];
   }
   // Fields that belong to only 1 content type.
+  // General Info node field items.
+  if (isset($node->field_museum_hours[$node->language][0]['safe_value'])) {
+    $node->museum_hours = $node->field_museum_hours[$node->language][0]['safe_value'];
+  }
+  elseif (isset($node->field_museum_hours[LANGUAGE_NONE][0]['safe_value'])) {
+    $node->museum_hours = $node->field_museum_hours[LANGUAGE_NONE][0]['safe_value'];
+  }
+  // General Info translations.
+  if (isset($node->museum_hours)) {
+    foreach ($translations as $lang_key => $details) {
+      $node->translations[] = array(
+        'language' => $lang_key,
+        'museum_hours' => isset($node->field_museum_hours[$lang_key][0]['safe_value']) ? $node->field_museum_hours[$lang_key][0]['safe_value'] : $node->museum_hours,
+      );
+    }
+  }
+
   // Gallery node field items.
   if (isset($node->field_gallery_id['und'][0]['safe_value'])) {
     $node->gallery_id = $node->field_gallery_id['und'][0]['safe_value'];
@@ -983,20 +988,30 @@ function strip_drupal_from_node(&$node) {
   if (isset($node->field_highlighted_object['und'][0])) {
     $node->highlighted_object = $node->field_highlighted_object['und'][0]['value'];
   }
+  // Object node translations.
+  if (isset($node->object_selector_number)) {
+    foreach ($translations as $lang_key => $details) {
+      // @TODO Object translations
+    }
+  }
 
   // Tour node field items.
   if (isset($node->field_tour_banner['und'][0]['value'])) {
     $node->tour_banner = $node->field_tour_banner['und'][0]['value'];
   }
   // Tour description field.
-  if (isset($node->field_description['und'][0]['value'])) {
+  if (isset($node->field_description[$node->language][0]['value'])) {
     $descriptions = field_get_items('node', $node, 'field_description');
     $a_description = array_shift($descriptions);
     $description = $a_description['value'];
     $node->description = trim(strip_tags($description));
     $node->description_html = trim($description);
   }
-  if (isset($node->field_intro['und'][0]['value'])) {
+  // Move tour dats into a new property so it can be acessed later.
+  if (!empty($node->field_tour_dates)) {
+    $node->tour_dates = $node->field_tour_dates;
+  }
+  if (isset($node->field_intro[$node->language][0]['value'])) {
     $intros = field_get_items('node', $node, 'field_intro');
     $an_intro = array_shift($intros);
     $intro = $an_intro['value'];
@@ -1006,8 +1021,8 @@ function strip_drupal_from_node(&$node) {
   if (isset($node->field_stops2['und'][0])) {
     $node->stops = $node->field_stops2['und'];
   }
-  if (isset($node->field_tour_duration['und'][0])) {
-    $node->tour_duration = $node->field_tour_duration['und'][0]['safe_value'];
+  if (isset($node->field_tour_duration[$node->language][0])) {
+    $node->tour_duration = $node->field_tour_duration[$node->language][0]['safe_value'];
   }
   if (isset($node->field_tour_audio['und'][0])) {
     $node->tour_audio = $node->field_tour_audio['und'][0]['nid'];
@@ -1043,6 +1058,20 @@ function strip_drupal_from_node(&$node) {
       }
     }
   }
+  // Tour translations.
+  if ($node->type === 'tour') {
+    foreach ($translations as $lang_key => $details) {
+      $node->translations[] = array(
+        'language' => $lang_key,
+        'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : $node->title,
+        'description' => isset($node->field_description[$lang_key][0]['safe_value']) ? trim(strip_tags($node->field_description[$lang_key][0]['safe_value'])) : $node->description,
+        'description_html' => isset($node->field_description[$lang_key][0]['safe_value']) ? $node->field_description[$lang_key][0]['safe_value'] : $node->description_html,
+        'intro' => isset($node->field_intro[$lang_key][0]['safe_value']) ? trim(strip_tags($node->field_intro[$lang_key][0]['safe_value'])) : $node->field_intro,
+        'intro_html' => isset($node->field_intro[$lang_key][0]['safe_value']) ? $node->field_intro[$lang_key][0]['safe_value'] : $node->field_intro_html,
+        'tour_duration' => isset($node->field_tour_duration[$lang_key][0]['safe_value']) ? $node->field_tour_duration[$lang_key][0]['safe_value'] : $node->tour_duration,
+      );
+    }
+  }
 
   // Audio node field items.
   // This handles each separate audio file.
@@ -1057,6 +1086,30 @@ function strip_drupal_from_node(&$node) {
   }
   if (isset($node->field_credits['und'][0]['safe_value'])) {
     $node->credits = $node->field_credits['und'][0]['safe_value'];
+  }
+
+  // Map Annotation field items: label (field_annotation_label), icon (field_icon),
+  // annontation_type (field_annotation_type)
+  if (isset($node->field_annotation_label[$node->language][0]['safe_value'])) {
+    $node->label = $node->field_annotation_label[$node->language][0]['safe_value'];
+  }
+  if (isset($node->field_icon[LANGUAGE_NONE][0]['safe_value'])) {
+    $node->icon = $node->field_icon[LANGUAGE_NONE][0]['safe_value'];
+  }
+  if (isset($node->field_annotation_type[LANGUAGE_NONE][0]['value'])) {
+    $type_field = field_info_field('field_annotation_type');
+    $label = $type_field['settings']['allowed_values'][$node->field_annotation_type[LANGUAGE_NONE][0]['value']];
+    $node->annotation_type = $label;
+  }
+  //  Map Annotation translations.
+  if ($node->type === 'map_annotation') {
+    foreach ($translations as $lang_key => $details) {
+      $node->translations[] = array(
+        'language' => $lang_key,
+        'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : $node->title,
+        'label' => isset($node->field_annotation_label[$lang_key][0]['safe_value']) ? $node->field_annotation_label[$lang_key][0]['safe_value'] : $node->label,
+      );
+    }
   }
 
   // now can unset language, and the rest of the saved props
