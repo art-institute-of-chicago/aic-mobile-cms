@@ -1,594 +1,639 @@
 <?php
+
 /**
  * @file
  * Manage objects and galleries that are used in the Mobile APP.
-
+ *
  * Objects and galleries have some data stored in Drupal, and some coming from SOLR queries to the
  * Chicago Art Institute's existing DB.  Objects physical location can be pinned on a Google Map of the Institute.
-
+ *
  * This module creates a button that when clicked, pulls all the published content into a JSON file (appData.json) at
  * the site root, which is then called by the mobile APP.
-
+ *
  * Email notices are also fired when objects are pulled out of galleries or added back into galleries.
  */
 
-
 /**
-* Implementation of hook_init()
-*/
-function aicapp_init(){
+ * Implements  hook_init().
+ */
+function aicapp_init() {
   define('AICAPP_ARTWORK_QUERY', 'artwork');
   define('AICAPP_GALLERY_QUERY', 'gallery');
-}
-  /**
-* Implementation of hook_menu()
-*/
-function aicapp_menu(){
-	$items['objects/search'] = array(
-		'title' => 'Add an Object',
-		'page callback' => 'aicapp_search_object',
-		'type' => MENU_CALLBACK,
-		'weight' => 20,
-		'access arguments' => array('add objects'),
-	);
-    $items['objects/object_add'] = array( //this is redundant, a placeholder for the next one.
-		'title' => 'Add Object',
-		'page callback' => 'aicapp_search_object',
-        'type' => MENU_CALLBACK,
-		'weight' => 20,
-		'access arguments' => array('add objects'),
-	);
-    $items['objects/object_add/%'] = array(
-		'title' => 'Add Object',
-		'page callback' => 'aicapp_add_object',
-        'page arguments' => array(2),
-        'type' => MENU_CALLBACK,
-		'weight' => 20,
-		'access arguments' => array('add objects'),
-	);
-    $items['objects/noimg'] = array(
-      'title' => 'Objects without Images',
-      'page callback' => 'aicapp_object_noimg',
-      'type' => MENU_CALLBACK,
-      'weight' => 20,
-      'access arguments' => array('add objects'),
-    );
-    $items['objects/check-objects-gallery'] = array(
-      'title' => 'Check Objects Gallery Info',
-      'page callback' => 'aicapp_object_checks',
-      'type' => MENU_CALLBACK,
-      'weight' => 20,
-      'access arguments' => array('add objects'),
-    );
-    /* Queries to retrieve data from Solr API */
-    $items['admin/settings/aic-api'] = array(
-      'title' => 'AIC API module settings',
-      'description' => 'Specify the URLs of your API',
-      'page callback' => 'drupal_get_form',
-	  'access callback' => TRUE,
-      'page arguments' => array('aicapp_admin'),
-      'access arguments' => array('administer aic api settings'),
-      'type' => MENU_CALLBACK,
-    ); return $items;
+  define('AICAPP_IMAGE_SERVER', rtrim(variable_get('aicapp_image_server_url', FALSE), '/'));
+  define('AICAPP_IMAGE_CROP_REGION', 'full');
+  define('AICAPP_IMAGE_CROP_ROTATION', 0);
+  define('AICAPP_IMAGE_CROP_QUALITY', 'default');
+  define('AICAPP_IMAGE_CROP_FORMAT', 'jpg');
 }
 
+/**
+ * Implements  hook_menu().
+ */
+function aicapp_menu() {
+  $items['objects/search'] = array(
+    'title' => 'Add an Object',
+    'page callback' => 'aicapp_search_object',
+    'type' => MENU_CALLBACK,
+    'weight' => 20,
+    'access arguments' => array('add objects'),
+  );
+  // This is redundant, a placeholder for the next one.
+  $items['objects/object_add'] = array(
+    'title' => 'Add Object',
+    'page callback' => 'aicapp_search_object',
+    'type' => MENU_CALLBACK,
+    'weight' => 20,
+    'access arguments' => array('add objects'),
+  );
+  $items['objects/object_add/%'] = array(
+    'title' => 'Add Object',
+    'page callback' => 'aicapp_add_object',
+    'page arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'weight' => 20,
+    'access arguments' => array('add objects'),
+  );
+  $items['objects/noimg'] = array(
+    'title' => 'Objects without Images',
+    'page callback' => 'aicapp_object_noimg',
+    'type' => MENU_CALLBACK,
+    'weight' => 20,
+    'access arguments' => array('add objects'),
+  );
+  $items['objects/check-objects-gallery'] = array(
+    'title' => 'Check Objects Gallery Info',
+    'page callback' => 'aicapp_object_checks',
+    'type' => MENU_CALLBACK,
+    'weight' => 20,
+    'access arguments' => array('add objects'),
+  );
+  /* Queries to retrieve data from Solr API */
+  $items['admin/settings/aic-api'] = array(
+    'title' => 'AIC API module settings',
+    'description' => 'Specify the URLs of your API',
+    'page callback' => 'drupal_get_form',
+    'access callback' => TRUE,
+    'page arguments' => array('aicapp_admin'),
+    'access arguments' => array('administer aic api settings'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
 function aicapp_permission() {
   return array(
-	'add objects' => array(
+    'add objects' => array(
       'description' => t('Add or edit objects in the museum'),
       'title' => t('Add or Edit Objects'),
-      'restrict access' => false,
+      'restrict access' => FALSE,
     ),
   );
 }
 
 /**
-* page callback
-**/
+ * Page callback function.
+ */
 function aicapp_search_object() {
-    $fm = drupal_get_form('aicapp_search_form');
-    return render($fm);
+  $fm = drupal_get_form('aicapp_search_form');
+  return render($fm);
 }
 
 /**
-* page callback
-**/
+ * Page callback for adding an object.
+ */
 function aicapp_add_object($object_id = 0) {
   $objectidArray = array();
-  $objectidArray = explode(",",$object_id);
-  //collecting information to present to the user
+  $objectidArray = explode(",", $object_id);
+  // Collecting information to present to the user.
   $collect = array();
 
   foreach ($objectidArray as $object_id) {
-    // query SOLR to get the object
+    // Query SOLR to get the object.
     $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
-    if($result['response']['numFound'] > 0) {
-      $nid = aicappSaveNode($result['response']['docs'][0], 'object'); //creates the new object or updates existing if it finds it in our Db.
-      $collect[] = '<strong>Object '.$object_id.' saved.</strong><br />'. l('View object', '/node/'.$nid).'<br /><br />';
-    } else {
-      $collect[] = 'Ran into a problem attempting SOLR query with object id '.$object_id.'<br />';
+    if ($result['response']['numFound'] > 0) {
+      // Creates the new object or updates existing if it finds it in our Db.
+      $nid = aicappSaveNode($result['response']['docs'][0], 'object');
+      $object = '<strong>Object ' . $object_id . ' saved.</strong><br />';
+      $object .= l(t('View object'), '/node/' . $nid) . '<br /><br />';
+      $collect[] = $object;
+    }
+    else {
+      $collect[] = t('Ran into a problem attempting SOLR query with object id:') . $object_id . '<br />';
     }
   }
 
-  $output = implode(' ',$collect);
+  $output = implode(' ', $collect);
   return $output;
 }
 
 /**
-* Implementation of hook_block_info()
-*/
+ * Implements hook_block_info().
+ */
 function aicapp_block_info() {
-    $blocks['data_buttons'] = array (
-		'info' => t('Load and Generate Buttons'),
-		'status' => true,
-		'weight' => 0,
-		'region' => 'sidebar_first',
-		'visibility' => 1,
-	);
-    $blocks['publish_butn'] = array (
-		'info' => t('Publish Button'),
-		'status' => true,
-		'weight' => 0,
-		'region' => 'sidebar_first',
-		'visibility' => 1,
-	);
-    $blocks['data_search'] = array (
-		'info' => t('Search AI Data'),
-		'status' => true,
-		'weight' => 0,
-		'region' => 'header',
-		'visibility' => 1,
-	);
-    $blocks['gallery_count'] = array (
-      'info' => t('Gallery Count'),
-      'status' => true,
-      'weight' => 0,
-      'region' => 'content',
-      'visibility' => 1,
-    );
-    $blocks['updates_pending'] = array (
-      'info' => t('Updates Pending'),
-      'status' => true,
-      'weight' => 0,
-      'region' => 'header',
-      'visibility' => 1,
-    );
-    $blocks['info_for_no-image_page'] = array (
-      'info' => t('Info for no-image page'),
-      'status' => true,
-      'weight' => 0,
-      'region' => 'content',
-      'visibility' => 1,
-    );
+  $blocks['data_buttons'] = array(
+    'info' => t('Load and Generate Buttons'),
+    'status' => TRUE,
+    'weight' => 0,
+    'region' => 'sidebar_first',
+    'visibility' => 1,
+  );
+  $blocks['publish_butn'] = array(
+    'info' => t('Publish Button'),
+    'status' => TRUE,
+    'weight' => 0,
+    'region' => 'sidebar_first',
+    'visibility' => 1,
+  );
+  $blocks['data_search'] = array(
+    'info' => t('Search AI Data'),
+    'status' => TRUE,
+    'weight' => 0,
+    'region' => 'header',
+    'visibility' => 1,
+  );
+  $blocks['gallery_count'] = array(
+    'info' => t('Gallery Count'),
+    'status' => TRUE,
+    'weight' => 0,
+    'region' => 'content',
+    'visibility' => 1,
+  );
+  $blocks['updates_pending'] = array(
+    'info' => t('Updates Pending'),
+    'status' => TRUE,
+    'weight' => 0,
+    'region' => 'header',
+    'visibility' => 1,
+  );
+  $blocks['info_for_no-image_page'] = array(
+    'info' => t('Info for no-image page'),
+    'status' => TRUE,
+    'weight' => 0,
+    'region' => 'content',
+    'visibility' => 1,
+  );
 
-    return $blocks;
+  return $blocks;
 }
+
 /**
-* Implementation of hook_block_view()
-*/
+ * Implements  hook_block_view().
+ */
 function aicapp_block_view($delta = '') {
-	$block = array();
+  $block = array();
 
-	switch($delta) {
-		case 'data_buttons':
-			$block['subject'] = t('Load and Generate Buttons');
-			$block['content'] = aicapp_data_content();
-			break;
-        case 'publish_butn':
-			$block['subject'] = t('Publish Button');
-			$block['content'] = aicapp_pub_content();
-			break;
-        case 'data_search':
-            $search_form = aicapp_search_form();
-			$block['subject'] = t('Search AI Data');
-			$block['content'] = render($search_form);
-			break;
-        case 'gallery_count':
-            $block['subject'] = t('Gallery Count');
-            $block['content'] = aicapp_gallery_count();
-            break;
-        case 'updates_pending':
-            $block['subject'] = t('Updates Pending');
-            $block['content'] = aicapp_updates_pending();
-            break;
-        case 'info_for_no-image_page':
-            $block['subject'] = t('Info for no-image page');
-            $block['content'] = aicapp_info_for_no_image_page();
-            break;
-	}
-	return $block;
+  switch ($delta) {
+    case 'data_buttons':
+      $block['subject'] = t('Load and Generate Buttons');
+      $block['content'] = aicapp_data_content();
+      break;
+
+    case 'publish_butn':
+      $block['subject'] = t('Publish Button');
+      $block['content'] = aicapp_pub_content();
+      break;
+
+    case 'data_search':
+      $search_form = aicapp_search_form();
+      $block['subject'] = t('Search AI Data');
+      $block['content'] = render($search_form);
+      break;
+
+    case 'gallery_count':
+      $block['subject'] = t('Gallery Count');
+      $block['content'] = aicapp_gallery_count();
+      break;
+
+    case 'updates_pending':
+      $block['subject'] = t('Updates Pending');
+      $block['content'] = aicapp_updates_pending();
+      break;
+
+    case 'info_for_no-image_page':
+      $block['subject'] = t('Info for no-image page');
+      $block['content'] = aicapp_info_for_no_image_page();
+      break;
+  }
+  return $block;
 }
+
 /**
- * block content callback
- **/
+ * Block content callback.
+ */
 function aicapp_updates_pending() {
-    $updates = variable_get('aicapp_pending');
-    if($updates) {
-        return '<div class="pending">'.t('Updates Pending').'</div>';
-    } else {
-        return '<div class="done">'.t('Up to Date').'</div>';
-    }
+  $updates = variable_get('aicapp_pending');
+  if ($updates) {
+    return '<div class="pending">' . t('Updates Pending') . '</div>';
+  }
+  else {
+    return '<div class="done">' . t('Up to Date') . '</div>';
+  }
 }
 
 /**
-* block content callback
-**/
+ * Block content callback.
+ */
 function aicapp_data_content() {
-    $fm1 = drupal_get_form('aicapp_loadgalleries_form');
-    $fm2 = drupal_get_form('aicapp_gendata_form');
-    return  render($fm1) . render($fm2);
+  $fm1 = drupal_get_form('aicapp_loadgalleries_form');
+  $fm2 = drupal_get_form('aicapp_gendata_form');
+  return render($fm1) . render($fm2);
 }
 
 /**
-* block content callback
-**/
+ * Block content callback.
+ */
 function aicapp_pub_content() {
-    $fm3 = drupal_get_form('aicapp_file_sync_form');
-    return render($fm3);
+  $fm3 = drupal_get_form('aicapp_file_sync_form');
+  return render($fm3);
 }
+
 /**
- * block content callback
- **/
+ * Block content callback.
+ */
 function aicapp_info_for_no_image_page() {
-        return '<p>This page is conducting a live search of each published object from the Drupal CMS in the SOLR data to see if there is a full-sized image. If there is not an image in SOLR or Drupal, then it is flagged.</p>
+  return '<p>This page is conducting a live search of each published object from the Drupal CMS in the SOLR data to see if there is a full-sized image. If there is not an image in SOLR or Drupal, then it is flagged.</p>
 ';
 }
 
 /**
-* hook_form() implementation
-**/
+ * Hook_form() implementation.
+ */
 function aicapp_loadgalleries_form() {
-    $form['submit'] = array(
-		'#type' => 'submit',
-		'#value' => t('Refresh Gallery List'),
-        '#attributes' => array('class' => array('button')),
-	);
-    return $form;
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Refresh Gallery List'),
+    '#attributes' => array('class' => array('button')),
+  );
+  return $form;
 };
 
 /**
-* hook_form() implementation
-**/
+ * Hook_form() implementation.
+ */
 function aicapp_gendata_form() {
-    $form['submit'] = array(
-		'#type' => 'submit',
-		'#value' => t('Submit for Publishing'),
-        '#attributes' => array('class' => array('button')),
-	);
-    return $form;
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit for Publishing'),
+    '#attributes' => array('class' => array('button')),
+  );
+  return $form;
 };
 
+/**
+ * Hook_form() implementation.
+ */
 function aicapp_file_sync_form() {
-    $form['submit'] = array(
-		'#type' => 'submit',
-		'#value' => t('Publish'),
-        '#attributes' => array('class' => array('button')),
-	);
-    return $form;
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Publish'),
+    '#attributes' => array('class' => array('button')),
+  );
+  return $form;
 }
 
-//page callback
-//aic-contours-notifications@artic.edu
+/**
+ * Page callback wth email aic-contours-notifications@artic.edu.
+ */
 function aicapp_object_checks() {
-    $frm = drupal_get_form('aicapp_ObjectGalleryStatus');
-    $msg = '<p>This button will cause the system to compare all objects with the current SOLR data, and update any objects that
-    have been moved into galleries but are currently marked as "Not on display" in Drupal. It will send out an email to tell
-    you which objects have recently been put into a gallery, update their gallery number field, and set "in Gallery" to checked.
-    It will also set these objects to unpublished so you can review & enter lat / long values if needed.</p>
-    <p style="margin-bottom:50px;">
-    It will also check each object for any gallery location changes and update the object. An email will
-    be sent out to notify of any changes. <em>It will take a while to do all this - please be patient!</em></p>';
+  $frm = drupal_get_form('aicapp_ObjectGalleryStatus');
+  $msg = '<p>This button will cause the system to compare all objects with the current SOLR data, and update any objects that
+  have been moved into galleries but are currently marked as "Not on display" in Drupal. It will send out an email to tell
+  you which objects have recently been put into a gallery, update their gallery number field, and set "in Gallery" to checked.
+  It will also set these objects to unpublished so you can review & enter lat / long values if needed.</p>
+  <p style="margin-bottom:50px;">
+  It will also check each object for any gallery location changes and update the object. An email will
+  be sent out to notify of any changes. <em>It will take a while to do all this - please be patient!</em></p>';
 
-    $frm2 = drupal_get_form('aicapp_verify_obj_gallery');
-    $msg2 = '<p>This will check objects to make sure the SOLR field "gallery_location" is a valid gallery (one listed here under Galleries).</p>';
+  $frm2 = drupal_get_form('aicapp_verify_obj_gallery');
+  $msg2 = '<p>This will check objects to make sure the SOLR field "gallery_location" is a valid gallery (one listed here under Galleries).</p>';
 
-    return render($frm). $msg.  render($frm2). $msg2;
-
+  return render($frm) . $msg . render($frm2) . $msg2;
 }
 
-function aicapp_ObjectGalleryStatus(){
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Update Objects\' Gallery Status'),
-      '#attributes' => array('class' => array('button')),
-    );
-    return $form;
+/**
+ * Gallery status callback.
+ */
+function aicapp_ObjectGalleryStatus() {
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t("Update Objects' Gallery Status"),
+    '#attributes' => array('class' => array('button')),
+  );
+  return $form;
 }
 
-function aicapp_verify_obj_gallery(){
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Verify Objects\' Galleries'),
-      '#attributes' => array('class' => array('button')),
-    );
-    return $form;
+/**
+ * Verify Object Gallery submit.
+ */
+function aicapp_verify_obj_gallery() {
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t("Verify Objects' Galleries"),
+    '#attributes' => array('class' => array('button')),
+  );
+  return $form;
 }
 
+/**
+ * Object Gallery Status submit.
+ */
 function aicapp_objectGalleryStatus_submit($form, &$form_state) {
-    //Load all objects, including unpublished, because we compare to see if objects previously not in a
-    //gallery (and unpublished) are now on display in a gallery.
-    $objects = node_load_multiple(array(), array('type' => 'object'));
+  // Load all objects, including unpublished, because we compare if objects
+  // previously not in a gallery (and unpublished) are now displayed.
+  $objects = node_load_multiple(array(), array('type' => 'object'));
 
-    //Now we build up the objects array for JSON output.
-    $art_gone = array();
-    $art_in_gallery = array();
-    $locations = array();
-    $changed = array();
-    foreach($objects as $key => $object) {
-        _getSOLRdata($object);
-
-        //check objects here to see if they recently went off display.
-        //We send email notice in that case - (they may need to update a tour?)
-        //First collect the ones marked not on display in current SOLR data
-        if(empty($object->in_gallery)) {
-            $art_gone[] = $object->nid;
-        } else {
-            $art_in_gallery[] = $object->nid;  //keep it simple for array comparison later
-            if(!empty($object->gallery_location)) {
-                $locations[$object->nid] = $object->gallery_location;
-            }
-        }
-
-        //make sure any objects that have changed galleries get updated.
-        if(isset($object->gallery_location)) {
-            $loc = $object->gallery_location;
-			$ingallery = $object->in_gallery;
-			if (empty($object->in_gallery)) {
-				$ingallery = 0;
-			}
-        } else {
-            $loc = '';
-			$ingallery = 0;
-        }
-
-		//check if 'in gallery' statuses have changed and sync with Solr data
-		if(isset($object->field_in_gallery['und'][0]['value']) && $ingallery != $object->field_in_gallery['und'][0]['value']) {
-
-			db_query("UPDATE field_data_field_in_gallery
-					SET field_in_gallery_value = :ingal
-					WHERE entity_id = :nid", array(':nid' => $object->nid, ':ingal' => $ingallery));
-
-			db_query("UPDATE field_revision_field_in_gallery
-					SET field_in_gallery_value = :ingal
-					WHERE entity_id = :nid", array(':nid' => $object->nid, ':ingal' => $ingallery));
-		}
-		//update gallery locations
-        if(isset($object->field_gallery_location['und'][0]['value']) && $loc != $object->field_gallery_location['und'][0]['value']) {
-			//track old gallery locations to compare with new locations
-			$oldloc = $object->field_gallery_location['und'][0]['value'];
-
-			db_query("UPDATE field_data_field_gallery_location
-                    SET field_gallery_location_value = :gal
-                    WHERE entity_id = :nid
-                    AND entity_type = 'node'
-                    AND bundle = 'object'", array(':nid' => $object->nid, ':gal' => $loc));
-
-            db_query("UPDATE field_revision_field_gallery_location
-                    SET field_gallery_location_value = :gal
-                    WHERE entity_id = :nid
-                    AND entity_type = 'node'
-                    AND bundle = 'object'", array(':nid' => $object->nid, ':gal' => $loc));
-
-			//setting node to unpublished
-			db_query("UPDATE node SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
-			db_query("UPDATE node_revision SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
-
-            $changed[] = array('object_id' => $object->object_id, 'title' => $object->title_t, 'location' => $object->gallery_location, 'old_location' => $oldloc);
-        }
+  // Now we build up the objects array for JSON output.
+  $art_gone = array();
+  $art_in_gallery = array();
+  $locations = array();
+  $changed = array();
+  foreach ($objects as $key => $object) {
+    _getSOLRdata($object);
+    // Check objects here to see if they recently went off display.
+    // We send email notice in that case - (they may need to update a tour?)
+    // First collect the ones marked not on display in current SOLR data.
+    if (empty($object->in_gallery)) {
+      $art_gone[] = $object->nid;
+    }
+    else {
+      // Keep it simple for array comparison later.
+      $art_in_gallery[] = $object->nid;
+      if (!empty($object->gallery_location)) {
+        $locations[$object->nid] = $object->gallery_location;
+      }
     }
 
-	//flush drupal cache
-	drupal_flush_all_caches();
+    // Make sure any objects that have changed galleries get updated.
+    if (isset($object->gallery_location)) {
+      $loc = $object->gallery_location;
+      $ingallery = $object->in_gallery;
+      if (empty($object->in_gallery)) {
+        $ingallery = 0;
+      }
+    }
+    else {
+      $loc = '';
+      $ingallery = 0;
+    }
+    // Check if 'in gallery' statuses have changed and sync with Solr data.
+    if (isset($object->field_in_gallery['und'][0]['value']) && $ingallery != $object->field_in_gallery['und'][0]['value']) {
+      db_query("UPDATE field_data_field_in_gallery
+        SET field_in_gallery_value = :ingal
+        WHERE entity_id = :nid", array(':nid' => $object->nid, ':ingal' => $ingallery));
 
-    //notify of any objects no longer on display
-    _email_art_removed($art_gone);
+      db_query("UPDATE field_revision_field_in_gallery
+        SET field_in_gallery_value = :ingal
+        WHERE entity_id = :nid", array(':nid' => $object->nid, ':ingal' => $ingallery));
+    }
+    // Update gallery locations.
+    if (isset($object->field_gallery_location['und'][0]['value']) && $loc != $object->field_gallery_location['und'][0]['value']) {
+      // Track old gallery locations to compare with new locations.
+      $oldloc = $object->field_gallery_location['und'][0]['value'];
 
-    //notify of any objects BACK on display
-    _email_art_gallery($art_in_gallery, $locations, $objects);
+      db_query("UPDATE field_data_field_gallery_location
+          SET field_gallery_location_value = :gal
+          WHERE entity_id = :nid
+          AND entity_type = 'node'
+          AND bundle = 'object'", array(':nid' => $object->nid, ':gal' => $loc));
 
-    //notify of any objects that have changed gallery location
-    _email_object_gallery_change($changed);
+      db_query("UPDATE field_revision_field_gallery_location
+          SET field_gallery_location_value = :gal
+          WHERE entity_id = :nid
+          AND entity_type = 'node'
+          AND bundle = 'object'", array(':nid' => $object->nid, ':gal' => $loc));
+
+      // Setting node to unpublished.
+      db_query("UPDATE node SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
+      db_query("UPDATE node_revision SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
+
+      $changed[] = array(
+        'object_id' => $object->object_id,
+        'title' => $object->title_t,
+        'location' => $object->gallery_location,
+        'old_location' => $oldloc,
+      );
+    }
+  }
+
+  // flush drupal cache.
+  drupal_flush_all_caches();
+
+  // notify of any objects no longer on display.
+  _email_art_removed($art_gone);
+
+  // notify of any objects BACK on display
+  _email_art_gallery($art_in_gallery, $locations, $objects);
+
+  // notify of any objects that have changed gallery location.
+  _email_object_gallery_change($changed);
 }
 
 /**
- * verify that the gallery assigned to a published object is one of the galleries we have in Drupal
+ * verify that the gallery assigned to a published object is one of the galleries we have in Drupal.
  */
 function aicapp_verify_obj_gallery_submit($form, &$form_state) {
-    $objects = db_query("SELECT node.nid, fi.field_object_id_value AS object_id
-          FROM node, field_data_field_object_id fi
-          WHERE node.nid = fi.entity_id
-          AND fi.bundle = 'object'
-          AND node.status = 1");
+  $objects = db_query("SELECT node.nid, fi.field_object_id_value AS object_id
+      FROM node, field_data_field_object_id fi
+      WHERE node.nid = fi.entity_id
+      AND fi.bundle = 'object'
+      AND node.status = 1");
 
-    $galleries = db_query("SELECT nid, title
-          FROM node
-          WHERE node.type = 'gallery'
-          AND node.status = 1");
+  $galleries = db_query("SELECT nid, title
+      FROM node
+      WHERE node.type = 'gallery'
+      AND node.status = 1");
 
-    //need a simple array
-    $gals = array();
-    foreach($galleries as $gallery){
-        $gals[] = $gallery->title_t;
-    }
+  // need a simple array
+  $gals = array();
+  foreach ($galleries as $gallery) {
+    $gals[] = $gallery->title_t;
+  }
 
-    $bad_obj_galleries = '';
-    foreach($objects as $object) {
-        _getSOLRdata($object, $object->object_id);
-        $match = false;
-        if(isset($object->gallery_location)) {
-            $match = array_search($object->gallery_location, $gals);
-        }
-        if(($match === false) && isset($object->gallery_location) && $object->gallery_location != 'Currently not on display') {
-            $bad_obj_galleries .= '<li>Object ID: ' . $object->object_id . ' -- ' . $object->gallery_location . '</li>';
-        }
+  $bad_obj_galleries = '';
+  foreach ($objects as $object) {
+    _getSOLRdata($object, $object->object_id);
+    $match = FALSE;
+    if (isset($object->gallery_location)) {
+      $match = array_search($object->gallery_location, $gals);
     }
-    //now notify
-    if(!empty($bad_obj_galleries)) {
-        drupal_set_message('Invalid gallery names found on objects: <ul>'.$bad_obj_galleries.'</ul>', 'error');
-    } else {
-        drupal_set_message('No invalid gallery names found in objects', 'status');
+    if (($match === FALSE) && isset($object->gallery_location) && $object->gallery_location != 'Currently not on display') {
+      $bad_obj_galleries .= '<li>Object ID: ' . $object->object_id . ' -- ' . $object->gallery_location . '</li>';
     }
+  }
+  // now notify
+  if (!empty($bad_obj_galleries)) {
+    drupal_set_message('Invalid gallery names found on objects: <ul>' . $bad_obj_galleries . '</ul>', 'error');
+  }
+  else {
+    drupal_set_message('No invalid gallery names found in objects', 'status');
+  }
 }
 
 /**
-* Helper function for aicapp_gendata_form_submit()
+ * Helper function for aicapp_gendata_form_submit()
 * Compare 2 arrays of art objects. The first comes from current SOLR & are marked as not in gallery.
 * The 2nd is from the Drupal DB, and are marked as in gallery.
 * For any that are in both, they have recently been moved out of their gallery.
 * Shoot off email notice with a list - the admin may need to update tours.
-**/
+ */
 function _email_art_removed($art_gone) {
-    global $base_url;
-    global $site_name;
+  global $base_url;
+  global $site_name;
 
-    //Now collect all objects from our Drupal DB (field_in_gallery table) that are in gallery and are published
-    $result = db_query("SELECT f.entity_id, f.field_in_gallery_value
-        FROM field_data_field_in_gallery f, node n
-        WHERE f.bundle = 'object'
-        AND f.entity_type = 'node'
-        AND f.field_in_gallery_value = 1
-        AND f.entity_id = n.nid
-        AND n.status = 1");
+  // Now collect all objects from our Drupal DB (field_in_gallery table) that are in gallery and are published
+  $result = db_query("SELECT f.entity_id, f.field_in_gallery_value
+    FROM field_data_field_in_gallery f, node n
+    WHERE f.bundle = 'object'
+    AND f.entity_type = 'node'
+    AND f.field_in_gallery_value = 1
+    AND f.entity_id = n.nid
+    AND n.status = 1");
 
-    $was_in_gallery = array();
-    //grab the ones that have been on display
-    foreach($result as $item) {
-        $was_in_gallery[] = $item->entity_id;
-    }
+  $was_in_gallery = array();
+  // grab the ones that have been on display
+  foreach ($result as $item) {
+    $was_in_gallery[] = $item->entity_id;
+  }
 
-    //now compare
-    $recent_pulled = array_intersect($art_gone, $was_in_gallery);
+  // now compare
+  $recent_pulled = array_intersect($art_gone, $was_in_gallery);
 
-    if(!empty($recent_pulled)) {
-        $from = 'admin@'.$base_url;
-        $to = variable_get('site_mail', '');
-        $msg = '<p>'.t('This automated email is to notify you that we\'ve found objects
-                that were recently REMOVED from galleries. You might need to update
-                the tours if any of these objects were shown:').'</p><ul>';
-        $object_list = '';
-        foreach($recent_pulled as $nid) {
-            $object = node_load($nid);
+  if (!empty($recent_pulled)) {
+    $from = 'admin@' . $base_url;
+    $to = variable_get('site_mail', '');
+    $msg = '<p>' . t('This automated email is to notify you that we\'ve found objects
+        that were recently REMOVED from galleries. You might need to update
+        the tours if any of these objects were shown:') . '</p><ul>';
+    $object_list = '';
+    foreach ($recent_pulled as $nid) {
+      $object = node_load($nid);
 
-            //was this object on a tour?
-            $result = db_query("SELECT entity_id FROM field_data_field_stops2 WHERE field_stops2_value = :d", array(':d' => $nid));
-            $tours = array();
-            foreach($result as $item) {
-                $tours[] = node_load($item->entity_id);
-            }
-            $object_list .= '<li>object_id = '.$object->object_id.' -- '.$object->title_t;
-            if(!empty($tours[0])) {
-                foreach($tours as $tour) {
-                    $object_list .= '<br>-- On tour: '.$tour->title;
-                }
-            }
-            $object_list .= '</li>';
-
-            //set the object's status to unpublished
-            db_query("UPDATE node SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
+      // was this object on a tour?
+      $result = db_query("SELECT entity_id FROM field_data_field_stops2 WHERE field_stops2_value = :d", array(':d' => $nid));
+      $tours = array();
+      foreach ($result as $item) {
+        $tours[] = node_load($item->entity_id);
+      }
+      $object_list .= '<li>object_id = ' . $object->object_id . ' -- ' . $object->title_t;
+      if (!empty($tours[0])) {
+        foreach ($tours as $tour) {
+          $object_list .= '<br>-- On tour: ' . $tour->title;
         }
-        $msg .= $object_list.'</ul><p>Do not reply to this email.</p>';
-        $headers = "From: <".$from.">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
-        $subject = $site_name.' -- Object Removal Notice';
+      }
+      $object_list .= '</li>';
 
-        if(mail($to,$subject,$msg,$headers)){
-           drupal_set_message('Email notice was sent regarding objects that have been removed:<ul>'.$object_list.'</ul>', 'status');
-        } else {
-           drupal_set_message('Email notice unable to send. (These objects were removed):<ul>'.$object_list.'</ul>', 'error');
-        }
+      // set the object's status to unpublished
+      db_query("UPDATE node SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
     }
+    $msg .= $object_list . '</ul><p>Do not reply to this email.</p>';
+    $headers = "From: <" . $from.">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
+    $subject = $site_name . ' -- Object Removal Notice';
+
+    if (mail($to, $subject, $msg, $headers)) {
+      drupal_set_message('Email notice was sent regarding objects that have been removed:<ul>' . $object_list . '</ul>', 'status');
+    }
+    else {
+      drupal_set_message('Email notice unable to send. (These objects were removed):<ul>' . $object_list . '</ul>', 'error');
+    }
+  }
 }
 
 /**
-* Helper function for aicapp_gendata_form_submit()
+ * Helper function for aicapp_gendata_form_submit()
 * Similar to above, but the reverse. Notify of objects that are now on display in gallery.
-**/
+ */
 function _email_art_gallery($art_in_gallery, $locations, $objects) {
-    global $base_url;
-    global $site_name;
+  global $base_url;
+  global $site_name;
 
-    //Now collect all objects from our Drupal DB (field_in_gallery table) that are NOT in gallery
-    $not_displayed = array();
-    foreach($objects as $obj){
-        if ($obj->field_in_gallery['und'][0]['value'] == 0) {
-            $not_displayed[] = $obj->nid;
-        }
+  // Now collect all objects from our Drupal DB (field_in_gallery table) that are NOT in gallery
+  $not_displayed = array();
+  foreach ($objects as $obj) {
+    if ($obj->field_in_gallery['und'][0]['value'] == 0) {
+      $not_displayed[] = $obj->nid;
     }
+  }
 
-    //now compare
-    $recent_added = array_intersect($art_in_gallery, $not_displayed);
+  // now compare
+  $recent_added = array_intersect($art_in_gallery, $not_displayed);
 
-    if(!empty($recent_added)) {
-        $from = 'admin@'.$base_url;
-        $to = variable_get('site_mail', '');
-        $msg = '<p>This automated email is to notify you that we\'ve found objects
-                that were recently ADDED into galleries. You might need to update the object location information
-                and the tours:</p><ul>';
-        $object_list = '';
-        $recent_full_objects = array();
-        foreach($recent_added as $nid) {
-            $recent_full_objects[$nid] = $objects[$nid];
-            $object_list .= '<li>object_id - ' . $objects[$nid]->object_id . ' - ' . $objects[$nid]->title_t . ' - ' . $objects[$nid]->gallery_location . '</li>';
-        }
-        $msg .= $object_list.'</ul><p>Do not reply to this email.</p>';
-        $headers = "From: <".$from.">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
-        $subject = $site_name.'Objects Now On Display Notice';
-
-        if(mail($to,$subject,$msg,$headers)){
-           drupal_set_message('Email notice was sent regarding objects now ADDED into galleries:<ul>'.$object_list.'</ul>', 'status');
-        } else {
-           drupal_set_message('Email notice unable to send. (These objects were removed):<ul>'.$object_list.'</ul>', 'error');
-        }
-        _update_object_galleries($recent_added, $locations);
-    } else {
-        drupal_set_message('\'Update Objects Gallery Status\' has been run. No new gallery_locations were added.', 'status');
+  if (!empty($recent_added)) {
+    $from = 'admin@' . $base_url;
+    $to = variable_get('site_mail', '');
+    $msg = '<p>This automated email is to notify you that we\'ve found objects
+        that were recently ADDED into galleries. You might need to update the object location information
+        and the tours:</p><ul>';
+    $object_list = '';
+    $recent_full_objects = array();
+    foreach ($recent_added as $nid) {
+      $recent_full_objects[$nid] = $objects[$nid];
+      $object_list .= '<li>object_id - ' . $objects[$nid]->object_id . ' - ' . $objects[$nid]->title_t . ' - ' . $objects[$nid]->gallery_location . '</li>';
     }
+    $msg .= $object_list . '</ul><p>Do not reply to this email.</p>';
+    $headers = "From: <" . $from.">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
+    $subject = $site_name . 'Objects Now On Display Notice';
+
+    if (mail($to, $subject, $msg, $headers)) {
+      drupal_set_message('Email notice was sent regarding objects now ADDED into galleries:<ul>' . $object_list . '</ul>', 'status');
+    }
+    else {
+      drupal_set_message('Email notice unable to send. (These objects were removed):<ul>' . $object_list . '</ul>', 'error');
+    }
+    _update_object_galleries($recent_added, $locations);
+  }
+  else {
+    drupal_set_message('\'Update Objects Gallery Status\' has been run. No new gallery_locations were added.', 'status');
+  }
 }
 
 /**
  * Helper function for aicapp_gendata_form_submit()
  * Similar to above, but the reverse. Notify of objects that are now on display in gallery.
- **/
+  */
 function _email_object_gallery_change($changed) {
-    if(!empty($changed)) {
-        global $base_url;
-        global $site_name;
+  if (!empty($changed)) {
+    global $base_url;
+    global $site_name;
 
-        $from = 'admin@' . $base_url;
-        $to = variable_get('site_mail', '');
-        $msg = '<p>This automated email is to notify you that we\'ve found object(s)
-            that have changed gallery locations. You might need to update the object\'s location (map LAT/LNG) values:</p><ul>';
-        $object_list = '';
-        foreach ($changed as $object) {
-            $object_list .= '<li>object_id - ' . $object['object_id'] . ' - ' . $object['title_t'] . '<br />Previous location: ' . $object['old_location'] . ', New location: ' . $object['location'] . '</li>';
-        }
-        $msg .= $object_list . '</ul><p>Do not reply to this email.</p>';
-        $headers = "From: <" . $from . ">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
-        $subject = $site_name . 'Object Changed Location Notice';
-
-        if (mail($to, $subject, $msg, $headers)) {
-            drupal_set_message('Email notice was sent regarding objects that CHANGED galleries:<ul>' . $object_list . '</ul>', 'status');
-        }
-        else {
-            drupal_set_message('Email notice unable to send. (These objects CHANGED galleries):<ul>' . $object_list . '</ul>', 'error');
-        }
-
-    } else {
-        drupal_set_message('No gallery changes were found.', 'status');
+    $from = 'admin@' . $base_url;
+    $to = variable_get('site_mail', '');
+    $msg = '<p>This automated email is to notify you that we\'ve found object(s)
+      that have changed gallery locations. You might need to update the object\'s location (map LAT/LNG) values:</p><ul>';
+    $object_list = '';
+    foreach ($changed as $object) {
+      $object_list .= '<li>object_id - ' . $object['object_id'] . ' - ' . $object['title_t'] . '<br />Previous location: ' . $object['old_location'] . ', New location: ' . $object['location'] . '</li>';
     }
+    $msg .= $object_list . '</ul><p>Do not reply to this email.</p>';
+    $headers = "From: <" . $from . ">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
+    $subject = $site_name . 'Object Changed Location Notice';
+
+    if (mail($to, $subject, $msg, $headers)) {
+      drupal_set_message('Email notice was sent regarding objects that CHANGED galleries:<ul>' . $object_list . '</ul>', 'status');
+    }
+    else {
+      drupal_set_message('Email notice unable to send. (These objects CHANGED galleries):<ul>' . $object_list . '</ul>', 'error');
+    }
+  }
+  else {
+    drupal_set_message('No gallery changes were found.', 'status');
+  }
 }
 
 /*
  * Update the gallery_location field, and into_gallery fields for newly displayed objects based on SOLR
  */
 function _update_object_galleries($recent_added, $locations) {
-    foreach($recent_added as $nid) {
-        $node = node_load($nid);
-        $entity = entity_metadata_wrapper('node', $node);
-        $entity->field_gallery_location = (string) $locations[$nid];
-        $entity->field_in_gallery->set(1);
-        $entity->status->set(0); //status is 0 (unpublished) because they want to look at it before it gets published.
-        $entity->save();
-    }
+  foreach ($recent_added as $nid) {
+    $node = node_load($nid);
+    $entity = entity_metadata_wrapper('node', $node);
+    $entity->field_gallery_location = (string) $locations[$nid];
+    $entity->field_in_gallery->set(1);
+    $entity->status->set(0); // status is 0 (unpublished) because they want to look at it before it gets published.
+    $entity->save();
+  }
 }
 
 /**
@@ -596,492 +641,525 @@ function _update_object_galleries($recent_added, $locations) {
 
  * take all the data in the Drupal DB, and the data from matching records in SOLR, and
  * write them to JSON file.
- **/
+  */
 function aicapp_gendata_form_submit($form, &$form_state) {
-    global $base_path;
+  global $base_path;
 
-    //load the general info
-    $node_gen = node_load(1);
-    strip_drupal_from_node($node_gen);
+  // load the general info
+  $node_gen = node_load(1);
+  strip_drupal_from_node($node_gen);
 
-    //load all the galleries
-    $galleries = node_load_multiple(array(), array('type' => 'gallery', 'status' => 1));
+  // load all the galleries
+  $galleries = node_load_multiple(array(), array('type' => 'gallery', 'status' => 1));
 
-    //load objects
-    $objects = node_load_multiple(array(), array('type' => 'object', 'status' => 1));
+  // load objects
+  $objects = node_load_multiple(array(), array('type' => 'object', 'status' => 1));
 
-    //load audio
-    $audio_files = node_load_multiple(array(), array('type' => 'audio', 'status' => 1));
+  // load audio
+  $audio_files = node_load_multiple(array(), array('type' => 'audio', 'status' => 1));
 
-    //load tours
-    $tours = node_load_multiple(array(), array('type' => 'tour'));
+  // load tours
+  $tours = node_load_multiple(array(), array('type' => 'tour'));
 
-    //strip out Drupal native stuff we don't need in the JSON output
-    foreach($galleries as $gallery) {
-        strip_drupal_from_node($gallery);
+  // strip out Drupal native stuff we don't need in the JSON output
+  foreach ($galleries as $gallery) {
+    strip_drupal_from_node($gallery);
 
-        //add in other gallery fields from SOLR
-        $result = _runSolrQuery(AICAPP_GALLERY_QUERY, 'gallery_id', $gallery->gallery_id);
-        if(!empty($result['response']['docs'])) {
-            foreach($result['response']['docs'][0] as $key => $val) {
-                if ($val == '<NOT Closed>' || $val == '<Closed>') {
-					if ($val == '<NOT Closed>') {
-						$gallery->$key = 'False';
-					} elseif ($val == '<Closed>') {
-						$gallery->$key = 'True';
-					}
-				} else {
-					$gallery->$key = $val;
-				}
-            }
+    // add in other gallery fields from SOLR
+    $result = _runSolrQuery(AICAPP_GALLERY_QUERY, 'gallery_id', $gallery->gallery_id);
+    if (!empty($result['response']['docs'])) {
+      foreach ($result['response']['docs'][0] as $key => $val) {
+        if ($val == '<NOT Closed>' || $val == '<Closed>') {
+          if ($val == '<NOT Closed>') {
+            $gallery->$key = 'FALSE';
+          }
+          elseif ($val == '<Closed>') {
+            $gallery->$key = 'TRUE';
+          }
         }
-    }
-
-    //Now we build up the objects array for JSON output.
-
-    foreach($objects as $key => $object) {
-        _getSOLRdata($object);
-        strip_drupal_from_node($object);
-        //only show objects that are in a gallery, and have lat/long values, and that are published
-        if(empty($object->in_gallery) || !$object->in_gallery || empty($object->location) || !$object->status) {
-            unset($objects[$key]);
+        else {
+          $gallery->$key = $val;
         }
-
-    }
-
-    //format audio files
-    foreach($audio_files as $audio) {
-        strip_drupal_from_node($audio);
-    }
-
-    foreach($tours as $key => $tour) {
-      strip_drupal_from_node($tour);
-
-      //retrieve today's date
-      $today = date("Y-m-d H:i:s");
-      if (!empty($tour->field_tour_dates) && !empty($tour->field_tour_dates['und'][0]['value'])) {
-        $tourStartDate = $tour->field_tour_dates['und'][0]['value'];
-        $tourEndDate = $tour->field_tour_dates['und'][0]['value2'];
-        //if today is greater than or equal to the start date and it's also less than or equal to the end date, publish the tour
-        if ($today >= $tourStartDate && $today <= $tourEndDate) {
-          db_query("UPDATE node SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
-          db_query("UPDATE node_revision SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
-        } else {
-          //unpublish the tour
-          db_query("UPDATE node SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
-          db_query("UPDATE node_revision SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
-          unset($tours[$key]);
-        }
-      } else if (empty($tour->field_tour_dates) && $tour->status == 0) {
-          unset($tours[$key]);
       }
-        //add the weight from the view page so we can sort
-        $result = db_query('SELECT weight FROM draggableviews_structure WHERE entity_id = :d', array(':d' => $tour->nid));
-        foreach($result as $item) {
-            $tour->weight = (!empty($item->weight)) ? $item->weight : 0;
-        }
+    }
+  }
 
-        //now collect the tour stops (objects + audio files)
-        if(!empty($tour->stops)) {
-            $tour->stops = aicapp_collect_tour_stops($tour->stops);
-        }
+  // Now we build up the objects array for JSON output.
+
+  foreach ($objects as $key => $object) {
+    _getSOLRdata($object);
+    strip_drupal_from_node($object);
+    // only show objects that are in a gallery, and have lat/long values, and that are published
+    if (empty($object->in_gallery) || !$object->in_gallery || empty($object->location) || !$object->status) {
+      unset($objects[$key]);
+    }
+  }
+
+  // format audio files
+  foreach ($audio_files as $audio) {
+    strip_drupal_from_node($audio);
+  }
+
+  foreach ($tours as $key => $tour) {
+    strip_drupal_from_node($tour);
+
+    // retrieve today's date
+    $today = date("Y-m-d H:i:s");
+    if (!empty($tour->field_tour_dates) && !empty($tour->field_tour_dates['und'][0]['value'])) {
+      $tourStartDate = $tour->field_tour_dates['und'][0]['value'];
+      $tourEndDate = $tour->field_tour_dates['und'][0]['value2'];
+      // if today is greater than or equal to the start date and it's also less than or equal to the end date, publish the tour
+      if ($today >= $tourStartDate && $today <= $tourEndDate) {
+        db_query("UPDATE node SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
+        db_query("UPDATE node_revision SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
+      }
+    else {
+        // unpublish the tour
+        db_query("UPDATE node SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
+        db_query("UPDATE node_revision SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
+        unset($tours[$key]);
+      }
+    }
+    elseif (empty($tour->field_tour_dates) && $tour->status == 0) {
+      unset($tours[$key]);
+    }
+    // add the weight from the view page so we can sort
+    $result = db_query('SELECT weight FROM draggableviews_structure WHERE entity_id = :d', array(':d' => $tour->nid));
+    foreach ($result as $item) {
+      $tour->weight = (!empty($item->weight)) ? $item->weight : 0;
     }
 
-    usort($tours, 'sort_objects_by_weight');
-
-    $data = array(
-      'general_info' => $node_gen,
-      'galleries' => $galleries,
-      'objects' => $objects,
-      'audio_files' => $audio_files,
-      'tours' => $tours,
-    );
-
-    $json_output = json_encode($data);
-    $num_bytes = file_put_contents('sites/default/files/appData.json', $json_output);
-    if($num_bytes) {
-        drupal_set_message('Updated file: <a href="'.$base_path.'sites/default/files/appData.json'.'">appData.json</a><br>When you click to view the file, be sure to refresh your browser as it might be cached. Best viewed in Chrome.', 'status');
-        variable_set('aicapp_pending', 0);
-    } else {
-        drupal_set_message('Problem occurred, file not written.', 'error');
+    // now collect the tour stops (objects + audio files)
+    if (!empty($tour->stops)) {
+      $tour->stops = aicapp_collect_tour_stops($tour->stops);
     }
+  }
+
+  usort($tours, 'sort_objects_by_weight');
+
+  $data = array(
+    'general_info' => $node_gen,
+    'galleries' => $galleries,
+    'objects' => $objects,
+    'audio_files' => $audio_files,
+    'tours' => $tours,
+  );
+
+  $json_output = json_encode($data);
+  $num_bytes = file_put_contents('sites/default/files/appData.json', $json_output);
+  if ($num_bytes) {
+    drupal_set_message('Updated file: <a href="' . $base_path . 'sites/default/files/appData.json' . '">appData.json</a><br>When you click to view the file, be sure to refresh your browser as it might be cached. Best viewed in Chrome.', 'status');
+    variable_set('aicapp_pending', 0);
+  }
+  else {
+    drupal_set_message('Problem occurred, file not written.', 'error');
+  }
 }
 
 function aicapp_collect_tour_stops($stops = array()) {
-    $full_stops = array();
-    foreach($stops as $stop) {
-        $result = db_query("SELECT field_t_audio_nid, delta
-            FROM field_revision_field_t_audio
-            WHERE revision_id = ".$stop['value']."
-            ORDER by delta");
-        foreach($result as $item) {
-            $audio[] = array('nid' => $item->field_t_audio_nid, 'delta' => $item->delta);
-        }
-
-        $result = db_query("SELECT field_t_object_nid, delta
-            FROM field_revision_field_t_object
-            WHERE revision_id = ".$stop['value']."
-            ORDER by delta");
-        foreach($result as $item) {
-            $objects[] = array('nid' => $item->field_t_object_nid, 'delta' => $item->delta);
-        }
-
-        //now we should have 2 arrays of same length, sorted in order.
-        if(count($audio) == count($objects)){
-            for($i = 0; $i < count($audio); $i++) {
-                $full_stops[] = array('audio' => $audio[$i]['nid'], 'object' => $objects[$i]['nid'], 'sort' => $objects[$i]['delta']);
-            }
-        }
+  $full_stops = array();
+  foreach ($stops as $stop) {
+    $result = db_query("SELECT field_t_audio_nid, delta
+      FROM field_revision_field_t_audio
+      WHERE revision_id = " . $stop['value']."
+      ORDER by delta");
+    foreach ($result as $item) {
+      $audio[] = array('nid' => $item->field_t_audio_nid, 'delta' => $item->delta);
     }
-    return $full_stops;
+
+    $result = db_query("SELECT field_t_object_nid, delta
+      FROM field_revision_field_t_object
+      WHERE revision_id = " . $stop['value']."
+      ORDER by delta");
+    foreach ($result as $item) {
+      $objects[] = array('nid' => $item->field_t_object_nid, 'delta' => $item->delta);
+    }
+
+    // now we should have 2 arrays of same length, sorted in order.
+    if (count($audio) == count($objects)) {
+      for ($i = 0; $i < count($audio); $i++) {
+        $full_stops[] = array('audio' => $audio[$i]['nid'], 'object' => $objects[$i]['nid'], 'sort' => $objects[$i]['delta']);
+      }
+    }
+  }
+  return $full_stops;
 }
 
 function sort_objects_by_weight($a, $b) {
-	if($a->weight == $b->weight){ return 0 ; }
-	return $a->weight - $b->weight;
+  if ($a->weight == $b->weight) {
+    return 0 ;
+  }
+  return $a->weight - $b->weight;
 }
 
-//add the SOLR data to the node
+// add the SOLR data to the node
 function _getSOLRdata(&$object, $object_id = null) {
-    $entity = entity_metadata_wrapper('node', $object);
-    if(empty($object_id)) {
-        $object_id = $entity->field_object_id->value();
-        if (empty($object_id)) {
-          //if there is no object id, then we have a custom object. Reference values entered for object data.
-          $object->in_gallery = $entity->field_in_gallery->value();
-          $object->gallery_location = $entity->field_gallery_location->value();
-          $object->credit_line = $entity->field_credit_line->value();
-          $object->copyright_notice = $entity->field_copyright_notice->value();
-          if ($entity->field_artist_origin->value()) {
-            $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
-          } else {
-            $object->artist_culture_place_delim = $entity->field_artist_name->value();
-          }
-          return;
-        }
+  $entity = entity_metadata_wrapper('node', $object);
+  if (empty($object_id)) {
+    $object_id = $entity->field_object_id->value();
+    if (empty($object_id)) {
+      // if there is no object id, then we have a custom object. Reference values entered for object data.
+      $object->in_gallery = $entity->field_in_gallery->value();
+      $object->gallery_location = $entity->field_gallery_location->value();
+      $object->credit_line = $entity->field_credit_line->value();
+      $object->copyright_notice = $entity->field_copyright_notice->value();
+      if ($entity->field_artist_origin->value()) {
+        $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
+      }
+      else {
+        $object->artist_culture_place_delim = $entity->field_artist_name->value();
+      }
+      return;
     }
+  }
 
-    $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
-    if(!empty($result['response']['docs'])) {
-        foreach($result['response']['docs'][0] as $key => $val) {
-            if($key == 'date_range') {
-                $val = implode('-', $val);
-            }
-            if($key != 'provenance_text' && $key != 'exhibition_history') {
-                $object->$key = $val;
-            }
-        }
+  $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
+  if (!empty($result['response']['docs'])) {
+    foreach ($result['response']['docs'][0] as $key => $val) {
+      if ($key == 'date_range') {
+        $val = implode('-', $val);
+      }
+      if ($key != 'provenance_text' && $key != 'exhibition_history') {
+        $object->$key = $val;
+      }
     }
+  }
 }
-
 
 // clear out all the Drupal stuff from the node, so we
 // can deliver bare JSON data.
 function strip_drupal_from_node(&$node) {
-    unset($node->vid);
-    unset($node->uid);
-    unset($node->log);
-    unset($node->comment);
-    unset($node->promote);
-    unset($node->sticky);
-    unset($node->comment);
-    unset($node->language);
-    unset($node->created);
-    unset($node->changed);
-    unset($node->tnid);
-    unset($node->translate);
-    unset($node->revision_timestamp);
-    unset($node->revision_uid);
-    unset($node->path);
-    unset($node->name);
-    unset($node->picture);
-    unset($node->data);
+  unset($node->vid);
+  unset($node->uid);
+  unset($node->log);
+  unset($node->comment);
+  unset($node->promote);
+  unset($node->sticky);
+  unset($node->comment);
+  unset($node->language);
+  unset($node->created);
+  unset($node->changed);
+  unset($node->tnid);
+  unset($node->translate);
+  unset($node->revision_timestamp);
+  unset($node->revision_uid);
+  unset($node->path);
+  unset($node->name);
+  unset($node->picture);
+  unset($node->data);
 
-    //Now add in the editable field data
-    if(isset($node->field_museum_hours['und'][0]['safe_value'])) {
-        $node->museum_hours = $node->field_museum_hours['und'][0]['safe_value'];
+  // Now add in the editable field data
+  if (isset($node->field_museum_hours['und'][0]['safe_value'])) {
+    $node->museum_hours = $node->field_museum_hours['und'][0]['safe_value'];
+  }
+  if (isset($node->field_gallery_id['und'][0]['safe_value'])) {
+    $node->gallery_id = $node->field_gallery_id['und'][0]['safe_value'];
+  }
+  // this is overriding the SOLR data.  This is why we sync.
+  if (isset($node->field_gallery_number['und'][0]['safe_value'])) {
+    $node->gallery_number = $node->field_gallery_number['und'][0]['safe_value'];
+  }
+  if (isset($node->field_location['und'][0]['safe_value'])) {
+    $node->location = $node->field_location['und'][0]['safe_value'];
+  }
+  if (isset($node->field_floor['und'][0]['safe_value'])) {
+    $node->floor = $node->field_floor['und'][0]['safe_value'];
+  }
+  if (isset($node->field_object_id['und'][0]['value'])) {
+    $node->object_id = $node->field_object_id['und'][0]['value'];
+  }
+  if (isset($node->field_reference_num['und'][0]['safe_value'])) {
+    $node->reference_num = $node->field_reference_num['und'][0]['safe_value'];
+  }
+  if (isset($node->field_tour_banner['und'][0]['value'])) {
+    $node->tour_banner = $node->field_tour_banner['und'][0]['value'];
+  }
+  if (isset($node->field_object_selector_number['und'][0]['value'])) {
+    $node->object_selector_number = $node->field_object_selector_number['und'][0]['value'];
+  }
+  if (isset($node->field_object_selector_numbers['und'][0]['value'])) {
+    foreach ($node->field_object_selector_numbers['und'] as $objselector) {
+      $node->object_selector_numbers[] = $objselector['value'];
     }
-    if(isset($node->field_gallery_id['und'][0]['safe_value'])) {
-        $node->gallery_id = $node->field_gallery_id['und'][0]['safe_value'];
+  }
+  if (isset($node->field_thumbnail_crop_rect['und'][0])) {
+    $items = field_get_items('node', $node, 'field_thumbnail_crop_rect');
+    foreach ($items as $itemid) {
+      $item = field_collection_field_get_entity($itemid);
+      if ($item->field_x) {
+        $node->thumbnail_crop_rect = array('x' => $item->field_x['und'][0]['value'], 'y' => $item->field_y['und'][0]['value'], 'width' => $item->field_width['und'][0]['value'], 'height' => $item->field_height['und'][0]['value']);
+        json_encode($node->thumbnail_crop_rect);
+      }
     }
-    //this is overriding the SOLR data.  This is why we sync.
-    if(isset($node->field_gallery_number['und'][0]['safe_value'])) {
-        $node->gallery_number = $node->field_gallery_number['und'][0]['safe_value'];
+  }
+  if (isset($node->field_large_image_crop_rect['und'][0])) {
+    $items = field_get_items('node', $node, 'field_large_image_crop_rect');
+    foreach ($items as $itemid) {
+      $item = field_collection_field_get_entity($itemid);
+      if ($item->field_x) {
+        $node->large_image_crop_rect = array('x' => $item->field_x['und'][0]['value'], 'y' => $item->field_y['und'][0]['value'], 'width' => $item->field_width['und'][0]['value'], 'height' => $item->field_height['und'][0]['value'] );
+        json_encode($node->large_image_crop_rect);
+      }
     }
-    if(isset($node->field_location['und'][0]['safe_value'])) {
-        $node->location = $node->field_location['und'][0]['safe_value'];
+  }
+  // here we loop through audio files attached to objects.
+  if (isset($node->field_object_audio['und'][0]['nid'])) {
+    foreach ($node->field_object_audio['und'] as $audiofld) {
+      $node->audio[] = $audiofld['nid'];
     }
-    if(isset($node->field_floor['und'][0]['safe_value'])) {
-        $node->floor = $node->field_floor['und'][0]['safe_value'];
-    }
-    if(isset($node->field_object_id['und'][0]['value'])) {
-        $node->object_id = $node->field_object_id['und'][0]['value'];
-    }
-    if(isset($node->field_reference_num['und'][0]['safe_value'])) {
-        $node->reference_num = $node->field_reference_num['und'][0]['safe_value'];
-    }
-	if(isset($node->field_tour_banner['und'][0]['value'])) {
-        $node->tour_banner = $node->field_tour_banner['und'][0]['value'];
-    }
-    if(isset($node->field_object_selector_number['und'][0]['value'])) {
-        $node->object_selector_number = $node->field_object_selector_number['und'][0]['value'];
-    }
-	if(isset($node->field_object_selector_numbers['und'][0]['value'])) {
-		foreach($node->field_object_selector_numbers['und'] as $objselector) {
-           $node->object_selector_numbers[] = $objselector['value'];
-        }
-    }
-	if(isset($node->field_thumbnail_crop_rect['und'][0])) {
-		$items = field_get_items('node', $node, 'field_thumbnail_crop_rect');
-		foreach($items as $itemid) {
-             $item = field_collection_field_get_entity($itemid);
-			 if ($item->field_x) {
-				 $node->thumbnail_crop_rect = array('x' => $item->field_x['und'][0]['value'], 'y' => $item->field_y['und'][0]['value'], 'width' => $item->field_width['und'][0]['value'], 'height' => $item->field_height['und'][0]['value']);
-				 json_encode($node->thumbnail_crop_rect);
-			 }
-    	}
-    }
-	if(isset($node->field_large_image_crop_rect['und'][0])) {
-		$items = field_get_items('node', $node, 'field_large_image_crop_rect');
-		foreach($items as $itemid) {
-             $item = field_collection_field_get_entity($itemid);
-			 if ($item->field_x) {
-				 $node->large_image_crop_rect = array('x' => $item->field_x['und'][0]['value'], 'y' => $item->field_y['und'][0]['value'], 'width' => $item->field_width['und'][0]['value'], 'height' => $item->field_height['und'][0]['value'] );
-				 json_encode($node->large_image_crop_rect);
-			 }
-    	}
-    }
-    //here we loop through audio files attached to objects.
-    if(isset($node->field_object_audio['und'][0]['nid'])) {
-        foreach($node->field_object_audio['und'] as $audiofld) {
-           $node->audio[] = $audiofld['nid'];
-        }
-    }
-    if(isset($node->field_object_audio['und'][0]['node']->field_audio_transcript['und'][0]['safe_value'])) {
-        $node->audio_transcript = $node->field_object_audio['und'][0]['node']->field_audio_transcript['und'][0]['safe_value'];
-    }
-    //this handles each separate audio file.
-    if(isset($node->field_audio_file['und'][0]['uri'])) {
-        $node->audio_filename = $node->field_audio_file['und'][0]['filename'];
-        $node->audio_file_url = file_create_url($node->field_audio_file['und'][0]['uri']);
-        $node->audio_filemime = $node->field_audio_file['und'][0]['filemime'];
-        $node->audio_filesize = $node->field_audio_file['und'][0]['filesize'];
-    }
-    if(isset($node->field_audio_transcript['und'][0]['safe_value'])) {
-        $node->audio_transcript = $node->field_audio_transcript['und'][0]['safe_value'];
-    }
-    if(isset($node->field_credits['und'][0]['safe_value'])) {
-        $node->audio_credits = $node->field_credits['und'][0]['safe_value'];
-    }
-    if(isset($node->field_image['und'][0]['uri'])) {
-        $node->image_filename = $node->field_image['und'][0]['filename'];
-        $node->image_url = file_create_url($node->field_image['und'][0]['uri']);
-        $node->image_filemime = $node->field_image['und'][0]['filemime'];
-        $node->image_filesize = $node->field_image['und'][0]['filesize'];
-        $node->image_width = $node->field_image['und'][0]['width'];
-        $node->image_height = $node->field_image['und'][0]['height'];
-    }
-    if(isset($node->field_description['und'][0]['value'])) {
-		$descriptions = field_get_items('node', $node, 'field_description');
-		$a_description = array_shift($descriptions);
-		$description = $a_description['value'];
-        $node->description = trim(strip_tags($description));
-		$node->description_html = trim($description);
-    }
-    if(isset($node->field_intro['und'][0]['value'])) {
-		$intros = field_get_items('node', $node, 'field_intro');
-		$an_intro = array_shift($intros);
-		$intro = $an_intro['value'];
-        $node->intro = trim(strip_tags($intro));
-		$node->intro_html = trim($intro);
-    }
-    if(isset($node->field_stops2['und'][0])) {
-        $node->stops = $node->field_stops2['und'];
-    }
-    if(isset($node->field_tour_duration['und'][0])) {
-        $node->tour_duration = $node->field_tour_duration['und'][0]['safe_value'];
-    }
-    if(isset($node->field_tour_audio['und'][0])) {
-        $node->tour_audio = $node->field_tour_audio['und'][0]['nid'];
-    }
-    if(isset($node->field_highlighted_object['und'][0])) {
-        $node->highlighted_object = $node->field_highlighted_object['und'][0]['value'];
-    }
-    unset($node->field_museum_hours);
-    unset($node->field_gallery_id);
-    unset($node->field_gallery_number);
-    unset($node->field_object_id);
-    unset($node->field_reference_num);
-    unset($node->field_location);
-    unset($node->field_audio_file);
-    unset($node->field_audio_transcript);
-    unset($node->field_image);
-    unset($node->field_description);
-    unset($node->field_intro);
-    unset($node->field_stops2);
-    unset($node->field_gallery_location);
-    unset($node->field_in_gallery);
-    unset($node->field_tour_duration);
-    unset($node->field_tour_audio);
-	  unset($node->field_tour_banner);
-    unset($node->field_object_audio);
-    unset($node->field_object_selector_number);
-	  unset($node->field_object_selector_numbers);
-	  unset($node->field_thumbnail_image);
-	  unset($node->field_large_image);
-	  unset($node->field_thumbnail_crop_rect);
-	  unset($node->field_large_image_crop_rect);
-    unset($node->field_credits);
-    unset($node->field_floor);
-    unset($node->field_highlighted_object);
-    unset($node->field_artist_name);
-    unset($node->field_artist_origin);
-    unset($node->field_credit_line);
-    unset($node->field_copyright_notice);
+  }
+  if (isset($node->field_object_audio['und'][0]['node']->field_audio_transcript['und'][0]['safe_value'])) {
+    $node->audio_transcript = $node->field_object_audio['und'][0]['node']->field_audio_transcript['und'][0]['safe_value'];
+  }
+  // this handles each separate audio file.
+  if (isset($node->field_audio_file['und'][0]['uri'])) {
+    $node->audio_filename = $node->field_audio_file['und'][0]['filename'];
+    $node->audio_file_url = file_create_url($node->field_audio_file['und'][0]['uri']);
+    $node->audio_filemime = $node->field_audio_file['und'][0]['filemime'];
+    $node->audio_filesize = $node->field_audio_file['und'][0]['filesize'];
+  }
+  if (isset($node->field_audio_transcript['und'][0]['safe_value'])) {
+    $node->audio_transcript = $node->field_audio_transcript['und'][0]['safe_value'];
+  }
+  if (isset($node->field_credits['und'][0]['safe_value'])) {
+    $node->audio_credits = $node->field_credits['und'][0]['safe_value'];
+  }
+  if (isset($node->field_image['und'][0]['uri'])) {
+    $node->image_filename = $node->field_image['und'][0]['filename'];
+    $node->image_url = file_create_url($node->field_image['und'][0]['uri']);
+    $node->image_filemime = $node->field_image['und'][0]['filemime'];
+    $node->image_filesize = $node->field_image['und'][0]['filesize'];
+    $node->image_width = $node->field_image['und'][0]['width'];
+    $node->image_height = $node->field_image['und'][0]['height'];
+  }
+  if (isset($node->field_description['und'][0]['value'])) {
+    $descriptions = field_get_items('node', $node, 'field_description');
+    $a_description = array_shift($descriptions);
+    $description = $a_description['value'];
+    $node->description = trim(strip_tags($description));
+    $node->description_html = trim($description);
+  }
+  if (isset($node->field_intro['und'][0]['value'])) {
+    $intros = field_get_items('node', $node, 'field_intro');
+    $an_intro = array_shift($intros);
+    $intro = $an_intro['value'];
+    $node->intro = trim(strip_tags($intro));
+    $node->intro_html = trim($intro);
+  }
+  if (isset($node->field_stops2['und'][0])) {
+    $node->stops = $node->field_stops2['und'];
+  }
+  if (isset($node->field_tour_duration['und'][0])) {
+    $node->tour_duration = $node->field_tour_duration['und'][0]['safe_value'];
+  }
+  if (isset($node->field_tour_audio['und'][0])) {
+    $node->tour_audio = $node->field_tour_audio['und'][0]['nid'];
+  }
+  if (isset($node->field_highlighted_object['und'][0])) {
+    $node->highlighted_object = $node->field_highlighted_object['und'][0]['value'];
+  }
+  unset($node->field_museum_hours);
+  unset($node->field_gallery_id);
+  unset($node->field_gallery_number);
+  unset($node->field_object_id);
+  unset($node->field_reference_num);
+  unset($node->field_location);
+  unset($node->field_audio_file);
+  unset($node->field_audio_transcript);
+  unset($node->field_image);
+  unset($node->field_description);
+  unset($node->field_intro);
+  unset($node->field_stops2);
+  unset($node->field_gallery_location);
+  unset($node->field_in_gallery);
+  unset($node->field_tour_duration);
+  unset($node->field_tour_audio);
+  unset($node->field_tour_banner);
+  unset($node->field_object_audio);
+  unset($node->field_object_selector_number);
+  unset($node->field_object_selector_numbers);
+  unset($node->field_thumbnail_image);
+  unset($node->field_large_image);
+  unset($node->field_thumbnail_crop_rect);
+  unset($node->field_large_image_crop_rect);
+  unset($node->field_credits);
+  unset($node->field_floor);
+  unset($node->field_highlighted_object);
+  unset($node->field_artist_name);
+  unset($node->field_artist_origin);
+  unset($node->field_credit_line);
+  unset($node->field_copyright_notice);
 }
 
 
 function aicapp_gallery_count() {
   $result = _runSolrQuery(AICAPP_GALLERY_QUERY, '*', '*', 500);
 
-    $SOLR_count = count($result['response']['docs']);
-    $result = db_query("SELECT COUNT(nid) as count FROM node WHERE type = :s AND status = 1", array(':s' => 'gallery'));
-    $galleries = $result->fetchObject();
+  $SOLR_count = count($result['response']['docs']);
+  $result = db_query("SELECT COUNT(nid) as count FROM node WHERE type = :s AND status = 1", array(':s' => 'gallery'));
+  $galleries = $result->fetchObject();
 
-    return '<div class="callout"><p>'.t('Galleries in SOLR: '. $SOLR_count) . '<br />'. t('Galleries in Drupal: '. $galleries->count).'</p></div>';
+  return '<div class="callout"><p>' . t('Galleries in SOLR: ' . $SOLR_count) . '<br />' . t('Galleries in Drupal: ' . $galleries->count) . '</p></div>';
 }
 
 /**
-* hook_form_submit() implementation
+ * hook_form_submit() implementation
 * Used to multi-load in the galleries.  Objects don't use this, they are loaded one at a time via search.
-**/
+ */
 function aicapp_loadgalleries_form_submit($form, &$form_state) {
   $result = _runSolrQuery(AICAPP_GALLERY_QUERY, '*', '*', 500);
 
-    //first delete any old galleries not in SOLR anymore
-    $galleries = node_load_multiple(array(), array('type' => 'gallery', 'status' => 1));
+  // first delete any old galleries not in SOLR anymore
+  $galleries = node_load_multiple(array(), array('type' => 'gallery', 'status' => 1));
 
-    try {
-        //Now loop through the $result JSON.
-        foreach ($result['response']['docs'] as $object) {
-            aicappSaveNode($object, 'gallery'); //create new or update existing
-        }
-        foreach ($galleries as $gallery) {
-            //look for the Drupal gallery in the SOLR gallery
-            $match = false;
-            foreach($result['response']['docs'] as $item){
-                if($item['gallery_id'] == $gallery->field_gallery_id['und'][0]['value']) {
-                    $match = true;
-                }
-            }
-            //this would work if we had php 5.5 installed on server.
-            //$key = array_search($gallery->field_gallery_id['und'][0]['value'], array_column($result['response']['docs'], 'gallery_id'));
-            if (!$match) {
-                //not found in SOLR, delete the Drupal gallery
-                node_delete($gallery->nid);
-            }
-        }
-        drupal_set_message(t("Data has been loaded!"), 'status');
-    } catch (Exception $e) {
-        drupal_set_message(t("An error occurred: ". $e), 'error');
+  try {
+    // Now loop through the $result JSON.
+    foreach ($result['response']['docs'] as $object) {
+      aicappSaveNode($object, 'gallery'); // create new or update existing
     }
+    foreach ($galleries as $gallery) {
+      // look for the Drupal gallery in the SOLR gallery
+      $match = FALSE;
+      foreach ($result['response']['docs'] as $item) {
+        if ($item['gallery_id'] == $gallery->field_gallery_id['und'][0]['value']) {
+          $match = TRUE;
+        }
+      }
+      // this would work if we had php 5.5 installed on server.
+      // $key = array_search($gallery->field_gallery_id['und'][0]['value'], array_column($result['response']['docs'], 'gallery_id'));
+      if (!$match) {
+        // not found in SOLR, delete the Drupal gallery
+        node_delete($gallery->nid);
+      }
+    }
+    drupal_set_message(t("Data has been loaded!"), 'status');
+  } catch (Exception $e) {
+    drupal_set_message(t("An error occurred: " . $e), 'error');
+  }
 }
 
 /**
-* Performs the actual node_save().
-* Either creates a new object node or updates the existing one.
-* expects an $object array from SOLR lookup.
-**/
+ * Performs the actual node_save().
+ * Either creates a new object node or updates the existing one.
+ * expects an $object array from SOLR lookup.
+ */
 function aicappSaveNode($object, $type) {
-    //prepare for node_save().
+  // prepare for node_save().
 
-    if($type == 'object') {
-        //check for nid by SOLR object_id
-        $qres = db_query('SELECT entity_id FROM field_data_field_object_id WHERE field_object_id_value = :id',
-                array(':id' => $object['object_id']));
-        $record = $qres->fetchObject();
-    }
+  if ($type == 'object') {
+    // check for nid by SOLR object_id
+    $qres = db_query(
+      'SELECT entity_id FROM field_data_field_object_id WHERE field_object_id_value = :id',
+        array(':id' => $object['object_id'])
+    );
+    $record = $qres->fetchObject();
+  }
 
-    if($type == 'gallery') {
-        if(!empty($object['gallery_id'])) {
-            //check for nid by SOLR gallery_id
-            $qres = db_query('SELECT entity_id FROM field_data_field_gallery_id WHERE field_gallery_id_value = :id',
-                    array(':id' => $object['gallery_id']));
-        }
-        $record = $qres->fetchObject();
+  if ($type == 'gallery') {
+    if (!empty($object['gallery_id'])) {
+      // check for nid by SOLR gallery_id
+      $qres = db_query(
+        'SELECT entity_id FROM field_data_field_gallery_id WHERE field_gallery_id_value = :id',
+          array(':id' => $object['gallery_id'])
+      );
     }
-    if(!empty($record->entity_id)) {
-        //we have an existing node, so load its data
-		$node = node_load($record->entity_id);
-    } else {
-		//create a new node
-		$node = new stdClass();
-		$node->title = $object['title_t'];
-		$node->type = $type;
-		$node->language = LANGUAGE_NONE;
-		$node->uid = 1;
-		$node->promote = 0;
-		$node->comment = 0;
-		$node->created = time();
-	}
+    $record = $qres->fetchObject();
+  }
+  if (!empty($record->entity_id)) {
+    // We have an existing node, so load its data.
+    $node = node_load($record->entity_id);
+  }
+  else {
+    // create a new node
+    $node = new stdClass();
+    $node->title = $object['title_t'];
+    $node->type = $type;
+    $node->language = LANGUAGE_NONE;
+    $node->uid = 1;
+    $node->promote = 0;
+    $node->comment = 0;
+    $node->created = time();
+  }
 
-    if($type == 'object') {
-        $node->field_object_id[$node->language][0]['value'] = $object['object_id'];
-        $node->field_reference_num[$node->language][0]['value'] = $object['main_reference_number'];
-        $node->field_gallery_location[$node->language][0]['value'] = $object['gallery_location'];
-		if (!empty($object['thumbnail_full_path'])) {
-			$node->field_thumbnail_image[$node->language][0]['value'] = $object['thumbnail_full_path'];
-		}
-		if (!empty($object['large_image_full_path'])) {
-			$node->field_large_image[$node->language][0]['value'] = $object['large_image_full_path'];
-		}
-		$node->status = 0;
+  if ($type == 'object') {
+    $node->field_object_id[$node->language][0]['value'] = $object['object_id'];
+    $node->field_reference_num[$node->language][0]['value'] = $object['main_reference_number'];
+    $node->field_gallery_location[$node->language][0]['value'] = $object['gallery_location'];
 
-        if($object['in_gallery']) {
-            $node->field_in_gallery[$node->language][0]['value'] = $object['in_gallery'];
-        } else {
-            $node->field_in_gallery[$node->language][0]['value'] = 0;
-        }
+    // @TODO build a dynamic path to the image using the Image Server URL and
+    // the image ID using the following format:
+    // {scheme}://{server}{/prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
+    $filename = AICAPP_IMAGE_CROP_QUALITY '.' AICAPP_IMAGE_CROP_FORMAT;
+    // Image server URL begins like this for both thumnail and full.
+    $URL = AICAPP_IMAGE_SERVER . '/' . $object['object_id'] . '/';
+
+    if (!empty($object['thumbnail_full_path'])) {
+      $crop_size = variable_get('aicapp_image_thumb_crop', '!112,112');
+      // @TODO build a dynamic path to the thumnail image.
+      $URL .= AICAPP_IMAGE_CROP_REGION . '/' . $crop_size . '/';
+      $URL .= AICAPP_IMAGE_CROP_ROTATION . '/' . $filename;
+      // $node->field_thumbnail_image[$node->language][0]['value'] = $URL;
+      // @TODO remove following after previous line is functioning.
+      $node->field_thumbnail_image[$node->language][0]['value'] = $object['thumbnail_full_path'];
     }
-    if($type == 'gallery') {
-        if(isset($object['title_t'])) {
-            $node->title = $object['title_t'];
-        }
-        if(isset($object['gallery_id'])) {
-            $node->field_gallery_id[$node->language][0]['value'] = $object['gallery_id'];
-        }
-        if(isset($object['gallery_number'])) {
-            $node->field_gallery_number[$node->language][0]['value'] = $object['gallery_number'];
-        }
-        if(!empty($object['latitude']) && !empty($object['longitude'])) {
-            $node->field_location[$node->language][0]['value'] = $object['latitude'].','.$object['longitude'];
-        }
-        if(isset($object['floor'])) {
-            $node->field_floor[$node->language][0]['value'] = $object['floor'];
-        }
-		$node->status = 1;
+    if (!empty($object['large_image_full_path'])) {
+      $crop_size = variable_get('aicapp_image_full_crop', '!800,800');
+      // @TODO build a dynamic path to the full image.
+      $URL .= AICAPP_IMAGE_CROP_REGION . '/' . $crop_size . '/';
+      $URL .= AICAPP_IMAGE_CROP_ROTATION . '/' . $filename;
+      // $node->field_large_image[$node->language][0]['value'] = $URL;
+      // @TODO remove following after previous line is functioning.
+      $node->field_large_image[$node->language][0]['value'] = $object['large_image_full_path'];
     }
-    try {
-        node_save($node);
-        return $node->nid;
-    } catch (Exception $e) {
-        drupal_set_message(t("An error occurred, did not complete node save."), 'error');
+    $node->status = 0;
+
+    if ($object['in_gallery']) {
+      $node->field_in_gallery[$node->language][0]['value'] = $object['in_gallery'];
     }
+    else {
+      $node->field_in_gallery[$node->language][0]['value'] = 0;
+    }
+  }
+  if ($type == 'gallery') {
+    if (isset($object['title_t'])) {
+      $node->title = $object['title_t'];
+    }
+    if (isset($object['gallery_id'])) {
+      $node->field_gallery_id[$node->language][0]['value'] = $object['gallery_id'];
+    }
+    if (isset($object['gallery_number'])) {
+      $node->field_gallery_number[$node->language][0]['value'] = $object['gallery_number'];
+    }
+    if (!empty($object['latitude']) && !empty($object['longitude'])) {
+      $node->field_location[$node->language][0]['value'] = $object['latitude'] . ',' . $object['longitude'];
+    }
+    if (isset($object['floor'])) {
+      $node->field_floor[$node->language][0]['value'] = $object['floor'];
+    }
+    $node->status = 1;
+  }
+  try {
+    node_save($node);
+    return $node->nid;
+  }
+  catch (Exception $e) {
+    drupal_set_message(t("An error occurred, did not complete node save."), 'error');
+  }
 }
 
 /**
-* implement hook_form_alter()
-* Alter the node edit form - for editing objects, to insert the interactive Google Map.  We allow them to place a pin on the map
-* to determine the location of the object. The map page is an iframe, with it's own form & javascript.  The values are captured and
-* sent back to the node edit form page.
-**/
+ * implement hook_form_alter()
+ * Alter the node edit form - for editing objects, to insert the interactive Google Map.  We allow them to place a pin on the map
+ * to determine the location of the object. The map page is an iframe, with it's own form & javascript.  The values are captured and
+ * sent back to the node edit form page.
+ */
 function aicapp_form_alter(&$form, &$form_state, $form_id) {
-  // Only proceed if either object or tour node form
-  if ($form_id != 'object_node_form' && $form_id  != 'tour_node_form') {
+  // Only proceed if either object or tour node form.
+  if ($form_id != 'object_node_form' && $form_id != 'tour_node_form') {
     return;
   }
   $drupal_path = base_path();
-  $dest = drupal_get_path('module','aicapp');
+  $dest = drupal_get_path('module', 'aicapp');
   $coords = !empty($form['#node']->field_location['und'][0]['safe_value']) ? $form['#node']->field_location['und'][0]['safe_value'] : 0;
   $map_markup = '<iframe width="650" height="600" frameborder="0" scrolling="no"';
   $map_markup .= ' marginheight="0" marginwidth="0" src="' . $drupal_path;
@@ -1098,46 +1176,46 @@ function aicapp_form_alter(&$form, &$form_state, $form_id) {
     'type' => 'file',
     'data' => drupal_get_path('module', 'aicapp') . '/jquery.imgareaselect.min.js',
   );
-  // options for how javascript is added to page
+  // options for how javascript is added to page.
   $js_options = array(
     'type' => 'inline',
     'scope' => 'footer',
     'group' => JS_THEME,
     'weight' => 5,
   );
-  // If node form has a field called "field_thumbnail_image"
+  // If node form has a field called "field_thumbnail_image".
   if (!empty($form['#node']->field_thumbnail_image)) {
     $imageToCrop = $form['#node']->field_thumbnail_image;
-    // Crop the image
+    // Crop the image.
     cropImage($form, $imageToCrop);
   }
   else {
     $js_to_add = '(function($) { $("div#field-thumbnail-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p class=\"warning\">Thumbnail image unavailable.</p>" );
-              $("#field-thumbnail-crop-rect-add-more-wrapper input").prop("readonly", "readonly");} (jQuery))';
-    // Add JS to the page
+        $("#field-thumbnail-crop-rect-add-more-wrapper input").prop("readonly", "readonly");} (jQuery))';
+    // Add JS to the page.
     drupal_add_js($js_to_add, $js_options);
   }
 
-  // If node form has a field called "field_large_image"
+  // If node form has a field called "field_large_image".
   if (!empty($form['#node']->field_large_image)) {
     $imageToCrop = $form['#node']->field_large_image;
-    // Set a image size to crop
+    // Set a image size to crop.
     $imageType = 'large';
     cropImage($form, $imageToCrop, $imageType);
   }
   else {
     $js_to_add = '(function($) { $("div#field-large-image-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p class=\"warning\">Large image unavailable.</p>" );
-              $("#field-large-image-crop-rect-add-more-wrapper input").prop("readonly", "readonly");}(jQuery))';
-    // Add JS to the page
+        $("#field-large-image-crop-rect-add-more-wrapper input").prop("readonly", "readonly");}(jQuery))';
+    // Add JS to the page.
     drupal_add_js($js_to_add, $js_options);
   }
 }
 
 /**
  * Helper function to crop an Image.
-**/
+ */
 function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
-  // initializing image
+  // initializing image.
   $thumbUrl = $imageToCrop['und'][0]['value'];
   $thumbImageinfo = getimagesize($thumbUrl);
   $thumbWidth = $thumbImageinfo[0];
@@ -1146,22 +1224,29 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
   $thumbY1 = 0;
   $thumbX2 = $thumbWidth;
   $thumbY2 = $thumbHeight;
-  $thumbValues = array('x1' => 0, 'y1' => 0, 'x2' => 0, 'y2' => 0, 'width' => 0, 'height' => 0);
-  // If cropping a thumnail image
+  $thumbValues = array(
+    'x1' => 0,
+    'y1' => 0,
+    'x2' => 0,
+    'y2' => 0,
+    'width' => 0,
+    'height' => 0,
+  );
+  // If cropping a thumnail image.
   if ($imageType == 'thumbnail') {
     $formName = 'field_thumbnail_crop_rect';
     $formID = 'field-thumbnail';
     $formValue = 'field_thumbnail';
     $aspectRatio = '1:1';
-    $resizable = 'false';
-    //original crops for thumbnail image
+    $resizable = 'FALSE';
+    // original crops for thumbnail image.
     if ($thumbWidth > $thumbHeight) {
-      //if landscape image
+      // if landscape image
       $thumbX1 = round(($thumbWidth - $thumbHeight) / 2);
       $thumbX2 = round($thumbX1 + $thumbHeight);
     }
     elseif ($thumbHeight > $thumbWidth) {
-      //if portrait image
+      // if portrait image.
       $thumbY1 = round(($thumbHeight - $thumbWidth) / 2);
       $thumbY2 = round($thumbY1 + $thumbWidth);
     }
@@ -1171,78 +1256,79 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
     $formID = 'field-large-image';
     $formValue = 'field_large_image';
     $aspectRatio = '1.82:1';
-    $resizable = 'true';
-    // original crops for large image
-    $thumbCropHeight = round($thumbWidth/1.82);
-    $thumbY1 = round(($thumbHeight/2) -($thumbCropHeight/2));
+    $resizable = 'TRUE';
+    // Original crops for large image.
+    $thumbCropHeight = round($thumbWidth / 1.82);
+    $thumbY1 = round(($thumbHeight / 2) - ($thumbCropHeight / 2));
     $thumbY2 = round($thumbY1 + $thumbCropHeight);
   }
 
   if (isset($imageToCrop['und'][0])) {
-    $items = field_get_items('node', $form['#node'], $formValue.'_crop_rect');
+    $items = field_get_items('node', $form['#node'], $formValue . '_crop_rect');
     if ($items) {
-      //get default crop values
-      foreach($items as $itemid) {
+      // Get default crop values.
+      foreach ($items as $itemid) {
         $item = field_collection_field_get_entity($itemid);
       }
       if ($item->field_x) {
-        //if an x value exists, get all the values
+        // if an x value exists, get all the values.
         getDefaults($items, $thumbValues, $imageType);
       }
       else {
-        //otherwise set default crop values
+        // otherwise set default crop values.
         setDefaults($form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, $thumbValues);
       }
     }
     else {
-      //set default crop values
+      // set default crop values.
       setDefaults($form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, $thumbValues);
     }
   }
   // Add the Javascript to the page.
   // @TODO use a file instead of adding JS inline. Only pass configurations for the file to act upon.
   drupal_add_js(
-      '(function ($) {
-        $(document).ready(function () {
-          //display thumbnail and large images
-          $( "div#'.$formID.'-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p><img id=\"'.$formValue.'\" src=\"'.$thumbUrl.'\" /></p>" );
-          //make fields readonly
-          $("#field-thumbnail-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
-          $("#field-large-image-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
+    '(function ($) {
+    $(document).ready(function () {
+      // display thumbnail and large images
+      $( "div#' . $formID . '-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p><img id=\"' . $formValue . '\" src=\"' . $thumbUrl . '\" /></p>" );
+      // make fields readonly
+      $("#field-thumbnail-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
+      $("#field-large-image-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
 
-          var imageType = "'.$imageType.'";
-          var imageWidth = "'.$thumbValues['width'].'";
-          var imageHeight = "'.$thumbValues['height'].'";
-          if (imageType == "large") {
-            var imageWidthMin = 364;
-            var imageHeightMin = 200;
-          } else {
-          var imageWidthMin = "'.$thumbValues['width'].'";
-          var imageHeightMin = "'.$thumbValues['height'].'";
-          }
-          if ((imageType == "large" && (imageWidth < 364 || imageHeight < 200)) || (imageType == "thumbnail" && imageWidth < 50)) {
-            $( "div#'.$formID.'-crop-rect-add-more-wrapper .fieldset-wrapper" ).append( "<p class=\"warning\">WARNING: THIS IMAGE IS SMALLER THAN THE RECOMMENDED MINIMUM AND WILL BE SCALED TO FIT IN THE APP.</p>" );
-          }
-          $("img#'.$formValue.'").imgAreaSelect({
-            x1: '.$thumbValues['x1'].', y1: '.$thumbValues['y1'].', x2: '.$thumbValues['x2'].', y2: '.$thumbValues['y2'].',
-            aspectRatio: "'.$aspectRatio.'",
-            persistent: true,
-            handles: true,
-            minWidth: imageWidthMin,
-            minHeight: imageHeightMin,
-            resizable: '.$resizable.',
-            onSelectEnd: function (img, selection) {
-              $("input[name=\"'.$formValue.'_crop_rect[und][0][field_x][und][0][value]\"]").val(selection.x1);
-              $("input[name=\"'.$formValue.'_crop_rect[und][0][field_y][und][0][value]\"]").val(selection.y1);
-              $("input[name=\"'.$formValue.'_crop_rect[und][0][field_x2][und][0][value]\"]").val(selection.x2);
-              $("input[name=\"'.$formValue.'_crop_rect[und][0][field_y2][und][0][value]\"]").val(selection.y2);
-              $("input[name=\"'.$formValue.'_crop_rect[und][0][field_width][und][0][value]\"]").val(selection.width);
-              $("input[name=\"'.$formValue.'_crop_rect[und][0][field_height][und][0][value]\"]").val(selection.height);
-              }
-            });
-        });
-      })(jQuery);',
-      array(
+      var imageType = "' . $imageType . '";
+      var imageWidth = "' . $thumbValues['width'] . '";
+      var imageHeight = "' . $thumbValues['height'] . '";
+      if (imageType == "large") {
+        var imageWidthMin = 364;
+        var imageHeightMin = 200;
+      }
+      else {
+        var imageWidthMin = "' . $thumbValues['width'] . '";
+        var imageHeightMin = "' . $thumbValues['height'] . '";
+      }
+      if ((imageType == "large" && (imageWidth < 364 || imageHeight < 200)) || (imageType == "thumbnail" && imageWidth < 50)) {
+        $( "div#' . $formID . '-crop-rect-add-more-wrapper .fieldset-wrapper" ).append( "<p class=\"warning\">WARNING: THIS IMAGE IS SMALLER THAN THE RECOMMENDED MINIMUM AND WILL BE SCALED TO FIT IN THE APP.</p>" );
+      }
+      $("img#' . $formValue . '").imgAreaSelect({
+      x1: ' . $thumbValues['x1'] . ', y1: ' . $thumbValues['y1'] . ', x2: ' . $thumbValues['x2'] . ', y2: ' . $thumbValues['y2'] . ',
+      aspectRatio: "' . $aspectRatio . '",
+      persistent: TRUE,
+      handles: TRUE,
+      minWidth: imageWidthMin,
+      minHeight: imageHeightMin,
+      resizable: ' . $resizable . ',
+      onSelectEnd: function (img, selection) {
+        $("input[name=\"' . $formValue . '_crop_rect[und][0][field_x][und][0][value]\"]").val(selection.x1);
+        $("input[name=\"' . $formValue . '_crop_rect[und][0][field_y][und][0][value]\"]").val(selection.y1);
+        $("input[name=\"' . $formValue . '_crop_rect[und][0][field_x2][und][0][value]\"]").val(selection.x2);
+        $("input[name=\"' . $formValue . '_crop_rect[und][0][field_y2][und][0][value]\"]").val(selection.y2);
+        $("input[name=\"' . $formValue . '_crop_rect[und][0][field_width][und][0][value]\"]").val(selection.width);
+        $("input[name=\"' . $formValue . '_crop_rect[und][0][field_height][und][0][value]\"]").val(selection.height);
+        }
+      });
+    });
+    })(jQuery);',
+    array(
       'type' => 'inline',
       'scope' => 'footer',
       'group' => JS_THEME,
@@ -1253,7 +1339,7 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
 
 /**
  * Helper function to get crop defaults.
-**/
+ */
 function getDefaults($items, &$thumbValues, $imageType) {
   foreach ($items as $itemid) {
     $item = field_collection_field_get_entity($itemid);
@@ -1268,9 +1354,9 @@ function getDefaults($items, &$thumbValues, $imageType) {
 
 /**
  * Helper function to set crop defaults.
-**/
+ */
 function setDefaults(&$form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, &$thumbValues) {
-	$thumbValues['x1'] = $thumbX1;
+  $thumbValues['x1'] = $thumbX1;
   $form[$formName][LANGUAGE_NONE][0]['field_x'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x1'];
   $thumbValues['y1'] = $thumbY1;
   $form[$formName][LANGUAGE_NONE][0]['field_y'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y1'];
@@ -1285,19 +1371,19 @@ function setDefaults(&$form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2
       $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
     }
     elseif ($thumbHeight > $thumbWidth) {
-      //if portrait image
+      // if portrait image
       $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
       $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
     }
     else {
-      //perfect square
+      // perfect square
       $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
       $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
     }
     $thumbValues['width'] = $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'];
     $thumbValues['height'] = $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'];
   }
-  else if ($imageType == 'large') {
+  elseif ($imageType == 'large') {
     $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
     $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'] - $thumbValues['y1'];
     $thumbValues['width'] = $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'];
@@ -1306,203 +1392,209 @@ function setDefaults(&$form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2
 }
 
 /**
-*  implement hook_node_view()
-*
-*  We do a SOLR field lookup here to view the object with the complete data.
-*  Just attach the SOLR data to the $node object for viewing.
-**/
+ *  Implements hook_node_view().
+ *
+ *  We do a SOLR field lookup here to view the object with the complete data.
+ *  Just attach the SOLR data to the $node object for viewing.
+ */
 function aicapp_node_view($node, $view_mode, $langcode) {
-    if($node->type == 'object' && $node->field_object_id) {
-        $ref_num = $node->field_object_id['und'][0]['value'];
-        if(!empty($ref_num)) {
-            $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $ref_num);
+  if ($node->type == 'object' && $node->field_object_id) {
+    $ref_num = $node->field_object_id['und'][0]['value'];
+    if (!empty($ref_num)) {
+      $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $ref_num);
 
-            if(!empty($result['response']['docs'])) {
-                $w = 10;
-                foreach($result['response']['docs'][0] as $key => $val) {
-                    if($key == 'date_range') {
-                        $val = implode('-', $val);
-                    }
-                    $node->content[$key] = array(
-                        '#markup' => aicapp_field_markup($key, $val),
-                        '#weight' => $w++,
-                    );
-                }
-            }
+      if (!empty($result['response']['docs'])) {
+        $w = 10;
+        foreach ($result['response']['docs'][0] as $key => $val) {
+          if ($key == 'date_range') {
+            $val = implode('-', $val);
+          }
+          $node->content[$key] = array(
+            '#markup' => aicapp_field_markup($key, $val),
+            '#weight' => $w++,
+          );
         }
+      }
     }
-    if($node->type == 'gallery') {
-        if(!empty($node->field_gallery_id['und'])) {
-            $gallery_id =  $node->field_gallery_id['und'][0]['safe_value'];
-        } else {
-            $gallery_id = 0;
-        }
-       if(!empty($gallery_id)) {
-            $result = _runSolrQuery(AICAPP_GALLERY_QUERY, 'gallery_id', $gallery_id);
+  }
+  if ($node->type == 'gallery') {
+    if (!empty($node->field_gallery_id['und'])) {
+      $gallery_id =  $node->field_gallery_id['und'][0]['safe_value'];
+    }
+    else {
+      $gallery_id = 0;
+    }
+    if (!empty($gallery_id)) {
+      $result = _runSolrQuery(AICAPP_GALLERY_QUERY, 'gallery_id', $gallery_id);
 
-            if(!empty($result['response']['docs'])) {
-                $w = 10;
-                foreach($result['response']['docs'][0] as $key => $val) {
-                    $node->content[$key] = array(
-                        '#markup' => aicapp_field_markup($key, $val),
-                        '#weight' => $w++,
-                    );
-                }
-            }
+      if (!empty($result['response']['docs'])) {
+        $w = 10;
+        foreach ($result['response']['docs'][0] as $key => $val) {
+          $node->content[$key] = array(
+            '#markup' => aicapp_field_markup($key, $val),
+            '#weight' => $w++,
+          );
         }
+      }
     }
+  }
 }
 
 function aicapp_field_markup($key, $value) {
-    if(is_array($value)) {
-        $value = implode(', ', $value);
-    }
+  if (is_array($value)) {
+    $value = implode(', ', $value);
+  }
 
-    $markup = '<div class="field solr-field field-label-inline clearfix"><div class="field-label">'.$key.': &nbsp;';
-    $markup .= '</div><div class="field-items"><div class="field-item">'.$value.'</div></div></div>';
-    return $markup;
+  $markup = '<div class="field solr-field field-label-inline clearfix"><div class="field-label">' . $key . ': &nbsp;';
+  $markup .= '</div><div class="field-items"><div class="field-item">' . $value . '</div></div></div>';
+  return $markup;
 }
 
 /**
-*  implement hook_form()
-**/
+ *  implement hook_form()
+ */
 function aicapp_search_form($form_state = array()) {
-    $form['intro'] = array(
-        '#markup' => t('<p><a href="/node/add/object"><span class="button form-submit">Add a custom object</span></a><br /><b>Add via Solr</b><br />Use the form below to search the external Art Institute database (SOLR) for an object you wish
-                to add. If the object is found to already be in our system, this tool can be used to update the existing object.</p>'),
+  $form['intro'] = array(
+    '#markup' => t('<p><a href="/node/add/object"><span class="button form-submit">Add a custom object</span></a><br /><b>Add via Solr</b><br />Use the form below to search the external Art Institute database (SOLR) for an object you wish
+        to add. If the object is found to already be in our system, this tool can be used to update the existing object.</p>'),
+  );
+  $form['search_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Search by Title'),
+    '#size' => 12,
+      '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
+  );
+  $form['search_ref_num'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Search by Reference Number'),
+    '#size' => 12,
+      '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
+  );
+  $form['search_object_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Search by Object ID'),
+    '#description' => t('To enter multiple IDs, separate IDs with commas, i.e. 159135, 159135 - no comma at the end.<br /><br />'),
+    '#size' => 12,
+      '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
+  );
+  $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Search'),
+    '#attributes' => array('class' => array('button')),
     );
-    $form['search_title'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Search by Title'),
-        '#size' => 12,
-		    '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
-    );
-    $form['search_ref_num'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Search by Reference Number'),
-        '#size' => 12,
-		    '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
-    );
-     $form['search_object_id'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Search by Object ID'),
-        '#description' => t('To enter multiple IDs, separate IDs with commas, i.e. 159135, 159135 - no comma at the end.<br /><br />'),
-        '#size' => 12,
-		    '#default_value' => isset($form_state['values']['search_term']) ? $form_state['values']['search_term']:'',
-    );
-    $form['submit'] = array(
-		    '#type' => 'submit',
-		    '#value' => t('Search'),
-        '#attributes' => array('class' => array('button')),
-	  );
-    return $form;
-}
-/**
-*  implement hook_form_validate()
-**/
-function aicapp_search_form_validate($form, &$form_state) {
-    if(!empty($form_state['values']['search_title']))  {
-        if(strlen($form_state['values']['search_title']) < 3)  {
-            form_set_error('search_title', 'Please enter more than 2 characters');
-        }
-    }
-    if(!empty($form_state['values']['search_ref_num']))  {
-        if(strlen($form_state['values']['search_ref_num']) < 4)  {
-            form_set_error('search_ref_num', 'Please enter more than 3 characters');
-        }
-    }
-    if(!empty($form_state['values']['search_object_id']))  {
-        //regular expression to allow for one number/id value or more with commas between and not the end
-        $regex = '/^\d+(?:,\d+)*$/';
-        //collecting value, removing spaces
-        $objectValue = preg_replace('/\s+/', '', $form_state['values']['search_object_id']);
-        if (preg_match_all($regex, $objectValue, $matches, PREG_SET_ORDER, 0)) {
-          //great, value is valid
-        } else {
-          form_set_error('search_object_id', 'Object ID(s) should be a numeric value. If providing more than one ID, add a comma between IDs. Make sure there is no comma at the end.');
-        }
-    }
+  return $form;
 }
 
 /**
-*  implement hook_form_submit()
-**/
+ *  implement hook_form_validate()
+ */
+function aicapp_search_form_validate($form, &$form_state) {
+  if (!empty($form_state['values']['search_title'])) {
+    if (strlen($form_state['values']['search_title']) < 3) {
+      form_set_error('search_title', 'Please enter more than 2 characters');
+    }
+  }
+  if (!empty($form_state['values']['search_ref_num'])) {
+    if (strlen($form_state['values']['search_ref_num']) < 4) {
+      form_set_error('search_ref_num', 'Please enter more than 3 characters');
+    }
+  }
+  if (!empty($form_state['values']['search_object_id'])) {
+    // regular expression to allow for one number/id value or more with commas between and not the end
+    $regex = '/^\d+(?:,\d+)*$/';
+    // collecting value, removing spaces
+    $objectValue = preg_replace('/\s+/', '', $form_state['values']['search_object_id']);
+    if (preg_match_all($regex, $objectValue, $matches, PREG_SET_ORDER, 0)) {
+      // great, value is valid
+    }
+    else {
+      form_set_error('search_object_id', 'Object ID(s) should be a numeric value. If providing more than one ID, add a comma between IDs. Make sure there is no comma at the end.');
+    }
+  }
+}
+
+/**
+ *  implement hook_form_submit()
+ */
 function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) {
   global $base_path;
   $field = 'title_t';
   $srchtermArray = array();
   $objectIDs;
-  //determining if searching by title, ref number, or id
-  if(!empty($form_state['values']['search_title'])) {
-        $srchterm = $form_state['values']['search_title'] .'~';
-        $field = 'title_t';
-    } else if(!empty($form_state['values']['search_ref_num'])) {
-        $srchterm = $form_state['values']['search_ref_num'];
-        $field = 'main_reference_number';
-    } else if(!empty($form_state['values']['search_object_id'])) {
-        //collecting value, removing spaces
-        $srchterm = preg_replace('/\s+/', '', $form_state['values']['search_object_id']);
-        //collecting IDs for add/update all function
-        $objectIDs = $srchterm;
-        $field = 'object_id';
-    } else {
-        drupal_set_message('Problem running search.', 'error');
-        return;
-    }
+  // determining if searching by title, ref number, or id
+  if (!empty($form_state['values']['search_title'])) {
+    $srchterm = $form_state['values']['search_title'] . '~';
+    $field = 'title_t';
+  }
+  elseif (!empty($form_state['values']['search_ref_num'])) {
+    $srchterm = $form_state['values']['search_ref_num'];
+    $field = 'main_reference_number';
+  }
+  elseif (!empty($form_state['values']['search_object_id'])) {
+    // collecting value, removing spaces
+    $srchterm = preg_replace('/\s+/', '', $form_state['values']['search_object_id']);
+    // collecting IDs for add/update all function
+    $objectIDs = $srchterm;
+    $field = 'object_id';
+  }
+  else {
+    drupal_set_message('Problem running search.', 'error');
+    return;
+  }
 
-    $srchtermArray = explode(",",$srchterm);
-    foreach ($srchtermArray as $key => $srchterm) {
+  $srchtermArray = explode(",", $srchterm);
+  foreach ($srchtermArray as $key => $srchterm) {
+    $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, $field, $srchterm, $rows, $start);
 
-      $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, $field, $srchterm, $rows, $start);
-
-      $collect = array();
-      if(!empty($result['response']['numFound'])) {
-          $collect[] = '<p>'.$result['response']['numFound'].' objects found. Showing '.$start.' - '.($start + $rows).' | ';
-          if($start > 0) {
-              $start = $start - $rows;
-              $collect[] = '<a href="objects/search/'.($start + $rows).'">Prev page</a>';
-          }
-          if($start < $result['response']['numFound']) {
-              $collect[] = ' <a href="objects/search/'.($start + $rows).'">Next page</a>';
-          }
-          $collect[] = '</p>';
-          foreach($result['response']['docs'] as $doc) {
-              $collect[] = aicapp_field_markup('object_id', $doc['object_id']);
-              $collect[] = aicapp_field_markup('title', $doc['title_t']);
-              $collect[] = aicapp_field_markup('main_reference_number', $doc['main_reference_number']);
-  			$collect[] = '<a class="button small" href="'.$base_path.'objects/object_add/'.$doc['object_id'].'">Add or Update Object</a>';
-          }
+    $collect = array();
+    if (!empty($result['response']['numFound'])) {
+      $collect[] = '<p>' . $result['response']['numFound'] . ' objects found. Showing ' . $start . ' - ' . ($start + $rows) . ' | ';
+      if ($start > 0) {
+        $start = $start - $rows;
+        $collect[] = '<a href="objects/search/' . ($start + $rows) . '">Prev page</a>';
       }
-      $output = implode(' ',$collect);
-
-      if(!empty($output)) {
-          drupal_set_message($output, 'status');
-      } else {
-          drupal_set_message('You entered <em>'. $srchterm.'</em>, no matching object was found.', 'status');
-          unset($srchtermArray[$key]);
+      if ($start < $result['response']['numFound']) {
+        $collect[] = ' <a href="objects/search/' . ($start + $rows) . '">Next page</a>';
       }
-
+      $collect[] = '</p>';
+      foreach ($result['response']['docs'] as $doc) {
+        $collect[] = aicapp_field_markup('object_id', $doc['object_id']);
+        $collect[] = aicapp_field_markup('title', $doc['title_t']);
+        $collect[] = aicapp_field_markup('main_reference_number', $doc['main_reference_number']);
+        $collect[] = '<a class="button small" href="' . $base_path . 'objects/object_add/' . $doc['object_id'] . '">Add or Update Object</a>';
+      }
     }
+    $output = implode(' ', $collect);
 
-    //display update all button only if there's more than one object
-    $countArray = count($srchtermArray);
-    if ($countArray > 1) {
-      drupal_set_message('<a class="button updateObjects" href="'.$base_path.'objects/object_add/'.$objectIDs.'">Add or Update All</a>');
+    if (!empty($output)) {
+      drupal_set_message($output, 'status');
     }
+    else {
+      drupal_set_message('You entered <em>' . $srchterm . '</em>, no matching object was found.', 'status');
+      unset($srchtermArray[$key]);
+    }
+  }
+
+  // display update all button only if there's more than one object
+  $countArray = count($srchtermArray);
+  if ($countArray > 1) {
+    drupal_set_message('<a class="button updateObjects" href="' . $base_path . 'objects/object_add/' . $objectIDs . '">Add or Update All</a>');
+  }
 }
 
 /**
-*    Run a SOLR query.
-*    To run this locally you must be connected through VPN to the AIC domain, and run the SSH command to create
-*    a tunnel mapping localhost:8080 to the SOLR URL.
+ *  Run a SOLR query.
+*  To run this locally you must be connected through VPN to the AIC domain, and run the SSH command to create
+*  a tunnel mapping localhost:8080 to the SOLR URL.
 *
-*    Sample queries.  Get a specific record by main_reference_number
-*    $url = "http://localhost:8080/solr/select?rows=50&start=0&fq=document_type%3Aartwork-webcoll&q=main_reference_number:1942.51&wt=json";
+ *  Sample queries.  Get a specific record by main_reference_number
+*  $url = "http:// localhost:8080/solr/select?rows=50&start=0&fq=document_type%3Aartwork-webcoll&q=main_reference_number:1942.51&wt=json";
 *
-*    Get all records in the Artwork web collection
-*    $url = "http://localhost:8080/solr/select?rows=50&start=0&fq=document_type%3Aartwork-webcoll&q=*%3A*&wt=json";
-**/
-  function _runSolrQuery($query_type, $term, $value, $rows = 1, $start = 0) {
+ *  Get all records in the Artwork web collection
+*  $url = "http:// localhost:8080/solr/select?rows=50&start=0&fq=document_type%3Aartwork-webcoll&q=*%3A*&wt=json";
+ */
+  function _runSolrQuery($query_type, $term, $value, $rows = 1, $start = 0)
+  {
     $query = variable_get('aicapp_artwork_query');
     if ($query_type == AICAPP_GALLERY_QUERY) {
       $query = variable_get('aicapp_gallery_query');
@@ -1525,54 +1617,56 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
     $query = str_replace('{{term}}', $term, $query);
     $query = str_replace('{{value}}', $value, $query);
 
-    //Executes the URL and saves the content (json) in the variable.
+    // Executes the URL and saves the content (json) in the variable.
     $content = file_get_contents($query);
 
-    if($content) {
-      return json_decode($content,true);
+    if ($content) {
+      return json_decode($content, TRUE);
     }
     return;
   }
 
 /**
-* Implements hook_cron() function
+ * Implements hook_cron() function
 * set up nightly cron job
-**/
+ */
 function aicapp_cron() {
-    // run the form submit functions.
-    // Send in empty arrays representing the form as these are not used in the function anyway.
-    // I guess I could have set these up as regular menu items with page callbacks..
+  // run the form submit functions.
+  // Send in empty arrays representing the form as these are not used in the function anyway.
+  // I guess I could have set these up as regular menu items with page callbacks..
 
-    $fm = array();
-    $fm2 = array();
+  $fm = array();
+  $fm2 = array();
 
-    if(date('G') == 22){ // At 10pm - assuming Cron is running every hour.
-        aicapp_loadgalleries_form_submit($fm, $fm2);
-    }
-	if(date('G') == 23){ // At 11pm - assuming Cron is running every hour.
-        aicapp_objectGalleryStatus_submit($fm, $fm2);
-    }
-    if(date('G') == 24){ // At 12pm - assuming Cron is running every hour.
-        aicapp_gendata_form_submit($fm, $fm2);
-    }
+  if (date('G') == 22) { // At 10pm - assuming Cron is running every hour.
+    aicapp_loadgalleries_form_submit($fm, $fm2);
+  }
+  if (date('G') == 23) { // At 11pm - assuming Cron is running every hour.
+    aicapp_objectGalleryStatus_submit($fm, $fm2);
+  }
+  if (date('G') == 24) { // At 12pm - assuming Cron is running every hour.
+    aicapp_gendata_form_submit($fm, $fm2);
+  }
 }
 
 /**
-* create a text file that triggers the Apache cron job to sync the files
+ * create a text file that triggers the Apache cron job to sync the files
 * with external system
-**/
+ */
 function aicapp_file_sync_form_submit() {
-    $filename = 'trigger/file_sync_trigger.txt';
-    if(!file_exists($filename)) {
-        $file = fopen($filename, 'w');
-        if($file) {
-           drupal_set_message('The file-sync trigger was generated. The system will now sync files.', 'status');
-        } else {
-           drupal_set_message('Unable to create the file-sync trigger.', 'error');
-        }
-    } else {
-        drupal_set_message('The file-sync trigger has been generated.', 'status');
+  $filename = 'trigger/file_sync_trigger.txt';
+  if (!file_exists($filename)) {
+    $file = fopen($filename, 'w');
+    if ($file) {
+      drupal_set_message('The file-sync trigger was generated. The system will now sync files.', 'status');
     }
+    else {
+      drupal_set_message('Unable to create the file-sync trigger.', 'error');
+    }
+  }
+  else {
+    drupal_set_message('The file-sync trigger has been generated.', 'status');
+  }
 }
 
 /**
@@ -1582,100 +1676,100 @@ function aicapp_file_sync_form_submit() {
  * won't be sent to the app without them.
  */
 function aicapp_node_presave($node) {
-    //a general flag to indicate there are changes to be published.
-    variable_set('aicapp_pending', 1);
+  // a general flag to indicate there are changes to be published.
+  variable_set('aicapp_pending', 1);
 
-    if($node->type == 'tour') {
-        aicapp_check_for_object_problems($node);
-    }
-    if($node->type == 'object') {
-        if(isset($node->field_object_id['und'][0]['value'])) {
-            $ref_num = $node->field_object_id['und'][0]['value'];
-            if (!empty($ref_num)) {
-                $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $ref_num);
+  if ($node->type == 'tour') {
+    aicapp_check_for_object_problems($node);
+  }
+  if ($node->type == 'object') {
+    if (isset($node->field_object_id['und'][0]['value'])) {
+      $ref_num = $node->field_object_id['und'][0]['value'];
+      if (!empty($ref_num)) {
+        $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $ref_num);
 
-                if (empty($result['response']['docs'][0]['large_image_full_path'])) {
-                    drupal_set_message('The object ' . $node->title . ' does not have a full-size image in SOLR.', 'warning');
-                }
-            }
+        if (empty($result['response']['docs'][0]['large_image_full_path'])) {
+          drupal_set_message('The object ' . $node->title . ' does not have a full-size image in SOLR.', 'warning');
         }
-        //also if an object is saved and is set to be published, but has no audio, set it back
-        //to unpublished and give warning.
-        if(empty($node->field_object_audio['und'][0])) {
-            $node->status = 0;
-            drupal_set_message('The object ' . $node->title . ' has no audio file attached.', 'warning');
-        }
+      }
     }
+    // also if an object is saved and is set to be published, but has no audio, set it back
+    // to unpublished and give warning.
+    if (empty($node->field_object_audio['und'][0])) {
+      $node->status = 0;
+      drupal_set_message('The object ' . $node->title . ' has no audio file attached.', 'warning');
+    }
+  }
 }
 
 function aicapp_check_for_object_problems($node) {
-    $noLocs = array();
-    $unpubs = array();
-    $noaudio = array();
-    $noImage = array();
-    $inGallery = array();
-    if(!empty($node->field_stops2['und'][0]['entity']->field_t_object['und'])){
-        $stops = $node->field_stops2['und'][0]['entity']->field_t_object['und'];
-        foreach($stops as $stop) {
-            $node = node_load($stop['nid']);
-            if(empty($node->field_location)) {
-                $noLocs[] = array('nid' => $node->nid, 'title' => $node->title);
-            }
-            if(!$node->status) {
-                $unpubs[] = array('nid' => $node->nid, 'title' => $node->title);
-            }
-            if(empty($node->field_object_audio['und'][0])) {
-                $noaudio[] = array('nid' => $node->nid, 'title' => $node->title);
-            }
-            if((empty($node->field_thumbnail_image) || empty($node->field_large_image)) && empty($node->field_image)) {
-                $noImage[] = array('nid' => $node->nid, 'title' => $node->title);
-            }
-            if($node->field_in_gallery['und'][0]['value'] != true) {
-                $inGallery[] = array('nid' => $node->nid, 'title' => $node->title);
-            }
-        }
+  $noLocs = array();
+  $unpubs = array();
+  $noaudio = array();
+  $noImage = array();
+  $inGallery = array();
+  if (!empty($node->field_stops2['und'][0]['entity']->field_t_object['und'])) {
+    $stops = $node->field_stops2['und'][0]['entity']->field_t_object['und'];
+    foreach ($stops as $stop) {
+      $node = node_load($stop['nid']);
+      if (empty($node->field_location)) {
+        $noLocs[] = array('nid' => $node->nid, 'title' => $node->title);
+      }
+      if (!$node->status) {
+        $unpubs[] = array('nid' => $node->nid, 'title' => $node->title);
+      }
+      if (empty($node->field_object_audio['und'][0])) {
+        $noaudio[] = array('nid' => $node->nid, 'title' => $node->title);
+      }
+      if ((empty($node->field_thumbnail_image) || empty($node->field_large_image)) && empty($node->field_image)) {
+        $noImage[] = array('nid' => $node->nid, 'title' => $node->title);
+      }
+      if ($node->field_in_gallery['und'][0]['value'] != TRUE) {
+        $inGallery[] = array('nid' => $node->nid, 'title' => $node->title);
+      }
     }
-    if(!empty($noLocs)) {
-        $group = '<ul>';
-        foreach($noLocs as $item) {
-            $group .= '<li>'.l($item['title'], 'node/'.$item['nid'].'/edit').'</li>';
-        }
-        $group .= '</ul>';
-        drupal_set_message('The following object(s) do not have a location field data set (lat/lon):'.
-          $group.'Location data must be set for the objects to be sent to the mobile app.', 'error');
+  }
+  if (!empty($noLocs)) {
+    $group = '<ul>';
+    foreach ($noLocs as $item) {
+      $group .= '<li>' . l($item['title'], 'node/' . $item['nid'] . '/edit') . '</li>';
     }
-    if(!empty($unpubs)) {
-        $group = '<ul>';
-        foreach($unpubs as $item) {
-            $group .= '<li>'.l($item['title'], 'node/'.$item['nid'].'/edit').'</li>';
-        }
-        $group .= '</ul>';
-        drupal_set_message('The following object(s) are currently marked unpublished:'.$group, 'error');
+    $group .= '</ul>';
+    drupal_set_message('The following object(s) do not have a location field data set (lat/lon):' .
+      $group . 'Location data must be set for the objects to be sent to the mobile app.', 'error');
+  }
+  if (!empty($unpubs)) {
+    $group = '<ul>';
+    foreach ($unpubs as $item) {
+      $group .= '<li>' . l($item['title'], 'node/' . $item['nid'] . '/edit') . '</li>';
     }
-    if(!empty($noaudio)) {
-        $group = '<ul>';
-        foreach($noaudio as $item) {
-            $group .= '<li>'.l($item['title'], 'node/'.$item['nid'].'/edit').'</li>';
-        }
-        $group .= '</ul>';
-        drupal_set_message('The following object(s) have no default audio file:'.$group, 'error');
+    $group .= '</ul>';
+    drupal_set_message('The following object(s) are currently marked unpublished:' . $group, 'error');
+  }
+  if (!empty($noaudio)) {
+    $group = '<ul>';
+    foreach ($noaudio as $item) {
+      $group .= '<li>' . l($item['title'], 'node/' . $item['nid'] . '/edit') . '</li>';
     }
-    if(!empty($noImage)) {
-        $group = '<ul>';
-        foreach($noImage as $item) {
-            $group .= '<li>'.l($item['title'], 'node/'.$item['nid'].'/edit').'</li>';
-        }
-        $group .= '</ul>';
-        drupal_set_message('The following object(s) are missing images:'.$group, 'error');
+    $group .= '</ul>';
+    drupal_set_message('The following object(s) have no default audio file:' . $group, 'error');
+  }
+  if (!empty($noImage)) {
+    $group = '<ul>';
+    foreach ($noImage as $item) {
+      $group .= '<li>' . l($item['title'], 'node/' . $item['nid'] . '/edit') . '</li>';
     }
-    if(!empty($inGallery)) {
-        $group = '<ul>';
-        foreach($inGallery as $item) {
-            $group .= '<li>'.l($item['title'], 'node/'.$item['nid'].'/edit').'</li>';
-        }
-        $group .= '</ul>';
-        drupal_set_message('The following objects\' \'in gallery\' setting is set to false:'.$group, 'error');
+    $group .= '</ul>';
+    drupal_set_message('The following object(s) are missing images:' . $group, 'error');
+  }
+  if (!empty($inGallery)) {
+    $group = '<ul>';
+    foreach ($inGallery as $item) {
+      $group .= '<li>' . l($item['title'], 'node/' . $item['nid'] . '/edit') . '</li>';
     }
+    $group .= '</ul>';
+    drupal_set_message('The following objects\' \'in gallery\' setting is set to FALSE:' . $group, 'error');
+  }
 }
 
 // cycle through every published CMS object and pull it up in SOLR
@@ -1683,50 +1777,50 @@ function aicapp_check_for_object_problems($node) {
 // image has been added in the node.
 function aicapp_object_noimg() {
 
-    //grab object_ids and nid for every object node
-    $query = db_select('field_revision_field_object_id', 'fi')->extend('PagerDefault');
-    $query->join('node','n', 'n.nid = fi.entity_id');
-    $query->fields('fi', array('entity_id', 'field_object_id_value'))
-        ->limit(10)
-        ->condition('fi.bundle', 'object')
-        ->condition('n.status', 1)
-        ->orderBy('field_object_id_value');
-    $result = $query->execute();
+  // grab object_ids and nid for every object node
+  $query = db_select('field_revision_field_object_id', 'fi')->extend('PagerDefault');
+  $query->join('node', 'n', 'n.nid = fi.entity_id');
+  $query->fields('fi', array('entity_id', 'field_object_id_value'))
+    ->limit(10)
+    ->condition('fi.bundle', 'object')
+    ->condition('n.status', 1)
+    ->orderBy('field_object_id_value');
+  $result = $query->execute();
 
 
-    //examine in SOLR and see if image is there
-    $rows = array();
-    while($record = $result->fetchAssoc()) {
-        $json = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $record['field_object_id_value']);
-        foreach ($json['response']['docs'] as $item) {
-            if (empty($item['large_image_full_path'])) {
+  // examine in SOLR and see if image is there
+  $rows = array();
+  while ($record = $result->fetchAssoc()) {
+    $json = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $record['field_object_id_value']);
+    foreach ($json['response']['docs'] as $item) {
+      if (empty($item['large_image_full_path'])) {
 
-                //there is no image in SOLR.  Check Drupal
-                $node = node_load($record['entity_id']);
-                if(empty($node->field_image[LANGUAGE_NONE][0]['uri'])) {
-                    $rows[] = l($item['object_id'] . ' - ' . substr($item['title_t'], 0, 50), 'node/'.$record['entity_id'].'/edit'). ' -> <span class="red">[needs image]</span>';
-                }
-            } else {
-                $rows[] = $item['object_id'] . ' - ' . substr($item['title_t'], 0, 50) . ' -> [good]';
-            }
+        // there is no image in SOLR.  Check Drupal
+        $node = node_load($record['entity_id']);
+        if (empty($node->field_image[LANGUAGE_NONE][0]['uri'])) {
+          $rows[] = l($item['object_id'] . ' - ' . substr($item['title_t'], 0, 50), 'node/' . $record['entity_id'] . '/edit') . ' -> <span class="red">[needs image]</span>';
         }
+      }
+    else {
+        $rows[] = $item['object_id'] . ' - ' . substr($item['title_t'], 0, 50) . ' -> [good]';
+      }
     }
+  }
 
-    $output = array(
-      array(
-          '#theme' => 'item_list',
-          '#items' => $rows,
-      ),
-      array(
-        '#theme' => 'pager',
-      ),
-    );
-    return $output;
+  $output = array(
+    array(
+      '#theme' => 'item_list',
+      '#items' => $rows,
+    ),
+    array(
+    '#theme' => 'pager',
+    ),
+  );
+  return $output;
 }
 
 function aicapp_admin() {
   $form = array();
-
   $form['aicapp_artwork_query'] = array(
     '#type' => 'textarea',
     '#title' => t('Artwork query URL'),
@@ -1734,7 +1828,6 @@ function aicapp_admin() {
     '#rows' => 4,
     '#description' => t("Use {{rows}}, {{start}}, {{term}}, and {{value}} to note where different values should be used."),
   );
-
   $form['aicapp_gallery_query'] = array(
     '#type' => 'textfield',
     '#title' => t('Gallery query URL'),
@@ -1743,33 +1836,59 @@ function aicapp_admin() {
     '#maxlength' => 256,
     '#description' => t("Use {{rows}}, {{start}}, {{term}}, and {{value}} to note where different values should be used."),
   );
-
   $form['aicapp_gmap_key'] = array(
     '#type' => 'textfield',
     '#title' => t('Google Maps API Key'),
     '#default_value' => variable_get('aicapp_gmap_key', ''),
     '#size' => 200,
     '#maxlength' => 256,
-    '#description' => t("Go to https://developers.google.com/maps/documentation/javascript/get-api-key to get an API key"),
+    '#description' => t("Go to https:// developers.google.com/maps/documentation/javascript/get-api-key to get an API key"),
   );
-
+  $form['aicapp_image_server_url'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Image Server URL'),
+    '#default_value' => variable_get('aicapp_image_server_url', ' https://lakeimagesweb.artic.edu/iiif2/'),
+    '#description' => t('URL to the Image Server.'),
+  );
+  $form['aicapp_image_full_crop'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Full image crop dimensions.'),
+    '#default_value' => variable_get('aicapp_image_thumb_crop', '!800,800'),
+    '#description' => t('Minimum crop dimensions for the full image.'),
+  );
+  $form['aicapp_image_thumb_crop'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Thumbnail image crop dimensions.'),
+    '#default_value' => variable_get('aicapp_image_thumb_crop', ' !112,112'),
+    '#description' => t('Minimum crop dimensions for the thumnail image.'),
+  );
   return system_settings_form($form);
 }
 
 function aicapp_admin_validate($form, &$form_state) {
   $query = $form_state['values']['aicapp_artwork_query'];
-  if (substr($query, 0, 7) !== "http://" && substr($query, 0, 8) !== "https://") {
+  if (substr($query, 0, 7) !== "http:// " && substr($query, 0, 8) !== "https:// ") {
     form_set_error('aicapp_artwork_query', t('You must enter a URL.'));
   }
-  if (strpos($query, '{{term}}') === false) {
+  if (strpos($query, '{{term}}') === FALSE) {
     form_set_error('aicapp_artwork_query', t('You must include {{term}} somewhere in your URL.'));
   }
 
   $query = $form_state['values']['aicapp_gallery_query'];
-  if (substr($query, 0, 7) !== "http://" && substr($query, 0, 8) !== "https://") {
+  if (substr($query, 0, 7) !== "http:// " && substr($query, 0, 8) !== "https:// ") {
     form_set_error('aicapp_gallery_query', t('You must enter a URL.'));
   }
-  if (strpos($query, '{{term}}') === false) {
+  if (strpos($query, '{{term}}') === FALSE) {
     form_set_error('aicapp_gallery_query', t('You must include {{term}} somewhere in your URL.'));
+  }
+  // Check if Image Server value is a URL.
+  if (!filter_var($form_state['values']['aicapp_image_server_url'], FILTER_VALIDATE_URL)) {
+    form_set_error('aicapp_image_server_url', t('You must provide a valid URL for the Image Server.'));
   }
 }
