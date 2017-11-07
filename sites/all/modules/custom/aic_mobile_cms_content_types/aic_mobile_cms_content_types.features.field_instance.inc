@@ -640,7 +640,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'progress_indicator' => 'throbber',
       ),
       'type' => 'file_generic',
-      'weight' => 2,
+      'weight' => 3,
     ),
   );
 
@@ -681,7 +681,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 3,
+      'weight' => 4,
     ),
   );
 
@@ -722,23 +722,23 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 4,
+      'weight' => 5,
     ),
   );
 
-  // Exported field_instance: 'node-audio-field_descriptive_title'.
-  $field_instances['node-audio-field_descriptive_title'] = array(
+  // Exported field_instance: 'node-audio-field_track_title'.
+  $field_instances['node-audio-field_track_title'] = array(
     'bundle' => 'audio',
     'default_value' => NULL,
     'deleted' => 0,
-    'description' => 'This is for the Admin to make it easier to select the right audio from the list in the CMS.',
+    'description' => 'Used in the app, to show the track name in the audio player. Ex: "Caba de Buddha"',
     'display' => array(
       'default' => array(
         'label' => 'above',
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 5,
+        'weight' => 6,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -748,8 +748,8 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       ),
     ),
     'entity_type' => 'node',
-    'field_name' => 'field_descriptive_title',
-    'label' => 'Descriptive Title',
+    'field_name' => 'field_track_title',
+    'label' => 'Track Title',
     'required' => 0,
     'settings' => array(
       'entity_translation_sync' => FALSE,
@@ -763,7 +763,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 1,
+      'weight' => 2,
     ),
   );
 
@@ -772,7 +772,8 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'bundle' => 'audio',
     'default_value' => NULL,
     'deleted' => 0,
-    'description' => '',
+    'description' => '"Descriptive Title for the Admin to easily identify the Audio Files within the CMS Admin UI.
+Ex: ""Head of Buddha (Spanish)"""',
     'display' => array(
       'default' => array(
         'label' => 'above',
@@ -790,7 +791,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'entity_type' => 'node',
     'field_name' => 'title_field',
     'label' => 'Title',
-    'required' => TRUE,
+    'required' => 1,
     'settings' => array(
       'entity_translation_sync' => FALSE,
       'hide_label' => array(
@@ -801,12 +802,13 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       'user_register_form' => FALSE,
     ),
     'widget' => array(
+      'active' => 1,
       'module' => 'text',
       'settings' => array(
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 0,
+      'weight' => 1,
     ),
   );
 
@@ -1056,7 +1058,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 1,
+      'weight' => 2,
     ),
   );
 
@@ -1094,7 +1096,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 3,
+      'weight' => 4,
     ),
   );
 
@@ -1135,7 +1137,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 5,
+      'weight' => 6,
     ),
   );
 
@@ -1174,7 +1176,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       'module' => 'html5_tools',
       'settings' => array(),
       'type' => 'urlwidget',
-      'weight' => 2,
+      'weight' => 3,
     ),
   );
 
@@ -1215,7 +1217,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 4,
+      'weight' => 5,
     ),
   );
 
@@ -1258,7 +1260,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 0,
+      'weight' => 1,
     ),
   );
 
@@ -1507,7 +1509,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'display_label' => 1,
       ),
       'type' => 'options_onoff',
-      'weight' => 10,
+      'weight' => 8,
     ),
   );
 
@@ -1558,7 +1560,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'progress_indicator' => 'throbber',
       ),
       'type' => 'image_image',
-      'weight' => 12,
+      'weight' => 10,
     ),
   );
 
@@ -1602,7 +1604,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'display_label' => 1,
       ),
       'type' => 'options_onoff',
-      'weight' => 5,
+      'weight' => 6,
     ),
   );
 
@@ -1643,7 +1645,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 15,
+      'weight' => 13,
     ),
   );
 
@@ -1689,7 +1691,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 16,
+      'weight' => 14,
     ),
   );
 
@@ -1730,7 +1732,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 11,
+      'weight' => 9,
     ),
   );
 
@@ -1772,7 +1774,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'node_reference_autocomplete',
-      'weight' => 9,
+      'weight' => 8,
     ),
   );
 
@@ -1898,7 +1900,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     ),
     'entity_type' => 'node',
     'field_name' => 'field_object_selector_numbers',
-    'label' => 'Object Selector Numbers',
+    'label' => 'Deprecated: Object Selector Numbers',
     'required' => 0,
     'settings' => array(
       'entity_translation_sync' => FALSE,
@@ -1913,7 +1915,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       'module' => 'number',
       'settings' => array(),
       'type' => 'number',
-      'weight' => 8,
+      'weight' => 9,
     ),
   );
 
@@ -2000,7 +2002,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 14,
+      'weight' => 12,
     ),
   );
 
@@ -2041,7 +2043,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 13,
+      'weight' => 11,
     ),
   );
 
@@ -2086,7 +2088,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'summary_rows' => 5,
       ),
       'type' => 'text_textarea_with_summary',
-      'weight' => -4,
+      'weight' => 2,
     ),
   );
 
@@ -2127,7 +2129,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 31,
+      'weight' => 4,
     ),
   );
 
@@ -2170,7 +2172,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => -5,
+      'weight' => 1,
     ),
   );
 
@@ -2211,7 +2213,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 5,
+      'weight' => 6,
     ),
   );
 
@@ -2252,7 +2254,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 11,
+      'weight' => 12,
     ),
   );
 
@@ -2303,7 +2305,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'progress_indicator' => 'throbber',
       ),
       'type' => 'image_image',
-      'weight' => 2,
+      'weight' => 3,
     ),
   );
 
@@ -2344,7 +2346,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 6,
+      'weight' => 7,
     ),
   );
 
@@ -2385,7 +2387,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 10,
+      'weight' => 11,
     ),
   );
 
@@ -2431,7 +2433,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 12,
+      'weight' => 13,
     ),
   );
 
@@ -2477,7 +2479,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 4,
+      'weight' => 5,
     ),
   );
 
@@ -2518,7 +2520,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 3,
+      'weight' => 4,
     ),
   );
 
@@ -2560,7 +2562,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'node_reference_autocomplete',
-      'weight' => 9,
+      'weight' => 10,
     ),
   );
 
@@ -2598,7 +2600,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 1,
+      'weight' => 2,
     ),
   );
 
@@ -2654,7 +2656,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'year_range' => '-0:+3',
       ),
       'type' => 'date_popup',
-      'weight' => 7,
+      'weight' => 8,
     ),
   );
 
@@ -2695,7 +2697,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 10,
       ),
       'type' => 'text_textfield',
-      'weight' => 8,
+      'weight' => 9,
     ),
   );
 
@@ -2738,12 +2740,14 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 0,
+      'weight' => 1,
     ),
   );
 
   // Translatables
   // Included for use with string extractors like potx.
+  t('"Descriptive Title for the Admin to easily identify the Audio Files within the CMS Admin UI.
+Ex: ""Head of Buddha (Spanish)"""');
   t('Add audio references in the same order as object selector numbers above.');
   t('Artist Name');
   t('Artist Origin');
@@ -2756,8 +2760,8 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   t('Copyright Notice');
   t('Credit Line');
   t('Credits');
+  t('Deprecated: Object Selector Numbers');
   t('Description');
-  t('Descriptive Title');
   t('Enter artist first and last name, i.e. Irving Penn');
   t('Enter artist\'s origin, i.e. American, 1917-2009');
   t('Floor');
@@ -2781,12 +2785,10 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   t('Object');
   t('Object ID');
   t('Object Selector Number');
-  t('Object Selector Numbers');
   t('Reference Number');
   t('Start Location');
   t('Start location of the Tour.');
   t('This field will be deprecated soon. For the time being, please enter first audio stop number here and also as the first number in the Object Selector Numbers fields below.');
-  t('This is for the Admin to make it easier to select the right audio from the list in the CMS.');
   t('Thumbail Image');
   t('Thumbnail Crop');
   t('Thumbnail Image');
@@ -2796,9 +2798,11 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   t('Tour Dates');
   t('Tour Duration');
   t('Tour Stops');
+  t('Track Title');
   t('Type');
   t('URL to an icon for a map annotation.');
   t('Upload an image here if there is not a web image for the object coming in via SOLR.  ');
+  t('Used in the app, to show the track name in the audio player. Ex: "Caba de Buddha"');
   t('height');
   t('latitude, longitude');
   t('width');
