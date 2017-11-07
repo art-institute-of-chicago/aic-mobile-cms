@@ -879,7 +879,6 @@ function _getSOLRdata(&$object, $object_id = null) {
  * Clear out all the Drupal stuff from the node, so we can deliver bare JSON data.
  */
 function strip_drupal_from_node(&$node) {
-dsm($node);
   $to_unset = array(
     'vid', 'uid', 'log', 'comment', 'promote', 'sticky', 'created', 'changed',
     'tnid', 'translate', 'revision_timestamp', 'revision_uid', 'path', 'name',
@@ -1044,7 +1043,6 @@ dsm($node);
   }
   // Data!
   unset($node->data);
-dsm($node);
 }
 
 /**
