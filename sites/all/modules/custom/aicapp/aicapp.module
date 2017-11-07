@@ -933,6 +933,11 @@ function strip_drupal_from_node(&$node) {
   if (isset($node->field_location['und'][0]['safe_value'])) {
     $node->location = $node->field_location['und'][0]['safe_value'];
   }
+  if ($node->type === 'gallery' && !empty($node->location)) {
+    $pieces = explode(',', $node->location);
+    $node->latitude = $pieces[0];
+    $node->longitude = $pieces[1];
+  }
   if (isset($node->field_floor['und'][0]['safe_value'])) {
     $node->floor = $node->field_floor['und'][0]['safe_value'];
   }
