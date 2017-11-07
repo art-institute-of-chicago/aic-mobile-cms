@@ -879,29 +879,44 @@ function _getSOLRdata(&$object, $object_id = null) {
  * Clear out all the Drupal stuff from the node, so we can deliver bare JSON data.
  */
 function strip_drupal_from_node(&$node) {
-  unset($node->vid);
-  unset($node->uid);
-  unset($node->log);
-  unset($node->comment);
-  unset($node->promote);
-  unset($node->sticky);
-  unset($node->comment);
-  unset($node->language);
-  unset($node->created);
-  unset($node->changed);
-  unset($node->tnid);
-  unset($node->translate);
-  unset($node->revision_timestamp);
-  unset($node->revision_uid);
-  unset($node->path);
-  unset($node->name);
-  unset($node->picture);
-  unset($node->data);
-
-  // Now add in the editable field data.
-  if (isset($node->field_museum_hours['und'][0]['safe_value'])) {
-    $node->museum_hours = $node->field_museum_hours['und'][0]['safe_value'];
+dsm($node);
+  $to_unset = array(
+    'vid', 'uid', 'log', 'comment', 'promote', 'sticky', 'created', 'changed',
+    'tnid', 'translate', 'revision_timestamp', 'revision_uid', 'path', 'name',
+    'picture', 'data', 'vuuid', 'uuid',
+    'body', 'title_original', 'entity_translation_handler_id'
+  );
+  foreach ($to_unset as $property) {
+    if (isset($node->{$property})) {
+      unset($node->{$property});
+    }
   }
+  // Save the properties of the node before adding more.
+  $properties = array_keys((array)$node);
+  // Translations available.
+  $translations = array();
+  if (isset($node->translations) && isset($node->translations->data)) {
+    $translations = $node->translations->data;
+  }
+  // Empty $node->translations.
+  $node->translations = array();
+  // Now add in the editable field data.
+  if (isset($node->field_museum_hours[$node->language][0]['safe_value'])) {
+    $node->museum_hours = $node->field_museum_hours[$node->language][0]['safe_value'];
+  }
+  elseif (isset($node->field_museum_hours[LANGUAGE_NONE][0]['safe_value'])) {
+    $node->museum_hours = $node->field_museum_hours[LANGUAGE_NONE][0]['safe_value'];
+  }
+  // General Info translations
+
+  foreach ($translations as $lang_key => $details) {
+    $node->translations[] = array(
+      'language' => $lang_key,
+      'museum_hours' => isset($node->field_museum_hours[$lang_key][0]['safe_value']) ? $node->field_museum_hours[$lang_key][0]['safe_value'] : $node->museum_hours,
+    );
+  }
+
+  // Tour
   if (isset($node->field_gallery_id['und'][0]['safe_value'])) {
     $node->gallery_id = $node->field_gallery_id['und'][0]['safe_value'];
   }
@@ -924,6 +939,8 @@ function strip_drupal_from_node(&$node) {
   if (isset($node->field_tour_banner['und'][0]['value'])) {
     $node->tour_banner = $node->field_tour_banner['und'][0]['value'];
   }
+
+  // Object node fields.
   if (isset($node->field_object_selector_number['und'][0]['value'])) {
     $node->object_selector_number = $node->field_object_selector_number['und'][0]['value'];
   }
@@ -1018,37 +1035,16 @@ function strip_drupal_from_node(&$node) {
   if (isset($node->field_highlighted_object['und'][0])) {
     $node->highlighted_object = $node->field_highlighted_object['und'][0]['value'];
   }
-  unset($node->field_museum_hours);
-  unset($node->field_gallery_id);
-  unset($node->field_gallery_number);
-  unset($node->field_object_id);
-  unset($node->field_reference_num);
-  unset($node->field_location);
-  unset($node->field_audio_file);
-  unset($node->field_audio_transcript);
-  unset($node->field_image);
-  unset($node->field_description);
-  unset($node->field_intro);
-  unset($node->field_stops2);
-  unset($node->field_gallery_location);
-  unset($node->field_in_gallery);
-  unset($node->field_tour_duration);
-  unset($node->field_tour_audio);
-  unset($node->field_tour_banner);
-  unset($node->field_object_audio);
-  unset($node->field_object_selector_number);
-  unset($node->field_object_selector_numbers);
-  unset($node->field_thumbnail_image);
-  unset($node->field_large_image);
-  unset($node->field_thumbnail_crop_rect);
-  unset($node->field_large_image_crop_rect);
-  unset($node->field_credits);
-  unset($node->field_floor);
-  unset($node->field_highlighted_object);
-  unset($node->field_artist_name);
-  unset($node->field_artist_origin);
-  unset($node->field_credit_line);
-  unset($node->field_copyright_notice);
+  // now can unset language, and the rest of the saved props
+  $to_skip = array('title', 'status', 'type', 'nid', 'translations');
+  foreach ($properties as $property) {
+    if (!in_array($property, $to_skip) && isset($node->{$property})) {
+      unset($node->{$property});
+    }
+  }
+  // Data!
+  unset($node->data);
+dsm($node);
 }
 
 /**
