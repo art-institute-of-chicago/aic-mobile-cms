@@ -1,0 +1,163 @@
+<?php
+/**
+ * @file
+ * Tests for Entity Translation module.
+ */
+
+/**
+ * Tests for the upgrade translation process.
+ */
+class EntityTranslationUpgradeTestCase extends EntityTranslationTestCase {
+
+  /**
+   * Return the test information.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Translation upgrade',
+      'description' => 'Tests for the upgrade from Content Translation to Entity Translation.',
+      'group' => 'Entity translation',
+      'dependencies' => array(),
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale', 'translation', 'translation_test', 'entity_translation', 'entity_translation_upgrade');
+    $this->getAdminUser(array(
+      'toggle field translatability',
+      'administer entity translation',
+    ));
+    $this->getTranslatorUser(array(
+      'translate content',
+    ));
+    $this->login($this->getAdminUser());
+    $this->addLanguage('en');
+    $this->addLanguage('es');
+    $this->configureContentTypeForContentTranslation();
+    $this->enableUrlLanguageDetection();
+    $this->login($this->getTranslatorUser());
+  }
+
+  /**
+   * Configure the "Basic page" content type for entity translation tests.
+   */
+  public function configureContentTypeForContentTranslation() {
+    // Configure the "Basic page" content type to use multilingual support with
+    // content translation.
+    $edit = array();
+    $edit['language_content_type'] = TRANSLATION_ENABLED;
+    $this->drupalPost('admin/structure/types/manage/page', $edit, t('Save content type'));
+    $this->assertRaw(t('The content type %type has been updated.', array('%type' => 'Basic page')), t('Basic page content type has been updated.'));
+
+  }
+
+  /**
+   * Toggle body field's translatability.
+   */
+  public function makeBodyFieldTranslatable() {
+    $edit = array();
+    $this->drupalGet('admin/structure/types/manage/page/fields/body');
+    $this->clickLink('Enable translation');
+    $this->drupalPost(NULL, array(), t('Confirm'));
+    $this->assertRaw(t('Data successfully processed.'), t('Body field have been made translatable.'));
+  }
+
+  /**
+   * @see TranslationTestCase::createPage
+   */
+  function createContentTranslationPage($title, $body, $language = NULL) {
+    $edit = array();
+    $langcode = LANGUAGE_NONE;
+    $edit["title"] = $title;
+    $edit["body[$langcode][0][value]"] = $body;
+    if (!empty($language)) {
+      $edit['language'] = $language;
+    }
+    $this->drupalPost('node/add/page', $edit, t('Save'));
+    $this->assertRaw(t('Basic page %title has been created.', array('%title' => $title)), 'Basic page created.');
+
+    // Check to make sure the node was created.
+    $node = $this->drupalGetNodeByTitle($title);
+    $this->assertTrue($node, 'Node found in database.');
+
+    return $node;
+  }
+
+  /**
+   * @see TranslationTestCase::createTranslation
+   */
+  function createContentTranslationTranslation($node, $title, $body, $language) {
+    $this->drupalGet('node/add/page', array('query' => array('translation' => $node->nid, 'target' => $language)));
+
+    $langcode = LANGUAGE_NONE;
+    $body_key = "body[$langcode][0][value]";
+    $this->assertFieldByXPath('//input[@id="edit-title"]', $node->title, "Original title value correctly populated.");
+    $this->assertFieldByXPath("//textarea[@name='$body_key']", $node->body[LANGUAGE_NONE][0]['value'], "Original body value correctly populated.");
+
+    $edit = array();
+    $edit["title"] = $title;
+    $edit[$body_key] = $body;
+    $this->drupalPost(NULL, $edit, t('Save'));
+    $this->assertRaw(t('Basic page %title has been created.', array('%title' => $title)), 'Translation created.');
+
+    // Check to make sure that translation was successful.
+    $translation = $this->drupalGetNodeByTitle($title);
+    $this->assertTrue($translation, 'Node found in database.');
+    $this->assertTrue($translation->tnid == $node->nid, 'Translation set id correctly stored.');
+
+    return $translation;
+  }
+
+  /**
+   * Tests copying of source node's body value in the add translation form page.
+   */
+  public function testUpgradeContentToEntityTranslation() {
+    // Create Basic page in English.
+    $node_title = $this->randomName();
+    $node_body = $this->randomName();
+    $node = $this->createContentTranslationPage($node_title, $node_body, 'en');
+
+    // Submit translation in Spanish.
+    $this->drupalGet('node/' . $node->nid . '/translate');
+    $node_translation_title = $this->randomName();
+    $node_translation_body = $this->randomName();
+    $node_translation = $this->createContentTranslationTranslation($node, $node_translation_title, $node_translation_body, 'es');
+
+    // Make Body field translatable before we run the upgrade.
+    $this->login($this->getAdminUser());
+    $this->makeBodyFieldTranslatable();
+
+    // Run the upgrade for all Page nodes.
+    $edit = array(
+      'types[page]' => 'page',
+    );
+    $this->drupalPost('admin/config/regional/entity_translation', $edit, t('Upgrade'));
+
+    // Switch to our translator user.
+    $this->login($this->getTranslatorUser());
+
+    // Check that the unpublished target node triggers a redirect.
+    $this->drupalGet('node/' . $node_translation->nid);
+    $headers = $this->drupalGetHeaders(TRUE);
+    list(, $status) = explode(' ', $headers[0][':status'], 3);
+    $this->assertEqual($status, 301, 'Expected response code was sent.');
+    $languages = language_list();
+    $this->assertEqual($this->getUrl(), url('node/' . $node->nid, array('absolute' => TRUE, 'language' => $languages['es'])), 'entity_translation_upgrade_redirect() redirected to expected URL.');
+
+    // Check that the body is displayed when the active language is English.
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertRaw($node_body, t('Body field displayed correctly in the source language.'));
+
+    // Check that the translated body is displayed when the active language is Spanish.
+    $this->drupalGet('es/node/' . $node->nid);
+    $this->assertRaw($node_translation_body, t('Body field displayed correctly in the target language.'));
+
+    // Check that the edit forms are initialized correctly in the target language.
+    $this->drupalGet('node/' . $node->nid . '/edit');
+    $this->assertFieldByXPath("//textarea[@name='body[en][0][value]']", $node_body, "Body field correctly instantiated with the value of the source language.");
+    $this->drupalGet('es/node/' . $node->nid . '/edit');
+    $this->assertFieldByXPath("//textarea[@name='body[es][0][value]']", $node_translation_body, "Body field correctly instantiated with the value of the target language.");
+
+  }
+
+}

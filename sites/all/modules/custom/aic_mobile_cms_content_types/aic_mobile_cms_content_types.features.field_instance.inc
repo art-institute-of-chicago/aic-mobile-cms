@@ -36,6 +36,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'height',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -77,6 +78,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'width',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -118,6 +120,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'x',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -153,6 +156,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'x2',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -194,6 +198,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'y',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -229,6 +234,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'y2',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -265,6 +271,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Audio',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'user_register_form' => FALSE,
     ),
     'widget' => array(
@@ -277,6 +284,43 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       ),
       'type' => 'node_reference_autocomplete',
       'weight' => 2,
+    ),
+  );
+
+  // Exported field_instance:
+  // 'field_collection_item-field_stops2-field_t_audio_bumper'.
+  $field_instances['field_collection_item-field_stops2-field_t_audio_bumper'] = array(
+    'bundle' => 'field_stops2',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => 'Audio bumper that plays right before this stop, to tell visitors where to go.',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'node_reference',
+        'settings' => array(),
+        'type' => 'node_reference_default',
+        'weight' => 2,
+      ),
+    ),
+    'entity_type' => 'field_collection_item',
+    'field_name' => 'field_t_audio_bumper',
+    'label' => 'Audio Bumper',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'node_reference',
+      'settings' => array(
+        'autocomplete_match' => 'contains',
+        'autocomplete_path' => 'node_reference/autocomplete',
+        'size' => 60,
+      ),
+      'type' => 'node_reference_autocomplete',
+      'weight' => 3,
     ),
   );
 
@@ -301,6 +345,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Object',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'user_register_form' => FALSE,
     ),
     'widget' => array(
@@ -342,6 +387,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'height',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -383,6 +429,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'width',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -424,6 +471,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'x',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -459,6 +507,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'x2',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -500,6 +549,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'y',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -535,6 +585,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'y2',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -576,6 +627,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'required' => 1,
     'settings' => array(
       'description_field' => 0,
+      'entity_translation_sync' => FALSE,
       'file_directory' => 'audio',
       'file_extensions' => 'mp3',
       'max_filesize' => '',
@@ -588,7 +640,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'progress_indicator' => 'throbber',
       ),
       'type' => 'file_generic',
-      'weight' => 33,
+      'weight' => 3,
     ),
   );
 
@@ -618,6 +670,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Audio Transcript',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -628,7 +681,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 35,
+      'weight' => 4,
     ),
   );
 
@@ -658,6 +711,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Credits',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -668,7 +722,93 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 36,
+      'weight' => 5,
+    ),
+  );
+
+  // Exported field_instance: 'node-audio-field_track_title'.
+  $field_instances['node-audio-field_track_title'] = array(
+    'bundle' => 'audio',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => 'Used in the app, to show the track name in the audio player. Ex: "Caba de Buddha"',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 6,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_track_title',
+    'label' => 'Track Title',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 2,
+    ),
+  );
+
+  // Exported field_instance: 'node-audio-title_field'.
+  $field_instances['node-audio-title_field'] = array(
+    'bundle' => 'audio',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '"Descriptive Title for the Admin to easily identify the Audio Files within the CMS Admin UI.
+Ex: ""Head of Buddha (Spanish)"""',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 4,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'title_field',
+    'label' => 'Title',
+    'required' => 1,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'hide_label' => array(
+        'entity' => 'entity',
+        'page' => 'page',
+      ),
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 1,
     ),
   );
 
@@ -702,6 +842,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'required' => FALSE,
     'settings' => array(
       'display_summary' => TRUE,
+      'entity_translation_sync' => FALSE,
       'text_processing' => 1,
       'user_register_form' => FALSE,
     ),
@@ -742,6 +883,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Floor',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -782,6 +924,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Gallery ID',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -822,6 +965,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Gallery Number',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -862,6 +1006,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Location',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -873,6 +1018,249 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       ),
       'type' => 'text_textfield',
       'weight' => 4,
+    ),
+  );
+
+  // Exported field_instance: 'node-map_annotation-field_annotation_label'.
+  $field_instances['node-map_annotation-field_annotation_label'] = array(
+    'bundle' => 'map_annotation',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 5,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_annotation_label',
+    'label' => 'Label',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 2,
+    ),
+  );
+
+  // Exported field_instance: 'node-map_annotation-field_annotation_type'.
+  $field_instances['node-map_annotation-field_annotation_type'] = array(
+    'bundle' => 'map_annotation',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'list',
+        'settings' => array(),
+        'type' => 'list_default',
+        'weight' => 3,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_annotation_type',
+    'label' => 'Type',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'options',
+      'settings' => array(),
+      'type' => 'options_select',
+      'weight' => 4,
+    ),
+  );
+
+  // Exported field_instance: 'node-map_annotation-field_floor'.
+  $field_instances['node-map_annotation-field_floor'] = array(
+    'bundle' => 'map_annotation',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 6,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_floor',
+    'label' => 'Floor',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 6,
+    ),
+  );
+
+  // Exported field_instance: 'node-map_annotation-field_icon'.
+  $field_instances['node-map_annotation-field_icon'] = array(
+    'bundle' => 'map_annotation',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => 'URL to an icon for a map annotation.',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 2,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_icon',
+    'label' => 'Icon',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'html5_tools',
+      'settings' => array(),
+      'type' => 'urlwidget',
+      'weight' => 3,
+    ),
+  );
+
+  // Exported field_instance: 'node-map_annotation-field_location'.
+  $field_instances['node-map_annotation-field_location'] = array(
+    'bundle' => 'map_annotation',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 4,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_location',
+    'label' => 'Location',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 5,
+    ),
+  );
+
+  // Exported field_instance: 'node-map_annotation-title_field'.
+  $field_instances['node-map_annotation-title_field'] = array(
+    'bundle' => 'map_annotation',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'title_field',
+    'label' => 'Title',
+    'required' => TRUE,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'hide_label' => array(
+        'entity' => 'entity',
+        'page' => 'page',
+      ),
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 1,
     ),
   );
 
@@ -902,6 +1290,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Artist Name',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -942,6 +1331,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Artist Origin',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -982,6 +1372,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Copyright Notice',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -1022,6 +1413,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Credit Line',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -1062,6 +1454,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Gallery Location',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -1106,6 +1499,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Highlighted Object',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'user_register_form' => FALSE,
     ),
     'widget' => array(
@@ -1115,7 +1509,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'display_label' => 1,
       ),
       'type' => 'options_onoff',
-      'weight' => 10,
+      'weight' => 8,
     ),
   );
 
@@ -1149,6 +1543,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'settings' => array(
       'alt_field' => 0,
       'default_image' => 0,
+      'entity_translation_sync' => FALSE,
       'file_directory' => 'object-images',
       'file_extensions' => 'png gif jpg jpeg',
       'max_filesize' => '',
@@ -1165,7 +1560,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'progress_indicator' => 'throbber',
       ),
       'type' => 'image_image',
-      'weight' => 12,
+      'weight' => 10,
     ),
   );
 
@@ -1199,6 +1594,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'In Gallery',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'user_register_form' => FALSE,
     ),
     'widget' => array(
@@ -1208,7 +1604,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'display_label' => 1,
       ),
       'type' => 'options_onoff',
-      'weight' => 5,
+      'weight' => 6,
     ),
   );
 
@@ -1238,6 +1634,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Large Image',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -1248,7 +1645,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 15,
+      'weight' => 13,
     ),
   );
 
@@ -1284,6 +1681,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Large Image Crop',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'user_register_form' => FALSE,
     ),
     'widget' => array(
@@ -1293,7 +1691,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 16,
+      'weight' => 14,
     ),
   );
 
@@ -1323,6 +1721,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Location',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -1333,7 +1732,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 11,
+      'weight' => 9,
     ),
   );
 
@@ -1363,6 +1762,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Audio',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'user_register_form' => FALSE,
     ),
     'widget' => array(
@@ -1374,7 +1774,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'node_reference_autocomplete',
-      'weight' => 9,
+      'weight' => 8,
     ),
   );
 
@@ -1409,6 +1809,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Object ID',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -1455,6 +1856,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Object Selector Number',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -1498,9 +1900,10 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     ),
     'entity_type' => 'node',
     'field_name' => 'field_object_selector_numbers',
-    'label' => 'Object Selector Numbers',
+    'label' => 'Deprecated: Object Selector Numbers',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'max' => '',
       'min' => '',
       'prefix' => '',
@@ -1512,7 +1915,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       'module' => 'number',
       'settings' => array(),
       'type' => 'number',
-      'weight' => 8,
+      'weight' => 9,
     ),
   );
 
@@ -1542,6 +1945,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Reference Number',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -1588,6 +1992,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Thumbnail Crop',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'user_register_form' => FALSE,
     ),
     'widget' => array(
@@ -1597,7 +2002,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 14,
+      'weight' => 12,
     ),
   );
 
@@ -1627,6 +2032,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Thumbnail Image',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -1637,7 +2043,52 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 13,
+      'weight' => 11,
+    ),
+  );
+
+  // Exported field_instance: 'node-page-body'.
+  $field_instances['node-page-body'] = array(
+    'bundle' => 'page',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'hidden',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'hidden',
+        'module' => 'text',
+        'settings' => array(
+          'trim_length' => 600,
+        ),
+        'type' => 'text_summary_or_trimmed',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'body',
+    'label' => 'Body',
+    'required' => FALSE,
+    'settings' => array(
+      'display_summary' => TRUE,
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 1,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 20,
+        'summary_rows' => 5,
+      ),
+      'type' => 'text_textarea_with_summary',
+      'weight' => 2,
     ),
   );
 
@@ -1667,6 +2118,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Museum Hours',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -1677,7 +2129,50 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 31,
+      'weight' => 4,
+    ),
+  );
+
+  // Exported field_instance: 'node-page-title_field'.
+  $field_instances['node-page-title_field'] = array(
+    'bundle' => 'page',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 1,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'title_field',
+    'label' => 'Title',
+    'required' => TRUE,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'hide_label' => array(
+        'entity' => 'entity',
+        'page' => 'page',
+      ),
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 1,
     ),
   );
 
@@ -1707,6 +2202,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Description',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 1,
       'user_register_form' => FALSE,
     ),
@@ -1717,7 +2213,48 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 4,
+      'weight' => 6,
+    ),
+  );
+
+  // Exported field_instance: 'node-tour-field_floor'.
+  $field_instances['node-tour-field_floor'] = array(
+    'bundle' => 'tour',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 15,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_floor',
+    'label' => 'Floor',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 12,
     ),
   );
 
@@ -1751,6 +2288,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'settings' => array(
       'alt_field' => 0,
       'default_image' => 0,
+      'entity_translation_sync' => FALSE,
       'file_directory' => 'tour-images',
       'file_extensions' => 'png gif jpg jpeg',
       'max_filesize' => '',
@@ -1797,6 +2335,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Intro',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 1,
       'user_register_form' => FALSE,
     ),
@@ -1807,7 +2346,48 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 5,
+      'weight' => 7,
+    ),
+  );
+
+  // Exported field_instance: 'node-tour-field_location'.
+  $field_instances['node-tour-field_location'] = array(
+    'bundle' => 'tour',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => 'Start location of the Tour.',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 16,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_location',
+    'label' => 'Start Location',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 11,
     ),
   );
 
@@ -1843,6 +2423,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Tour Stops',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'user_register_form' => FALSE,
     ),
     'widget' => array(
@@ -1852,7 +2433,94 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 8,
+      'weight' => 13,
+    ),
+  );
+
+  // Exported field_instance: 'node-tour-field_thumbnail_crop_rect'.
+  $field_instances['node-tour-field_thumbnail_crop_rect'] = array(
+    'bundle' => 'tour',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'field_collection',
+        'settings' => array(
+          'add' => 'Add',
+          'delete' => 'Delete',
+          'description' => TRUE,
+          'edit' => 'Edit',
+          'view_mode' => 'full',
+        ),
+        'type' => 'field_collection_view',
+        'weight' => 18,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_thumbnail_crop_rect',
+    'label' => 'Thumbnail Crop',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'field_collection_table',
+      'settings' => array(
+        'nodragging' => 0,
+      ),
+      'type' => 'field_collection_table',
+      'weight' => 5,
+    ),
+  );
+
+  // Exported field_instance: 'node-tour-field_thumbnail_image'.
+  $field_instances['node-tour-field_thumbnail_image'] = array(
+    'bundle' => 'tour',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 17,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_thumbnail_image',
+    'label' => 'Thumbail Image',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 4,
     ),
   );
 
@@ -1882,6 +2550,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Tour Audio',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'user_register_form' => FALSE,
     ),
     'widget' => array(
@@ -1893,7 +2562,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'node_reference_autocomplete',
-      'weight' => 7,
+      'weight' => 10,
     ),
   );
 
@@ -1923,6 +2592,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Tour Banner',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'user_register_form' => FALSE,
     ),
     'widget' => array(
@@ -1930,7 +2600,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 1,
+      'weight' => 2,
     ),
   );
 
@@ -1970,6 +2640,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       'default_value2' => 'blank',
       'default_value_code' => '',
       'default_value_code2' => '',
+      'entity_translation_sync' => FALSE,
       'user_register_form' => FALSE,
     ),
     'widget' => array(
@@ -1985,7 +2656,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'year_range' => '-0:+3',
       ),
       'type' => 'date_popup',
-      'weight' => 12,
+      'weight' => 8,
     ),
   );
 
@@ -2015,6 +2686,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     'label' => 'Tour Duration',
     'required' => 0,
     'settings' => array(
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -2025,22 +2697,70 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 10,
       ),
       'type' => 'text_textfield',
-      'weight' => 6,
+      'weight' => 9,
+    ),
+  );
+
+  // Exported field_instance: 'node-tour-title_field'.
+  $field_instances['node-tour-title_field'] = array(
+    'bundle' => 'tour',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 14,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'title_field',
+    'label' => 'Title',
+    'required' => TRUE,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'hide_label' => array(
+        'entity' => 'entity',
+        'page' => 'page',
+      ),
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 1,
     ),
   );
 
   // Translatables
   // Included for use with string extractors like potx.
+  t('"Descriptive Title for the Admin to easily identify the Audio Files within the CMS Admin UI.
+Ex: ""Head of Buddha (Spanish)"""');
   t('Add audio references in the same order as object selector numbers above.');
   t('Artist Name');
   t('Artist Origin');
   t('Audio');
+  t('Audio Bumper');
   t('Audio File');
   t('Audio Transcript');
+  t('Audio bumper that plays right before this stop, to tell visitors where to go.');
   t('Body');
   t('Copyright Notice');
   t('Credit Line');
   t('Credits');
+  t('Deprecated: Object Selector Numbers');
   t('Description');
   t('Enter artist first and last name, i.e. Irving Penn');
   t('Enter artist\'s origin, i.e. American, 1917-2009');
@@ -2049,9 +2769,11 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   t('Gallery Location');
   t('Gallery Number');
   t('Highlighted Object');
+  t('Icon');
   t('Image');
   t('In Gallery');
   t('Intro');
+  t('Label');
   t('Large Image');
   t('Large Image Crop');
   t('Latitude, Longitude');
@@ -2063,17 +2785,24 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   t('Object');
   t('Object ID');
   t('Object Selector Number');
-  t('Object Selector Numbers');
   t('Reference Number');
+  t('Start Location');
+  t('Start location of the Tour.');
   t('This field will be deprecated soon. For the time being, please enter first audio stop number here and also as the first number in the Object Selector Numbers fields below.');
+  t('Thumbail Image');
   t('Thumbnail Crop');
   t('Thumbnail Image');
+  t('Title');
   t('Tour Audio');
   t('Tour Banner');
   t('Tour Dates');
   t('Tour Duration');
   t('Tour Stops');
+  t('Track Title');
+  t('Type');
+  t('URL to an icon for a map annotation.');
   t('Upload an image here if there is not a web image for the object coming in via SOLR.  ');
+  t('Used in the app, to show the track name in the audio player. Ex: "Caba de Buddha"');
   t('height');
   t('latitude, longitude');
   t('width');
