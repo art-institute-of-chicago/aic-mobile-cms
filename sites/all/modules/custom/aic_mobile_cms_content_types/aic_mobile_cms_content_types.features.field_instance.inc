@@ -2445,7 +2445,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 6,
+      'weight' => 7,
     ),
   );
 
@@ -2486,7 +2486,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 12,
+      'weight' => 13,
     ),
   );
 
@@ -2537,7 +2537,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'progress_indicator' => 'throbber',
       ),
       'type' => 'image_image',
-      'weight' => 3,
+      'weight' => 4,
     ),
   );
 
@@ -2578,7 +2578,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 7,
+      'weight' => 8,
     ),
   );
 
@@ -2619,7 +2619,54 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 11,
+      'weight' => 12,
+    ),
+  );
+
+  // Exported field_instance: 'node-tour-field_selector_number'.
+  $field_instances['node-tour-field_selector_number'] = array(
+    'bundle' => 'tour',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'number',
+        'settings' => array(
+          'decimal_separator' => '.',
+          'prefix_suffix' => TRUE,
+          'scale' => 0,
+          'thousand_separator' => '',
+        ),
+        'type' => 'number_integer',
+        'weight' => 19,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_selector_number',
+    'label' => 'Selector Number',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'max' => '',
+      'min' => '',
+      'prefix' => '',
+      'suffix' => '',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'number',
+      'settings' => array(),
+      'type' => 'number',
+      'weight' => 16,
     ),
   );
 
@@ -2665,7 +2712,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 13,
+      'weight' => 14,
     ),
   );
 
@@ -2711,7 +2758,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 5,
+      'weight' => 6,
     ),
   );
 
@@ -2752,7 +2799,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 4,
+      'weight' => 5,
     ),
   );
 
@@ -2794,7 +2841,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'node_reference_autocomplete',
-      'weight' => 10,
+      'weight' => 11,
     ),
   );
 
@@ -2832,7 +2879,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 2,
+      'weight' => 3,
     ),
   );
 
@@ -2888,7 +2935,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'year_range' => '-0:+3',
       ),
       'type' => 'date_popup',
-      'weight' => 8,
+      'weight' => 9,
     ),
   );
 
@@ -2929,7 +2976,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 10,
       ),
       'type' => 'text_textfield',
-      'weight' => 9,
+      'weight' => 10,
     ),
   );
 
@@ -3022,6 +3069,7 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Object ID');
   t('Object Selector Number');
   t('Reference Number');
+  t('Selector Number');
   t('Start Location');
   t('Start location of the Tour.');
   t('This field will be deprecated soon. For the time being, please enter first audio stop number here and also as the first number in the Object Selector Numbers fields below.');
