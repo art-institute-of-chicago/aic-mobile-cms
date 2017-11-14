@@ -861,14 +861,14 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'entityreference',
+      'module' => 'options',
       'settings' => array(
         'match_operator' => 'CONTAINS',
         'path' => '',
         'size' => 60,
       ),
-      'type' => 'entityreference_autocomplete',
-      'weight' => 1,
+      'type' => 'options_select',
+      'weight' => 2,
     ),
   );
 
@@ -904,7 +904,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 2,
+      'weight' => 1,
     ),
   );
 
