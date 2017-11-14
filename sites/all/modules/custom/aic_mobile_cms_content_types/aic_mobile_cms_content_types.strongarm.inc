@@ -275,10 +275,10 @@ function aic_mobile_cms_content_types_strongarm() {
     'extra_fields' => array(
       'form' => array(
         'title' => array(
-          'weight' => '1',
+          'weight' => '0',
         ),
         'path' => array(
-          'weight' => '15',
+          'weight' => '14',
         ),
         'language' => array(
           'weight' => '0',
@@ -318,7 +318,7 @@ function aic_mobile_cms_content_types_strongarm() {
     'extra_fields' => array(
       'form' => array(
         'path' => array(
-          'weight' => '14',
+          'weight' => '15',
         ),
         'language' => array(
           'weight' => '0',
@@ -333,7 +333,7 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
   $strongarm->name = 'language_content_type_audio';
-  $strongarm->value = '0';
+  $strongarm->value = '4';
   $export['language_content_type_audio'] = $strongarm;
 
   $strongarm = new stdClass();
@@ -361,7 +361,7 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
   $strongarm->name = 'language_content_type_object';
-  $strongarm->value = '4';
+  $strongarm->value = '0';
   $export['language_content_type_object'] = $strongarm;
 
   $strongarm = new stdClass();
