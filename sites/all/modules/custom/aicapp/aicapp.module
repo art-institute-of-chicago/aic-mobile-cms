@@ -1294,61 +1294,26 @@ function aicappSaveNode($object, $type) {
  * sent back to the node edit form page.
  */
 function aicapp_form_alter(&$form, &$form_state, $form_id) {
-  // Only proceed if either object or tour node form.
-  if ($form_id != 'object_node_form' && $form_id != 'tour_node_form') {
+  if (!strstr($form_id, '_node_form')
+  || !isset($form['#entity_type']) || $form['#entity_type'] !== 'node') {
     return;
   }
-  $drupal_path = base_path();
-  $dest = drupal_get_path('module', 'aicapp');
-  $coords = !empty($form['#node']->field_location[LANGUAGE_NONE][0]['safe_value']) ? $form['#node']->field_location[LANGUAGE_NONE][0]['safe_value'] : 0;
-  $map_markup = '<iframe width="650" height="600" frameborder="0" scrolling="no"';
-  $map_markup .= ' marginheight="0" marginwidth="0" src="' . $drupal_path;
-  $map_markup .= $dest . '/map-page.php?coords=' . $coords . '"></iframe>';
-  $form['map'] = array(
-    '#markup' => $map_markup,
-    '#weight' => 10,
-  );
-  // Attach CSS & JS assets to the form.
-  $form['#attached']['css'] = array(
-    drupal_get_path('module', 'aicapp') . '/css/imgareaselect-default.css',
-  );
-  $form['#attached']['js'][] = array(
-    'type' => 'file',
-    'data' => drupal_get_path('module', 'aicapp') . '/jquery.imgareaselect.min.js',
-  );
-  // options for how javascript is added to page.
-  $js_options = array(
-    'type' => 'inline',
-    'scope' => 'footer',
-    'group' => JS_THEME,
-    'weight' => 5,
-  );
-  // If node form has a field called "field_thumbnail_image".
-  if (!empty($form['#node']->field_thumbnail_image)) {
-    $imageToCrop = $form['#node']->field_thumbnail_image;
-    // Crop the image.
-    cropImage($form, $imageToCrop);
-  }
-  else {
-    $js_to_add = '(function($) { $("div#field-thumbnail-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p class=\"warning\">Thumbnail image unavailable.</p>" );
-        $("#field-thumbnail-crop-rect-add-more-wrapper input").prop("readonly", "readonly");} (jQuery))';
-    // Add JS to the page.
-    drupal_add_js($js_to_add, $js_options);
-  }
+  // Alter the setup form
+  module_load_include('inc', 'aicapp', 'includes/aicapp.form.alter');
+  // Run the form alter routine.
+  _aicapp_form_alter($form, $form_state, $form_id);
+}
 
-  // If node form has a field called "field_large_image".
-  if (!empty($form['#node']->field_large_image)) {
-    $imageToCrop = $form['#node']->field_large_image;
-    // Set a image size to crop.
-    $imageType = 'large';
-    cropImage($form, $imageToCrop, $imageType);
-  }
-  else {
-    $js_to_add = '(function($) { $("div#field-large-image-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p class=\"warning\">Large image unavailable.</p>" );
-        $("#field-large-image-crop-rect-add-more-wrapper input").prop("readonly", "readonly");}(jQuery))';
-    // Add JS to the page.
-    drupal_add_js($js_to_add, $js_options);
-  }
+/**
+ * Helper function to make sure title field has default values when changing
+ * from no language.
+ */
+function aicapp_setup_afterbuild($form, &$form_state) {
+  // Load the include file.
+  module_load_include('inc', 'aicapp', 'includes/aicapp.form.alter');
+  // Run after build process
+  _aicapp_form_afterbuild($form, $form_state);
+  return $form;
 }
 
 /**

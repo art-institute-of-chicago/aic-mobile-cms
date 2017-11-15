@@ -21,7 +21,7 @@ function aic_mobile_cms_content_types_locale_default_languages() {
     'formula' => '',
     'domain' => '',
     'prefix' => '',
-    'weight' => 0,
+    'weight' => -10,
   );
   // Exported language: es.
   $languages['es'] = array(
@@ -34,7 +34,7 @@ function aic_mobile_cms_content_types_locale_default_languages() {
     'formula' => '',
     'domain' => '',
     'prefix' => 'es',
-    'weight' => 0,
+    'weight' => -9,
   );
   // Exported language: zh-hans.
   $languages['zh-hans'] = array(
@@ -47,7 +47,7 @@ function aic_mobile_cms_content_types_locale_default_languages() {
     'formula' => '',
     'domain' => '',
     'prefix' => 'zh-hans',
-    'weight' => 0,
+    'weight' => -8,
   );
   // Exported language: zh-hant.
   $languages['zh-hant'] = array(
@@ -60,7 +60,7 @@ function aic_mobile_cms_content_types_locale_default_languages() {
     'formula' => '',
     'domain' => '',
     'prefix' => 'zh-hant',
-    'weight' => 0,
+    'weight' => -7,
   );
   return $languages;
 }
