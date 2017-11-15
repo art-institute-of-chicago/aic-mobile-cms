@@ -5,13 +5,18 @@ package = Fields
 configure = admin/config/content/title
 dependencies[] = system (>7.14)
 
-files[] = title.module
 files[] = views/views_handler_title_field.inc
-files[] = tests/title.test
 
-; Information added by Drupal.org packaging script on 2017-01-13
-version = "7.x-1.0-alpha9"
+; Tests.
+test_dependencies[] = entity
+test_dependencies[] = entity_translation
+files[] = tests/TitleAdminSettingsTestCase.test
+files[] = tests/TitleFieldReplacementTestCase.test
+files[] = tests/TitleTranslationTestCase.test
+
+; Information added by Drupal.org packaging script on 2017-10-29
+version = "7.x-1.0-alpha9+4-dev"
 core = "7.x"
 project = "title"
-datestamp = "1484302985"
+datestamp = "1509317592"
 

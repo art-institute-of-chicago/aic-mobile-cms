@@ -132,6 +132,9 @@ function title_entity_label($entity, $type, $langcode = NULL) {
  * Implements hook_entity_presave().
  */
 function title_entity_presave($entity, $entity_type) {
+  if (isset($entity->avoid_title_entity_presave)) {
+    return;
+  }
   $entity_langcode = title_entity_language($entity_type, $entity);
   $langcode = $entity_langcode;
 
@@ -478,6 +481,8 @@ function title_field_sync_get($entity_type, $entity, $legacy_field, $info, $lang
     $entity->{$legacy_field . '_original'} = $entity->{$legacy_field};
     // Find out the actual language to use (field might be untranslatable).
     $langcode = field_language($entity_type, $entity, $info['field']['field_name'], $langcode);
+    // Also remember the language we sync here.
+    $entity->{$legacy_field . '_sync_source_lang'} = $langcode;
     $values = $info['callbacks']['sync_get']($entity_type, $entity, $legacy_field, $info, $langcode);
     foreach ($values as $name => $value) {
       if ($value !== NULL) {
@@ -512,6 +517,26 @@ function title_field_sync_set($entity_type, $entity, $legacy_field, $info, $lang
     // Find out the actual language to use (field might be untranslatable).
     $field = field_info_field($info['field']['field_name']);
     $langcode = field_is_translatable($entity_type, $field) ? $langcode : LANGUAGE_NONE;
+    // If we saved the synced language in title_field_sync_get, we only want
+    // to sync back to that language. Not always the entity source language,
+    // because that can lead to data loss, if we are not currently on the source
+    // language of the node.
+    // Explanation:
+    // If german, for example, is the active language and we load a node, which
+    // source' language is english, the english $node->title (Title EN) will
+    // be replaced with the german title field (Title DE) on node_load through
+    // title_field_sync_get.
+    // Since $langcode is now the source language of the node (en), the english
+    // $node->title would now be replaced with the german title.
+    // This would happen also in title_field_text_sync_set(),
+    // which will sync to the legacy replacement field in english. So now the
+    // english title would be lost both in the node table and also in
+    // field_data_LEGACY_TITLE_FIELD_REPLACEMENT.
+    // So we really need to know from which language we synced and only sync
+    // back to that language.
+    if (!empty($entity->{$legacy_field . '_sync_source_lang'})) {
+      $langcode = $entity->{$legacy_field . '_sync_source_lang'};
+    }
     $info['callbacks']['sync_set']($entity_type, $entity, $legacy_field, $info, $langcode);
   }
 }
