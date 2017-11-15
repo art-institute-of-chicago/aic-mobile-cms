@@ -39,9 +39,23 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
+  $strongarm->name = 'entity_translation_hide_translation_links_featured_dashboard';
+  $strongarm->value = 0;
+  $export['entity_translation_hide_translation_links_featured_dashboard'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
   $strongarm->name = 'entity_translation_hide_translation_links_map_annotation';
   $strongarm->value = 1;
   $export['entity_translation_hide_translation_links_map_annotation'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'entity_translation_hide_translation_links_map_floor';
+  $strongarm->value = 0;
+  $export['entity_translation_hide_translation_links_map_floor'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
@@ -81,9 +95,23 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
+  $strongarm->name = 'entity_translation_node_metadata_featured_dashboard';
+  $strongarm->value = '0';
+  $export['entity_translation_node_metadata_featured_dashboard'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
   $strongarm->name = 'entity_translation_node_metadata_map_annotation';
   $strongarm->value = '0';
   $export['entity_translation_node_metadata_map_annotation'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'entity_translation_node_metadata_map_floor';
+  $strongarm->value = '0';
+  $export['entity_translation_node_metadata_map_floor'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
@@ -116,13 +144,26 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
+  $strongarm->name = 'entity_translation_settings_node__audio';
+  $strongarm->value = array(
+    'default_language' => 'en',
+    'hide_language_selector' => 1,
+    'exclude_language_none' => 1,
+    'lock_language' => 1,
+    'shared_fields_original_only' => 1,
+  );
+  $export['entity_translation_settings_node__audio'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
   $strongarm->name = 'entity_translation_settings_node__map_annotation';
   $strongarm->value = array(
     'default_language' => 'en',
-    'hide_language_selector' => 0,
-    'exclude_language_none' => 0,
-    'lock_language' => 0,
-    'shared_fields_original_only' => 0,
+    'hide_language_selector' => 1,
+    'exclude_language_none' => 1,
+    'lock_language' => 1,
+    'shared_fields_original_only' => 1,
   );
   $export['entity_translation_settings_node__map_annotation'] = $strongarm;
 
@@ -145,10 +186,10 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->name = 'entity_translation_settings_node__page';
   $strongarm->value = array(
     'default_language' => 'en',
-    'hide_language_selector' => 0,
-    'exclude_language_none' => 0,
-    'lock_language' => 0,
-    'shared_fields_original_only' => 0,
+    'hide_language_selector' => 1,
+    'exclude_language_none' => 1,
+    'lock_language' => 1,
+    'shared_fields_original_only' => 1,
   );
   $export['entity_translation_settings_node__page'] = $strongarm;
 
@@ -158,10 +199,10 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->name = 'entity_translation_settings_node__tour';
   $strongarm->value = array(
     'default_language' => 'en',
-    'hide_language_selector' => 0,
-    'exclude_language_none' => 0,
-    'lock_language' => 0,
-    'shared_fields_original_only' => 0,
+    'hide_language_selector' => 1,
+    'exclude_language_none' => 1,
+    'lock_language' => 1,
+    'shared_fields_original_only' => 1,
   );
   $export['entity_translation_settings_node__tour'] = $strongarm;
 
@@ -185,6 +226,45 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->name = 'entity_translation_workflow_enabled';
   $strongarm->value = 0;
   $export['entity_translation_workflow_enabled'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'field_bundle_settings_field_collection_item__field_audio_commentary';
+  $strongarm->value = array(
+    'view_modes' => array(),
+    'extra_fields' => array(
+      'form' => array(),
+      'display' => array(),
+    ),
+  );
+  $export['field_bundle_settings_field_collection_item__field_audio_commentary'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'field_bundle_settings_field_collection_item__field_floor_map';
+  $strongarm->value = array(
+    'view_modes' => array(),
+    'extra_fields' => array(
+      'form' => array(),
+      'display' => array(),
+    ),
+  );
+  $export['field_bundle_settings_field_collection_item__field_floor_map'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'field_bundle_settings_field_collection_item__field_tour_stops';
+  $strongarm->value = array(
+    'view_modes' => array(),
+    'extra_fields' => array(
+      'form' => array(),
+      'display' => array(),
+    ),
+  );
+  $export['field_bundle_settings_field_collection_item__field_tour_stops'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
