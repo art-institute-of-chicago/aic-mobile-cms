@@ -398,7 +398,7 @@ function aic_mobile_cms_content_types_strongarm() {
     'extra_fields' => array(
       'form' => array(
         'path' => array(
-          'weight' => '15',
+          'weight' => '14',
         ),
         'language' => array(
           'weight' => '0',
@@ -464,5 +464,6 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->name = 'locale_field_language_fallback';
   $strongarm->value = 0;
   $export['locale_field_language_fallback'] = $strongarm;
+
   return $export;
 }
