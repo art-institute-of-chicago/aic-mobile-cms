@@ -398,7 +398,7 @@ function aic_mobile_cms_content_types_strongarm() {
     'extra_fields' => array(
       'form' => array(
         'path' => array(
-          'weight' => '15',
+          'weight' => '14',
         ),
         'language' => array(
           'weight' => '0',
@@ -457,6 +457,13 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->name = 'language_content_type_tour';
   $strongarm->value = '4';
   $export['language_content_type_tour'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'locale_field_language_fallback';
+  $strongarm->value = 0;
+  $export['locale_field_language_fallback'] = $strongarm;
 
   return $export;
 }
