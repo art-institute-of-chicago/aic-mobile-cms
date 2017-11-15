@@ -88,9 +88,9 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 0,
-      'module' => 'number',
+      'module' => 'html5_tools',
       'settings' => array(),
-      'type' => 'number',
+      'type' => 'numberfield',
       'weight' => 0,
     ),
   );
@@ -2382,7 +2382,7 @@ Ex: ""Head of Buddha (Spanish)"""',
     ),
     'entity_type' => 'node',
     'field_name' => 'field_object_selector_numbers',
-    'label' => 'Deprecated: Object Selector Numbers',
+    'label' => 'Object Selector Numbers',
     'required' => 0,
     'settings' => array(
       'entity_translation_sync' => FALSE,
@@ -2913,9 +2913,9 @@ Ex: ""Head of Buddha (Spanish)"""',
     ),
     'widget' => array(
       'active' => 0,
-      'module' => 'number',
+      'module' => 'html5_tools',
       'settings' => array(),
-      'type' => 'number',
+      'type' => 'numberfield',
       'weight' => 2,
     ),
   );
@@ -3337,7 +3337,6 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Credit Line');
   t('Credits');
   t('Deprecated - Tour Stops');
-  t('Deprecated: Object Selector Numbers');
   t('Description');
   t('Enter artist first and last name, i.e. Irving Penn');
   t('Enter artist\'s origin, i.e. American, 1917-2009');
@@ -3366,6 +3365,7 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Object');
   t('Object ID');
   t('Object Selector Number');
+  t('Object Selector Numbers');
   t('Reference Number');
   t('Selector Number');
   t('Start Location');
