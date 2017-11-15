@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the AIC Mobile CMS Floor Map Export feature.
+ */
+
+include_once 'aic_mobile_cms_floor_map_export.features.inc';
