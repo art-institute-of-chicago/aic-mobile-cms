@@ -14,7 +14,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['administer entity translation'] = array(
     'name' => 'administer entity translation',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'entity_translation',
   );
@@ -23,7 +23,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['administer features'] = array(
     'name' => 'administer features',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'features',
   );
@@ -32,7 +32,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['administer field collections'] = array(
     'name' => 'administer field collections',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'field_collection',
   );
@@ -41,7 +41,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['administer fieldgroups'] = array(
     'name' => 'administer fieldgroups',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'field_group',
   );
@@ -50,7 +50,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['administer fields'] = array(
     'name' => 'administer fields',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'field',
   );
@@ -59,7 +59,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['administer languages'] = array(
     'name' => 'administer languages',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'locale',
   );
@@ -68,7 +68,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['administer pathauto'] = array(
     'name' => 'administer pathauto',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'pathauto',
   );
@@ -77,7 +77,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['generate features'] = array(
     'name' => 'generate features',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'features',
   );
@@ -86,7 +86,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['manage features'] = array(
     'name' => 'manage features',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'features',
   );
@@ -95,7 +95,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['notify of path changes'] = array(
     'name' => 'notify of path changes',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'pathauto',
   );
@@ -104,7 +104,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['rename features'] = array(
     'name' => 'rename features',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'features',
   );
@@ -113,7 +113,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['toggle field translatability'] = array(
     'name' => 'toggle field translatability',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'entity_translation',
   );
@@ -122,7 +122,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['translate any entity'] = array(
     'name' => 'translate any entity',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
       'editor' => 'editor',
       'publisher' => 'publisher',
     ),
@@ -133,7 +133,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['translate interface'] = array(
     'name' => 'translate interface',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
     ),
     'module' => 'locale',
   );
@@ -142,7 +142,7 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   $permissions['translate node entities'] = array(
     'name' => 'translate node entities',
     'roles' => array(
-      'administrator' => 'administrator',
+      'admin' => 'admin',
       'editor' => 'editor',
       'publisher' => 'publisher',
     ),
