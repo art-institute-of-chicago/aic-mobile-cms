@@ -1,11 +1,14 @@
 <?php
-// $Id: aicapp.form.alter.inc$
+
+/**
+ * @file aicapp.form.alter.inc.
+ */
 
 /**
  * Private callback to alter setup form.
  */
 function _aicapp_form_alter(&$form, &$form_state, $form_id) {
-  // Add an afterbuild callback
+  // Add an afterbuild callback.
   $form['#after_build'][] = 'aicapp_setup_afterbuild';
   // Only proceed if either object or tour node form.
   if ($form_id != 'object_node_form' && $form_id != 'tour_node_form') {
@@ -29,7 +32,7 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
     'type' => 'file',
     'data' => drupal_get_path('module', 'aicapp') . '/jquery.imgareaselect.min.js',
   );
-  // options for how javascript is added to page.
+  // Options for how javascript is added to page.
   $js_options = array(
     'type' => 'inline',
     'scope' => 'footer',
@@ -64,9 +67,9 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
   }
 }
 
-
 /**
- * Private callback to alter setup form.
+ * Private callback to alter setup form after translation related items
+ * have been added.
  */
 function _aicapp_form_afterbuild(&$form, &$form_state) {
   // Fix for empty title fields when changing from language neutral.
@@ -75,12 +78,13 @@ function _aicapp_form_afterbuild(&$form, &$form_state) {
     && empty($form['title_field'][LANGUAGE_NONE][0]['#default_value'])
     && !empty($form['title']['#default_value'])) {
     // Add the default title.
-    $form['title_field'][LANGUAGE_NONE][0]['value']['#value'] = $form['title']['#default_value'];
+    $form['title_field'][LANGUAGE_NONE][0]['value']['#value'] = check_plain($form['title']['#default_value']);
   }
-  // Fix to set language to 'en' by default.
-  if (!empty($form['language']) && $form['language']['#default_value'] === LANGUAGE_NONE
+  // Fix to set language to AICAPP_DEFAULT_LANG, which 'en' by default.
+  if (!empty($form['language']) && !empty($form['language']['#default_value'])
+    && $form['language']['#default_value'] === LANGUAGE_NONE
     && $form_state['values']['language'] === LANGUAGE_NONE) {
     // Add EN as the default language.
-    $form_state['values']['language'] = 'en';
+    $form_state['values']['language'] = AICAPP_DEFAULT_LANG;
   }
 }
