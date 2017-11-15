@@ -41,6 +41,9 @@ function title_entity_info() {
           'label' => t('Title'),
           'description' => '',
         ) + $instance,
+        'additional keys' => array(
+          'format' => 'format',
+        ),
       ),
     ),
     'efq bundle conditions' => TRUE,
@@ -122,12 +125,31 @@ function title_field_term_description_submit($entity_type, $entity, $legacy_fiel
  */
 function title_field_text_sync_get($entity_type, $entity, $legacy_field, $info, $langcode) {
   $value = NULL;
+  $format = 'plain_text';
+
+  $info += array(
+    'additional keys' => array(
+      'format' => 'format',
+    ),
+  );
+
+  $format_key = $info['additional keys']['format'];
   $field_name = $info['field']['field_name'];
+  // Return values only if there is any available to process for the current
+  // language.
   if (!empty($entity->{$field_name}[$langcode]) && is_array($entity->{$field_name}[$langcode])) {
-    $items = $entity->{$field_name}[$langcode];
-    $value = !empty($items[0]['value']) ? $items[0]['value'] : NULL;
+    $item = $entity->{$field_name}[$langcode][0] + array(
+      'value' => NULL,
+      'format' => NULL,
+    );
+    $value = $item['value'];
+    $format = $item['format'];
   }
-  return array($legacy_field => $value);
+
+  return array(
+    $legacy_field => $value,
+    $format_key => $format,
+  );
 }
 
 /**
@@ -143,15 +165,26 @@ function title_field_text_sync_set($entity_type, $entity, $legacy_field, $info, 
 function title_field_text_with_summary_sync_get($entity_type, $entity, $legacy_field, $info, $langcode) {
   $value = NULL;
   $format = NULL;
+
+  $info += array(
+    'additional keys' => array(
+      'format' => 'format',
+    ),
+  );
+
   $format_key = $info['additional keys']['format'];
   $field_name = $info['field']['field_name'];
   // Return values only if there is any available to process for the current
   // language.
   if (!empty($entity->{$field_name}[$langcode]) && is_array($entity->{$field_name}[$langcode])) {
-    $items = $entity->{$field_name}[$langcode];
-    $value = !empty($items[0]['value']) ? $items[0]['value'] : NULL;
-    $format = $entity->{$field_name}[$langcode][0]['format'];
+    $item = $entity->{$field_name}[$langcode][0] + array(
+      'value' => NULL,
+      'format' => NULL,
+    );
+    $value = $item['value'];
+    $format = $item['format'];
   }
+
   return array(
     $legacy_field => $value,
     $format_key => $format,

@@ -757,13 +757,10 @@ function title_tokens_alter(array &$replacements, array $context) {
           if (title_field_replacement_enabled($entity_type, $bundle, $legacy_field)) {
             if (isset($context['tokens'][$legacy_field])) {
               $langcode = field_language($entity_type, $entity, $info['field']['field_name'], $langcode);
-              $values = $info['callbacks']['sync_get']($entity_type, $entity, $legacy_field, $info, $langcode);
-              $item = $values[$legacy_field];
+              $item = $info['callbacks']['sync_get']($entity_type, $entity, $legacy_field, $info, $langcode);
               if (!empty($item)) {
-                if (is_array($item)) {
-                  $item = reset($item);
-                }
-                $replacements[$context['tokens'][$legacy_field]] = $sanitize ? check_plain($item) : $item;
+                list($value, $format) = array_values($item);
+                $replacements[$context['tokens'][$legacy_field]] = check_markup($value, $format, $langcode);
               }
             }
           }
