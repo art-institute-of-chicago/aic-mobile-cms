@@ -156,7 +156,18 @@ function title_field_text_sync_get($entity_type, $entity, $legacy_field, $info, 
  * Sync back callback for the text field type.
  */
 function title_field_text_sync_set($entity_type, $entity, $legacy_field, $info, $langcode) {
+  // Sync the field back to the language we originally synced from, which will
+  // be ensured by title_field_sync_set().
   $entity->{$info['field']['field_name']}[$langcode][0]['value'] = $entity->{$legacy_field};
+
+  // If there is a stored original value, we have to replace the legacy field
+  // with that one. Also it is important that the langcode is the same,
+  // that we synced on load.
+  if (!empty($entity->{$legacy_field . '_original'})
+    && !empty($entity->{$legacy_field . '_sync_source_lang'})
+    && $entity->{$legacy_field . '_sync_source_lang'} == $langcode) {
+    $entity->{$legacy_field} = $entity->{$legacy_field . '_original'};
+  }
 }
 
 /**
