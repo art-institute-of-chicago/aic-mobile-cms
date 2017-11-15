@@ -24,6 +24,8 @@ function aicapp_init() {
   define('AICAPP_IMAGE_CROP_ROTATION', 0);
   define('AICAPP_IMAGE_CROP_QUALITY', 'default');
   define('AICAPP_IMAGE_CROP_FORMAT', 'jpg');
+  global $language;
+  define('AICAPP_DEFAULT_LANG', $language->language);
 }
 
 /**
@@ -2001,5 +2003,11 @@ function aicapp_admin_validate($form, &$form_state) {
   // Check if Image Server value is a URL.
   if (!filter_var($form_state['values']['aicapp_image_server_url'], FILTER_VALIDATE_URL)) {
     form_set_error('aicapp_image_server_url', t('You must provide a valid URL for the Image Server.'));
+  }
+}
+
+function aicapp_query_alter($query) {
+  if ($query->hasTag('node_export_features')) {
+    $query->condition('uuid', '1b0519f8-14ef-4144-a556-d2601df4331a');
   }
 }
