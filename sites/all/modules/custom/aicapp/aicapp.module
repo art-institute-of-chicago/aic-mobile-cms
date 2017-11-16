@@ -26,6 +26,8 @@ function aicapp_init() {
   define('AICAPP_IMAGE_CROP_FORMAT', 'jpg');
   global $language;
   define('AICAPP_DEFAULT_LANG', $language->language);
+  define('AICAPP_TYPE_EVENT', 'event');
+  define('AICAPP_TYPE_EXHIBITION', 'exhibition');
 }
 
 /**
@@ -2043,6 +2045,19 @@ function _aicapp_check_connection($url) {
 }
 
 /**
+ * Make an entity field query and return results.
+ */
+function aicapp_get_featured($type = 'node', $bundles = array()) {
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', $type);
+  if (count($bundles)) {
+    $query->entityCondition('bundle', $bundles, 'IN');
+  }
+  $result = $query->execute();
+  return !empty($result[$type]) ? $result[$type] : array();
+}
+
+/**
  * Save remote objects to nodes.
  */
 function aicapp_process_remote_object() {
@@ -2056,11 +2071,11 @@ function aicapp_process_remote_object() {
   $page = 'page=';
   // Define what we're going to import
   $objects = array(
-    'event' => array(
+    AICAPP_TYPE_EVENT => array(
       'endpoint' => AICAPP_API_HOST . AICAPP_EVENT_API_ENDPOINT,
       'remote' => array(),
     ),
-    'exhibition' => array(
+    AICAPP_TYPE_EXHIBITION => array(
       'endpoint' => AICAPP_API_HOST . AICAPP_EXHIBITION_API_ENDPOINT,
       'remote' => array(),
     ),
@@ -2077,13 +2092,13 @@ function aicapp_process_remote_object() {
       $json = json_decode($discover, TRUE);
       if (isset($json['data'])) {
         foreach ($json['data'] as $remote_record) {
-          if ($type === 'exhibition') {
+          if ($type === AICAPP_TYPE_EXHIBITION) {
             // Skip any that are not active
             if (!$remote_record['is_active']) {
               continue;
             }
           }
-          else if ($type === 'event') {
+          else if ($type === AICAPP_TYPE_EVENT) {
             // Skip any that have end dates in the past.
             if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
               continue;
@@ -2102,13 +2117,13 @@ function aicapp_process_remote_object() {
             $decoded_loop = json_decode($loop_json, TRUE);
             if (isset($decoded_loop['data'])) {
               foreach ($decoded_loop['data'] as $remote_record) {
-                if ($type === 'exhibition') {
+                if ($type === AICAPP_TYPE_EXHIBITION) {
                   // Skip any that are not active
                   if (!$remote_record['is_active']) {
                     continue;
                   }
                 }
-                else if ($type === 'event') {
+                else if ($type === AICAPP_TYPE_EVENT) {
                   // Skip any that have end dates in the past.
                   if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
                     continue;
@@ -2157,15 +2172,21 @@ function aicapp_process_remote_object() {
       // Object JSON
       $ewrapper->field_imported_object->set(json_encode($to_import));
 
-      if ($type === 'exhibition') {
+      if ($type === AICAPP_TYPE_EXHIBITION) {
         // Description
         $ewrapper->field_exhibit_description->set($to_import['description']);
         // Is exhibition active
+        $current_state = $ewrapper->field_exhibit_is_active->value();
         $ewrapper->field_exhibit_is_active->set($to_import['is_active']);
+        if ($current_state && !$to_import['is_active']) {
+          // Unpubish and demote this node.
+          $ewrapper->status->set(0);
+          $ewrapper->promote->set(0);
+        }
         // Exhibition dates.
         $ewrapper->field_exhibit_dates->set($to_import['dates']);
       }
-      else if ($type === 'event') {
+      else if ($type === AICAPP_TYPE_EVENT) {
         $start = new DateTime($to_import['start_at']);
         $end = new DateTime($to_import['end_at']);
         // Event start and end dates
@@ -2173,6 +2194,11 @@ function aicapp_process_remote_object() {
           'value' => $start->format('Y-m-d H:i:s'),
           'value2' => $end->format('Y-m-d H:i:s'),
         ));
+        if (strtotime($to_import['end_at']) < strtotime('now')) {
+          // Unpubish and demote this node.
+          $ewrapper->status->set(0);
+          $ewrapper->promote->set(0);
+        }
       }
       // Now just save the wrapper and the entity
       $ewrapper->save();
@@ -2211,7 +2237,7 @@ function aicapp_process_remote_object() {
       // Object JSON
       $ewrapper->field_imported_object->set(json_encode($to_import));
 
-      if ($type === 'exhibition') {
+      if ($type === AICAPP_TYPE_EXHIBITION) {
         // Description
         $ewrapper->field_exhibit_description->set($to_import['description']);
         // Is exhibition active
@@ -2219,7 +2245,7 @@ function aicapp_process_remote_object() {
         // Exhibition dates.
         $ewrapper->field_exhibit_dates->set($to_import['dates']);
       }
-      else if ($type === 'event') {
+      else if ($type === AICAPP_TYPE_EVENT) {
         $start = new DateTime($to_import['start_at']);
         $end = new DateTime($to_import['end_at']);
         // Event start and end dates
