@@ -1717,48 +1717,6 @@ Ex: ""Head of Buddha (Spanish)"""',
     ),
   );
 
-  // Exported field_instance: 'node-featured_dashboard-field_featured_tours'.
-  $field_instances['node-featured_dashboard-field_featured_tours'] = array(
-    'bundle' => 'featured_dashboard',
-    'default_value' => NULL,
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'module' => 'node_reference',
-        'settings' => array(),
-        'type' => 'node_reference_default',
-        'weight' => 0,
-      ),
-      'teaser' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 0,
-      ),
-    ),
-    'entity_type' => 'node',
-    'field_name' => 'field_featured_tours',
-    'label' => 'Tours',
-    'required' => 0,
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'node_reference',
-      'settings' => array(
-        'autocomplete_match' => 'contains',
-        'autocomplete_path' => 'node_reference/autocomplete',
-        'size' => 60,
-      ),
-      'type' => 'node_reference_autocomplete',
-      'weight' => 1,
-    ),
-  );
-
   // Exported field_instance: 'node-gallery-field_floor'.
   $field_instances['node-gallery-field_floor'] = array(
     'bundle' => 'gallery',
@@ -4022,7 +3980,6 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Tour Dates');
   t('Tour Duration');
   t('Tour Stops');
-  t('Tours');
   t('Track Title');
   t('Type');
   t('URL to an icon for a map annotation.');

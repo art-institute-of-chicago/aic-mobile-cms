@@ -252,12 +252,40 @@ function aic_mobile_cms_content_types_views_default_views() {
       'empty_column' => 1,
     ),
   );
-  /* Field: Content: Edit link */
-  $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
-  $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
-  $handler->display->display_options['fields']['edit_node']['field'] = 'edit_node';
-  $handler->display->display_options['fields']['edit_node']['label'] = '';
-  $handler->display->display_options['fields']['edit_node']['element_label_colon'] = FALSE;
+  /* Field: Bulk operations: Content */
+  $handler->display->display_options['fields']['views_bulk_operations']['id'] = 'views_bulk_operations';
+  $handler->display->display_options['fields']['views_bulk_operations']['table'] = 'views_entity_node';
+  $handler->display->display_options['fields']['views_bulk_operations']['field'] = 'views_bulk_operations';
+  $handler->display->display_options['fields']['views_bulk_operations']['label'] = 'Feature';
+  $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['display_type'] = '0';
+  $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['enable_select_all_pages'] = 1;
+  $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['row_clickable'] = 1;
+  $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['force_single'] = 0;
+  $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['entity_load_capacity'] = '10';
+  $handler->display->display_options['fields']['views_bulk_operations']['vbo_operations'] = array(
+    'action::node_promote_action' => array(
+      'selected' => 1,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 1,
+      'skip_permission_check' => 0,
+      'override_label' => 1,
+      'label' => 'Make Featured',
+    ),
+    'action::node_unpromote_action' => array(
+      'selected' => 1,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 1,
+      'skip_permission_check' => 0,
+      'override_label' => 1,
+      'label' => 'Remove Featured',
+    ),
+  );
+  /* Field: Content: Promoted to front page */
+  $handler->display->display_options['fields']['promote']['id'] = 'promote';
+  $handler->display->display_options['fields']['promote']['table'] = 'node';
+  $handler->display->display_options['fields']['promote']['field'] = 'promote';
+  $handler->display->display_options['fields']['promote']['label'] = 'Featured';
+  $handler->display->display_options['fields']['promote']['not'] = 0;
   /* Field: Content: Title */
   $handler->display->display_options['fields']['title']['id'] = 'title';
   $handler->display->display_options['fields']['title']['table'] = 'node';
@@ -290,12 +318,12 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['field_event_short_description']['table'] = 'field_data_field_event_short_description';
   $handler->display->display_options['fields']['field_event_short_description']['field'] = 'field_event_short_description';
   $handler->display->display_options['fields']['field_event_short_description']['exclude'] = TRUE;
-  /* Field: Content: Promoted to front page */
-  $handler->display->display_options['fields']['promote']['id'] = 'promote';
-  $handler->display->display_options['fields']['promote']['table'] = 'node';
-  $handler->display->display_options['fields']['promote']['field'] = 'promote';
-  $handler->display->display_options['fields']['promote']['label'] = 'Featured';
-  $handler->display->display_options['fields']['promote']['not'] = 0;
+  /* Field: Content: Edit link */
+  $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
+  $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
+  $handler->display->display_options['fields']['edit_node']['field'] = 'edit_node';
+  $handler->display->display_options['fields']['edit_node']['label'] = '';
+  $handler->display->display_options['fields']['edit_node']['element_label_colon'] = FALSE;
   /* Sort criterion: Content: Post date */
   $handler->display->display_options['sorts']['created']['id'] = 'created';
   $handler->display->display_options['sorts']['created']['table'] = 'node';
@@ -324,7 +352,6 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['filters']['promote']['expose']['label'] = 'Featured';
   $handler->display->display_options['filters']['promote']['expose']['operator'] = 'promote_op';
   $handler->display->display_options['filters']['promote']['expose']['identifier'] = 'promote';
-  $handler->display->display_options['filters']['promote']['expose']['required'] = TRUE;
   $handler->display->display_options['filters']['promote']['expose']['remember_roles'] = array(
     2 => '2',
     1 => 0,
@@ -342,12 +369,40 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['defaults']['title'] = FALSE;
   $handler->display->display_options['title'] = 'Exhibitions';
   $handler->display->display_options['defaults']['fields'] = FALSE;
-  /* Field: Content: Edit link */
-  $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
-  $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
-  $handler->display->display_options['fields']['edit_node']['field'] = 'edit_node';
-  $handler->display->display_options['fields']['edit_node']['label'] = '';
-  $handler->display->display_options['fields']['edit_node']['element_label_colon'] = FALSE;
+  /* Field: Bulk operations: Content */
+  $handler->display->display_options['fields']['views_bulk_operations_1']['id'] = 'views_bulk_operations_1';
+  $handler->display->display_options['fields']['views_bulk_operations_1']['table'] = 'views_entity_node';
+  $handler->display->display_options['fields']['views_bulk_operations_1']['field'] = 'views_bulk_operations';
+  $handler->display->display_options['fields']['views_bulk_operations_1']['label'] = 'Featured';
+  $handler->display->display_options['fields']['views_bulk_operations_1']['vbo_settings']['display_type'] = '0';
+  $handler->display->display_options['fields']['views_bulk_operations_1']['vbo_settings']['enable_select_all_pages'] = 1;
+  $handler->display->display_options['fields']['views_bulk_operations_1']['vbo_settings']['row_clickable'] = 1;
+  $handler->display->display_options['fields']['views_bulk_operations_1']['vbo_settings']['force_single'] = 0;
+  $handler->display->display_options['fields']['views_bulk_operations_1']['vbo_settings']['entity_load_capacity'] = '10';
+  $handler->display->display_options['fields']['views_bulk_operations_1']['vbo_operations'] = array(
+    'action::node_promote_action' => array(
+      'selected' => 1,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 1,
+      'skip_permission_check' => 0,
+      'override_label' => 1,
+      'label' => 'Make Featured',
+    ),
+    'action::node_unpromote_action' => array(
+      'selected' => 1,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 1,
+      'skip_permission_check' => 0,
+      'override_label' => 1,
+      'label' => 'Remove Featured',
+    ),
+  );
+  /* Field: Content: Promoted to front page */
+  $handler->display->display_options['fields']['promote']['id'] = 'promote';
+  $handler->display->display_options['fields']['promote']['table'] = 'node';
+  $handler->display->display_options['fields']['promote']['field'] = 'promote';
+  $handler->display->display_options['fields']['promote']['label'] = 'Featured';
+  $handler->display->display_options['fields']['promote']['not'] = 0;
   /* Field: Content: Title */
   $handler->display->display_options['fields']['title']['id'] = 'title';
   $handler->display->display_options['fields']['title']['table'] = 'node';
@@ -364,12 +419,12 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['field_exhibit_description']['table'] = 'field_data_field_exhibit_description';
   $handler->display->display_options['fields']['field_exhibit_description']['field'] = 'field_exhibit_description';
   $handler->display->display_options['fields']['field_exhibit_description']['element_label_colon'] = FALSE;
-  /* Field: Content: Promoted to front page */
-  $handler->display->display_options['fields']['promote']['id'] = 'promote';
-  $handler->display->display_options['fields']['promote']['table'] = 'node';
-  $handler->display->display_options['fields']['promote']['field'] = 'promote';
-  $handler->display->display_options['fields']['promote']['label'] = 'Featured';
-  $handler->display->display_options['fields']['promote']['not'] = 0;
+  /* Field: Content: Edit link */
+  $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
+  $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
+  $handler->display->display_options['fields']['edit_node']['field'] = 'edit_node';
+  $handler->display->display_options['fields']['edit_node']['label'] = '';
+  $handler->display->display_options['fields']['edit_node']['element_label_colon'] = FALSE;
   $handler->display->display_options['defaults']['filter_groups'] = FALSE;
   $handler->display->display_options['defaults']['filters'] = FALSE;
   /* Filter criterion: Content: Published */
@@ -395,7 +450,6 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['filters']['promote']['expose']['label'] = 'Featured';
   $handler->display->display_options['filters']['promote']['expose']['operator'] = 'promote_op';
   $handler->display->display_options['filters']['promote']['expose']['identifier'] = 'promote';
-  $handler->display->display_options['filters']['promote']['expose']['required'] = TRUE;
   $handler->display->display_options['filters']['promote']['expose']['remember_roles'] = array(
     2 => '2',
     1 => 0,
@@ -404,6 +458,101 @@ function aic_mobile_cms_content_types_views_default_views() {
     4 => 0,
   );
   $handler->display->display_options['path'] = 'exhibitions';
+
+  /* Display: Featured Events Block */
+  $handler = $view->new_display('block', 'Featured Events Block', 'block_1');
+
+  /* Display: Exhibitions Block */
+  $handler = $view->new_display('block', 'Exhibitions Block', 'block_2');
+  $handler->display->display_options['defaults']['title'] = FALSE;
+  $handler->display->display_options['title'] = 'Exhibitions';
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: Bulk operations: Content */
+  $handler->display->display_options['fields']['views_bulk_operations']['id'] = 'views_bulk_operations';
+  $handler->display->display_options['fields']['views_bulk_operations']['table'] = 'views_entity_node';
+  $handler->display->display_options['fields']['views_bulk_operations']['field'] = 'views_bulk_operations';
+  $handler->display->display_options['fields']['views_bulk_operations']['label'] = 'Feature';
+  $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['display_type'] = '0';
+  $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['enable_select_all_pages'] = 1;
+  $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['row_clickable'] = 1;
+  $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['force_single'] = 0;
+  $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['entity_load_capacity'] = '10';
+  $handler->display->display_options['fields']['views_bulk_operations']['vbo_operations'] = array(
+    'action::node_promote_action' => array(
+      'selected' => 1,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 1,
+      'skip_permission_check' => 0,
+      'override_label' => 1,
+      'label' => 'Make Featured',
+    ),
+    'action::node_unpromote_action' => array(
+      'selected' => 1,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 1,
+      'skip_permission_check' => 0,
+      'override_label' => 1,
+      'label' => 'Remove Featured',
+    ),
+  );
+  /* Field: Content: Promoted to front page */
+  $handler->display->display_options['fields']['promote']['id'] = 'promote';
+  $handler->display->display_options['fields']['promote']['table'] = 'node';
+  $handler->display->display_options['fields']['promote']['field'] = 'promote';
+  $handler->display->display_options['fields']['promote']['label'] = 'Featured';
+  $handler->display->display_options['fields']['promote']['not'] = 0;
+  /* Field: Content: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'node';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
+  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+  /* Field: Content: Dates */
+  $handler->display->display_options['fields']['field_exhibit_dates']['id'] = 'field_exhibit_dates';
+  $handler->display->display_options['fields']['field_exhibit_dates']['table'] = 'field_data_field_exhibit_dates';
+  $handler->display->display_options['fields']['field_exhibit_dates']['field'] = 'field_exhibit_dates';
+  /* Field: Content: Description */
+  $handler->display->display_options['fields']['field_exhibit_description']['id'] = 'field_exhibit_description';
+  $handler->display->display_options['fields']['field_exhibit_description']['table'] = 'field_data_field_exhibit_description';
+  $handler->display->display_options['fields']['field_exhibit_description']['field'] = 'field_exhibit_description';
+  /* Field: Content: Edit link */
+  $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
+  $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
+  $handler->display->display_options['fields']['edit_node']['field'] = 'edit_node';
+  $handler->display->display_options['fields']['edit_node']['label'] = '';
+  $handler->display->display_options['fields']['edit_node']['element_label_colon'] = FALSE;
+  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
+  $handler->display->display_options['defaults']['filters'] = FALSE;
+  /* Filter criterion: Content: Published */
+  $handler->display->display_options['filters']['status']['id'] = 'status';
+  $handler->display->display_options['filters']['status']['table'] = 'node';
+  $handler->display->display_options['filters']['status']['field'] = 'status';
+  $handler->display->display_options['filters']['status']['value'] = 1;
+  $handler->display->display_options['filters']['status']['group'] = 1;
+  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
+  /* Filter criterion: Content: Type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'node';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['value'] = array(
+    'exhibition' => 'exhibition',
+  );
+  /* Filter criterion: Content: Promoted to front page */
+  $handler->display->display_options['filters']['promote']['id'] = 'promote';
+  $handler->display->display_options['filters']['promote']['table'] = 'node';
+  $handler->display->display_options['filters']['promote']['field'] = 'promote';
+  $handler->display->display_options['filters']['promote']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['promote']['expose']['operator_id'] = '';
+  $handler->display->display_options['filters']['promote']['expose']['label'] = 'Featured';
+  $handler->display->display_options['filters']['promote']['expose']['operator'] = 'promote_op';
+  $handler->display->display_options['filters']['promote']['expose']['identifier'] = 'promote';
+  $handler->display->display_options['filters']['promote']['expose']['remember_roles'] = array(
+    2 => '2',
+    1 => 0,
+    3 => 0,
+    5 => 0,
+    4 => 0,
+  );
   $translatables['events'] = array(
     t('Master'),
     t('Events'),
@@ -420,13 +569,19 @@ function aic_mobile_cms_content_types_views_default_views() {
     t('‹ previous'),
     t('next ›'),
     t('last »'),
+    t('Feature'),
+    t('- Choose an operation -'),
+    t('Make Featured'),
+    t('Remove Featured'),
+    t('Featured'),
     t('Title'),
     t('Dates'),
     t('Description'),
     t('Event Short Description'),
-    t('Featured'),
     t('Exhibitions Page'),
     t('Exhibitions'),
+    t('Featured Events Block'),
+    t('Exhibitions Block'),
   );
   $export['events'] = $view;
 

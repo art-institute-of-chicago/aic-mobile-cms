@@ -60,14 +60,6 @@ function aic_mobile_cms_content_types_node_info() {
       'title_label' => t('Exhibition Title'),
       'help' => '',
     ),
-    'featured_dashboard' => array(
-      'name' => t('Featured Dashboard'),
-      'base' => 'node_content',
-      'description' => '',
-      'has_title' => '1',
-      'title_label' => t('Title'),
-      'help' => '',
-    ),
     'gallery' => array(
       'name' => t('Gallery'),
       'base' => 'node_content',

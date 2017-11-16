@@ -519,47 +519,6 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'type' => 'list_boolean',
   );
 
-  // Exported field_base: 'field_featured_tours'.
-  $field_bases['field_featured_tours'] = array(
-    'active' => 1,
-    'cardinality' => -1,
-    'deleted' => 0,
-    'entity_types' => array(),
-    'field_name' => 'field_featured_tours',
-    'field_permissions' => array(
-      'type' => 0,
-    ),
-    'indexes' => array(
-      'nid' => array(
-        0 => 'nid',
-      ),
-    ),
-    'locked' => 0,
-    'module' => 'node_reference',
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-      'referenceable_types' => array(
-        'article' => 0,
-        'audio' => 0,
-        'basic_page' => 0,
-        'featured_dashboard' => 0,
-        'gallery' => 0,
-        'map_annotation' => 0,
-        'map_floor' => 0,
-        'object' => 0,
-        'page' => 0,
-        'tour' => 'tour',
-      ),
-      'view' => array(
-        'args' => array(),
-        'display_name' => '',
-        'view_name' => '',
-      ),
-    ),
-    'translatable' => 0,
-    'type' => 'node_reference',
-  );
-
   // Exported field_base: 'field_floor'.
   $field_bases['field_floor'] = array(
     'active' => 1,
