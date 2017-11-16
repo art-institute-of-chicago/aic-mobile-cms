@@ -1763,6 +1763,10 @@ function aicapp_cron() {
   if (date('G') == 24) {
     aicapp_gendata_form_submit($fm, $fm2);
   }
+  // At 1am - assuming Cron is running every hour.
+  if (date('G') == 2) {
+    aicapp_process_remote_object();
+  }
 }
 
 /**
@@ -2016,12 +2020,9 @@ function aicapp_admin_validate($form, &$form_state) {
   }
 }
 
-function aicapp_query_alter($query) {
-  if ($query->hasTag('node_export_features')) {
-    $query->condition('uuid', '1b0519f8-14ef-4144-a556-d2601df4331a');
-  }
-}
-
+/**
+ * Check a connection beofre making a query.
+ */
 function _aicapp_check_connection($url) {
   if (!filter_var($url, FILTER_VALIDATE_URL)) {
     return FALSE;
@@ -2034,9 +2035,205 @@ function _aicapp_check_connection($url) {
   $response = curl_exec($curl_init);
   curl_close($curl_init);
 
-  if ($response){
+  if ($response) {
     return TRUE;
   }
 
   return FALSE;
+}
+
+/**
+ * Save remote objects to nodes.
+ */
+function aicapp_process_remote_object() {
+  // @TODO expose these via the admin UI.
+  define('AICAPP_API_HOST', 'http://aggregator-data-test.artic.edu');
+  define('AICAPP_EVENT_API_ENDPOINT', '/api/v1/events');
+  define('AICAPP_EXHIBITION_API_ENDPOINT', '/api/v1/exhibitions');
+  $limit = 'limit=';
+  $limit_count = 50;
+  $max_page = 10;
+  $page = 'page=';
+  // Define what we're going to import
+  $objects = array(
+    'event' => array(
+      'endpoint' => AICAPP_API_HOST . AICAPP_EVENT_API_ENDPOINT,
+      'remote' => array(),
+    ),
+    'exhibition' => array(
+      'endpoint' => AICAPP_API_HOST . AICAPP_EXHIBITION_API_ENDPOINT,
+      'remote' => array(),
+    ),
+  );
+  $remote_objects = array();
+  // Fetch all recent remote objects.
+  foreach ($objects as $type => &$remote) {
+    $page_start = 2;
+    $url = $remote['endpoint'];
+    // This will require first discovering which events and exhibitions are
+    // active by using paging in the API.
+    $discover = file_get_contents($url . '?' . $limit . $limit_count);
+    if ($discover) {
+      $json = json_decode($discover, TRUE);
+      if (isset($json['data'])) {
+        foreach ($json['data'] as $remote_record) {
+          if ($type === 'exhibition') {
+            // Skip any that are not active
+            if (!$remote_record['is_active']) {
+              continue;
+            }
+          }
+          else if ($type === 'event') {
+            // Skip any that have end dates in the past.
+            if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
+              continue;
+            }
+          }
+          $remote['remote'][$remote_record['id']] = $remote_record;
+        }
+      }
+      // Now loop though up to $max_page adding records that are active and
+      // having an end date in the past.
+      if (isset($json['pagination']) && isset($json['pagination']['next_url'])) {
+        $loop_url = $json['pagination']['next_url'];
+        while ($page_start <= $max_page) {
+          $loop_json = file_get_contents($loop_url);
+          if ($loop_json) {
+            $decoded_loop = json_decode($loop_json, TRUE);
+            if (isset($decoded_loop['data'])) {
+              foreach ($decoded_loop['data'] as $remote_record) {
+                if ($type === 'exhibition') {
+                  // Skip any that are not active
+                  if (!$remote_record['is_active']) {
+                    continue;
+                  }
+                }
+                else if ($type === 'event') {
+                  // Skip any that have end dates in the past.
+                  if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
+                    continue;
+                  }
+                }
+                $remote['remote'][$remote_record['id']] = $remote_record;
+              }
+            }
+            $loop_url = isset($decoded_loop['pagination']) ? $decoded_loop['pagination']['next_url'] : NULL;
+          }
+          $page_start++;
+        }
+      }
+    }
+    // Fetch all locally saved objects using the key of remote ids.
+    $remote['local'] = array();
+    $remote['to_import'] = array_keys($remote['remote']);
+
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', $type, '=')
+      ->fieldCondition('field_imported_object_id', 'value', $remote['to_import'], 'IN');
+    $result = $query->execute();
+    if (isset($result['node'])) {
+      $nids = array_keys($result['node']);
+      $remote['local'] = entity_load('node', $nids);
+    }
+    // Loop through cached objects and save updated values from API.
+    foreach ($remote['local'] as $local_node) {
+      // Load an entity.
+      $ewrapper = entity_metadata_wrapper('node', $local_node);
+      $remote_id = $ewrapper->field_imported_object_id->value();
+
+      if (empty($remote['remote'][$remote_id])) {
+        continue;
+      }
+      // Update node fields with values from remote enities, but only if remote
+      // updated date is more recent than local date.
+      // Update all local objects that have local update date previous to last
+      // updated remote object dates.
+      $to_import = $remote['remote'][$remote_id];
+      // Ttile
+      $ewrapper->title->set($to_import['title']);
+      // Object ID
+      $ewrapper->field_imported_object_id->set($to_import['id']);
+      // Object JSON
+      $ewrapper->field_imported_object->set(json_encode($to_import));
+
+      if ($type === 'exhibition') {
+        // Description
+        $ewrapper->field_exhibit_description->set($to_import['description']);
+        // Is exhibition active
+        $ewrapper->field_exhibit_is_active->set($to_import['is_active']);
+        // Exhibition dates.
+        $ewrapper->field_exhibit_dates->set($to_import['dates']);
+      }
+      else if ($type === 'event') {
+        $start = new DateTime($to_import['start_at']);
+        $end = new DateTime($to_import['end_at']);
+        // Event start and end dates
+        $ewrapper->field_event_dates->set(array(
+          'value' => $start->format('Y-m-d H:i:s'),
+          'value2' => $end->format('Y-m-d H:i:s'),
+        ));
+      }
+      // Now just save the wrapper and the entity
+      $ewrapper->save();
+      // Get the key value for this remote id.
+      $remote_key = array_search($remote_id, $remote['to_import']);
+      // Unset this item from the import stack.
+      if (!empty($remote['to_import'][$remote_key])) {
+        unset($remote['to_import'][$remote_key]);
+      }
+    }
+    // Add any new remote objects that do not exist locally.
+    foreach ($remote['to_import'] as $remote_id) {
+      if (empty($remote['remote'][$remote_id])) {
+        continue;
+      }
+      // Update node fields with values from remote enities, but only if remote
+      // updated date is more recent than local date.
+      $to_import = $remote['remote'][$remote_id];
+      // creating a new object $node and setting its 'type' and uid property
+      $values = array(
+        'type' => $type,
+        'uid' => 1,
+        'status' => 1,
+        'promote' => 0,
+      );
+      $entity = entity_create('node', $values);
+
+      // The entity is now created, but we have not yet simplified use of it.
+      // Now create an entity_metadata_wrapper around the new node entity
+      // to make getting and setting values easier
+      $ewrapper = entity_metadata_wrapper('node', $entity);
+      // Ttile
+      $ewrapper->title->set($to_import['title']);
+      // Object ID
+      $ewrapper->field_imported_object_id->set($to_import['id']);
+      // Object JSON
+      $ewrapper->field_imported_object->set(json_encode($to_import));
+
+      if ($type === 'exhibition') {
+        // Description
+        $ewrapper->field_exhibit_description->set($to_import['description']);
+        // Is exhibition active
+        $ewrapper->field_exhibit_is_active->set($to_import['is_active']);
+        // Exhibition dates.
+        $ewrapper->field_exhibit_dates->set($to_import['dates']);
+      }
+      else if ($type === 'event') {
+        $start = new DateTime($to_import['start_at']);
+        $end = new DateTime($to_import['end_at']);
+        // Event start and end dates
+        $ewrapper->field_event_dates->set(array(
+          'value' => $start->format('Y-m-d H:i:s'),
+          'value2' => $end->format('Y-m-d H:i:s'),
+        ));
+        // Description
+        $ewrapper->field_event_description->set($to_import['description']);
+        // Short Description
+        $ewrapper->field_event_short_description->set($to_import['short_description']);
+      }
+      // Now just save the wrapper and the entity
+      $ewrapper->save();
+    }
+  }
 }
