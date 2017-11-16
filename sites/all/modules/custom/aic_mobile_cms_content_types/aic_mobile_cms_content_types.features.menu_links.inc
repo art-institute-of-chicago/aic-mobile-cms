@@ -102,16 +102,16 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
     'customized' => 1,
   );
   // Exported menu link: main-menu_map-floors:annotations.
-  $menu_links['main-menu_map-floors:annotations'] = array(
+  $menu_links['main-menu_map-floors:floors'] = array(
     'menu_name' => 'main-menu',
-    'link_path' => 'annotations',
-    'router_path' => 'annotations',
+    'link_path' => 'floors',
+    'router_path' => 'floors',
     'link_title' => 'Map Floors',
     'options' => array(
       'attributes' => array(
         'title' => '',
       ),
-      'identifier' => 'main-menu_map-floors:annotations',
+      'identifier' => 'main-menu_map-floors:floors',
     ),
     'module' => 'menu',
     'hidden' => 0,

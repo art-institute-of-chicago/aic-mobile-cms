@@ -2088,56 +2088,59 @@ function aicapp_process_remote_object() {
     // This will require first discovering which events and exhibitions are
     // active by using paging in the API.
     $discover = file_get_contents($url . '?' . $limit . $limit_count);
-    if ($discover) {
-      $json = json_decode($discover, TRUE);
-      if (isset($json['data'])) {
-        foreach ($json['data'] as $remote_record) {
-          if ($type === AICAPP_TYPE_EXHIBITION) {
-            // Skip any that are not active
-            if (!$remote_record['is_active']) {
-              continue;
-            }
+    // If connection not available.
+    if (!$discover) {
+      return;
+    }
+    $json = json_decode($discover, TRUE);
+    if (isset($json['data'])) {
+      foreach ($json['data'] as $remote_record) {
+        if ($type === AICAPP_TYPE_EXHIBITION) {
+          // Skip any that are not active
+          if (!$remote_record['is_active']) {
+            continue;
           }
-          else if ($type === AICAPP_TYPE_EVENT) {
-            // Skip any that have end dates in the past.
-            if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
-              continue;
-            }
-          }
-          $remote['remote'][$remote_record['id']] = $remote_record;
         }
-      }
-      // Now loop though up to $max_page adding records that are active and
-      // having an end date in the past.
-      if (isset($json['pagination']) && isset($json['pagination']['next_url'])) {
-        $loop_url = $json['pagination']['next_url'];
-        while ($page_start <= $max_page) {
-          $loop_json = file_get_contents($loop_url);
-          if ($loop_json) {
-            $decoded_loop = json_decode($loop_json, TRUE);
-            if (isset($decoded_loop['data'])) {
-              foreach ($decoded_loop['data'] as $remote_record) {
-                if ($type === AICAPP_TYPE_EXHIBITION) {
-                  // Skip any that are not active
-                  if (!$remote_record['is_active']) {
-                    continue;
-                  }
-                }
-                else if ($type === AICAPP_TYPE_EVENT) {
-                  // Skip any that have end dates in the past.
-                  if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
-                    continue;
-                  }
-                }
-                $remote['remote'][$remote_record['id']] = $remote_record;
-              }
-            }
-            $loop_url = isset($decoded_loop['pagination']) ? $decoded_loop['pagination']['next_url'] : NULL;
+        else if ($type === AICAPP_TYPE_EVENT) {
+          // Skip any that have end dates in the past.
+          if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
+            continue;
           }
-          $page_start++;
         }
+        $remote['remote'][$remote_record['id']] = $remote_record;
       }
     }
+    // Now loop though up to $max_page adding records that are active and
+    // having an end date in the past.
+    if (isset($json['pagination']) && isset($json['pagination']['next_url'])) {
+      $loop_url = $json['pagination']['next_url'];
+      while ($page_start <= $max_page) {
+        $loop_json = file_get_contents($loop_url);
+        if ($loop_json) {
+          $decoded_loop = json_decode($loop_json, TRUE);
+          if (isset($decoded_loop['data'])) {
+            foreach ($decoded_loop['data'] as $remote_record) {
+              if ($type === AICAPP_TYPE_EXHIBITION) {
+                // Skip any that are not active
+                if (!$remote_record['is_active']) {
+                  continue;
+                }
+              }
+              else if ($type === AICAPP_TYPE_EVENT) {
+                // Skip any that have end dates in the past.
+                if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
+                  continue;
+                }
+              }
+              $remote['remote'][$remote_record['id']] = $remote_record;
+            }
+          }
+          $loop_url = isset($decoded_loop['pagination']) ? $decoded_loop['pagination']['next_url'] : NULL;
+        }
+        $page_start++;
+      }
+    }
+
     // Fetch all locally saved objects using the key of remote ids.
     $remote['local'] = array();
     $remote['to_import'] = array_keys($remote['remote']);
