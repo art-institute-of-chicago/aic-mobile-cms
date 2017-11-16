@@ -39,13 +39,6 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
-  $strongarm->name = 'entity_translation_hide_translation_links_featured_dashboard';
-  $strongarm->value = 0;
-  $export['entity_translation_hide_translation_links_featured_dashboard'] = $strongarm;
-
-  $strongarm = new stdClass();
-  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
-  $strongarm->api_version = 1;
   $strongarm->name = 'entity_translation_hide_translation_links_map_annotation';
   $strongarm->value = 1;
   $export['entity_translation_hide_translation_links_map_annotation'] = $strongarm;
@@ -91,13 +84,6 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->name = 'entity_translation_node_metadata_audio';
   $strongarm->value = '0';
   $export['entity_translation_node_metadata_audio'] = $strongarm;
-
-  $strongarm = new stdClass();
-  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
-  $strongarm->api_version = 1;
-  $strongarm->name = 'entity_translation_node_metadata_featured_dashboard';
-  $strongarm->value = '0';
-  $export['entity_translation_node_metadata_featured_dashboard'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
@@ -289,22 +275,36 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
-  $strongarm->name = 'field_bundle_settings_node__featured_dashboard';
+  $strongarm->name = 'field_bundle_settings_node__event';
   $strongarm->value = array(
     'view_modes' => array(),
     'extra_fields' => array(
       'form' => array(
-        'title' => array(
-          'weight' => '0',
-        ),
         'path' => array(
-          'weight' => '2',
+          'weight' => '4',
         ),
       ),
       'display' => array(),
     ),
   );
-  $export['field_bundle_settings_node__featured_dashboard'] = $strongarm;
+  $export['field_bundle_settings_node__event'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'field_bundle_settings_node__exhibition';
+  $strongarm->value = array(
+    'view_modes' => array(),
+    'extra_fields' => array(
+      'form' => array(
+        'path' => array(
+          'weight' => '6',
+        ),
+      ),
+      'display' => array(),
+    ),
+  );
+  $export['field_bundle_settings_node__exhibition'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
@@ -419,9 +419,16 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
-  $strongarm->name = 'language_content_type_featured_dashboard';
+  $strongarm->name = 'language_content_type_event';
   $strongarm->value = '0';
-  $export['language_content_type_featured_dashboard'] = $strongarm;
+  $export['language_content_type_event'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'language_content_type_exhibition';
+  $strongarm->value = '0';
+  $export['language_content_type_exhibition'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
@@ -464,6 +471,57 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->name = 'locale_field_language_fallback';
   $strongarm->value = 0;
   $export['locale_field_language_fallback'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'node_options_exhibition';
+  $strongarm->value = array(
+    0 => 'status',
+  );
+  $export['node_options_exhibition'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'node_submitted_audio';
+  $strongarm->value = 0;
+  $export['node_submitted_audio'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'node_submitted_event';
+  $strongarm->value = 1;
+  $export['node_submitted_event'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'node_submitted_exhibition';
+  $strongarm->value = 1;
+  $export['node_submitted_exhibition'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'node_submitted_gallery';
+  $strongarm->value = 0;
+  $export['node_submitted_gallery'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'node_submitted_object';
+  $strongarm->value = 0;
+  $export['node_submitted_object'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'node_submitted_tour';
+  $strongarm->value = 0;
+  $export['node_submitted_tour'] = $strongarm;
 
   return $export;
 }
