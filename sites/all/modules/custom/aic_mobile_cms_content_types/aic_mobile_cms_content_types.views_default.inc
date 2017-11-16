@@ -202,6 +202,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['pager']['options']['items_per_page'] = '50';
   $handler->display->display_options['style_plugin'] = 'table';
   $handler->display->display_options['style_options']['columns'] = array(
+    'edit_node' => 'edit_node',
     'title' => 'title',
     'field_event_dates' => 'field_event_dates',
     'field_event_description' => 'field_event_description',
@@ -210,12 +211,17 @@ function aic_mobile_cms_content_types_views_default_views() {
   );
   $handler->display->display_options['style_options']['default'] = '-1';
   $handler->display->display_options['style_options']['info'] = array(
+    'edit_node' => array(
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
     'title' => array(
       'sortable' => 0,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
-      'empty_column' => 0,
+      'empty_column' => 1,
     ),
     'field_event_dates' => array(
       'sortable' => 0,
@@ -239,11 +245,11 @@ function aic_mobile_cms_content_types_views_default_views() {
       'empty_column' => 0,
     ),
     'promote' => array(
-      'sortable' => 0,
+      'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
-      'empty_column' => 0,
+      'empty_column' => 1,
     ),
   );
   /* Field: Content: Edit link */
@@ -309,6 +315,23 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['filters']['type']['value'] = array(
     'event' => 'event',
   );
+  /* Filter criterion: Content: Promoted to front page */
+  $handler->display->display_options['filters']['promote']['id'] = 'promote';
+  $handler->display->display_options['filters']['promote']['table'] = 'node';
+  $handler->display->display_options['filters']['promote']['field'] = 'promote';
+  $handler->display->display_options['filters']['promote']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['promote']['expose']['operator_id'] = '';
+  $handler->display->display_options['filters']['promote']['expose']['label'] = 'Featured';
+  $handler->display->display_options['filters']['promote']['expose']['operator'] = 'promote_op';
+  $handler->display->display_options['filters']['promote']['expose']['identifier'] = 'promote';
+  $handler->display->display_options['filters']['promote']['expose']['required'] = TRUE;
+  $handler->display->display_options['filters']['promote']['expose']['remember_roles'] = array(
+    2 => '2',
+    1 => 0,
+    3 => 0,
+    5 => 0,
+    4 => 0,
+  );
 
   /* Display: Events */
   $handler = $view->new_display('page', 'Events', 'page');
@@ -362,6 +385,23 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['filters']['type']['field'] = 'type';
   $handler->display->display_options['filters']['type']['value'] = array(
     'exhibition' => 'exhibition',
+  );
+  /* Filter criterion: Content: Promoted to front page */
+  $handler->display->display_options['filters']['promote']['id'] = 'promote';
+  $handler->display->display_options['filters']['promote']['table'] = 'node';
+  $handler->display->display_options['filters']['promote']['field'] = 'promote';
+  $handler->display->display_options['filters']['promote']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['promote']['expose']['operator_id'] = '';
+  $handler->display->display_options['filters']['promote']['expose']['label'] = 'Featured';
+  $handler->display->display_options['filters']['promote']['expose']['operator'] = 'promote_op';
+  $handler->display->display_options['filters']['promote']['expose']['identifier'] = 'promote';
+  $handler->display->display_options['filters']['promote']['expose']['required'] = TRUE;
+  $handler->display->display_options['filters']['promote']['expose']['remember_roles'] = array(
+    2 => '2',
+    1 => 0,
+    3 => 0,
+    5 => 0,
+    4 => 0,
   );
   $handler->display->display_options['path'] = 'exhibitions';
   $translatables['events'] = array(
