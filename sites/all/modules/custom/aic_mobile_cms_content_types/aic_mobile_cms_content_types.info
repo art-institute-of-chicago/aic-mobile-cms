@@ -285,6 +285,7 @@ features[variable][] = node_submitted_gallery
 features[variable][] = node_submitted_object
 features[variable][] = node_submitted_tour
 features[views_view][] = audio_files
+features[views_view][] = events
 features[views_view][] = floor_entities
 features[views_view][] = galleries
 features[views_view][] = object_references
