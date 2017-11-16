@@ -146,7 +146,8 @@ function aic_mobile_cms_content_types_field_group_info() {
     ),
     'format_type' => 'fieldset',
     'format_settings' => array(
-      'formatter' => 'collapsible',
+      'formatter' => 'collapsed',
+      'label' => 'Deprecated - App Version 1',
       'instance_settings' => array(
         'description' => '',
         'classes' => 'group-tour-app-v1 field-group-fieldset',

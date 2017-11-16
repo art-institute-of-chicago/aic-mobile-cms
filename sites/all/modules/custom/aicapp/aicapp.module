@@ -964,6 +964,7 @@ function strip_drupal_from_node(&$node) {
   }
 
   // Object node type field items.
+  // @TODO Add version 2 code changes for objects.
   if (isset($node->field_object_id[LANGUAGE_NONE][0]['value'])) {
     $node->object_id = $node->field_object_id[LANGUAGE_NONE][0]['value'];
   }
@@ -998,6 +999,7 @@ function strip_drupal_from_node(&$node) {
   }
 
   // Tour node field items.
+  // @TODO Add version 2 code changes for tours.
   if (isset($node->field_tour_banner[LANGUAGE_NONE][0]['value'])) {
     $node->tour_banner = $node->field_tour_banner[LANGUAGE_NONE][0]['value'];
   }
@@ -1077,6 +1079,7 @@ function strip_drupal_from_node(&$node) {
 
   // Audio node field items.
   // This handles each separate audio file.
+  // @TODO Add version 2 code changes for audio.
   if (isset($node->field_audio_file[LANGUAGE_NONE][0]['uri'])) {
     $node->audio_filename = $node->field_audio_file[LANGUAGE_NONE][0]['filename'];
     $node->audio_file_url = file_create_url($node->field_audio_file[LANGUAGE_NONE][0]['uri']);
@@ -1296,8 +1299,12 @@ function aicappSaveNode($object, $type) {
  * sent back to the node edit form page.
  */
 function aicapp_form_alter(&$form, &$form_state, $form_id) {
+  // Exit from form altering in the following cases: The sting *_node_form is
+  // not present in $form_id, the '#entity_type' property is not set in $form,
+  // or the '#entity_type' property is not equal to 'node'.
   if (!strstr($form_id, '_node_form')
   || !isset($form['#entity_type']) || $form['#entity_type'] !== 'node') {
+    // Exit here without altering anything.
     return;
   }
   // Alter the setup form
@@ -1719,7 +1726,10 @@ function _runSolrQuery($query_type, $term, $value, $rows = 1, $start = 0) {
     drupal_set_message('No queries to a collections API were set, so not all fields will be populated. Go to admin/settings/aic-api to add your settings.', 'warning');
     return;
   }
-
+  else if (!_aicapp_check_connection($query)) {
+    drupal_set_message('Solr server cannot be reached, check your network settings. Go to admin/settings/aic-api to add your settings', 'error');
+    return;
+  }
   $query = str_replace('{{rows}}', $rows, $query);
   $query = str_replace('{{start}}', $start, $query);
   $query = str_replace('{{term}}', $term, $query);
@@ -2010,4 +2020,23 @@ function aicapp_query_alter($query) {
   if ($query->hasTag('node_export_features')) {
     $query->condition('uuid', '1b0519f8-14ef-4144-a556-d2601df4331a');
   }
+}
+
+function _aicapp_check_connection($url) {
+  if (!filter_var($url, FILTER_VALIDATE_URL)) {
+    return FALSE;
+  }
+  $curl_init = curl_init($url);
+  curl_setopt($curl_init, CURLOPT_CONNECTTIMEOUT, 5);
+  curl_setopt($curl_init, CURLOPT_HEADER, TRUE);
+  curl_setopt($curl_init, CURLOPT_NOBODY, TRUE);
+  curl_setopt($curl_init, CURLOPT_RETURNTRANSFER, TRUE);
+  $response = curl_exec($curl_init);
+  curl_close($curl_init);
+
+  if ($response){
+    return TRUE;
+  }
+
+  return FALSE;
 }

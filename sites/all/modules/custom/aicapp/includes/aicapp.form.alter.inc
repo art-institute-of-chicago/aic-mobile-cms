@@ -14,16 +14,6 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id != 'object_node_form' && $form_id != 'tour_node_form') {
     return;
   }
-  $drupal_path = base_path();
-  $dest = drupal_get_path('module', 'aicapp');
-  $coords = !empty($form['#node']->field_location[LANGUAGE_NONE][0]['safe_value']) ? $form['#node']->field_location[LANGUAGE_NONE][0]['safe_value'] : 0;
-  $map_markup = '<iframe width="650" height="600" frameborder="0" scrolling="no"';
-  $map_markup .= ' marginheight="0" marginwidth="0" src="' . $drupal_path;
-  $map_markup .= $dest . '/map-page.php?coords=' . $coords . '"></iframe>';
-  $form['map'] = array(
-    '#markup' => $map_markup,
-    '#weight' => 10,
-  );
   // Attach CSS & JS assets to the form.
   $form['#attached']['css'] = array(
     drupal_get_path('module', 'aicapp') . '/css/imgareaselect-default.css',
@@ -72,6 +62,19 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
  * have been added.
  */
 function _aicapp_form_afterbuild(&$form, &$form_state) {
+  // Add a google map for pages that have a location field.
+  if (isset($form['#node']->field_location)) {
+    $coords = !empty($form['#node']->field_location[LANGUAGE_NONE][0]['safe_value']) ? $form['#node']->field_location[LANGUAGE_NONE][0]['safe_value'] : 0;
+    $map_markup = '<iframe width="650" height="600" frameborder="0" scrolling="no"';
+    $map_markup .= ' marginheight="0" marginwidth="0" src="' . base_path();
+    $map_markup .= drupal_get_path('module', 'aicapp') . '/map-page.php?';
+    $map_markup .= 'coords=' . $coords . '"></iframe>';
+    $form['amap'] = array(
+      '#markup' => $map_markup,
+      '#weight' => $form['field_location']['#weight'],
+    );
+    $form['field_location']['#weight'] = $form['amap']['#weight'] + 1;
+  }
   // Fix for empty title fields when changing from language neutral.
   if (!empty($form['title_field']) && !empty($form['title_field'][LANGUAGE_NONE])
     && !empty($form['title_field'][LANGUAGE_NONE][0])
