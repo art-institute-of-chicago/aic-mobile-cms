@@ -53,7 +53,7 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'settings' => array(
       'entity_translation_sync' => FALSE,
     ),
-    'translatable' => 0,
+    'translatable' => 1,
     'type' => 'text_long',
   );
 
@@ -189,18 +189,17 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'module' => 'entityreference',
     'settings' => array(
       'entity_translation_sync' => FALSE,
-      'handler' => 'base',
+      'handler' => 'views',
       'handler_settings' => array(
         'behaviors' => array(
           'views-select-list' => array(
             'status' => 0,
           ),
         ),
-        'sort' => array(
-          'type' => 'none',
-        ),
-        'target_bundles' => array(
-          'audio' => 'audio',
+        'view' => array(
+          'args' => array(),
+          'display_name' => 'entityreference_2',
+          'view_name' => 'object_references',
         ),
       ),
       'target_type' => 'node',
@@ -236,6 +235,35 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     ),
     'translatable' => 1,
     'type' => 'file',
+  );
+
+  // Exported field_base: 'field_audio_is_bumper'.
+  $field_bases['field_audio_is_bumper'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_audio_is_bumper',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'value' => array(
+        0 => 'value',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'list',
+    'settings' => array(
+      'allowed_values' => array(
+        0 => '',
+        1 => '',
+      ),
+      'allowed_values_function' => '',
+      'entity_translation_sync' => FALSE,
+    ),
+    'translatable' => 0,
+    'type' => 'list_boolean',
   );
 
   // Exported field_base: 'field_audio_transcript'.
@@ -1611,10 +1639,8 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
           ),
         ),
         'view' => array(
-          'args' => array(
-            0 => '[field_collection_item:field-tour-stop-object:nid]',
-          ),
-          'display_name' => 'entityreference_1',
+          'args' => array(),
+          'display_name' => 'entityreference_2',
           'view_name' => 'tour_stop_audio_commentaries',
         ),
       ),

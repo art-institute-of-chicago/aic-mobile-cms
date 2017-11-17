@@ -933,9 +933,13 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
     ),
     'widget' => array(
       'active' => 1,
-      'module' => 'options',
-      'settings' => array(),
-      'type' => 'options_select',
+      'module' => 'entityreference',
+      'settings' => array(
+        'match_operator' => 'CONTAINS',
+        'path' => '',
+        'size' => 60,
+      ),
+      'type' => 'entityreference_autocomplete',
       'weight' => 2,
     ),
   );
@@ -1058,6 +1062,50 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'progress_indicator' => 'throbber',
       ),
       'type' => 'file_generic',
+      'weight' => 2,
+    ),
+  );
+
+  // Exported field_instance: 'node-audio-field_audio_is_bumper'.
+  $field_instances['node-audio-field_audio_is_bumper'] = array(
+    'bundle' => 'audio',
+    'default_value' => array(
+      0 => array(
+        'value' => 0,
+      ),
+    ),
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'list',
+        'settings' => array(),
+        'type' => 'list_default',
+        'weight' => 7,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_audio_is_bumper',
+    'label' => 'Is Tour Stop Audio Bumper',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'options',
+      'settings' => array(
+        'display_label' => 1,
+      ),
+      'type' => 'options_onoff',
       'weight' => 3,
     ),
   );
@@ -1181,7 +1229,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 2,
+      'weight' => 1,
     ),
   );
 
@@ -1226,7 +1274,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 1,
+      'weight' => 0,
     ),
   );
 
@@ -1274,8 +1322,6 @@ Ex: ""Head of Buddha (Spanish)"""',
       'weight' => 31,
     ),
   );
-
-
 
   // Exported field_instance: 'node-event-field_event_dates'.
   $field_instances['node-event-field_event_dates'] = array(
@@ -3966,10 +4012,16 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Copyright Notice');
   t('Credit Line');
   t('Credits');
+  t('Dates');
   t('Deprecated - Tour Stops');
   t('Description');
   t('Enter artist first and last name, i.e. Irving Penn');
   t('Enter artist\'s origin, i.e. American, 1917-2009');
+  t('Event Dates');
+  t('Event Description');
+  t('Event ID');
+  t('Event Short Description');
+  t('Exhibition ID');
   t('Floor');
   t('Floor Label');
   t('Floor Map File');
@@ -3978,8 +4030,12 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Gallery Number');
   t('Highlighted Object');
   t('Image');
+  t('Imported Event Object');
+  t('Imported Exhibition Object');
   t('In Gallery');
   t('Intro');
+  t('Is Active');
+  t('Is Tour Stop Audio Bumper');
   t('Label');
   t('Large Image');
   t('Large Image Crop');
