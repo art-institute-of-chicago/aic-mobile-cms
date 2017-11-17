@@ -3408,7 +3408,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 12,
+      'weight' => 11,
     ),
   );
 
@@ -3541,7 +3541,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 11,
+      'weight' => 10,
     ),
   );
 
@@ -3588,7 +3588,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'html5_tools',
       'settings' => array(),
       'type' => 'numberfield',
-      'weight' => 9,
+      'weight' => 10,
     ),
   );
 
@@ -3763,7 +3763,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'node_reference_autocomplete',
-      'weight' => 10,
+      'weight' => 11,
     ),
   );
 
@@ -3857,7 +3857,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'year_range' => '-0:+3',
       ),
       'type' => 'date_popup',
-      'weight' => 7,
+      'weight' => 8,
     ),
   );
 
@@ -3898,7 +3898,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 10,
       ),
       'type' => 'text_textfield',
-      'weight' => 8,
+      'weight' => 7,
     ),
   );
 
