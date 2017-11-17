@@ -1033,7 +1033,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'label' => 'above',
         'module' => 'file',
         'settings' => array(),
-        'type' => 'file_default',
+        'type' => 'file_url_plain',
         'weight' => 1,
       ),
       'teaser' => array(
@@ -1081,7 +1081,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
         'label' => 'above',
         'module' => 'list',
         'settings' => array(),
-        'type' => 'list_default',
+        'type' => 'list_key',
         'weight' => 7,
       ),
       'teaser' => array(
@@ -2327,7 +2327,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 16,
+      'weight' => 15,
     ),
   );
 
@@ -2368,7 +2368,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 17,
+      'weight' => 16,
     ),
   );
 
@@ -2455,7 +2455,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 19,
+      'weight' => 18,
     ),
   );
 
@@ -2496,7 +2496,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 18,
+      'weight' => 17,
     ),
   );
 
@@ -2537,7 +2537,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 9,
+      'weight' => 8,
     ),
   );
 
@@ -2622,7 +2622,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'display_label' => 1,
       ),
       'type' => 'options_onoff',
-      'weight' => 6,
+      'weight' => 5,
     ),
   );
 
@@ -2673,7 +2673,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'progress_indicator' => 'throbber',
       ),
       'type' => 'image_image',
-      'weight' => 10,
+      'weight' => 9,
     ),
   );
 
@@ -2717,7 +2717,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'display_label' => 1,
       ),
       'type' => 'options_onoff',
-      'weight' => 5,
+      'weight' => 4,
     ),
   );
 
@@ -2758,7 +2758,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 13,
+      'weight' => 12,
     ),
   );
 
@@ -2804,7 +2804,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 14,
+      'weight' => 13,
     ),
   );
 
@@ -2845,7 +2845,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 8,
+      'weight' => 7,
     ),
   );
 
@@ -2887,7 +2887,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'node_reference_autocomplete',
-      'weight' => 8,
+      'weight' => 23,
     ),
   );
 
@@ -2981,7 +2981,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'number',
       'settings' => array(),
       'type' => 'number',
-      'weight' => 7,
+      'weight' => 22,
     ),
   );
 
@@ -3028,7 +3028,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'number',
       'settings' => array(),
       'type' => 'number',
-      'weight' => 9,
+      'weight' => 24,
     ),
   );
 
@@ -3115,7 +3115,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 12,
+      'weight' => 11,
     ),
   );
 
@@ -3156,7 +3156,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 11,
+      'weight' => 10,
     ),
   );
 
