@@ -9,6 +9,7 @@
  */
 function _aicapp_form_alter(&$form, &$form_state, $form_id) {
   // Add an afterbuild callback.
+
   $form['#after_build'][] = 'aicapp_setup_afterbuild';
   // Only proceed if either object or tour node form.
   if ($form_id != 'object_node_form' && $form_id != 'tour_node_form') {
@@ -63,7 +64,7 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
  */
 function _aicapp_form_afterbuild(&$form, &$form_state) {
   // Add a google map for pages that have a location field.
-  if (isset($form['#node']->field_location)) {
+  if (!empty($form['field_location'])) {
     $coords = !empty($form['#node']->field_location[LANGUAGE_NONE][0]['safe_value']) ? $form['#node']->field_location[LANGUAGE_NONE][0]['safe_value'] : 0;
     $map_markup = '<iframe width="650" height="600" frameborder="0" scrolling="no"';
     $map_markup .= ' marginheight="0" marginwidth="0" src="' . base_path();

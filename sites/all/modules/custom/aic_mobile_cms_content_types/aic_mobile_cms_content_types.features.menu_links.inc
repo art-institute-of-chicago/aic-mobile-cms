@@ -27,26 +27,6 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
     'weight' => -49,
     'customized' => 1,
   );
-  // Exported menu link: main-menu_dahsboard:featured.
-  $menu_links['main-menu_dahsboard:featured'] = array(
-    'menu_name' => 'main-menu',
-    'link_path' => 'featured',
-    'router_path' => 'featured',
-    'link_title' => 'Dahsboard',
-    'options' => array(
-      'attributes' => array(
-        'title' => '',
-      ),
-      'identifier' => 'main-menu_dahsboard:featured',
-    ),
-    'module' => 'menu',
-    'hidden' => 0,
-    'external' => 0,
-    'has_children' => 0,
-    'expanded' => 0,
-    'weight' => -42,
-    'customized' => 1,
-  );
   // Exported menu link: main-menu_galleries:galleries.
   $menu_links['main-menu_galleries:galleries'] = array(
     'menu_name' => 'main-menu',
@@ -79,63 +59,6 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
     'has_children' => 0,
     'expanded' => 0,
     'weight' => -50,
-    'customized' => 1,
-  );
-  // Exported menu link: main-menu_map-annotations:annotations.
-  $menu_links['main-menu_map-annotations:annotations'] = array(
-    'menu_name' => 'main-menu',
-    'link_path' => 'annotations',
-    'router_path' => 'annotations',
-    'link_title' => 'Map Annotations',
-    'options' => array(
-      'attributes' => array(
-        'title' => '',
-      ),
-      'identifier' => 'main-menu_map-annotations:annotations',
-    ),
-    'module' => 'menu',
-    'hidden' => 0,
-    'external' => 0,
-    'has_children' => 0,
-    'expanded' => 0,
-    'weight' => -43,
-    'customized' => 1,
-  );
-  // Exported menu link: main-menu_map-floors:annotations.
-  $menu_links['main-menu_map-floors:floors'] = array(
-    'menu_name' => 'main-menu',
-    'link_path' => 'floors',
-    'router_path' => 'floors',
-    'link_title' => 'Map Floors',
-    'options' => array(
-      'attributes' => array(
-        'title' => '',
-      ),
-      'identifier' => 'main-menu_map-floors:floors',
-    ),
-    'module' => 'menu',
-    'hidden' => 0,
-    'external' => 0,
-    'has_children' => 0,
-    'expanded' => 0,
-    'weight' => -44,
-    'customized' => 1,
-  );
-  // Exported menu link: main-menu_objects:annotations.
-  $menu_links['main-menu_objects:annotations'] = array(
-    'menu_name' => 'main-menu',
-    'link_path' => 'annotations',
-    'router_path' => 'annotations',
-    'link_title' => 'Objects',
-    'options' => array(
-      'identifier' => 'main-menu_objects:annotations',
-    ),
-    'module' => 'system',
-    'hidden' => 0,
-    'external' => 0,
-    'has_children' => 0,
-    'expanded' => 0,
-    'weight' => -46,
     'customized' => 1,
   );
   // Exported menu link: main-menu_objects:objects.
@@ -176,11 +99,8 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
   // Translatables
   // Included for use with string extractors like potx.
   t('Audio');
-  t('Dahsboard');
   t('Galleries');
   t('General Info');
-  t('Map Annotations');
-  t('Map Floors');
   t('Objects');
   t('Tours');
 

@@ -677,10 +677,10 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       foreach ($result['response']['docs'][0] as $key => $val) {
         if ($val == '<NOT Closed>' || $val == '<Closed>') {
           if ($val == '<NOT Closed>') {
-            $gallery->$key = 'FALSE';
+            $gallery->$key = 'False';
           }
           elseif ($val == '<Closed>') {
-            $gallery->$key = 'TRUE';
+            $gallery->$key = 'True';
           }
         }
         else {
@@ -1354,7 +1354,7 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
     $formID = 'field-thumbnail';
     $formValue = 'field_thumbnail';
     $aspectRatio = '1:1';
-    $resizable = 'FALSE';
+    $resizable = 'false';
     // original crops for thumbnail image.
     if ($thumbWidth > $thumbHeight) {
       // if landscape image
@@ -1372,7 +1372,7 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
     $formID = 'field-large-image';
     $formValue = 'field_large_image';
     $aspectRatio = '1.82:1';
-    $resizable = 'TRUE';
+    $resizable = 'true';
     // Original crops for large image.
     $thumbCropHeight = round($thumbWidth / 1.82);
     $thumbY1 = round(($thumbHeight / 2) - ($thumbCropHeight / 2));
@@ -1428,8 +1428,8 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
       $("img#' . $formValue . '").imgAreaSelect({
       x1: ' . $thumbValues['x1'] . ', y1: ' . $thumbValues['y1'] . ', x2: ' . $thumbValues['x2'] . ', y2: ' . $thumbValues['y2'] . ',
       aspectRatio: "' . $aspectRatio . '",
-      persistent: TRUE,
-      handles: TRUE,
+      persistent: true,
+      handles: true,
       minWidth: imageWidthMin,
       minHeight: imageHeightMin,
       resizable: ' . $resizable . ',

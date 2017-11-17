@@ -27,6 +27,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['query']['options']['distinct'] = TRUE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['pager']['options']['items_per_page'] = '50';
@@ -212,29 +213,37 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['pager']['options']['items_per_page'] = '50';
   $handler->display->display_options['style_plugin'] = 'table';
   $handler->display->display_options['style_options']['columns'] = array(
-    'edit_node' => 'edit_node',
+    'views_bulk_operations' => 'views_bulk_operations',
+    'promote' => 'promote',
     'title' => 'title',
     'field_event_dates' => 'field_event_dates',
     'field_event_description' => 'field_event_description',
     'field_event_short_description' => 'field_event_short_description',
-    'promote' => 'promote',
+    'edit_node' => 'edit_node',
   );
   $handler->display->display_options['style_options']['default'] = '-1';
   $handler->display->display_options['style_options']['info'] = array(
-    'edit_node' => array(
+    'views_bulk_operations' => array(
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
     ),
+    'promote' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 1,
+    ),
     'title' => array(
-      'sortable' => 0,
+      'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
       'empty_column' => 1,
     ),
     'field_event_dates' => array(
-      'sortable' => 0,
+      'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
@@ -254,12 +263,10 @@ function aic_mobile_cms_content_types_views_default_views() {
       'separator' => '',
       'empty_column' => 0,
     ),
-    'promote' => array(
-      'sortable' => 1,
-      'default_sort_order' => 'asc',
+    'edit_node' => array(
       'align' => '',
       'separator' => '',
-      'empty_column' => 1,
+      'empty_column' => 0,
     ),
   );
   /* Field: Bulk operations: Content */
@@ -302,23 +309,31 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['title']['field'] = 'title';
   $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
   $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
-  /* Field: Broken/missing handler */
+  /* Field: Content: Event Dates */
   $handler->display->display_options['fields']['field_event_dates']['id'] = 'field_event_dates';
   $handler->display->display_options['fields']['field_event_dates']['table'] = 'field_data_field_event_dates';
   $handler->display->display_options['fields']['field_event_dates']['field'] = 'field_event_dates';
   $handler->display->display_options['fields']['field_event_dates']['label'] = 'Dates';
   $handler->display->display_options['fields']['field_event_dates']['element_label_colon'] = FALSE;
-  /* Field: Broken/missing handler */
+  $handler->display->display_options['fields']['field_event_dates']['settings'] = array(
+    'format_type' => 'long',
+    'custom_date_format' => '',
+    'fromto' => 'both',
+    'multiple_number' => '',
+    'multiple_from' => '',
+    'multiple_to' => '',
+    'show_remaining_days' => 0,
+  );
+  /* Field: Content: Event Description */
   $handler->display->display_options['fields']['field_event_description']['id'] = 'field_event_description';
   $handler->display->display_options['fields']['field_event_description']['table'] = 'field_data_field_event_description';
   $handler->display->display_options['fields']['field_event_description']['field'] = 'field_event_description';
   $handler->display->display_options['fields']['field_event_description']['label'] = 'Description';
   $handler->display->display_options['fields']['field_event_description']['element_label_colon'] = FALSE;
-  /* Field: Broken/missing handler */
+  /* Field: Content: Event Short Description */
   $handler->display->display_options['fields']['field_event_short_description']['id'] = 'field_event_short_description';
   $handler->display->display_options['fields']['field_event_short_description']['table'] = 'field_data_field_event_short_description';
   $handler->display->display_options['fields']['field_event_short_description']['field'] = 'field_event_short_description';
-  $handler->display->display_options['fields']['field_event_short_description']['label'] = 'Event Short Description';
   $handler->display->display_options['fields']['field_event_short_description']['exclude'] = TRUE;
   /* Field: Content: Edit link */
   $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
@@ -365,6 +380,12 @@ function aic_mobile_cms_content_types_views_default_views() {
   /* Display: Events */
   $handler = $view->new_display('page', 'Events', 'page');
   $handler->display->display_options['path'] = 'events';
+  $handler->display->display_options['menu']['type'] = 'normal';
+  $handler->display->display_options['menu']['title'] = 'Events';
+  $handler->display->display_options['menu']['weight'] = '6';
+  $handler->display->display_options['menu']['name'] = 'main-menu';
+  $handler->display->display_options['menu']['context'] = 0;
+  $handler->display->display_options['menu']['context_only_inline'] = 0;
 
   /* Display: Exhibitions Page */
   $handler = $view->new_display('page', 'Exhibitions Page', 'page_1');
@@ -411,17 +432,15 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['title']['field'] = 'title';
   $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
   $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
-  /* Field: Broken/missing handler */
+  /* Field: Content: Dates */
   $handler->display->display_options['fields']['field_exhibit_dates']['id'] = 'field_exhibit_dates';
   $handler->display->display_options['fields']['field_exhibit_dates']['table'] = 'field_data_field_exhibit_dates';
   $handler->display->display_options['fields']['field_exhibit_dates']['field'] = 'field_exhibit_dates';
-  $handler->display->display_options['fields']['field_exhibit_dates']['label'] = 'Dates';
   $handler->display->display_options['fields']['field_exhibit_dates']['element_label_colon'] = FALSE;
-  /* Field: Broken/missing handler */
+  /* Field: Content: Description */
   $handler->display->display_options['fields']['field_exhibit_description']['id'] = 'field_exhibit_description';
   $handler->display->display_options['fields']['field_exhibit_description']['table'] = 'field_data_field_exhibit_description';
   $handler->display->display_options['fields']['field_exhibit_description']['field'] = 'field_exhibit_description';
-  $handler->display->display_options['fields']['field_exhibit_description']['label'] = 'Description';
   $handler->display->display_options['fields']['field_exhibit_description']['element_label_colon'] = FALSE;
   /* Field: Content: Edit link */
   $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
@@ -462,6 +481,12 @@ function aic_mobile_cms_content_types_views_default_views() {
     4 => 0,
   );
   $handler->display->display_options['path'] = 'exhibitions';
+  $handler->display->display_options['menu']['type'] = 'normal';
+  $handler->display->display_options['menu']['title'] = 'Exhibitions';
+  $handler->display->display_options['menu']['weight'] = '6';
+  $handler->display->display_options['menu']['name'] = 'main-menu';
+  $handler->display->display_options['menu']['context'] = 0;
+  $handler->display->display_options['menu']['context_only_inline'] = 0;
 
   /* Display: Featured Events Block */
   $handler = $view->new_display('block', 'Featured Events Block', 'block_1');
@@ -511,12 +536,11 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['title']['field'] = 'title';
   $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
   $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
-  /* Field: Broken/missing handler */
+  /* Field: Content: Dates */
   $handler->display->display_options['fields']['field_exhibit_dates']['id'] = 'field_exhibit_dates';
   $handler->display->display_options['fields']['field_exhibit_dates']['table'] = 'field_data_field_exhibit_dates';
   $handler->display->display_options['fields']['field_exhibit_dates']['field'] = 'field_exhibit_dates';
-  $handler->display->display_options['fields']['field_exhibit_dates']['label'] = 'Dates';
-  /* Field: Broken/missing handler */
+  /* Field: Content: Description */
   $handler->display->display_options['fields']['field_exhibit_description']['id'] = 'field_exhibit_description';
   $handler->display->display_options['fields']['field_exhibit_description']['table'] = 'field_data_field_exhibit_description';
   $handler->display->display_options['fields']['field_exhibit_description']['field'] = 'field_exhibit_description';
@@ -587,7 +611,6 @@ function aic_mobile_cms_content_types_views_default_views() {
     t('Exhibitions'),
     t('Featured Events Block'),
     t('Exhibitions Block'),
-    t('Broken handler field_data_field_exhibit_description.field_exhibit_description'),
   );
   $export['events'] = $view;
 
@@ -766,6 +789,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['query']['options']['distinct'] = TRUE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['pager']['options']['items_per_page'] = '50';
@@ -1005,13 +1029,6 @@ function aic_mobile_cms_content_types_views_default_views() {
       'empty_column' => 0,
     ),
   );
-  /* Header: Global: Text area */
-  $handler->display->display_options['header']['area']['id'] = 'area';
-  $handler->display->display_options['header']['area']['table'] = 'views';
-  $handler->display->display_options['header']['area']['field'] = 'area';
-  $handler->display->display_options['header']['area']['content'] = '<a href="/objects/search">Find new Object to Add</a>   |   <a href="/objects/noimg">Objects with no CITI / SOLR Image</a>  |   <a href="/objects/check-objects-gallery">Update Objects\' Galleries</a>
-';
-  $handler->display->display_options['header']['area']['format'] = 'full_html';
   /* Field: Content: Nid */
   $handler->display->display_options['fields']['nid']['id'] = 'nid';
   $handler->display->display_options['fields']['nid']['table'] = 'node';
@@ -1026,13 +1043,28 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['title']['id'] = 'title';
   $handler->display->display_options['fields']['title']['table'] = 'node';
   $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['exclude'] = TRUE;
   $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
   $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+  /* Field: Entity translation: Title: translated */
+  $handler->display->display_options['fields']['title_field_et']['id'] = 'title_field_et';
+  $handler->display->display_options['fields']['title_field_et']['table'] = 'field_data_title_field';
+  $handler->display->display_options['fields']['title_field_et']['field'] = 'title_field_et';
+  $handler->display->display_options['fields']['title_field_et']['label'] = 'Title';
+  /* Field: Content: Type */
+  $handler->display->display_options['fields']['field_annotation_type']['id'] = 'field_annotation_type';
+  $handler->display->display_options['fields']['field_annotation_type']['table'] = 'field_data_field_annotation_type';
+  $handler->display->display_options['fields']['field_annotation_type']['field'] = 'field_annotation_type';
   /* Field: Content: Published */
   $handler->display->display_options['fields']['status']['id'] = 'status';
   $handler->display->display_options['fields']['status']['table'] = 'node';
   $handler->display->display_options['fields']['status']['field'] = 'status';
   $handler->display->display_options['fields']['status']['not'] = 0;
+  /* Field: Entity translation: Label: translated */
+  $handler->display->display_options['fields']['field_annotation_label_et']['id'] = 'field_annotation_label_et';
+  $handler->display->display_options['fields']['field_annotation_label_et']['table'] = 'field_data_field_annotation_label';
+  $handler->display->display_options['fields']['field_annotation_label_et']['field'] = 'field_annotation_label_et';
+  $handler->display->display_options['fields']['field_annotation_label_et']['label'] = 'Label';
   /* Sort criterion: Content: Title */
   $handler->display->display_options['sorts']['title']['id'] = 'title';
   $handler->display->display_options['sorts']['title']['table'] = 'node';
@@ -1094,8 +1126,8 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler = $view->new_display('page', 'Page', 'page');
   $handler->display->display_options['path'] = 'annotations';
   $handler->display->display_options['menu']['type'] = 'normal';
-  $handler->display->display_options['menu']['title'] = 'Objects';
-  $handler->display->display_options['menu']['weight'] = '2';
+  $handler->display->display_options['menu']['title'] = 'Map Annotations';
+  $handler->display->display_options['menu']['weight'] = '9';
   $handler->display->display_options['menu']['name'] = 'main-menu';
   $handler->display->display_options['menu']['context'] = 0;
   $handler->display->display_options['menu']['context_only_inline'] = 0;
@@ -1115,11 +1147,11 @@ function aic_mobile_cms_content_types_views_default_views() {
     t('‹ previous'),
     t('next ›'),
     t('last »'),
-    t('<a href="/objects/search">Find new Object to Add</a>   |   <a href="/objects/noimg">Objects with no CITI / SOLR Image</a>  |   <a href="/objects/check-objects-gallery">Update Objects\' Galleries</a>
-'),
     t('[edit]'),
     t('Title'),
+    t('Type'),
     t('Published'),
+    t('Label'),
     t('Gallery Location'),
     t('Object ID '),
     t('Object Selector Number'),
@@ -1209,6 +1241,12 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['relationships']['field_floor_map_node']['table'] = 'field_collection_item';
   $handler->display->display_options['relationships']['field_floor_map_node']['field'] = 'field_floor_map_node';
   $handler->display->display_options['relationships']['field_floor_map_node']['required'] = TRUE;
+  /* Field: Content: Edit link */
+  $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
+  $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
+  $handler->display->display_options['fields']['edit_node']['field'] = 'edit_node';
+  $handler->display->display_options['fields']['edit_node']['relationship'] = 'field_floor_map_node';
+  $handler->display->display_options['fields']['edit_node']['label'] = 'Edit';
   /* Field: Field collection item: Floor Label */
   $handler->display->display_options['fields']['field_floor_label']['id'] = 'field_floor_label';
   $handler->display->display_options['fields']['field_floor_label']['table'] = 'field_data_field_floor_label';
@@ -1242,6 +1280,12 @@ function aic_mobile_cms_content_types_views_default_views() {
   /* Display: Map Floors */
   $handler = $view->new_display('page', 'Map Floors', 'page');
   $handler->display->display_options['path'] = 'floors';
+  $handler->display->display_options['menu']['type'] = 'normal';
+  $handler->display->display_options['menu']['title'] = 'Map Floors';
+  $handler->display->display_options['menu']['weight'] = '9';
+  $handler->display->display_options['menu']['name'] = 'main-menu';
+  $handler->display->display_options['menu']['context'] = 0;
+  $handler->display->display_options['menu']['context_only_inline'] = 0;
   $translatables['map_floors'] = array(
     t('Master'),
     t('Map Floors'),
@@ -1252,6 +1296,7 @@ function aic_mobile_cms_content_types_views_default_views() {
     t('Asc'),
     t('Desc'),
     t('field_floor_map'),
+    t('Edit'),
     t('Level [field_floor_label]'),
     t('Anchor Geolocation 1'),
     t('Anchor Geolocation 2'),
@@ -1292,13 +1337,18 @@ function aic_mobile_cms_content_types_views_default_views() {
     'prefix_suffix' => 1,
   );
   /* Field: Content: Title */
-  $handler->display->display_options['fields']['title']['id'] = 'title';
-  $handler->display->display_options['fields']['title']['table'] = 'node';
-  $handler->display->display_options['fields']['title']['field'] = 'title';
-  $handler->display->display_options['fields']['title']['label'] = '';
-  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
-  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
-  $handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['title_field']['id'] = 'title_field';
+  $handler->display->display_options['fields']['title_field']['table'] = 'field_data_title_field';
+  $handler->display->display_options['fields']['title_field']['field'] = 'title_field';
+  $handler->display->display_options['fields']['title_field']['label'] = '';
+  $handler->display->display_options['fields']['title_field']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['title_field']['link_to_entity'] = 0;
+  /* Field: Content: Track Title */
+  $handler->display->display_options['fields']['field_track_title']['id'] = 'field_track_title';
+  $handler->display->display_options['fields']['field_track_title']['table'] = 'field_data_field_track_title';
+  $handler->display->display_options['fields']['field_track_title']['field'] = 'field_track_title';
+  $handler->display->display_options['fields']['field_track_title']['label'] = '';
+  $handler->display->display_options['fields']['field_track_title']['element_label_colon'] = FALSE;
   /* Sort criterion: Content: Object ID (field_object_id) */
   $handler->display->display_options['sorts']['field_object_id_value']['id'] = 'field_object_id_value';
   $handler->display->display_options['sorts']['field_object_id_value']['table'] = 'field_data_field_object_id';
@@ -1315,6 +1365,8 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler = $view->new_display('entityreference', 'Entity Reference', 'entityreference_1');
   $handler->display->display_options['defaults']['title'] = FALSE;
   $handler->display->display_options['pager']['type'] = 'some';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '15';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
   $handler->display->display_options['defaults']['style_plugin'] = FALSE;
   $handler->display->display_options['style_plugin'] = 'entityreference_style';
   $handler->display->display_options['style_options']['search_fields'] = array(
@@ -1325,6 +1377,65 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['defaults']['row_plugin'] = FALSE;
   $handler->display->display_options['row_plugin'] = 'entityreference_fields';
   $handler->display->display_options['defaults']['row_options'] = FALSE;
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: Content: Object ID */
+  $handler->display->display_options['fields']['field_object_id']['id'] = 'field_object_id';
+  $handler->display->display_options['fields']['field_object_id']['table'] = 'field_data_field_object_id';
+  $handler->display->display_options['fields']['field_object_id']['field'] = 'field_object_id';
+  $handler->display->display_options['fields']['field_object_id']['label'] = '';
+  $handler->display->display_options['fields']['field_object_id']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_object_id']['settings'] = array(
+    'thousand_separator' => '',
+    'prefix_suffix' => 1,
+  );
+  /* Field: Content: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'node';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['label'] = '';
+  $handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['title']['link_to_node'] = FALSE;
+
+  /* Display: Audio Reference */
+  $handler = $view->new_display('entityreference', 'Audio Reference', 'entityreference_2');
+  $handler->display->display_options['defaults']['title'] = FALSE;
+  $handler->display->display_options['pager']['type'] = 'some';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '15';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['defaults']['style_plugin'] = FALSE;
+  $handler->display->display_options['style_plugin'] = 'entityreference_style';
+  $handler->display->display_options['style_options']['search_fields'] = array(
+    'title' => 'title',
+    'field_track_title' => 'field_track_title',
+  );
+  $handler->display->display_options['defaults']['style_options'] = FALSE;
+  $handler->display->display_options['defaults']['row_plugin'] = FALSE;
+  $handler->display->display_options['row_plugin'] = 'entityreference_fields';
+  $handler->display->display_options['defaults']['row_options'] = FALSE;
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: Content: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'node';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['label'] = '';
+  $handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['title']['link_to_node'] = FALSE;
+  /* Field: Content: Track Title */
+  $handler->display->display_options['fields']['field_track_title']['id'] = 'field_track_title';
+  $handler->display->display_options['fields']['field_track_title']['table'] = 'field_data_field_track_title';
+  $handler->display->display_options['fields']['field_track_title']['field'] = 'field_track_title';
+  $handler->display->display_options['fields']['field_track_title']['label'] = '';
+  $handler->display->display_options['fields']['field_track_title']['element_label_colon'] = FALSE;
+  $handler->display->display_options['defaults']['sorts'] = FALSE;
+  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
+  $handler->display->display_options['defaults']['filters'] = FALSE;
+  /* Filter criterion: Content: Type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'node';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['value'] = array(
+    'audio' => 'audio',
+  );
   $translatables['object_references'] = array(
     t('Master'),
     t('more'),
@@ -1341,6 +1452,7 @@ function aic_mobile_cms_content_types_views_default_views() {
     t('next ›'),
     t('last »'),
     t('Entity Reference'),
+    t('Audio Reference'),
   );
   $export['object_references'] = $view;
 
@@ -1361,6 +1473,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['query']['options']['distinct'] = TRUE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['pager']['options']['items_per_page'] = '50';
@@ -1886,6 +1999,16 @@ function aic_mobile_cms_content_types_views_default_views() {
     'object' => 'object',
   );
   $handler->display->display_options['filters']['type']['group'] = 1;
+  /* Filter criterion: Content: Is Tour Stop Audio Bumper (field_audio_is_bumper) */
+  $handler->display->display_options['filters']['field_audio_is_bumper_value']['id'] = 'field_audio_is_bumper_value';
+  $handler->display->display_options['filters']['field_audio_is_bumper_value']['table'] = 'field_data_field_audio_is_bumper';
+  $handler->display->display_options['filters']['field_audio_is_bumper_value']['field'] = 'field_audio_is_bumper_value';
+  $handler->display->display_options['filters']['field_audio_is_bumper_value']['relationship'] = 'field_audio_commentary_audio_target_id';
+  $handler->display->display_options['filters']['field_audio_is_bumper_value']['operator'] = 'not';
+  $handler->display->display_options['filters']['field_audio_is_bumper_value']['value'] = array(
+    1 => '1',
+  );
+  $handler->display->display_options['filters']['field_audio_is_bumper_value']['reduce_duplicates'] = TRUE;
 
   /* Display: Entity Reference */
   $handler = $view->new_display('entityreference', 'Entity Reference', 'entityreference_1');
@@ -1931,6 +2054,46 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['row_options']['separator'] = '--';
   $handler->display->display_options['row_options']['hide_empty'] = TRUE;
   $handler->display->display_options['defaults']['row_options'] = FALSE;
+
+  /* Display: Tour Stop Bumpers */
+  $handler = $view->new_display('entityreference', 'Tour Stop Bumpers', 'entityreference_2');
+  $handler->display->display_options['defaults']['title'] = FALSE;
+  $handler->display->display_options['pager']['type'] = 'some';
+  $handler->display->display_options['defaults']['style_plugin'] = FALSE;
+  $handler->display->display_options['style_plugin'] = 'entityreference_style';
+  $handler->display->display_options['style_options']['search_fields'] = array(
+    'title_field_et' => 'title_field_et',
+    'field_track_title_et' => 'field_track_title_et',
+    'item_id' => 0,
+    'nid' => 0,
+    'field_object_id' => 0,
+    'title' => 0,
+    'nid_1' => 0,
+    'type' => 0,
+  );
+  $handler->display->display_options['defaults']['style_options'] = FALSE;
+  $handler->display->display_options['defaults']['row_plugin'] = FALSE;
+  $handler->display->display_options['row_plugin'] = 'entityreference_fields';
+  $handler->display->display_options['defaults']['row_options'] = FALSE;
+  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
+  $handler->display->display_options['defaults']['filters'] = FALSE;
+  /* Filter criterion: Content: Type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'node';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['relationship'] = 'field_audio_commentary_node';
+  $handler->display->display_options['filters']['type']['value'] = array(
+    'object' => 'object',
+  );
+  $handler->display->display_options['filters']['type']['group'] = 1;
+  /* Filter criterion: Content: Is Tour Stop Audio Bumper (field_audio_is_bumper) */
+  $handler->display->display_options['filters']['field_audio_is_bumper_value']['id'] = 'field_audio_is_bumper_value';
+  $handler->display->display_options['filters']['field_audio_is_bumper_value']['table'] = 'field_data_field_audio_is_bumper';
+  $handler->display->display_options['filters']['field_audio_is_bumper_value']['field'] = 'field_audio_is_bumper_value';
+  $handler->display->display_options['filters']['field_audio_is_bumper_value']['relationship'] = 'field_audio_commentary_audio_target_id';
+  $handler->display->display_options['filters']['field_audio_is_bumper_value']['value'] = array(
+    1 => '1',
+  );
   $translatables['tour_stop_audio_commentaries'] = array(
     t('Master'),
     t('more'),
@@ -1956,6 +2119,7 @@ function aic_mobile_cms_content_types_views_default_views() {
     t('All'),
     t('Entity Reference'),
     t('Block'),
+    t('Tour Stop Bumpers'),
   );
   $export['tour_stop_audio_commentaries'] = $view;
 
@@ -1976,6 +2140,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['query']['options']['distinct'] = TRUE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['pager']['options']['items_per_page'] = '20';
