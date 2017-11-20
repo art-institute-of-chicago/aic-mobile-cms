@@ -1061,7 +1061,7 @@ function strip_drupal_from_node(&$node) {
     foreach ($fc_items as $fc_item) {
       $item = field_collection_field_get_entity($fc_item);
       $node->audio_commentary[] = array(
-        'object_selector_number' => !empty($item->field_object_selector_number) ? $item->field_object_selector_number[LANGUAGE_NONE][0]['safe_value'] : NULL,
+        'object_selector_number' => !empty($item->field_object_selector_number) ? $item->field_object_selector_number[LANGUAGE_NONE][0]['value'] : NULL,
         'audio' => !empty($item->field_audio_commentary_audio) ? $item->field_audio_commentary_audio[LANGUAGE_NONE][0]['target_id'] : NULL,
       );
     }
@@ -1153,7 +1153,7 @@ function strip_drupal_from_node(&$node) {
         $item = field_collection_field_get_entity($fc_item);
         $node->tour_stop_items[] = array(
           'object' => !empty($item->field_tour_stop_object) ? $item->field_tour_stop_object[LANGUAGE_NONE][0]['target_id'] : NULL,
-          'object_selector_number' => !empty($item->field_tour_stop_audio_commentary) ? $item->field_tour_stop_audio_commentary[LANGUAGE_NONE][0]['target_id'] : NULL,
+          'audio_id' => !empty($item->field_tour_stop_audio_commentary) ? $item->field_tour_stop_audio_commentary[LANGUAGE_NONE][0]['target_id'] : NULL,
           'audio_bumper' => !empty($item->field_tour_stop_audio_bumper) ? $item->field_tour_stop_audio_bumper[LANGUAGE_NONE][0]['target_id'] : NULL,
           'sort' => $i,
         );
