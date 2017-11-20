@@ -26,8 +26,13 @@ function aicapp_init() {
   define('AICAPP_IMAGE_CROP_FORMAT', 'jpg');
   global $language;
   define('AICAPP_DEFAULT_LANG', $language->language);
+  define('AICAPP_TYPE_AUDIO', 'audio');
+  define('AICAPP_TYPE_OBJECT', 'object');
+  define('AICAPP_TYPE_GALLERY', 'gallery');
+  define('AICAPP_TYPE_TOUR', 'tour');
   define('AICAPP_TYPE_EVENT', 'event');
   define('AICAPP_TYPE_EXHIBITION', 'exhibition');
+  define('AICAPP_TYPE_MAP_ANNOTATION', 'map_annotation');
 }
 
 /**
@@ -119,7 +124,7 @@ function aicapp_add_object($object_id = 0) {
     $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
     if ($result['response']['numFound'] > 0) {
       // Creates the new object or updates existing if it finds it in our Db.
-      $nid = aicappSaveNode($result['response']['docs'][0], 'object');
+      $nid = aicappSaveNode($result['response']['docs'][0], AICAPP_TYPE_OBJECT);
       $object = '<strong>Object ' . $object_id . ' saved.</strong><br />';
       $object .= l(t('View object'), '/node/' . $nid) . '<br /><br />';
       $collect[] = $object;
@@ -347,7 +352,7 @@ function aicapp_verify_obj_gallery() {
 function aicapp_objectGalleryStatus_submit($form, &$form_state) {
   // Load all objects, including unpublished, because we compare if objects
   // previously not in a gallery (and unpublished) are now displayed.
-  $objects = node_load_multiple(array(), array('type' => 'object'));
+  $objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
 
   // Now we build up the objects array for JSON output.
   $art_gone = array();
@@ -384,11 +389,11 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
     }
     // Check if 'in gallery' statuses have changed and sync with Solr data.
     if (isset($object->field_in_gallery[LANGUAGE_NONE][0]['value']) && $ingallery != $object->field_in_gallery[LANGUAGE_NONE][0]['value']) {
-      db_query("UPDATE field_data_field_in_gallery
+      db_query("UPDATE {field_data_field_in_gallery}
         SET field_in_gallery_value = :ingal
         WHERE entity_id = :nid", array(':nid' => $object->nid, ':ingal' => $ingallery));
 
-      db_query("UPDATE field_revision_field_in_gallery
+      db_query("UPDATE {field_revision_field_in_gallery}
         SET field_in_gallery_value = :ingal
         WHERE entity_id = :nid", array(':nid' => $object->nid, ':ingal' => $ingallery));
     }
@@ -397,21 +402,21 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
       // Track old gallery locations to compare with new locations.
       $oldloc = $object->field_gallery_location[LANGUAGE_NONE][0]['value'];
 
-      db_query("UPDATE field_data_field_gallery_location
+      db_query("UPDATE {field_data_field_gallery_location}
           SET field_gallery_location_value = :gal
           WHERE entity_id = :nid
           AND entity_type = 'node'
-          AND bundle = 'object'", array(':nid' => $object->nid, ':gal' => $loc));
+          AND bundle = :type", array(':type' => AICAPP_TYPE_OBJECT, ':nid' => $object->nid, ':gal' => $loc));
 
-      db_query("UPDATE field_revision_field_gallery_location
+      db_query("UPDATE {field_revision_field_gallery_location}
           SET field_gallery_location_value = :gal
           WHERE entity_id = :nid
           AND entity_type = 'node'
-          AND bundle = 'object'", array(':nid' => $object->nid, ':gal' => $loc));
+          AND bundle = :type", array(':type' => AICAPP_TYPE_OBJECT, ':nid' => $object->nid, ':gal' => $loc));
 
       // Setting node to unpublished.
-      db_query("UPDATE node SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
-      db_query("UPDATE node_revision SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
+      db_query("UPDATE {node} SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
+      db_query("UPDATE {node_revision} SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
 
       $changed[] = array(
         'object_id' => $object->object_id,
@@ -440,14 +445,14 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
  */
 function aicapp_verify_obj_gallery_submit($form, &$form_state) {
   $objects = db_query("SELECT node.nid, fi.field_object_id_value AS object_id
-      FROM node, field_data_field_object_id fi
+      FROM {node}, {field_data_field_object_id} fi
       WHERE node.nid = fi.entity_id
-      AND fi.bundle = 'object'
+      AND fi.bundle = AICAPP_TYPE_OBJECT
       AND node.status = 1");
 
   $galleries = db_query("SELECT nid, title
-      FROM node
-      WHERE node.type = 'gallery'
+      FROM {node}
+      WHERE node.type = AICAPP_TYPE_GALLERY
       AND node.status = 1");
 
   // need a simple array
@@ -489,8 +494,8 @@ function _email_art_removed($art_gone) {
 
   // Now collect all objects from our Drupal DB (field_in_gallery table) that are in gallery and are published
   $result = db_query("SELECT f.entity_id, f.field_in_gallery_value
-    FROM field_data_field_in_gallery f, node n
-    WHERE f.bundle = 'object'
+    FROM {field_data_field_in_gallery} f, {node} n
+    WHERE f.bundle = AICAPP_TYPE_OBJECT
     AND f.entity_type = 'node'
     AND f.field_in_gallery_value = 1
     AND f.entity_id = n.nid
@@ -530,7 +535,7 @@ function _email_art_removed($art_gone) {
       $object_list .= '</li>';
 
       // set the object's status to unpublished
-      db_query("UPDATE node SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
+      db_query("UPDATE {node} SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
     }
     $msg .= $object_list . '</ul><p>Do not reply to this email.</p>';
     $headers = "From: <" . $from.">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
@@ -647,30 +652,32 @@ function _update_object_galleries($recent_added, $locations) {
  */
 function aicapp_gendata_form_submit($form, &$form_state) {
   global $base_path;
-
   // Load the general info by loading node number 1.
   $node_gen = node_load(1);
   strip_drupal_from_node($node_gen);
-
-  // load all the galleries
-  $galleries = node_load_multiple(array(), array('type' => 'gallery', 'status' => 1));
-
-  // load objects
-  $objects = node_load_multiple(array(), array('type' => 'object', 'status' => 1));
-
-  // load audio
-  $audio_files = node_load_multiple(array(), array('type' => 'audio', 'status' => 1));
-
-  // load tours
-  $tours = node_load_multiple(array(), array('type' => 'tour'));
-
+  // Load all published gallery nodes.
+  $galleries = node_load_multiple(array(), array('type' => AICAPP_TYPE_GALLERY, 'status' => 1));
+  // Load all published objects.
+  $objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT, 'status' => 1));
+  // Load audio nodes.
+  $audio_files = node_load_multiple(array(), array('type' => AICAPP_TYPE_AUDIO, 'status' => 1));
+  // Load tours nodes.
+  $tours = node_load_multiple(array(), array('type' => AICAPP_TYPE_TOUR));
+  // Load featured Events & Objects.
+  $query = new EntityFieldQuery();
+  $results = $query
+    ->entityCondition('entity_type', 'node')
+    ->propertyCondition('type', array(AICAPP_TYPE_EVENT, AICAPP_TYPE_EXHIBITION), 'IN')
+    ->propertyCondition('status', 1, '=')
+    ->propertyCondition('promote', 1, '=')
+    ->execute();
+  // Load all featued nodes.
+  $featured = isset($results['node']) ? node_load_multiple(array_keys($results['node'])) : array('node' => array());
   // Load map annontations that are published.
-  $map_annotations = node_load_multiple(array(), array('type' => 'map_annotation', 'status' => 1));
-
+  $map_annotations = node_load_multiple(array(), array('type' => AICAPP_TYPE_MAP_ANNOTATION, 'status' => 1));
   // Strip out Drupal native stuff we don't need in the JSON output.
   foreach ($galleries as $gallery) {
     strip_drupal_from_node($gallery);
-
     // Add in other gallery fields from SOLR.
     $result = _runSolrQuery(AICAPP_GALLERY_QUERY, 'gallery_id', $gallery->gallery_id);
     if (!empty($result['response']['docs'])) {
@@ -689,26 +696,31 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       }
     }
   }
-
   // Now we build up the objects array for JSON output.
   foreach ($objects as $key => $object) {
     _getSOLRdata($object);
     strip_drupal_from_node($object);
-    // only show objects that are in a gallery, and have lat/long values, and that are published
+    // Only show objects that are in a gallery, and have lat/long values,
+    // and that are published.
     if (empty($object->in_gallery) || !$object->in_gallery || empty($object->location) || !$object->status) {
       unset($objects[$key]);
     }
   }
-
-  // format audio files
+  // Format audio node.
   foreach ($audio_files as $audio) {
     strip_drupal_from_node($audio);
   }
-
+  // Loop through all tours.
   foreach ($tours as $key => $tour) {
+    // If tour is featured (ie, promote = 1), then add to featued lists.
+    if ($tour->promote && $tour->status) {
+      $featured['node'][$tour->nid] = new stdClass();
+      $featured['node'][$tour->nid]->nid = $tour->nid;
+      $featured['node'][$tour->nid]->type = AICAPP_TYPE_TOUR;
+    }
+    // Clean the tour node of extra properties.
     strip_drupal_from_node($tour);
-
-    // retrieve today's date
+    // Retrieve today's date.
     $today = date("Y-m-d H:i:s");
     if (!empty($tour->tour_dates) && !empty($tour->tour_dates[LANGUAGE_NONE][0]['value'])) {
       $tourStartDate = $tour->tour_dates[LANGUAGE_NONE][0]['value'];
@@ -717,81 +729,84 @@ function aicapp_gendata_form_submit($form, &$form_state) {
         'start_date' => $tourStartDate,
         'end_date' => $tourEndDate,
       );
-      // if today is greater than or equal to the start date and it's also less than or equal to the end date, publish the tour
+      // iIf today is greater than or equal to the start date and
+      // it's also less than or equal to the end date, publish the tour.
       if ($today >= $tourStartDate && $today <= $tourEndDate) {
-        db_query("UPDATE node SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
-        db_query("UPDATE node_revision SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
+        db_query("UPDATE {node} SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
+        db_query("UPDATE {node_revision} SET status = 1 WHERE nid = :nid", array(':nid' => $tour->nid));
       }
       else {
-        // unpublish the tour
-        db_query("UPDATE node SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
-        db_query("UPDATE node_revision SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
+        // Unpublish the tour.
+        db_query("UPDATE {node} SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
+        db_query("UPDATE {node_revision} SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
         unset($tours[$key]);
+        // Also remove from featured.
+        unset($featured['node'][$tour->nid]);
       }
     }
     elseif (empty($tour->tour_dates) && $tour->status == 0) {
       unset($tours[$key]);
     }
-    // add the weight from the view page so we can sort
-    $result = db_query('SELECT weight FROM draggableviews_structure WHERE entity_id = :d', array(':d' => $tour->nid));
+    // Add the weight from the view page so we can sort.
+    $result = db_query('SELECT weight FROM {draggableviews_structure} WHERE entity_id = :d', array(':d' => $tour->nid));
     foreach ($result as $item) {
       $tour->weight = (!empty($item->weight)) ? $item->weight : 0;
     }
-
-    // now collect the tour stops (objects + audio files)
+    // Collect the tour stops (objects + audio files)
+    // App v1 -- this will be deprecated.
     if (!empty($tour->stops)) {
       $tour->stops = aicapp_collect_tour_stops($tour->stops);
+    }
+    // App v2 -- process all tour stops..
+    if (isset($tour->tour_stop_items)) {
+      $tour->tour_stops = $tour->tour_stop_items;
+      unset($tour->tour_stop_items);
     }
   }
   // Sort tours.
   usort($tours, 'sort_objects_by_weight');
-
   // Format map annontations.
   foreach ($map_annotations as $annontation) {
     strip_drupal_from_node($annontation);
   }
+  // Format featured events, tours and exhibitions.
+  $featured_sorted = array();
+  foreach ($featured['node'] as $feature) {
+    $featured_sorted[$feature->type][] = $feature->nid;
+  }
+  // Prepare to output JSON data.
   // Add all the entities to a single array for encoding.
-  $data = array(
+  $v1_data = array(
     'general_info' => $node_gen,
     'galleries' => $galleries,
     'objects' => $objects,
     'audio_files' => $audio_files,
     'tours' => $tours,
   );
-  // Current verions file output.
-  $json_output = json_encode($data);
-  $v1_filename = 'appData';
-  $v1_file = file_put_contents('sites/default/files/' . $v1_filename . '.json', $json_output);
-
   // Version 2 JSON data.
-  // @TODO pupulate the featured tours, exhibitions and events.
-  $featured = array(
-    'tours' => array(),
-    'exhibitions' => array(),
-    'events' => array(),
-  );
-  $dashboard = array(
-    'featured_tours' => $featured['tours'],
-    'featured_exhibitions' => $featured['exhibitions'],
-    'featured_events' => $featured['events'],
-  );
-  // Create a new JSON output object for changes in version 2, starting with
-  // a dashboard.
   $v2_data = array(
-    // Add a dashboard.
-    'dashboard' => $dashboard,
-  );
-  // Add the v1 data after the dashboard.
-  $v2_data += $data;
-  // Add the map annotations.
-  $v2_data += array(
+    'dashboard' => array(
+      'featured_tours' => isset($featured_sorted[AICAPP_TYPE_TOUR]) ? $featured_sorted[AICAPP_TYPE_TOUR] : array(),
+      'featured_exhibitions' => isset($featured_sorted[AICAPP_TYPE_EXHIBITION]) ? $featured_sorted[AICAPP_TYPE_EXHIBITION] : array(),
+      'featured_events' => isset($featured_sorted[AICAPP_TYPE_EVENT]) ? $featured_sorted[AICAPP_TYPE_EVENT] : array(),
+    ),
+    'general_info' => $node_gen,
+    'galleries' => $galleries,
+    'objects' => $objects,
+    'audio_files' => $audio_files,
+    'tours' => $tours,
     'annontations' => $map_annotations,
   );
+  // Write JSON output to files.
+  // v1 verion file output.
+  $v1_json_output = json_encode($v1_data);
+  $v1_filename = 'appData';
+  $v1_file = file_put_contents('sites/default/files/' . $v1_filename . '.json', $v1_json_output);
   // Version 2 file output.
   $v2_json_output = json_encode($v2_data);
   $v2_filename = 'appData-v2';
   $v2_file = file_put_contents('sites/default/files/' . $v2_filename . '.json', $v2_json_output);
-
+  // If both v1 & v1 files were written successfully.
   if ($v1_file && $v2_file) {
     drupal_set_message('Updated files <strong>v1</strong>: <a href="' . $base_path . 'sites/default/files/appData.json' . '">appData.json</a> or <strong>v2</strong>: <a href="' . $base_path . 'sites/default/files/appData-v2.json' . '">appData-v2.json</a><br>When you click to view one of the files, be sure to refresh your browser as it might be cached. Best viewed in Chrome.', 'status');
     variable_set('aicapp_pending', 0);
@@ -807,18 +822,21 @@ function aicapp_gendata_form_submit($form, &$form_state) {
 function aicapp_collect_tour_stops($stops = array()) {
   $full_stops = $audio = $objects = array();
   foreach ($stops as $stop) {
+    if (empty($stop['value'])) {
+      continue;
+    }
     $result = db_query("SELECT field_t_audio_nid, delta
-      FROM field_revision_field_t_audio
-      WHERE revision_id = " . $stop['value'] . "
-      ORDER by delta");
+      FROM {field_revision_field_t_audio}
+      WHERE revision_id = :vid
+      ORDER by delta", array(':vid' => $stop['value']));
     foreach ($result as $item) {
       $audio[] = array('nid' => $item->field_t_audio_nid, 'delta' => $item->delta);
     }
 
     $result = db_query("SELECT field_t_object_nid, delta
-      FROM field_revision_field_t_object
-      WHERE revision_id = " . $stop['value'] . "
-      ORDER by delta");
+      FROM {field_revision_field_t_object}
+      WHERE revision_id = :vid
+      ORDER by delta", array(':vid' => $stop['value']));
     foreach ($result as $item) {
       $objects[] = array('nid' => $item->field_t_object_nid, 'delta' => $item->delta);
     }
@@ -827,8 +845,8 @@ function aicapp_collect_tour_stops($stops = array()) {
     if (count($audio) == count($objects)) {
       for ($i = 0; $i < count($audio); $i++) {
         $full_stops[] = array(
-          'audio' => $audio[$i]['nid'],
-          'object' => $objects[$i]['nid'],
+          AICAPP_TYPE_AUDIO => $audio[$i]['nid'],
+          AICAPP_TYPE_OBJECT => $objects[$i]['nid'],
           'sort' => $objects[$i]['delta'],
         );
       }
@@ -841,7 +859,7 @@ function aicapp_collect_tour_stops($stops = array()) {
  * Helper to sort object by weight.
  */
 function sort_objects_by_weight($a, $b) {
-  if (!isset($a->weight) || $a->weight == $b->weight) {
+  if ((!isset($a->weight) || !isset($b->weight)) || (isset($a->weight) && isset($b->weight) && $a->weight == $b->weight)) {
     return 0;
   }
   return $a->weight - $b->weight;
@@ -899,55 +917,79 @@ function strip_drupal_from_node(&$node) {
     }
   }
   // Save the properties of the node before adding more.
-  $properties = array_keys((array)$node);
+  $properties = array_keys((array) $node);
   // Translations available.
   $translations = array();
   if (isset($node->translations) && isset($node->translations->data)) {
     $translations = $node->translations->data;
   }
   if (!count($translations)) {
-    // unset $node->translations property.
+    // Unset $node->translations property if no translations were found.
     unset($node->translations);
   }
   else {
     // Empty $node->translations.
     $node->translations = array();
   }
-
-  // Fields used in multiple content types.
+  // Fields used in multiple content types, such as location and floor.
   // Location field.
-  if (isset($node->field_location[LANGUAGE_NONE][0]['safe_value'])) {
-    $node->location = $node->field_location[LANGUAGE_NONE][0]['safe_value'];
+  if (isset($node->field_location)) {
+    $node->location = '';
+    if (isset($node->field_location[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->location = $node->field_location[LANGUAGE_NONE][0]['safe_value'];
+    }
+    // Location should be split into latitude and longitude properties.
+    if (!empty($node->location)) {
+      $pieces = explode(',', $node->location);
+      $node->latitude = $pieces[0];
+      $node->longitude = isset($pieces[1]) ? $pieces[1] : '';
+    }
   }
-  // Location should be split into latitude and longitude properties.
-  if (!empty($node->location)) {
-    $pieces = explode(',', $node->location);
-    $node->latitude = $pieces[0];
-    $node->longitude = isset($pieces[1]) ? $pieces[1] : '';
+  // Current Floor is used in Gallery, Map Annotation & Tour nodes. App V1.
+  if (isset($node->field_floor)) {
+    $node->floor = '';
+    if (isset($node->field_floor[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->floor = $node->field_floor[LANGUAGE_NONE][0]['safe_value'];
+    }
   }
-  // Current Floor is used in Gallery, Map Annotation & Tour nodes.
-  if (isset($node->field_floor[LANGUAGE_NONE][0]['safe_value'])) {
-    $node->floor = $node->field_floor[LANGUAGE_NONE][0]['safe_value'];
+  // If the floor reference field is set.
+  if (isset($node->field_floor_reference)) {
+    $node->floor = '';
+    if (isset($node->field_floor_reference[LANGUAGE_NONE][0]['target_id'])) {
+      $floor = entity_load('field_collection_item', array($node->field_floor_reference[LANGUAGE_NONE][0]['target_id']));
+      if (count($floor)) {
+        $floor = array_pop($floor);
+        $node->floor = !empty($floor->field_floor_label) ? $floor->field_floor_label[LANGUAGE_NONE][0]['safe_value'] : '';
+      }
+    }
   }
   // Image field is used in Object, Tour & Article nodes.
-  if (isset($node->field_image[LANGUAGE_NONE][0]['uri'])) {
-    $node->image_filename = $node->field_image[LANGUAGE_NONE][0]['filename'];
-    $node->image_url = file_create_url($node->field_image[LANGUAGE_NONE][0]['uri']);
-    $node->image_filemime = $node->field_image[LANGUAGE_NONE][0]['filemime'];
-    $node->image_filesize = $node->field_image[LANGUAGE_NONE][0]['filesize'];
-    $node->image_width = $node->field_image[LANGUAGE_NONE][0]['width'];
-    $node->image_height = $node->field_image[LANGUAGE_NONE][0]['height'];
+  if (isset($node->field_image)) {
+    $node->image_filename = '';
+    $node->image_url = '';
+    $node->image_filemime = '';
+    $node->image_filesize = '';
+    $node->image_width = '';
+    $node->image_height = '';
+    if (isset($node->field_image[LANGUAGE_NONE][0]['uri'])) {
+      $node->image_filename = $node->field_image[LANGUAGE_NONE][0]['filename'];
+      $node->image_url = file_create_url($node->field_image[LANGUAGE_NONE][0]['uri']);
+      $node->image_filemime = $node->field_image[LANGUAGE_NONE][0]['filemime'];
+      $node->image_filesize = $node->field_image[LANGUAGE_NONE][0]['filesize'];
+      $node->image_width = $node->field_image[LANGUAGE_NONE][0]['width'];
+      $node->image_height = $node->field_image[LANGUAGE_NONE][0]['height'];
+    }
   }
   // Fields that belong to only 1 content type.
   // General Info node field items.
-  if (isset($node->field_museum_hours[$node->language][0]['safe_value'])) {
-    $node->museum_hours = $node->field_museum_hours[$node->language][0]['safe_value'];
-  }
-  elseif (isset($node->field_museum_hours[LANGUAGE_NONE][0]['safe_value'])) {
-    $node->museum_hours = $node->field_museum_hours[LANGUAGE_NONE][0]['safe_value'];
+  if (isset($node->field_museum_hours)) {
+    $node->museum_hours = '';
+    if (isset($node->field_museum_hours[$node->language][0]['safe_value'])) {
+      $node->museum_hours = $node->field_museum_hours[$node->language][0]['safe_value'];
+    }
   }
   // General Info translations.
-  if (isset($node->museum_hours)) {
+  if (!empty($node->museum_hours)) {
     foreach ($translations as $lang_key => $details) {
       $node->translations[] = array(
         'language' => $lang_key,
@@ -955,161 +997,312 @@ function strip_drupal_from_node(&$node) {
       );
     }
   }
-
   // Gallery node field items.
-  if (isset($node->field_gallery_id[LANGUAGE_NONE][0]['safe_value'])) {
-    $node->gallery_id = $node->field_gallery_id[LANGUAGE_NONE][0]['safe_value'];
-  }
-  // This is overriding the SOLR data.  This is why we sync.
-  if (isset($node->field_gallery_number[LANGUAGE_NONE][0]['safe_value'])) {
-    $node->gallery_number = $node->field_gallery_number[LANGUAGE_NONE][0]['safe_value'];
-  }
-
-  // Object node type field items.
-  // @TODO Add version 2 code changes for objects.
-  if (isset($node->field_object_id[LANGUAGE_NONE][0]['value'])) {
-    $node->object_id = $node->field_object_id[LANGUAGE_NONE][0]['value'];
-  }
-  if (isset($node->field_reference_num[LANGUAGE_NONE][0]['safe_value'])) {
-    $node->reference_num = $node->field_reference_num[LANGUAGE_NONE][0]['safe_value'];
-  }
-  if (isset($node->field_object_selector_number[LANGUAGE_NONE][0]['value'])) {
-    $node->object_selector_number = $node->field_object_selector_number[LANGUAGE_NONE][0]['value'];
-  }
-  if (isset($node->field_object_selector_numbers[LANGUAGE_NONE][0]['value'])) {
-    foreach ($node->field_object_selector_numbers[LANGUAGE_NONE] as $objselector) {
-      $node->object_selector_numbers[] = $objselector['value'];
+  if (isset($node->field_gallery_id)) {
+    $node->gallery_id = '';
+    if (isset($node->field_gallery_id[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->gallery_id = $node->field_gallery_id[LANGUAGE_NONE][0]['safe_value'];
     }
   }
-  // Here we loop through audio files attached to objects.
-  if (isset($node->field_object_audio[LANGUAGE_NONE][0]['nid'])) {
-    foreach ($node->field_object_audio[LANGUAGE_NONE] as $audiofld) {
-      $node->audio[] = $audiofld['nid'];
+  // Gallery Number.
+  if (isset($node->field_gallery_number)) {
+    $node->gallery_number = '';
+    // This is overriding the SOLR data.  This is why we sync.
+    if (isset($node->field_gallery_number[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->gallery_number = $node->field_gallery_number[LANGUAGE_NONE][0]['safe_value'];
     }
   }
-  if (isset($node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'])) {
-    $node->audio_transcript = $node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'];
-  }
-  if (isset($node->field_highlighted_object[LANGUAGE_NONE][0])) {
-    $node->highlighted_object = $node->field_highlighted_object[LANGUAGE_NONE][0]['value'];
-  }
-  // Object node translations.
-  if (isset($node->object_selector_number)) {
-    foreach ($translations as $lang_key => $details) {
-      // @TODO Object translations
+  // Object node type field items, starging with the object id.
+  if (isset($node->field_object_id)) {
+    $node->object_id = '';
+    if (isset($node->field_object_id[LANGUAGE_NONE][0]['value'])) {
+      $node->object_id = $node->field_object_id[LANGUAGE_NONE][0]['value'];
     }
   }
-
-  // Tour node field items.
-  // @TODO Add version 2 code changes for tours.
-  if (isset($node->field_tour_banner[LANGUAGE_NONE][0]['value'])) {
-    $node->tour_banner = $node->field_tour_banner[LANGUAGE_NONE][0]['value'];
+  // Object reference number.
+  if (isset($node->field_reference_num)) {
+    $node->reference_num = '';
+    if (isset($node->field_reference_num[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->reference_num = $node->field_reference_num[LANGUAGE_NONE][0]['safe_value'];
+    }
   }
-  // Tour description field.
-  if (isset($node->field_description[$node->language][0]['value'])) {
-    $descriptions = field_get_items('node', $node, 'field_description');
-    $a_description = array_shift($descriptions);
-    $description = $a_description['value'];
-    $node->description = trim(strip_tags($description));
-    $node->description_html = trim($description);
+  // What is this object's gallery location?
+  if (isset($node->field_gallery_location)) {
+    $node->gallery_location = '';
+    if (isset($node->field_gallery_location[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->gallery_location = $node->field_gallery_location[LANGUAGE_NONE][0]['safe_value'];
+    }
   }
-  // Move tour dats into a new property so it can be acessed later.
-  if (!empty($node->field_tour_dates)) {
-    $node->tour_dates = $node->field_tour_dates;
+  // Is this object in a gallery?
+  if (isset($node->field_in_gallery)) {
+    $node->in_gallery = '';
+    if (isset($node->field_reference_num[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->reference_num = $node->field_reference_num[LANGUAGE_NONE][0]['safe_value'];
+    }
   }
-  if (isset($node->field_intro[$node->language][0]['value'])) {
-    $intros = field_get_items('node', $node, 'field_intro');
-    $an_intro = array_shift($intros);
-    $intro = $an_intro['value'];
-    $node->intro = trim(strip_tags($intro));
-    $node->intro_html = trim($intro);
+  // Object thumbnail image url.
+  if (isset($node->field_thumbnail_image)) {
+    $node->thumbnail_full_path = '';
+    if (isset($node->field_thumbnail_image[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->thumbnail_full_path = $node->field_thumbnail_image[LANGUAGE_NONE][0]['safe_value'];
+    }
   }
-  if (isset($node->field_stops2[LANGUAGE_NONE][0])) {
-    $node->stops = $node->field_stops2[LANGUAGE_NONE];
+  // Object full size image url.
+  if (isset($node->field_large_image)) {
+    $node->large_image_full_path = '';
+    if (isset($node->field_large_image[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->large_image_full_path = $node->field_large_image[LANGUAGE_NONE][0]['safe_value'];
+    }
   }
-  if (isset($node->field_tour_duration[$node->language][0])) {
-    $node->tour_duration = $node->field_tour_duration[$node->language][0]['safe_value'];
+  // Audio Commentary field collection items.
+  if ($fc_items = field_get_items('node', $node, 'field_audio_commentary')) {
+    $node->audio_commentary = '';
+    // Extract the field collection items.
+    foreach ($fc_items as $fc_item) {
+      $item = field_collection_field_get_entity($fc_item);
+      $node->audio_commentary[] = array(
+        'object_selector_number' => !empty($item->field_object_selector_number) ? $item->field_object_selector_number[LANGUAGE_NONE][0]['safe_value'] : NULL,
+        'audio' => !empty($item->field_audio_commentary_audio) ? $item->field_audio_commentary_audio[LANGUAGE_NONE][0]['target_id'] : NULL,
+      );
+    }
   }
-  if (isset($node->field_tour_audio[LANGUAGE_NONE][0])) {
-    $node->tour_audio = $node->field_tour_audio[LANGUAGE_NONE][0]['nid'];
+  // Object audio files.
+  if (isset($node->field_object_audio)) {
+    if (isset($node->field_object_audio[LANGUAGE_NONE][0]['nid'])) {
+      foreach ($node->field_object_audio[LANGUAGE_NONE] as $audiofld) {
+        $node->audio[] = $audiofld['nid'];
+      }
+    }
+    if (isset($node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->audio_transcript = $node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'];
+    }
   }
-  // Tour thumnail image.
-  if (isset($node->field_thumbnail_crop_rect[LANGUAGE_NONE][0])) {
-    $items = field_get_items('node', $node, 'field_thumbnail_crop_rect');
-    foreach ($items as $itemid) {
-      $item = field_collection_field_get_entity($itemid);
-      if ($item->field_x) {
-        $node->thumbnail_crop_rect = array(
-          'x' => $item->field_x[LANGUAGE_NONE][0]['value'],
-          'y' => $item->field_y[LANGUAGE_NONE][0]['value'],
-          'width' => $item->field_width[LANGUAGE_NONE][0]['value'],
-          'height' => $item->field_height[LANGUAGE_NONE][0]['value'],
-        );
-        json_encode($node->thumbnail_crop_rect);
+  // Is this a highlighed object?
+  if (isset($node->field_highlighted_object)) {
+    if (isset($node->field_highlighted_object[LANGUAGE_NONE][0])) {
+      $node->highlighted_object = $node->field_highlighted_object[LANGUAGE_NONE][0]['value'];
+    }
+  }
+  // App v1 property: Object selector number.
+  if (isset($node->field_object_selector_number)) {
+    $node->object_selector_number = '';
+    if (isset($node->field_object_selector_number[LANGUAGE_NONE][0]['value'])) {
+      $node->object_selector_number = $node->field_object_selector_number[LANGUAGE_NONE][0]['value'];
+    }
+  }
+  // App v1 property: Object selector number.
+  if (isset($node->field_object_selector_numbers)) {
+    $node->object_selector_numbers = array();
+    if (isset($node->field_object_selector_numbers[LANGUAGE_NONE][0]['value'])) {
+      foreach ($node->field_object_selector_numbers[LANGUAGE_NONE] as $objselector) {
+        $node->object_selector_numbers[] = $objselector['value'];
       }
     }
   }
-  if (isset($node->field_large_image_crop_rect[LANGUAGE_NONE][0])) {
-    $items = field_get_items('node', $node, 'field_large_image_crop_rect');
-    foreach ($items as $itemid) {
-      $item = field_collection_field_get_entity($itemid);
-      if ($item->field_x) {
-        $node->large_image_crop_rect = array(
-          'x' => $item->field_x[LANGUAGE_NONE][0]['value'],
-          'y' => $item->field_y[LANGUAGE_NONE][0]['value'],
-          'width' => $item->field_width[LANGUAGE_NONE][0]['value'],
-          'height' => $item->field_height[LANGUAGE_NONE][0]['value'],
+  // Tour node items, beginning with tour banner.
+  if (isset($node->field_tour_banner)) {
+    $node->tour_banner = '';
+    if (isset($node->field_tour_banner[LANGUAGE_NONE][0]['value'])) {
+      $node->tour_banner = $node->field_tour_banner[LANGUAGE_NONE][0]['value'];
+    }
+  }
+  // Tour selector field.
+  if (isset($node->field_selector_number)) {
+    $node->selector_number = '';
+    if (isset($node->field_selector_number[LANGUAGE_NONE][0]['value'])) {
+      $node->selector_number = $node->field_tour_banner[LANGUAGE_NONE][0]['value'];
+    }
+  }
+  // Tour description field.
+  if (isset($node->field_description)) {
+    $node->description = '';
+    $node->description_html = '';
+    if (isset($node->field_description[$node->language][0]['value'])) {
+      $descriptions = field_get_items('node', $node, 'field_description');
+      $a_description = array_shift($descriptions);
+      $description = $a_description['value'];
+      $node->description = trim(strip_tags($description));
+      $node->description_html = trim($description);
+    }
+  }
+  // Move tour dats into a new property so it can be acessed later.
+  if (isset($node->field_tour_dates)) {
+    $node->tour_dates = array();
+    if (!empty($node->field_tour_dates)) {
+      $node->tour_dates = $node->field_tour_dates;
+    }
+  }
+  // Tour Intro.
+  if (isset($node->field_intro)) {
+    $node->intro = '';
+    $node->intro_html = '';
+    if (isset($node->field_intro[$node->language][0]['value'])) {
+      $intros = field_get_items('node', $node, 'field_intro');
+      $an_intro = array_shift($intros);
+      $intro = $an_intro['value'];
+      $node->intro = trim(strip_tags($intro));
+      $node->intro_html = trim($intro);
+    }
+  }
+  // Tour stops.
+  if (isset($node->field_tour_stops)) {
+    $node->tour_stop_items = array();
+    if ($fc_items = field_get_items('node', $node, 'field_tour_stops')) {
+      $i = 0;
+      foreach ($fc_items as $fc_item) {
+        $item = field_collection_field_get_entity($fc_item);
+        $node->tour_stop_items[] = array(
+          'object' => !empty($item->field_tour_stop_object) ? $item->field_tour_stop_object[LANGUAGE_NONE][0]['target_id'] : NULL,
+          'object_selector_number' => !empty($item->field_tour_stop_audio_commentary) ? $item->field_tour_stop_audio_commentary[LANGUAGE_NONE][0]['target_id'] : NULL,
+          'audio_bumper' => !empty($item->field_tour_stop_audio_bumper) ? $item->field_tour_stop_audio_bumper[LANGUAGE_NONE][0]['target_id'] : NULL,
+          'sort' => $i,
         );
-        json_encode($node->large_image_crop_rect);
+        $i++;
+      }
+    }
+  }
+  // Tour Duration.
+  if (isset($node->field_tour_duration)) {
+    $node->tour_duration = '';
+    if (isset($node->field_tour_duration[$node->language][0])) {
+      $node->tour_duration = $node->field_tour_duration[$node->language][0]['safe_value'];
+    }
+  }
+  // Tour audio node id..
+  if (isset($node->field_tour_audio)) {
+    $node->tour_audio = '';
+    if (isset($node->field_tour_audio[LANGUAGE_NONE][0])) {
+      $node->tour_audio = $node->field_tour_audio[LANGUAGE_NONE][0]['nid'];
+    }
+  }
+  // Tour thumnail image.
+  if (isset($node->field_thumbnail_crop_rect)) {
+    $node->thumbnail_crop_rect = array();
+    if (isset($node->field_thumbnail_crop_rect[LANGUAGE_NONE][0])) {
+      $items = field_get_items('node', $node, 'field_thumbnail_crop_rect');
+      foreach ($items as $itemid) {
+        $item = field_collection_field_get_entity($itemid);
+        if ($item->field_x) {
+          $node->thumbnail_crop_rect = array(
+            'x' => $item->field_x[LANGUAGE_NONE][0]['value'],
+            'y' => $item->field_y[LANGUAGE_NONE][0]['value'],
+            'width' => $item->field_width[LANGUAGE_NONE][0]['value'],
+            'height' => $item->field_height[LANGUAGE_NONE][0]['value'],
+          );
+          json_encode($node->thumbnail_crop_rect);
+        }
+      }
+    }
+  }
+  // Tour large image.
+  if (isset($node->field_large_image_crop_rect)) {
+    $node->large_image_crop_rect = array();
+    if (isset($node->field_large_image_crop_rect[LANGUAGE_NONE][0])) {
+      $items = field_get_items('node', $node, 'field_large_image_crop_rect');
+      foreach ($items as $itemid) {
+        $item = field_collection_field_get_entity($itemid);
+        if ($item->field_x) {
+          $node->large_image_crop_rect = array(
+            'x' => $item->field_x[LANGUAGE_NONE][0]['value'],
+            'y' => $item->field_y[LANGUAGE_NONE][0]['value'],
+            'width' => $item->field_width[LANGUAGE_NONE][0]['value'],
+            'height' => $item->field_height[LANGUAGE_NONE][0]['value'],
+          );
+          json_encode($node->large_image_crop_rect);
+        }
       }
     }
   }
   // Tour translations.
-  if ($node->type === 'tour' && isset($node->intro) && isset($node->description)) {
+  if ($node->type === AICAPP_TYPE_TOUR) {
     foreach ($translations as $lang_key => $details) {
       $node->translations[] = array(
         'language' => $lang_key,
         'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : $node->title,
         'description' => isset($node->field_description[$lang_key][0]['safe_value']) ? trim(strip_tags($node->field_description[$lang_key][0]['safe_value'])) : $node->description,
         'description_html' => isset($node->field_description[$lang_key][0]['safe_value']) ? $node->field_description[$lang_key][0]['safe_value'] : $node->description_html,
-        'intro' => isset($node->field_intro[$lang_key][0]['safe_value']) ? trim(strip_tags($node->field_intro[$lang_key][0]['safe_value'])) : $node->field_intro,
-        'intro_html' => isset($node->field_intro[$lang_key][0]['safe_value']) ? $node->field_intro[$lang_key][0]['safe_value'] : $node->field_intro_html,
+        'intro' => isset($node->field_intro[$lang_key][0]['safe_value']) ? trim(strip_tags($node->field_intro[$lang_key][0]['safe_value'])) : $node->intro,
+        'intro_html' => isset($node->field_intro[$lang_key][0]['safe_value']) ? $node->field_intro[$lang_key][0]['safe_value'] : $node->intro_html,
         'tour_duration' => isset($node->field_tour_duration[$lang_key][0]['safe_value']) ? $node->field_tour_duration[$lang_key][0]['safe_value'] : $node->tour_duration,
       );
     }
   }
-
+  // App V1 - version of tour stops.
+  if (isset($node->field_stops2)) {
+    $node->stops = array();
+    if (isset($node->field_stops2[LANGUAGE_NONE][0])) {
+      $node->stops = $node->field_stops2[LANGUAGE_NONE];
+    }
+  }
   // Audio node field items.
   // This handles each separate audio file.
-  // @TODO Add version 2 code changes for audio.
-  if (isset($node->field_audio_file[LANGUAGE_NONE][0]['uri'])) {
-    $node->audio_filename = $node->field_audio_file[LANGUAGE_NONE][0]['filename'];
-    $node->audio_file_url = file_create_url($node->field_audio_file[LANGUAGE_NONE][0]['uri']);
-    $node->audio_filemime = $node->field_audio_file[LANGUAGE_NONE][0]['filemime'];
-    $node->audio_filesize = $node->field_audio_file[LANGUAGE_NONE][0]['filesize'];
+  if (isset($node->field_audio_file)) {
+    $node->audio_filename = '';
+    $node->audio_file_url = '';
+    $node->audio_filemime = '';
+    $node->audio_filesize = '';
+    if (isset($node->field_audio_file[$node->language][0]['uri'])) {
+      $node->audio_filename = $node->field_audio_file[$node->language][0]['filename'];
+      $node->audio_file_url = file_create_url($node->field_audio_file[$node->language][0]['uri']);
+      $node->audio_filemime = $node->field_audio_file[$node->language][0]['filemime'];
+      $node->audio_filesize = $node->field_audio_file[$node->language][0]['filesize'];
+    }
   }
-  if (isset($node->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'])) {
-    $node->audio_transcript = $node->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'];
+  // Audio Transcript.
+  if (isset($node->field_audio_transcript)) {
+    $node->audio_transcript = '';
+    if (isset($node->field_audio_transcript[$node->language][0]['safe_value'])) {
+      $node->audio_transcript = $node->field_audio_transcript[$node->language][0]['safe_value'];
+    }
   }
-  if (isset($node->field_credits[LANGUAGE_NONE][0]['safe_value'])) {
-    $node->credits = $node->field_credits[LANGUAGE_NONE][0]['safe_value'];
+  // Audio Credits.
+  if (isset($node->field_credits)) {
+    $node->credits = '';
+    if (isset($node->field_credits[$node->language][0]['safe_value'])) {
+      $node->credits = $node->field_credits[$node->language][0]['safe_value'];
+    }
   }
-
-  // Map Annotation field items: label (field_annotation_label), icon (field_icon),
+  // Audio Track title.
+  if (isset($node->field_track_title)) {
+    $node->track_title = '';
+    if (isset($node->field_track_title[$node->language][0]['safe_value'])) {
+      $node->track_title = $node->field_track_title[$node->language][0]['safe_value'];
+    }
+  }
+  // Audio translations.
+  if ($node->type === AICAPP_TYPE_AUDIO) {
+    foreach ($translations as $lang_key => $details) {
+      $node->translations[] = array(
+        'language' => $lang_key,
+        'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : $node->title,
+        'track_title' => isset($node->field_track_title[$lang_key][0]['safe_value']) ? $node->field_track_title[$lang_key][0]['safe_value'] : $node->track_title,
+        'audio_filename' => isset($node->field_audio_file[$lang_key][0]['filename']) ? $node->field_audio_file[$lang_key][0]['filename'] : $node->audio_filename,
+        'audio_file_url' => isset($node->field_audio_file[$lang_key][0]['uri']) ? file_create_url($node->field_audio_file[$lang_key][0]['uri']) : $node->audio_file_url,
+        'audio_filemime' => isset($node->field_audio_file[$lang_key][0]['filemime']) ? $node->field_audio_file[$lang_key][0]['filemime'] : $node->audio_filemime,
+        'audio_filesize' => isset($node->field_audio_file[$lang_key][0]['filesize']) ? $node->field_audio_file[$lang_key][0]['filesize'] : $node->audio_filesize,
+        'audio_transcript' => isset($node->field_audio_transcript[$lang_key][0]['safe_value']) ? $node->field_audio_transcript[$lang_key][0]['safe_value'] : $node->audio_transcript,
+        'credits' => isset($node->field_credits[$lang_key][0]['safe_value']) ? $node->field_credits[$lang_key][0]['safe_value'] : $node->credits,
+      );
+    }
+  }
+  // Map Annotation field items: label (field_annotation_label)
   // annontation_type (field_annotation_type)
-  if (isset($node->field_annotation_label[$node->language][0]['safe_value'])) {
-    $node->label = $node->field_annotation_label[$node->language][0]['safe_value'];
+  if (isset($node->field_annotation_label)) {
+    $node->label = '';
+    if (isset($node->field_annotation_label[$node->language][0]['safe_value'])) {
+      $node->label = $node->field_annotation_label[$node->language][0]['safe_value'];
+    }
   }
-  if (isset($node->field_icon[LANGUAGE_NONE][0]['safe_value'])) {
-    $node->icon = $node->field_icon[LANGUAGE_NONE][0]['safe_value'];
+  if (isset($node->field_annotation_type)) {
+    $node->annotation_type = '';
+    if (isset($node->field_annotation_type[LANGUAGE_NONE][0]['value'])) {
+      $type_field = field_info_field('field_annotation_type');
+      $label = $type_field['settings']['allowed_values'][$node->field_annotation_type[LANGUAGE_NONE][0]['value']];
+      $node->annotation_type = $label;
+    }
   }
-  if (isset($node->field_annotation_type[LANGUAGE_NONE][0]['value'])) {
-    $type_field = field_info_field('field_annotation_type');
-    $label = $type_field['settings']['allowed_values'][$node->field_annotation_type[LANGUAGE_NONE][0]['value']];
-    $node->annotation_type = $label;
-  }
-  //  Map Annotation translations.
-  if ($node->type === 'map_annotation') {
+  // Map Annotation translations.
+  if ($node->type === AICAPP_TYPE_MAP_ANNOTATION) {
     foreach ($translations as $lang_key => $details) {
       $node->translations[] = array(
         'language' => $lang_key,
@@ -1143,7 +1336,7 @@ function aicapp_gallery_count() {
   $result = _runSolrQuery(AICAPP_GALLERY_QUERY, '*', '*', 500);
 
   $SOLR_count = count($result['response']['docs']);
-  $result = db_query("SELECT COUNT(nid) as count FROM node WHERE type = :s AND status = 1", array(':s' => 'gallery'));
+  $result = db_query("SELECT COUNT(nid) as count FROM {node} WHERE type = :s AND status = 1", array(':s' => AICAPP_TYPE_GALLERY));
   $galleries = $result->fetchObject();
 
   return '<div class="callout"><p>' . t('Galleries in SOLR: ' . $SOLR_count) . '<br />' . t('Galleries in Drupal: ' . $galleries->count) . '</p></div>';
@@ -1157,12 +1350,12 @@ function aicapp_loadgalleries_form_submit($form, &$form_state) {
   $result = _runSolrQuery(AICAPP_GALLERY_QUERY, '*', '*', 500);
 
   // first delete any old galleries not in SOLR anymore
-  $galleries = node_load_multiple(array(), array('type' => 'gallery', 'status' => 1));
+  $galleries = node_load_multiple(array(), array('type' => AICAPP_TYPE_GALLERY, 'status' => 1));
 
   try {
     // Now loop through the $result JSON.
     foreach ($result['response']['docs'] as $object) {
-      aicappSaveNode($object, 'gallery'); // create new or update existing
+      aicappSaveNode($object, AICAPP_TYPE_GALLERY); // create new or update existing
     }
     foreach ($galleries as $gallery) {
       // look for the Drupal gallery in the SOLR gallery
@@ -1193,20 +1386,22 @@ function aicapp_loadgalleries_form_submit($form, &$form_state) {
  */
 function aicappSaveNode($object, $type) {
   // Prepare for node_save().
-  if ($type == 'object') {
+  if ($type == AICAPP_TYPE_OBJECT) {
     // Check for nid by SOLR object_id.
-    $qres = db_query(
-      'SELECT entity_id FROM field_data_field_object_id WHERE field_object_id_value = :id',
+    $qres = db_query("SELECT entity_id
+                 FROM {field_data_field_object_id}
+                 WHERE field_object_id_value = :id",
         array(':id' => $object['object_id'])
     );
     $record = $qres->fetchObject();
   }
 
-  if ($type == 'gallery') {
+  if ($type == AICAPP_TYPE_GALLERY) {
     if (!empty($object['gallery_id'])) {
       // Check for nid by SOLR gallery_id.
-      $qres = db_query(
-        'SELECT entity_id FROM field_data_field_gallery_id WHERE field_gallery_id_value = :id',
+      $qres = db_query("SELECT entity_id
+                   FROM {field_data_field_gallery_id}
+                   WHERE field_gallery_id_value = :id",
           array(':id' => $object['gallery_id'])
       );
     }
@@ -1228,7 +1423,7 @@ function aicappSaveNode($object, $type) {
     $node->created = time();
   }
 
-  if ($type == 'object') {
+  if ($type == AICAPP_TYPE_OBJECT) {
     $node->field_object_id[$node->language][0]['value'] = $object['object_id'];
     $node->field_reference_num[$node->language][0]['value'] = $object['main_reference_number'];
     $node->field_gallery_location[$node->language][0]['value'] = $object['gallery_location'];
@@ -1267,7 +1462,7 @@ function aicappSaveNode($object, $type) {
       $node->field_in_gallery[$node->language][0]['value'] = 0;
     }
   }
-  if ($type == 'gallery') {
+  if ($type == AICAPP_TYPE_GALLERY) {
     if (isset($object['title_t'])) {
       $node->title = $object['title_t'];
     }
@@ -1282,6 +1477,23 @@ function aicappSaveNode($object, $type) {
     }
     if (isset($object['floor'])) {
       $node->field_floor[$node->language][0]['value'] = $object['floor'];
+      // Set the floor reference field.
+      // First find the entity to reference.
+      $efq = new EntityFieldQuery();
+      $efq->entityCondition('entity_type', 'field_collection_item');
+      $efq->propertyCondition('field_name', 'field_floor_map');
+      // Sometimes Level 0 is known as LL.
+      $floors = array($object['floor']);
+      if (strtolower($object['floor']) === 'll') {
+        $floors[] = 0;
+      }
+      $efq->fieldCondition('field_floor_label', 'value', $floors, 'IN');
+      $efq->range(0, 1);
+      $result = $efq->execute();
+      if (!empty($result['field_collection_item'])) {
+        $floor_reference = key($result['field_collection_item']);
+        $node->field_floor_reference[$node->language][0]['target_id'] = $floor_reference;
+      }
     }
     $node->status = 1;
   }
@@ -1328,193 +1540,13 @@ function aicapp_setup_afterbuild($form, &$form_state) {
 }
 
 /**
- * Helper function to crop an Image.
- */
-function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
-  // initializing image.
-  $thumbUrl = $imageToCrop[LANGUAGE_NONE][0]['value'];
-  $thumbImageinfo = getimagesize($thumbUrl);
-  $thumbWidth = $thumbImageinfo[0];
-  $thumbHeight = $thumbImageinfo[1];
-  $thumbX1 = 0;
-  $thumbY1 = 0;
-  $thumbX2 = $thumbWidth;
-  $thumbY2 = $thumbHeight;
-  $thumbValues = array(
-    'x1' => 0,
-    'y1' => 0,
-    'x2' => 0,
-    'y2' => 0,
-    'width' => 0,
-    'height' => 0,
-  );
-  // If cropping a thumnail image.
-  if ($imageType == 'thumbnail') {
-    $formName = 'field_thumbnail_crop_rect';
-    $formID = 'field-thumbnail';
-    $formValue = 'field_thumbnail';
-    $aspectRatio = '1:1';
-    $resizable = 'false';
-    // original crops for thumbnail image.
-    if ($thumbWidth > $thumbHeight) {
-      // if landscape image
-      $thumbX1 = round(($thumbWidth - $thumbHeight) / 2);
-      $thumbX2 = round($thumbX1 + $thumbHeight);
-    }
-    elseif ($thumbHeight > $thumbWidth) {
-      // if portrait image.
-      $thumbY1 = round(($thumbHeight - $thumbWidth) / 2);
-      $thumbY2 = round($thumbY1 + $thumbWidth);
-    }
-  }
-  elseif ($imageType == 'large') {
-    $formName = 'field_large_image_crop_rect';
-    $formID = 'field-large-image';
-    $formValue = 'field_large_image';
-    $aspectRatio = '1.82:1';
-    $resizable = 'true';
-    // Original crops for large image.
-    $thumbCropHeight = round($thumbWidth / 1.82);
-    $thumbY1 = round(($thumbHeight / 2) - ($thumbCropHeight / 2));
-    $thumbY2 = round($thumbY1 + $thumbCropHeight);
-  }
-
-  if (isset($imageToCrop[LANGUAGE_NONE][0])) {
-    $items = field_get_items('node', $form['#node'], $formValue . '_crop_rect');
-    if ($items) {
-      // Get default crop values.
-      foreach ($items as $itemid) {
-        $item = field_collection_field_get_entity($itemid);
-      }
-      if ($item->field_x) {
-        // if an x value exists, get all the values.
-        getDefaults($items, $thumbValues, $imageType);
-      }
-      else {
-        // otherwise set default crop values.
-        setDefaults($form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, $thumbValues);
-      }
-    }
-    else {
-      // set default crop values.
-      setDefaults($form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, $thumbValues);
-    }
-  }
-  // Add the Javascript to the page.
-  // @TODO use a file instead of adding JS inline. Only pass configurations for the file to act upon.
-  drupal_add_js(
-    '(function ($) {
-    $(document).ready(function () {
-      // display thumbnail and large images
-      $( "div#' . $formID . '-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p><img id=\"' . $formValue . '\" src=\"' . $thumbUrl . '\" /></p>" );
-      // make fields readonly
-      $("#field-thumbnail-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
-      $("#field-large-image-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
-
-      var imageType = "' . $imageType . '";
-      var imageWidth = "' . $thumbValues['width'] . '";
-      var imageHeight = "' . $thumbValues['height'] . '";
-      if (imageType == "large") {
-        var imageWidthMin = 364;
-        var imageHeightMin = 200;
-      }
-      else {
-        var imageWidthMin = "' . $thumbValues['width'] . '";
-        var imageHeightMin = "' . $thumbValues['height'] . '";
-      }
-      if ((imageType == "large" && (imageWidth < 364 || imageHeight < 200)) || (imageType == "thumbnail" && imageWidth < 50)) {
-        $( "div#' . $formID . '-crop-rect-add-more-wrapper .fieldset-wrapper" ).append( "<p class=\"warning\">WARNING: THIS IMAGE IS SMALLER THAN THE RECOMMENDED MINIMUM AND WILL BE SCALED TO FIT IN THE APP.</p>" );
-      }
-      $("img#' . $formValue . '").imgAreaSelect({
-      x1: ' . $thumbValues['x1'] . ', y1: ' . $thumbValues['y1'] . ', x2: ' . $thumbValues['x2'] . ', y2: ' . $thumbValues['y2'] . ',
-      aspectRatio: "' . $aspectRatio . '",
-      persistent: true,
-      handles: true,
-      minWidth: imageWidthMin,
-      minHeight: imageHeightMin,
-      resizable: ' . $resizable . ',
-      onSelectEnd: function (img, selection) {
-        $("input[name=\"' . $formValue . '_crop_rect[und][0][field_x][und][0][value]\"]").val(selection.x1);
-        $("input[name=\"' . $formValue . '_crop_rect[und][0][field_y][und][0][value]\"]").val(selection.y1);
-        $("input[name=\"' . $formValue . '_crop_rect[und][0][field_x2][und][0][value]\"]").val(selection.x2);
-        $("input[name=\"' . $formValue . '_crop_rect[und][0][field_y2][und][0][value]\"]").val(selection.y2);
-        $("input[name=\"' . $formValue . '_crop_rect[und][0][field_width][und][0][value]\"]").val(selection.width);
-        $("input[name=\"' . $formValue . '_crop_rect[und][0][field_height][und][0][value]\"]").val(selection.height);
-        }
-      });
-    });
-    })(jQuery);',
-    array(
-      'type' => 'inline',
-      'scope' => 'footer',
-      'group' => JS_THEME,
-      'weight' => 15,
-    )
-  );
-}
-
-/**
- * Helper function to get crop defaults.
- */
-function getDefaults($items, &$thumbValues, $imageType) {
-  foreach ($items as $itemid) {
-    $item = field_collection_field_get_entity($itemid);
-    $thumbValues['x1'] = $item->field_x[LANGUAGE_NONE][0]['value'];
-    $thumbValues['y1'] = $item->field_y[LANGUAGE_NONE][0]['value'];
-    $thumbValues['x2'] = $item->field_x2[LANGUAGE_NONE][0]['value'];
-    $thumbValues['y2'] = $item->field_y2[LANGUAGE_NONE][0]['value'];
-    $thumbValues['width'] = $item->field_width[LANGUAGE_NONE][0]['value'];
-    $thumbValues['height'] = $item->field_height[LANGUAGE_NONE][0]['value'];
-  }
-}
-
-/**
- * Helper function to set crop defaults.
- */
-function setDefaults(&$form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, &$thumbValues) {
-  $thumbValues['x1'] = $thumbX1;
-  $form[$formName][LANGUAGE_NONE][0]['field_x'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x1'];
-  $thumbValues['y1'] = $thumbY1;
-  $form[$formName][LANGUAGE_NONE][0]['field_y'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y1'];
-  $thumbValues['x2'] = $thumbX2;
-  $form[$formName][LANGUAGE_NONE][0]['field_x2'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-  $thumbValues['y2'] = $thumbY2;
-  $form[$formName][LANGUAGE_NONE][0]['field_y2'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
-  if ($imageType == 'thumbnail') {
-    if ($thumbWidth > $thumbHeight) {
-      // if landscape image
-      $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
-      $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
-    }
-    elseif ($thumbHeight > $thumbWidth) {
-      // if portrait image
-      $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-      $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-    }
-    else {
-      // perfect square
-      $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-      $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-    }
-    $thumbValues['width'] = $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'];
-    $thumbValues['height'] = $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'];
-  }
-  elseif ($imageType == 'large') {
-    $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-    $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'] - $thumbValues['y1'];
-    $thumbValues['width'] = $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'];
-    $thumbValues['height'] = $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'];
-  }
-}
-
-/**
  *  Implements hook_node_view().
  *
  *  We do a SOLR field lookup here to view the object with the complete data.
  *  Just attach the SOLR data to the $node object for viewing.
  */
 function aicapp_node_view($node, $view_mode, $langcode) {
-  if ($node->type == 'object' && $node->field_object_id) {
+  if ($node->type == AICAPP_TYPE_OBJECT && $node->field_object_id) {
     $ref_num = $node->field_object_id[LANGUAGE_NONE][0]['value'];
     if (!empty($ref_num)) {
       $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $ref_num);
@@ -1533,7 +1565,7 @@ function aicapp_node_view($node, $view_mode, $langcode) {
       }
     }
   }
-  if ($node->type == 'gallery') {
+  if ($node->type == AICAPP_TYPE_GALLERY) {
     if (!empty($node->field_gallery_id[LANGUAGE_NONE])) {
       $gallery_id = $node->field_gallery_id[LANGUAGE_NONE][0]['safe_value'];
     }
@@ -1766,8 +1798,9 @@ function aicapp_cron() {
     aicapp_gendata_form_submit($fm, $fm2);
   }
   // At 1am - assuming Cron is running every hour.
-  if (date('G') == 2) {
+  if (date('G') == 2 || !variable_get('aicapp_remote_entities_imported', 0)) {
     aicapp_process_remote_object();
+    variable_set('aicapp_remote_entities_imported', 1);
   }
 }
 
@@ -1801,10 +1834,10 @@ function aicapp_node_presave($node) {
   // A general flag to indicate there are changes to be published.
   variable_set('aicapp_pending', 1);
 
-  if ($node->type == 'tour') {
+  if ($node->type == AICAPP_TYPE_TOUR) {
     aicapp_check_for_object_problems($node);
   }
-  if ($node->type == 'object') {
+  if ($node->type == AICAPP_TYPE_OBJECT) {
     if (isset($node->field_object_id[LANGUAGE_NONE][0]['value'])) {
       $ref_num = $node->field_object_id[LANGUAGE_NONE][0]['value'];
       if (!empty($ref_num)) {
@@ -1833,6 +1866,7 @@ function aicapp_check_for_object_problems($node) {
   $noaudio = array();
   $noImage = array();
   $inGallery = array();
+  // App V1 - To be deprecated. field_stops2 will no longer be used.
   if (!empty($node->field_stops2[LANGUAGE_NONE][0]['entity']->field_t_object[LANGUAGE_NONE])) {
     $stops = $node->field_stops2[LANGUAGE_NONE][0]['entity']->field_t_object[LANGUAGE_NONE];
     foreach ($stops as $stop) {
@@ -1908,7 +1942,7 @@ function aicapp_object_noimg() {
   $query->join('node', 'n', 'n.nid = fi.entity_id');
   $query->fields('fi', array('entity_id', 'field_object_id_value'))
     ->limit(10)
-    ->condition('fi.bundle', 'object')
+    ->condition('fi.bundle', AICAPP_TYPE_OBJECT)
     ->condition('n.status', 1)
     ->orderBy('field_object_id_value');
   $result = $query->execute();
@@ -1994,6 +2028,58 @@ function aicapp_admin() {
     '#default_value' => variable_get('aicapp_image_thumb_crop', ' !112,112'),
     '#description' => t('Minimum crop dimensions for the thumnail image.'),
   );
+  $form['aicapp_image_thumb_crop_aspect'] = array(
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#maxlength' => 25,
+    '#title' => t('Thumbnail crop aspect ratio.'),
+    '#default_value' => variable_get('aicapp_image_thumb_crop_aspect', '1:1'),
+    '#description' => t('The aspect ratio of the tool used to crop.'),
+  );
+  $form['aicapp_image_thumb_crop_lock'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Thumbnail crop aspect ratio can be changed?'),
+    '#default_value' => (variable_get('aicapp_image_thumb_crop_lock', 1)) ? 1 : 0,
+    '#description' => t('Whether or not to lock the crop dimensions to this aspect ratio.'),
+  );
+  $form['aicapp_image_large_crop_aspect'] = array(
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#maxlength' => 25,
+    '#title' => t('Full size image crop aspect ratio.'),
+    '#default_value' => variable_get('aicapp_image_large_crop_aspect', '1.82:1'),
+    '#description' => t('.'),
+  );
+  $form['aicapp_image_large_crop_lock'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Full size image crop aspect ratio can be changed?'),
+    '#default_value' => (variable_get('aicapp_image_large_crop_lock', 0)) ? 1 : 0,
+    '#description' => t('Whether or not to lock the crop dimensions to this aspect ratio.'),
+  );
+
+  $form['aicapp_data'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Data migration'),
+    '#tree' => TRUE,
+  );
+  $options = array(
+    'audio' => t('Audio'),
+    'object' => t('Objects'),
+    'tour' => t('Tours'),
+  );
+  $form['aicapp_data']['migration_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Select which Content type to migrate:'),
+    '#options' => $options,
+    '#default_value' => 'audio',
+    '#description' => t('Choose a content type to migrate data from.'),
+  );
+  $form['aicapp_data']['migration_submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Migrate Data'),
+  );
   return system_settings_form($form);
 }
 
@@ -2002,15 +2088,14 @@ function aicapp_admin() {
  */
 function aicapp_admin_validate($form, &$form_state) {
   $query = $form_state['values']['aicapp_artwork_query'];
-  if (substr($query, 0, 7) !== "http:// " && substr($query, 0, 8) !== "https:// ") {
+  if (substr($query, 0, 7) !== "http://" && substr($query, 0, 8) !== "https://") {
     form_set_error('aicapp_artwork_query', t('You must enter a URL.'));
   }
   if (strpos($query, '{{term}}') === FALSE) {
     form_set_error('aicapp_artwork_query', t('You must include {{term}} somewhere in your URL.'));
   }
-
   $query = $form_state['values']['aicapp_gallery_query'];
-  if (substr($query, 0, 7) !== "http:// " && substr($query, 0, 8) !== "https:// ") {
+  if (substr($query, 0, 7) !== "http://" && substr($query, 0, 8) !== "https://") {
     form_set_error('aicapp_gallery_query', t('You must enter a URL.'));
   }
   if (strpos($query, '{{term}}') === FALSE) {
@@ -2020,6 +2105,308 @@ function aicapp_admin_validate($form, &$form_state) {
   if (!filter_var($form_state['values']['aicapp_image_server_url'], FILTER_VALIDATE_URL)) {
     form_set_error('aicapp_image_server_url', t('You must provide a valid URL for the Image Server.'));
   }
+  if (strpos($form_state['values']['aicapp_image_large_crop_aspect'], ':') === FALSE) {
+    $form_state['values']['aicapp_image_large_crop_aspect'] = $form_state['values']['aicapp_image_large_crop_aspect'] . ':1';
+  }
+  if (strpos($form_state['values']['aicapp_image_thumb_crop_aspect'], ':') === FALSE) {
+    $form_state['values']['aicapp_image_thumb_crop_aspect'] = $form_state['values']['aicapp_image_thumb_crop_aspect'] . ':1';
+  }
+  // Save the variable as a lowercase string for use in JS.
+  if ($form_state['values']['aicapp_image_thumb_crop_lock'] == FALSE) {
+    // Leave as lowercase for use in JS
+    $form_state['values']['aicapp_image_thumb_crop_lock'] = false;
+  }
+  else {
+    $form_state['values']['aicapp_image_thumb_crop_lock'] = 'true';
+  }
+  // Save the variable as a lowercase string for use in JS.
+  if ($form_state['values']['aicapp_image_large_crop_lock'] == FALSE) {
+    // Leave as lowercase for use in JS
+    $form_state['values']['aicapp_image_large_crop_lock'] = false;
+  }
+  else {
+    $form_state['values']['aicapp_image_large_crop_lock'] = 'true';
+  }
+  if ($form_state['clicked_button']['#value'] === 'Migrate Data') {
+    global $language;
+    $type = $form_state['values']['aicapp_data']['migration_type'];
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+         ->entityCondition('bundle', $type, '=');
+    switch ($type) {
+      default:
+        drupal_set_message('There were no items to migrate');
+      break;
+      case 'audio':
+        $query->propertyCondition('language', LANGUAGE_NONE, '=');
+        $result = $query->execute();
+        if (!empty($result['node'])) {
+          $count = count($result['node']);
+          if ($count < 1) {
+            drupal_set_message('There were no audio items to migrate');
+            break;
+          }
+          foreach ($result['node'] as $nid => $obj) {
+            $node = node_load($nid);
+            $node->language = $language->language;
+            node_save($node);
+          }
+          drupal_set_message('All audio nodes have been set to English if no language had been set.');
+
+        }
+        break;
+
+      case 'object':
+        // Load all objects that have no audio commentary items.
+        $query->addTag('no_commentary_items');
+        $result = $query->execute();
+        if (!empty($result['node'])) {
+          $i = 0;
+          foreach ($result['node'] as $nid => $obj) {
+            $changed = FALSE;
+            $to_add = array();
+            $node = node_load($nid);
+            $found = array(
+              'field_object_selector_numbers' => NULL,
+              'field_object_selector_number' => NULL,
+              'field_object_audio' => NULL,
+            );
+            // Check for field_object_selector_numbers, field_object_selector_number, and field_object_audio
+            if (!empty($node->field_object_selector_numbers[LANGUAGE_NONE])) {
+              $found['field_object_selector_numbers'] = $node->field_object_selector_numbers[LANGUAGE_NONE];
+            }
+            if (!empty($node->field_object_selector_number[LANGUAGE_NONE])) {
+              $found['field_object_selector_number'] = $node->field_object_selector_number[LANGUAGE_NONE];
+            }
+            if (!empty($node->field_object_audio[LANGUAGE_NONE])) {
+              // Uses 'nid' as value key instead of 'value'
+              $found['field_object_audio'] = $node->field_object_audio[LANGUAGE_NONE];
+            }
+            // In terms of selector numbers, there are 3 cases.
+            $count_multi = count($found['field_object_selector_numbers']);
+            $count_audio = count($found['field_object_audio']);
+            if ($count_multi === 1) {
+              // One of each, make sure they are the same.
+              if ($found['field_object_selector_number'] &&
+                $found['field_object_selector_number'][0]['value'] === $found['field_object_selector_numbers'][0]['value']) {
+
+
+                // Numbers match, there is 1 matching selector being used.
+                $to_add[$i]['selector'][] = $found['field_object_selector_number'][0]['value'];
+                if ($count_audio) {
+                  foreach ($found['field_object_audio'] as $k => $v) {
+                    $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
+                  }
+                }
+                else {
+                  // No audio found unset this selector to add.
+                  unset($to_add[$i]['selector']);
+                }
+              }
+              else {
+                // Number will take precendence.
+                $to_add[$i]['selector'][] = $found['field_object_selector_number'][0]['value'];
+                $to_add[$i]['selector'][] = $found['field_object_selector_numbers'][LANGUAGE_NONE][0]['value'];
+                // Multi and single do not match. Check audio count.
+                if ($count_audio > 1) {
+                  foreach ($found['field_object_audio'] as $k => $v) {
+                    $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
+                  }
+
+                }
+                elseif ($count_audio === 1) {
+                  $to_add[$i]['audio'][] = $found['field_object_audio'][0]['nid'];
+                  unset($to_add[$i]['selector'][1]);
+                }
+                else {
+                  // No audio found unset this selector to add.
+                  unset($to_add[$i]['selector']);
+                }
+              }
+            }
+            elseif ($count_multi > 1) {
+              foreach ($found['field_object_selector_numbers'][LANGUAGE_NONE] as $k => $v) {
+                $to_add[$i]['selector'][] = $found['field_object_selector_numbers'][$k]['value'];
+              }
+              if ($count_audio) {
+                foreach ($found['field_object_audio'][LANGUAGE_NONE] as $k => $v) {
+                  $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
+                }
+              }
+              else {
+                unset($to_add[$i]['selector']);
+              }
+            }
+            elseif ($found['field_object_selector_number']) {
+              // No multiple count but found one selector
+              $to_add[$i]['selector'][] = $found['field_object_selector_number'][0]['value'];
+              if ($count_audio) {
+                foreach ($found['field_object_audio'] as $k => $v) {
+                  $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
+                }
+              }
+            }
+            else {
+              $i++;
+              continue;
+            }
+            // Check if there are currently audio commentary items.
+            if (!empty($node->field_audio_commentary[LANGUAGE_NONE])) {
+              foreach ($node->field_audio_commentary[LANGUAGE_NONE] as $key => $value) {
+                $field_collection_item_values[] = $value['value'];
+              }
+            }
+            // Add the new audio commentary
+            if (!empty($to_add[$i]) && !empty($to_add[$i]['audio']) && empty($field_collection_item_values)) {
+              foreach ($to_add[$i]['audio'] as $k => $audio_id) {
+                // Setup the values in the structure expected by the field_collection entity.
+                $item_values = array(
+                  'field_name' => 'field_audio_commentary',
+                  'field_audio_commentary_audio' => array(
+                    LANGUAGE_NONE => array(array(
+                      'target_id' => $audio_id
+                    )),
+                  ),
+                );
+                if (isset($to_add[$i]['selector'][$k])) {
+                  $item_values['field_object_selector_number'] = array(
+                    LANGUAGE_NONE => array(array(
+                      'value' => $to_add[$i]['selector'][$k]
+                    ))
+                  );
+                }
+                $fc_item = entity_create('field_collection_item', $item_values);
+                $fc_item->setHostEntity('node', $node);
+                $fc_item->save();
+              }
+              $changed = TRUE;
+            }
+            if ($changed === TRUE) {
+              node_save($node);
+            }
+            $i++;
+          }
+          drupal_set_message('All object nodes have been set to English if no language had been set.');
+
+        }
+        break;
+
+      case 'tour':
+        // Load all tous.
+        $query->addTag('no_tour_stop');
+        // Five at a time.
+        $query->range(0, 5);
+        $result = $query->execute();
+        if (!empty($result['node'])) {
+          $i = 0;
+          foreach ($result['node'] as $nid => $obj) {
+            $changed = FALSE;
+            $to_add = array();
+            $node = node_load($nid);
+            $found = array(
+              'field_t_object' => NULL,
+              'field_t_audio' => NULL,
+              'field_t_audio_bumper' => NULL,
+            );
+
+            // Check for field_object_selector_numbers, field_object_selector_number, and field_object_audio
+            if (!empty($node->field_stops2[LANGUAGE_NONE])) {
+              $ids = array();
+              foreach ($node->field_stops2[LANGUAGE_NONE] as $key => $value) {
+                $ids[] = $value['value'];
+              }
+              $stops = field_collection_item_load_multiple($ids);
+              $stops = current($stops);
+              foreach ($found as $field => $n) {
+                if (!isset($stops->{$field}[LANGUAGE_NONE])) {
+                  continue;
+                }
+                foreach ($stops->{$field}[LANGUAGE_NONE] as $id => $stop) {
+                  $found[$field][] = $stop['nid'];
+                }
+              }
+            }
+            // In terms of selector numbers, there are 3 cases.
+            $count_object = count($found['field_t_object']);
+            $count_audio = count($found['field_t_audio']);
+            $count_bumper = count($found['field_t_audio_bumper']);
+            if ($count_object > $count_audio) {
+
+            }
+            elseif ($count_object < $count_audio) {
+
+            }
+            // Check if there are currently audio commentary items.
+            if (!empty($node->field_tour_stops[LANGUAGE_NONE])) {
+              foreach ($node->field_tour_stops[LANGUAGE_NONE] as $key => $value) {
+                $field_collection_item_values[] = $value['value'];
+              }
+            }
+            // Add the new audio commentary
+            if (!empty($found['field_t_audio']) && empty($field_collection_item_values)) {
+              foreach ($found['field_t_audio'] as $k => $audio_id) {
+                // Setup the values in the structure expected by the field_collection entity.
+                $item_values = array(
+                  'field_name' => 'field_tour_stops',
+                  'field_t_object' => array(
+                    LANGUAGE_NONE => array(array(
+                      'target_id' => $audio_id,
+                    )),
+                  ),
+                );
+                if (isset($found['field_t_audio'][$k])) {
+                  $item_values['field_t_audio'] = array(
+                    LANGUAGE_NONE => array(array(
+                      'target_id' => $found['field_t_audio'][$k],
+                    ))
+                  );
+                }
+                if (isset($found['field_t_audio_bumper'][$k])) {
+                  $item_values['field_t_audio_bumper'] = array(
+                    LANGUAGE_NONE => array(array(
+                      'target_id' => $found['field_t_audio_bumper'][$k],
+                    ))
+                  );
+                }
+                $fc_item = entity_create('field_collection_item', $item_values);
+                $fc_item->setHostEntity('node', $node);
+                $fc_item->save();
+              }
+              $changed = TRUE;
+            }
+
+            // Set language to en.
+            if ($node->language === LANGUAGE_NONE) {
+              $node->language = $language->language;
+              $changed = TRUE;
+            }
+            if ($changed === TRUE) {
+              node_save($node);
+            }
+            $i++;
+          }
+          drupal_set_message('All tour nodes have been set to English if no language had been set, and tour stops have been udpated.');
+
+        }
+        break;
+    }
+  }
+}
+
+/**
+ * Implements hook_query_TAG_alter()
+ */
+function aicapp_query_no_commentary_items_alter(QueryAlterableInterface $query) {
+  $query->leftJoin('field_data_field_audio_commentary', 'o', 'node.nid = o.entity_id');
+  $query->isNull('o.field_audio_commentary_value');
+}
+
+/**
+ * Implements hook_query_TAG_alter()
+ */
+function aicapp_query_no_tour_stops_items_alter(QueryAlterableInterface $query) {
+  $query->leftJoin('field_data_field_tour_stops', 'o', 'node.nid = o.entity_id');
+  $query->isNull('o.field_tour_stops_value');
 }
 
 /**
@@ -2069,7 +2456,7 @@ function aicapp_process_remote_object() {
   $limit_count = 50;
   $max_page = 10;
   $page = 'page=';
-  // Define what we're going to import
+  // Define what we're going to import.
   $objects = array(
     AICAPP_TYPE_EVENT => array(
       'endpoint' => AICAPP_API_HOST . AICAPP_EVENT_API_ENDPOINT,
@@ -2081,188 +2468,193 @@ function aicapp_process_remote_object() {
     ),
   );
   $remote_objects = array();
-  // Fetch all recent remote objects.
-  foreach ($objects as $type => &$remote) {
-    $page_start = 2;
-    $url = $remote['endpoint'];
-    // This will require first discovering which events and exhibitions are
-    // active by using paging in the API.
-    $discover = file_get_contents($url . '?' . $limit . $limit_count);
-    // If connection not available.
-    if (!$discover) {
-      return;
-    }
-    $json = json_decode($discover, TRUE);
-    if (isset($json['data'])) {
-      foreach ($json['data'] as $remote_record) {
-        if ($type === AICAPP_TYPE_EXHIBITION) {
-          // Skip any that are not active
-          if (!$remote_record['is_active']) {
-            continue;
-          }
-        }
-        else if ($type === AICAPP_TYPE_EVENT) {
-          // Skip any that have end dates in the past.
-          if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
-            continue;
-          }
-        }
-        $remote['remote'][$remote_record['id']] = $remote_record;
+  try {
+    // Fetch all recent remote objects.
+    foreach ($objects as $type => &$remote) {
+      $page_start = 2;
+      $url = $remote['endpoint'];
+      // This will require first discovering which events and exhibitions are
+      // active by using paging in the API.
+      $discover = file_get_contents($url . '?' . $limit . $limit_count);
+      // If connection not available.
+      if (!$discover) {
+        return;
       }
-    }
-    // Now loop though up to $max_page adding records that are active and
-    // having an end date in the past.
-    if (isset($json['pagination']) && isset($json['pagination']['next_url'])) {
-      $loop_url = $json['pagination']['next_url'];
-      while ($page_start <= $max_page) {
-        $loop_json = file_get_contents($loop_url);
-        if ($loop_json) {
-          $decoded_loop = json_decode($loop_json, TRUE);
-          if (isset($decoded_loop['data'])) {
-            foreach ($decoded_loop['data'] as $remote_record) {
-              if ($type === AICAPP_TYPE_EXHIBITION) {
-                // Skip any that are not active
-                if (!$remote_record['is_active']) {
-                  continue;
-                }
-              }
-              else if ($type === AICAPP_TYPE_EVENT) {
-                // Skip any that have end dates in the past.
-                if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
-                  continue;
-                }
-              }
-              $remote['remote'][$remote_record['id']] = $remote_record;
+      $json = json_decode($discover, TRUE);
+      if (isset($json['data'])) {
+        foreach ($json['data'] as $remote_record) {
+          if ($type === AICAPP_TYPE_EXHIBITION) {
+            // Skip any that are not active
+            if (!$remote_record['is_active']) {
+              continue;
             }
           }
-          $loop_url = isset($decoded_loop['pagination']) ? $decoded_loop['pagination']['next_url'] : NULL;
-        }
-        $page_start++;
-      }
-    }
-
-    // Fetch all locally saved objects using the key of remote ids.
-    $remote['local'] = array();
-    $remote['to_import'] = array_keys($remote['remote']);
-
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', $type, '=')
-      ->fieldCondition('field_imported_object_id', 'value', $remote['to_import'], 'IN');
-    $result = $query->execute();
-    if (isset($result['node'])) {
-      $nids = array_keys($result['node']);
-      $remote['local'] = entity_load('node', $nids);
-    }
-    // Loop through cached objects and save updated values from API.
-    foreach ($remote['local'] as $local_node) {
-      // Load an entity.
-      $ewrapper = entity_metadata_wrapper('node', $local_node);
-      $remote_id = $ewrapper->field_imported_object_id->value();
-
-      if (empty($remote['remote'][$remote_id])) {
-        continue;
-      }
-      // Update node fields with values from remote enities, but only if remote
-      // updated date is more recent than local date.
-      // Update all local objects that have local update date previous to last
-      // updated remote object dates.
-      $to_import = $remote['remote'][$remote_id];
-      // Ttile
-      $ewrapper->title->set($to_import['title']);
-      // Object ID
-      $ewrapper->field_imported_object_id->set($to_import['id']);
-      // Object JSON
-      $ewrapper->field_imported_object->set(json_encode($to_import));
-
-      if ($type === AICAPP_TYPE_EXHIBITION) {
-        // Description
-        $ewrapper->field_exhibit_description->set($to_import['description']);
-        // Is exhibition active
-        $current_state = $ewrapper->field_exhibit_is_active->value();
-        $ewrapper->field_exhibit_is_active->set($to_import['is_active']);
-        if ($current_state && !$to_import['is_active']) {
-          // Unpubish and demote this node.
-          $ewrapper->status->set(0);
-          $ewrapper->promote->set(0);
-        }
-        // Exhibition dates.
-        $ewrapper->field_exhibit_dates->set($to_import['dates']);
-      }
-      else if ($type === AICAPP_TYPE_EVENT) {
-        $start = new DateTime($to_import['start_at']);
-        $end = new DateTime($to_import['end_at']);
-        // Event start and end dates
-        $ewrapper->field_event_dates->set(array(
-          'value' => $start->format('Y-m-d H:i:s'),
-          'value2' => $end->format('Y-m-d H:i:s'),
-        ));
-        if (strtotime($to_import['end_at']) < strtotime('now')) {
-          // Unpubish and demote this node.
-          $ewrapper->status->set(0);
-          $ewrapper->promote->set(0);
+          else if ($type === AICAPP_TYPE_EVENT) {
+            // Skip any that have end dates in the past.
+            if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
+              continue;
+            }
+          }
+          $remote['remote'][$remote_record['id']] = $remote_record;
         }
       }
-      // Now just save the wrapper and the entity
-      $ewrapper->save();
-      // Get the key value for this remote id.
-      $remote_key = array_search($remote_id, $remote['to_import']);
-      // Unset this item from the import stack.
-      if (!empty($remote['to_import'][$remote_key])) {
-        unset($remote['to_import'][$remote_key]);
+      // Now loop though up to $max_page adding records that are active and
+      // having an end date in the past.
+      if (isset($json['pagination']) && isset($json['pagination']['next_url'])) {
+        $loop_url = $json['pagination']['next_url'];
+        while ($page_start <= $max_page) {
+          $loop_json = file_get_contents($loop_url);
+          if ($loop_json) {
+            $decoded_loop = json_decode($loop_json, TRUE);
+            if (isset($decoded_loop['data'])) {
+              foreach ($decoded_loop['data'] as $remote_record) {
+                if ($type === AICAPP_TYPE_EXHIBITION) {
+                  // Skip any that are not active
+                  if (!$remote_record['is_active']) {
+                    continue;
+                  }
+                }
+                else if ($type === AICAPP_TYPE_EVENT) {
+                  // Skip any that have end dates in the past.
+                  if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
+                    continue;
+                  }
+                }
+                $remote['remote'][$remote_record['id']] = $remote_record;
+              }
+            }
+            $loop_url = isset($decoded_loop['pagination']) ? $decoded_loop['pagination']['next_url'] : NULL;
+          }
+          $page_start++;
+        }
+      }
+
+      // Fetch all locally saved objects using the key of remote ids.
+      $remote['local'] = array();
+      $remote['to_import'] = array_keys($remote['remote']);
+
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', $type, '=')
+        ->fieldCondition('field_imported_object_id', 'value', $remote['to_import'], 'IN');
+      $result = $query->execute();
+      if (isset($result['node'])) {
+        $nids = array_keys($result['node']);
+        $remote['local'] = entity_load('node', $nids);
+      }
+      // Loop through cached objects and save updated values from API.
+      foreach ($remote['local'] as $local_node) {
+        // Load an entity.
+        $ewrapper = entity_metadata_wrapper('node', $local_node);
+        $remote_id = $ewrapper->field_imported_object_id->value();
+
+        if (empty($remote['remote'][$remote_id])) {
+          continue;
+        }
+        // Update node fields with values from remote enities, but only if remote
+        // updated date is more recent than local date.
+        // Update all local objects that have local update date previous to last
+        // updated remote object dates.
+        $to_import = $remote['remote'][$remote_id];
+        // Ttile
+        $ewrapper->title->set($to_import['title']);
+        // Object ID
+        $ewrapper->field_imported_object_id->set($to_import['id']);
+        // Object JSON
+        $ewrapper->field_imported_object->set(json_encode($to_import));
+
+        if ($type === AICAPP_TYPE_EXHIBITION) {
+          // Description
+          $ewrapper->field_exhibit_description->set($to_import['description']);
+          // Is exhibition active
+          $current_state = $ewrapper->field_exhibit_is_active->value();
+          $ewrapper->field_exhibit_is_active->set($to_import['is_active']);
+          if ($current_state && !$to_import['is_active']) {
+            // Unpubish and demote this node.
+            $ewrapper->status->set(0);
+            $ewrapper->promote->set(0);
+          }
+          // Exhibition dates.
+          $ewrapper->field_exhibit_dates->set($to_import['dates']);
+        }
+        else if ($type === AICAPP_TYPE_EVENT) {
+          $start = new DateTime($to_import['start_at']);
+          $end = new DateTime($to_import['end_at']);
+          // Event start and end dates
+          $ewrapper->field_event_dates->set(array(
+            'value' => $start->format('Y-m-d H:i:s'),
+            'value2' => $end->format('Y-m-d H:i:s'),
+          ));
+          if (strtotime($to_import['end_at']) < strtotime('now')) {
+            // Unpubish and demote this node.
+            $ewrapper->status->set(0);
+            $ewrapper->promote->set(0);
+          }
+        }
+        // Now just save the wrapper and the entity
+        $ewrapper->save();
+        // Get the key value for this remote id.
+        $remote_key = array_search($remote_id, $remote['to_import']);
+        // Unset this item from the import stack.
+        if (!empty($remote['to_import'][$remote_key])) {
+          unset($remote['to_import'][$remote_key]);
+        }
+      }
+      // Add any new remote objects that do not exist locally.
+      foreach ($remote['to_import'] as $remote_id) {
+        if (empty($remote['remote'][$remote_id])) {
+          continue;
+        }
+        // Update node fields with values from remote enities, but only if remote
+        // updated date is more recent than local date.
+        $to_import = $remote['remote'][$remote_id];
+        // Creating a new object $node and setting its 'type' and uid property.
+        $values = array(
+          'type' => $type,
+          'uid' => 1,
+          'status' => 1,
+          'promote' => 0,
+        );
+        $entity = entity_create('node', $values);
+
+        // The entity is now created, but we have not yet simplified use of it.
+        // Now create an entity_metadata_wrapper around the new node entity
+        // to make getting and setting values easier.
+        $ewrapper = entity_metadata_wrapper('node', $entity);
+        // Ttile.
+        $ewrapper->title->set($to_import['title']);
+        // Object ID.
+        $ewrapper->field_imported_object_id->set($to_import['id']);
+        // Object JSON.
+        $ewrapper->field_imported_object->set(json_encode($to_import));
+
+        if ($type === AICAPP_TYPE_EXHIBITION) {
+          // Description.
+          $ewrapper->field_exhibit_description->set($to_import['description']);
+          // Is exhibition active.
+          $ewrapper->field_exhibit_is_active->set($to_import['is_active']);
+          // Exhibition dates..
+          $ewrapper->field_exhibit_dates->set($to_import['dates']);
+        }
+        elseif ($type === AICAPP_TYPE_EVENT) {
+          $start = new DateTime($to_import['start_at']);
+          $end = new DateTime($to_import['end_at']);
+          // Event start and end dates.
+          $ewrapper->field_event_dates->set(array(
+            'value' => $start->format('Y-m-d H:i:s'),
+            'value2' => $end->format('Y-m-d H:i:s'),
+          ));
+          // Description.
+          $ewrapper->field_event_description->set($to_import['description']);
+          // Short Description.
+          $ewrapper->field_event_short_description->set($to_import['short_description']);
+        }
+        // Now just save the wrapper and the entity.
+        $ewrapper->save();
       }
     }
-    // Add any new remote objects that do not exist locally.
-    foreach ($remote['to_import'] as $remote_id) {
-      if (empty($remote['remote'][$remote_id])) {
-        continue;
-      }
-      // Update node fields with values from remote enities, but only if remote
-      // updated date is more recent than local date.
-      $to_import = $remote['remote'][$remote_id];
-      // creating a new object $node and setting its 'type' and uid property
-      $values = array(
-        'type' => $type,
-        'uid' => 1,
-        'status' => 1,
-        'promote' => 0,
-      );
-      $entity = entity_create('node', $values);
-
-      // The entity is now created, but we have not yet simplified use of it.
-      // Now create an entity_metadata_wrapper around the new node entity
-      // to make getting and setting values easier
-      $ewrapper = entity_metadata_wrapper('node', $entity);
-      // Ttile
-      $ewrapper->title->set($to_import['title']);
-      // Object ID
-      $ewrapper->field_imported_object_id->set($to_import['id']);
-      // Object JSON
-      $ewrapper->field_imported_object->set(json_encode($to_import));
-
-      if ($type === AICAPP_TYPE_EXHIBITION) {
-        // Description
-        $ewrapper->field_exhibit_description->set($to_import['description']);
-        // Is exhibition active
-        $ewrapper->field_exhibit_is_active->set($to_import['is_active']);
-        // Exhibition dates.
-        $ewrapper->field_exhibit_dates->set($to_import['dates']);
-      }
-      else if ($type === AICAPP_TYPE_EVENT) {
-        $start = new DateTime($to_import['start_at']);
-        $end = new DateTime($to_import['end_at']);
-        // Event start and end dates
-        $ewrapper->field_event_dates->set(array(
-          'value' => $start->format('Y-m-d H:i:s'),
-          'value2' => $end->format('Y-m-d H:i:s'),
-        ));
-        // Description
-        $ewrapper->field_event_description->set($to_import['description']);
-        // Short Description
-        $ewrapper->field_event_short_description->set($to_import['short_description']);
-      }
-      // Now just save the wrapper and the entity
-      $ewrapper->save();
-    }
+  }
+  catch (Exception $e) {
+    drupal_set_message(t("An error occurred when importing events: " . $e), 'error');
   }
 }
