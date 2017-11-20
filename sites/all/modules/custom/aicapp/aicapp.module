@@ -758,7 +758,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       $tour->stops = aicapp_collect_tour_stops($tour->stops);
     }
     // App v2 -- process all tour stops..
-    if (!empty($tour->tour_stop_items)) {
+    if (isset($tour->tour_stop_items)) {
       $tour->tour_stops = $tour->tour_stop_items;
       unset($tour->tour_stop_items);
     }
