@@ -29,10 +29,19 @@ function aicapp_init() {
   define('AICAPP_TYPE_AUDIO', 'audio');
   define('AICAPP_TYPE_OBJECT', 'object');
   define('AICAPP_TYPE_GALLERY', 'gallery');
+  define('AICAPP_TYPE_PAGE', 'page');
   define('AICAPP_TYPE_TOUR', 'tour');
   define('AICAPP_TYPE_EVENT', 'event');
   define('AICAPP_TYPE_EXHIBITION', 'exhibition');
   define('AICAPP_TYPE_MAP_ANNOTATION', 'map_annotation');
+  define('AICAPP_DATA_AGGREGATOR', 'aic_data_aggregrator');
+  define('AICAPP_DATA_SOLR', 'aic_data_solr');
+  define('AICAPP_DATA_API_HOST', rtrim(variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'), '/'));
+  define('AICAPP_DATA_API_ENDPOINT_EVENT', variable_get('aicapp_data_endpoint_events', '/api/v1/events'));
+  define('AICAPP_DATA_API_ENDPOINT_EXHIBITION', variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'));
+  define('AICAPP_DATA_API_ENDPOINT_ARTWORKS', variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'));
+  define('AICAPP_DATA_API_ENDPOINT_GALLERIES', variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'));
+  define('AICAPP_DATA_API_ENDPOINT_IMAGES', variable_get('aicapp_data_endpoint_images', '/api/v1/images'));
 }
 
 /**
@@ -120,11 +129,21 @@ function aicapp_add_object($object_id = 0) {
   $collect = array();
 
   foreach ($objectidArray as $object_id) {
-    // Query SOLR to get the object.
-    $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
-    if ($result['response']['numFound'] > 0) {
+
+    // An object ID was passed and is not empty, query based on object ID.
+    $options = array(
+      'ids' => array($object_id),
+      'key' => 'object_id',
+    );
+    $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+    // Query the data aggregrator.
+    $results = _aicapp_fetch_data($url, $options);
+    if (!empty($results[0])) {
+      // // Query SOLR to get the object.
+      // $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
+      // if ($result['response']['numFound'] > 0) {
       // Creates the new object or updates existing if it finds it in our Db.
-      $nid = aicappSaveNode($result['response']['docs'][0], AICAPP_TYPE_OBJECT);
+      $nid = aicappSaveNode($results[0], AICAPP_TYPE_OBJECT);
       $object = '<strong>Object ' . $object_id . ' saved.</strong><br />';
       $object .= l(t('View object'), '/node/' . $nid) . '<br /><br />';
       $collect[] = $object;
@@ -360,7 +379,7 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
   $locations = array();
   $changed = array();
   foreach ($objects as $key => $object) {
-    _getSOLRdata($object);
+    aicapp_fetch_remote_artwork($object);
     // Check objects here to see if they recently went off display.
     // We send email notice in that case - (they may need to update a tour?)
     // First collect the ones marked not on display in current SOLR data.
@@ -463,7 +482,7 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
 
   $bad_obj_galleries = '';
   foreach ($objects as $object) {
-    _getSOLRdata($object, $object->object_id);
+    aicapp_fetch_remote_artwork($object, $object->object_id);
     $match = FALSE;
     if (isset($object->gallery_location)) {
       $match = array_search($object->gallery_location, $gals);
@@ -663,7 +682,10 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $audio_files = node_load_multiple(array(), array('type' => AICAPP_TYPE_AUDIO, 'status' => 1));
   // Load tours nodes.
   $tours = node_load_multiple(array(), array('type' => AICAPP_TYPE_TOUR));
-  // Load featured Events & Objects.
+  // Load map annontations that are published.
+  $map_annotations = node_load_multiple(array(), array('type' => AICAPP_TYPE_MAP_ANNOTATION, 'status' => 1));
+  // Load featured Events & Objects via an entity field query because we Only
+  // need a list of node IDs instead of entire objects.
   $query = new EntityFieldQuery();
   $results = $query
     ->entityCondition('entity_type', 'node')
@@ -673,8 +695,6 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     ->execute();
   // Load all featued nodes.
   $featured = isset($results['node']) ? node_load_multiple(array_keys($results['node'])) : array('node' => array());
-  // Load map annontations that are published.
-  $map_annotations = node_load_multiple(array(), array('type' => AICAPP_TYPE_MAP_ANNOTATION, 'status' => 1));
   // Strip out Drupal native stuff we don't need in the JSON output.
   foreach ($galleries as $gallery) {
     strip_drupal_from_node($gallery);
@@ -698,7 +718,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   }
   // Now we build up the objects array for JSON output.
   foreach ($objects as $key => $object) {
-    _getSOLRdata($object);
+    aicapp_fetch_remote_artwork($object);
     strip_drupal_from_node($object);
     // Only show objects that are in a gallery, and have lat/long values,
     // and that are published.
@@ -771,8 +791,10 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   }
   // Format featured events, tours and exhibitions.
   $featured_sorted = array();
-  foreach ($featured['node'] as $feature) {
-    $featured_sorted[$feature->type][] = $feature->nid;
+  if (!empty($featured['node'])) {
+    foreach ($featured['node'] as $feature) {
+      $featured_sorted[$feature->type][] = $feature->nid;
+    }
   }
   // Prepare to output JSON data.
   // Add all the entities to a single array for encoding.
@@ -840,8 +862,7 @@ function aicapp_collect_tour_stops($stops = array()) {
     foreach ($result as $item) {
       $objects[] = array('nid' => $item->field_t_object_nid, 'delta' => $item->delta);
     }
-
-    // now we should have 2 arrays of same length, sorted in order.
+    // Now we should have 2 arrays of same length, sorted in order.
     if (count($audio) == count($objects)) {
       for ($i = 0; $i < count($audio); $i++) {
         $full_stops[] = array(
@@ -868,7 +889,104 @@ function sort_objects_by_weight($a, $b) {
 /**
  * Add the SOLR data to the node.
  */
-function _getSOLRdata(&$object, $object_id = null) {
+function aicapp_fetch_remote_artwork(&$object, $object_id = NULL, $provider = AICAPP_DATA_SOLR) {
+  // For now, just return the same as before. Eventually switch to getting
+  // data from https://art-institute-of-chicago.github.io/data-aggregator.
+  if ($provider === AICAPP_DATA_SOLR) {
+    return _getSOLRdata($object, $object_id);
+  }
+  elseif ($provider === AICAPP_DATA_AGGREGATOR) {
+    return _aicapp_update_remote_artwork_data($object, $object_id);
+  }
+}
+
+/**
+ * Add the SOLR data to the node.
+ */
+function _aicapp_update_remote_artwork_data(&$object, $object_id = NULL) {
+  $entity = entity_metadata_wrapper('node', $object);
+  if (empty($object_id)) {
+    $object_id = $entity->field_object_id->value();
+    if (empty($object_id)) {
+      // If there is no object id, then we have a custom object.
+      // Reference values entered for object data.
+      $object->in_gallery = $entity->field_in_gallery->value();
+      $object->gallery_location = $entity->field_gallery_location->value();
+      $object->credit_line = $entity->field_credit_line->value();
+      $object->copyright_notice = $entity->field_copyright_notice->value();
+      if ($entity->field_artist_origin->value()) {
+        $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
+      }
+      else {
+        $object->artist_culture_place_delim = $entity->field_artist_name->value();
+      }
+      return;
+    }
+  }
+  // An object ID was passed and is not empty, query based on object ID.
+  $options = array(
+    'ids' => array($object_id),
+    'key' => 'object_id',
+  );
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  // Query the data aggregrator.
+  $results = _aicapp_fetch_data($url, $options);
+  if (!empty($results[0])) {
+    foreach ($results[0] as $key => $val) {
+      if ($key == 'date_range') {
+        $val = implode('-', $val);
+      }
+      if ($key != 'provenance_text' && $key != 'exhibition_history') {
+        $object->$key = $val;
+      }
+    }
+  }
+}
+
+/**
+ * Fetch data from the data aggregrator.
+ */
+function _aicapp_fetch_data($endpoint, $options = array()) {
+  $results = array();
+  $defaults = array(
+    'limit' => 'limit=1',
+    'fields' => array(),
+    'ids' => array(),
+  );
+  $options += $defaults;
+  $limit_count = 50;
+  $max_page = 10;
+  $url = $endpoint . '?' . $options['limit'];
+  if (!empty($options['fields'])) {
+    $url .= '&fields=' . implode(',', $options['fields']);
+  }
+  if (!empty($options['fields'])) {
+    $url .= '&ids=' . implode(',', $options['ids']);
+  }
+  $remote_objects = array();
+  try {
+    $connection = file_get_contents($url);
+    // If connection not available.
+    if (!$connection) {
+      return;
+    }
+    $json = json_decode($connection, TRUE);
+    if (isset($json['data'])) {
+      foreach ($json['data'] as $remote_record) {
+        $results[] = $remote_record;
+      }
+    }
+  }
+  catch (Exception $e) {
+
+  }
+  return $results;
+}
+
+/**
+ * Add the SOLR data to the node.
+ */
+function _getSOLRdata(&$object, $object_id = NULL) {
   $entity = entity_metadata_wrapper('node', $object);
   if (empty($object_id)) {
     $object_id = $entity->field_object_id->value();
@@ -902,7 +1020,7 @@ function _getSOLRdata(&$object, $object_id = null) {
 }
 
 /**
- * Clear out all the Drupal stuff from the node, so we can deliver bare JSON data.
+ * Clear out all the Drupal stuff from the node, so we can deliver JSON data.
  */
 function strip_drupal_from_node(&$node) {
   $to_unset = array(
@@ -918,18 +1036,22 @@ function strip_drupal_from_node(&$node) {
   }
   // Save the properties of the node before adding more.
   $properties = array_keys((array) $node);
-  // Translations available.
+  // List of node types that can be translated.
+  // Save the translations available.
   $translations = array();
   if (isset($node->translations) && isset($node->translations->data)) {
     $translations = $node->translations->data;
   }
-  if (!count($translations)) {
-    // Unset $node->translations property if no translations were found.
-    unset($node->translations);
+  $i18n_types = array(
+    AICAPP_TYPE_AUDIO, AICAPP_TYPE_TOUR,
+    AICAPP_TYPE_MAP_ANNOTATION, AICAPP_TYPE_PAGE,
+  );
+  if (in_array($node->type, $i18n_types)) {
+    // Create an empty translations property to store all translations.
+    $node->translations = array();
   }
   else {
-    // Empty $node->translations.
-    $node->translations = array();
+    unset($node->translations);
   }
   // Fields used in multiple content types, such as location and floor.
   // Location field.
@@ -980,6 +1102,58 @@ function strip_drupal_from_node(&$node) {
       $node->image_height = $node->field_image[LANGUAGE_NONE][0]['height'];
     }
   }
+  // Object & Tour thumnail image crop dimensions.
+  if (isset($node->field_thumbnail_crop_rect)) {
+    $node->thumbnail_crop_rect = array();
+    if (isset($node->field_thumbnail_crop_rect[LANGUAGE_NONE][0])) {
+      $items = field_get_items('node', $node, 'field_thumbnail_crop_rect');
+      foreach ($items as $itemid) {
+        $item = field_collection_field_get_entity($itemid);
+        if ($item->field_x) {
+          $node->thumbnail_crop_rect = array(
+            'x' => $item->field_x[LANGUAGE_NONE][0]['value'],
+            'y' => $item->field_y[LANGUAGE_NONE][0]['value'],
+            'width' => $item->field_width[LANGUAGE_NONE][0]['value'],
+            'height' => $item->field_height[LANGUAGE_NONE][0]['value'],
+          );
+          json_encode($node->thumbnail_crop_rect);
+        }
+      }
+    }
+  }
+  // Object & Tour thumbnail image url.
+  if (isset($node->field_thumbnail_image)) {
+    $node->thumbnail_full_path = '';
+    if (isset($node->field_thumbnail_image[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->thumbnail_full_path = $node->field_thumbnail_image[LANGUAGE_NONE][0]['safe_value'];
+    }
+  }
+  // Object & Tour large image crop dimensions.
+  if (isset($node->field_large_image_crop_rect)) {
+    $node->large_image_crop_rect = array();
+    if (isset($node->field_large_image_crop_rect[LANGUAGE_NONE][0])) {
+      $items = field_get_items('node', $node, 'field_large_image_crop_rect');
+      foreach ($items as $itemid) {
+        $item = field_collection_field_get_entity($itemid);
+        if ($item->field_x) {
+          $node->large_image_crop_rect = array(
+            'x' => $item->field_x[LANGUAGE_NONE][0]['value'],
+            'y' => $item->field_y[LANGUAGE_NONE][0]['value'],
+            'width' => $item->field_width[LANGUAGE_NONE][0]['value'],
+            'height' => $item->field_height[LANGUAGE_NONE][0]['value'],
+          );
+          json_encode($node->large_image_crop_rect);
+        }
+      }
+    }
+  }
+  // Object & Tour full size image url.
+  if (isset($node->field_large_image)) {
+    $node->large_image_full_path = '';
+    if (isset($node->field_large_image[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->large_image_full_path = $node->field_large_image[LANGUAGE_NONE][0]['safe_value'];
+    }
+  }
   // Fields that belong to only 1 content type.
   // General Info node field items.
   if (isset($node->field_museum_hours)) {
@@ -991,9 +1165,12 @@ function strip_drupal_from_node(&$node) {
   // General Info translations.
   if (!empty($node->museum_hours)) {
     foreach ($translations as $lang_key => $details) {
+      if ($lang_key === 'en') {
+        continue;
+      }
       $node->translations[] = array(
         'language' => $lang_key,
-        'museum_hours' => isset($node->field_museum_hours[$lang_key][0]['safe_value']) ? $node->field_museum_hours[$lang_key][0]['safe_value'] : $node->museum_hours,
+        'museum_hours' => isset($node->field_museum_hours[$lang_key][0]['safe_value']) ? $node->field_museum_hours[$lang_key][0]['safe_value'] : '',
       );
     }
   }
@@ -1040,29 +1217,16 @@ function strip_drupal_from_node(&$node) {
       $node->reference_num = $node->field_reference_num[LANGUAGE_NONE][0]['safe_value'];
     }
   }
-  // Object thumbnail image url.
-  if (isset($node->field_thumbnail_image)) {
-    $node->thumbnail_full_path = '';
-    if (isset($node->field_thumbnail_image[LANGUAGE_NONE][0]['safe_value'])) {
-      $node->thumbnail_full_path = $node->field_thumbnail_image[LANGUAGE_NONE][0]['safe_value'];
-    }
-  }
-  // Object full size image url.
-  if (isset($node->field_large_image)) {
-    $node->large_image_full_path = '';
-    if (isset($node->field_large_image[LANGUAGE_NONE][0]['safe_value'])) {
-      $node->large_image_full_path = $node->field_large_image[LANGUAGE_NONE][0]['safe_value'];
-    }
-  }
   // Audio Commentary field collection items.
   if ($fc_items = field_get_items('node', $node, 'field_audio_commentary')) {
     $node->audio_commentary = '';
     // Extract the field collection items.
     foreach ($fc_items as $fc_item) {
       $item = field_collection_field_get_entity($fc_item);
+      $audio_id = !empty($item->field_audio_commentary_audio) ? $item->field_audio_commentary_audio[LANGUAGE_NONE][0]['target_id'] : NULL;
       $node->audio_commentary[] = array(
         'object_selector_number' => !empty($item->field_object_selector_number) ? $item->field_object_selector_number[LANGUAGE_NONE][0]['value'] : NULL,
-        'audio' => !empty($item->field_audio_commentary_audio) ? $item->field_audio_commentary_audio[LANGUAGE_NONE][0]['target_id'] : NULL,
+        'audio' => $audio_id,
       );
     }
   }
@@ -1151,10 +1315,16 @@ function strip_drupal_from_node(&$node) {
       $i = 0;
       foreach ($fc_items as $fc_item) {
         $item = field_collection_field_get_entity($fc_item);
+        $audio_commentary_id = !empty($item->field_tour_stop_audio_commentary) ? $item->field_tour_stop_audio_commentary[LANGUAGE_NONE][0]['target_id'] : NULL;
+        $audio_commentary = $audio_commentary_id ? entity_load_single('field_collection_item', $audio_commentary_id) : NULL;
+        $audio_node_id = !empty($audio_commentary->field_audio_commentary_audio) ? $audio_commentary->field_audio_commentary_audio[LANGUAGE_NONE][0]['target_id']: NULL;
+        $bumper_commentary_id = !empty($item->field_tour_stop_audio_bumper) ? $item->field_tour_stop_audio_bumper[LANGUAGE_NONE][0]['target_id'] : NULL;
+        $bumper_commentary = $bumper_commentary_id ? entity_load_single('field_collection_item', $bumper_commentary_id) : NULL;
+        $bumper_node_id = is_object($bumper_commentary) ? $bumper_commentary->hostEntityId() : NULL;
         $node->tour_stop_items[] = array(
           'object' => !empty($item->field_tour_stop_object) ? $item->field_tour_stop_object[LANGUAGE_NONE][0]['target_id'] : NULL,
-          'audio_id' => !empty($item->field_tour_stop_audio_commentary) ? $item->field_tour_stop_audio_commentary[LANGUAGE_NONE][0]['target_id'] : NULL,
-          'audio_bumper' => !empty($item->field_tour_stop_audio_bumper) ? $item->field_tour_stop_audio_bumper[LANGUAGE_NONE][0]['target_id'] : NULL,
+          'audio_id' => $audio_node_id,
+          'audio_bumper' => $bumper_node_id,
           'sort' => $i,
         );
         $i++;
@@ -1175,55 +1345,20 @@ function strip_drupal_from_node(&$node) {
       $node->tour_audio = $node->field_tour_audio[LANGUAGE_NONE][0]['nid'];
     }
   }
-  // Tour thumnail image.
-  if (isset($node->field_thumbnail_crop_rect)) {
-    $node->thumbnail_crop_rect = array();
-    if (isset($node->field_thumbnail_crop_rect[LANGUAGE_NONE][0])) {
-      $items = field_get_items('node', $node, 'field_thumbnail_crop_rect');
-      foreach ($items as $itemid) {
-        $item = field_collection_field_get_entity($itemid);
-        if ($item->field_x) {
-          $node->thumbnail_crop_rect = array(
-            'x' => $item->field_x[LANGUAGE_NONE][0]['value'],
-            'y' => $item->field_y[LANGUAGE_NONE][0]['value'],
-            'width' => $item->field_width[LANGUAGE_NONE][0]['value'],
-            'height' => $item->field_height[LANGUAGE_NONE][0]['value'],
-          );
-          json_encode($node->thumbnail_crop_rect);
-        }
-      }
-    }
-  }
-  // Tour large image.
-  if (isset($node->field_large_image_crop_rect)) {
-    $node->large_image_crop_rect = array();
-    if (isset($node->field_large_image_crop_rect[LANGUAGE_NONE][0])) {
-      $items = field_get_items('node', $node, 'field_large_image_crop_rect');
-      foreach ($items as $itemid) {
-        $item = field_collection_field_get_entity($itemid);
-        if ($item->field_x) {
-          $node->large_image_crop_rect = array(
-            'x' => $item->field_x[LANGUAGE_NONE][0]['value'],
-            'y' => $item->field_y[LANGUAGE_NONE][0]['value'],
-            'width' => $item->field_width[LANGUAGE_NONE][0]['value'],
-            'height' => $item->field_height[LANGUAGE_NONE][0]['value'],
-          );
-          json_encode($node->large_image_crop_rect);
-        }
-      }
-    }
-  }
   // Tour translations.
   if ($node->type === AICAPP_TYPE_TOUR) {
     foreach ($translations as $lang_key => $details) {
+      if ($lang_key === 'en') {
+        continue;
+      }
       $node->translations[] = array(
         'language' => $lang_key,
-        'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : $node->title,
-        'description' => isset($node->field_description[$lang_key][0]['safe_value']) ? trim(strip_tags($node->field_description[$lang_key][0]['safe_value'])) : $node->description,
-        'description_html' => isset($node->field_description[$lang_key][0]['safe_value']) ? $node->field_description[$lang_key][0]['safe_value'] : $node->description_html,
-        'intro' => isset($node->field_intro[$lang_key][0]['safe_value']) ? trim(strip_tags($node->field_intro[$lang_key][0]['safe_value'])) : $node->intro,
-        'intro_html' => isset($node->field_intro[$lang_key][0]['safe_value']) ? $node->field_intro[$lang_key][0]['safe_value'] : $node->intro_html,
-        'tour_duration' => isset($node->field_tour_duration[$lang_key][0]['safe_value']) ? $node->field_tour_duration[$lang_key][0]['safe_value'] : $node->tour_duration,
+        'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : '',
+        'description' => isset($node->field_description[$lang_key][0]['safe_value']) ? trim(strip_tags($node->field_description[$lang_key][0]['safe_value'])) : '',
+        'description_html' => isset($node->field_description[$lang_key][0]['safe_value']) ? $node->field_description[$lang_key][0]['safe_value'] : '',
+        'intro' => isset($node->field_intro[$lang_key][0]['safe_value']) ? trim(strip_tags($node->field_intro[$lang_key][0]['safe_value'])) : '',
+        'intro_html' => isset($node->field_intro[$lang_key][0]['safe_value']) ? $node->field_intro[$lang_key][0]['safe_value'] : '',
+        'tour_duration' => isset($node->field_tour_duration[$lang_key][0]['safe_value']) ? $node->field_tour_duration[$lang_key][0]['safe_value'] : '',
       );
     }
   }
@@ -1272,27 +1407,30 @@ function strip_drupal_from_node(&$node) {
   // Audio translations.
   if ($node->type === AICAPP_TYPE_AUDIO) {
     foreach ($translations as $lang_key => $details) {
+      if ($lang_key === 'en') {
+        continue;
+      }
       $node->translations[] = array(
         'language' => $lang_key,
-        'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : $node->title,
-        'track_title' => isset($node->field_track_title[$lang_key][0]['safe_value']) ? $node->field_track_title[$lang_key][0]['safe_value'] : $node->track_title,
-        'audio_filename' => isset($node->field_audio_file[$lang_key][0]['filename']) ? $node->field_audio_file[$lang_key][0]['filename'] : $node->audio_filename,
-        'audio_file_url' => isset($node->field_audio_file[$lang_key][0]['uri']) ? file_create_url($node->field_audio_file[$lang_key][0]['uri']) : $node->audio_file_url,
-        'audio_filemime' => isset($node->field_audio_file[$lang_key][0]['filemime']) ? $node->field_audio_file[$lang_key][0]['filemime'] : $node->audio_filemime,
-        'audio_filesize' => isset($node->field_audio_file[$lang_key][0]['filesize']) ? $node->field_audio_file[$lang_key][0]['filesize'] : $node->audio_filesize,
-        'audio_transcript' => isset($node->field_audio_transcript[$lang_key][0]['safe_value']) ? $node->field_audio_transcript[$lang_key][0]['safe_value'] : $node->audio_transcript,
-        'credits' => isset($node->field_credits[$lang_key][0]['safe_value']) ? $node->field_credits[$lang_key][0]['safe_value'] : $node->credits,
+        'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : '',
+        'track_title' => isset($node->field_track_title[$lang_key][0]['safe_value']) ? $node->field_track_title[$lang_key][0]['safe_value'] : '',
+        'audio_filename' => isset($node->field_audio_file[$lang_key][0]['filename']) ? $node->field_audio_file[$lang_key][0]['filename'] : '',
+        'audio_file_url' => isset($node->field_audio_file[$lang_key][0]['uri']) ? file_create_url($node->field_audio_file[$lang_key][0]['uri']) : '',
+        'audio_filemime' => isset($node->field_audio_file[$lang_key][0]['filemime']) ? $node->field_audio_file[$lang_key][0]['filemime'] : '',
+        'audio_filesize' => isset($node->field_audio_file[$lang_key][0]['filesize']) ? $node->field_audio_file[$lang_key][0]['filesize'] : '',
+        'audio_transcript' => isset($node->field_audio_transcript[$lang_key][0]['safe_value']) ? $node->field_audio_transcript[$lang_key][0]['safe_value'] : '',
+        'credits' => isset($node->field_credits[$lang_key][0]['safe_value']) ? $node->field_credits[$lang_key][0]['safe_value'] : '',
       );
     }
   }
   // Map Annotation field items: label (field_annotation_label)
-  // annontation_type (field_annotation_type)
   if (isset($node->field_annotation_label)) {
     $node->label = '';
     if (isset($node->field_annotation_label[$node->language][0]['safe_value'])) {
       $node->label = $node->field_annotation_label[$node->language][0]['safe_value'];
     }
   }
+  // Map annontation_type (field_annotation_type)
   if (isset($node->field_annotation_type)) {
     $node->annotation_type = '';
     if (isset($node->field_annotation_type[LANGUAGE_NONE][0]['value'])) {
@@ -1304,29 +1442,24 @@ function strip_drupal_from_node(&$node) {
   // Map Annotation translations.
   if ($node->type === AICAPP_TYPE_MAP_ANNOTATION) {
     foreach ($translations as $lang_key => $details) {
+      if ($lang_key === 'en') {
+        continue;
+      }
       $node->translations[] = array(
         'language' => $lang_key,
-        'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : $node->title,
-        'label' => isset($node->field_annotation_label[$lang_key][0]['safe_value']) ? $node->field_annotation_label[$lang_key][0]['safe_value'] : $node->label,
+        'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : '',
+        'label' => isset($node->field_annotation_label[$lang_key][0]['safe_value']) ? $node->field_annotation_label[$lang_key][0]['safe_value'] : '',
       );
     }
   }
-  // Final Clean-up.
-  // Now can unset language, and the rest of the saved props.
+  // Final Clean-up. Unset language, and the rest of the saved properties.
   $to_skip = array('title', 'status', 'type', 'nid', 'translations');
-  foreach ($properties + array('data', 'entity_translation_handler_id') as $property) {
+  $properties += array('data', 'entity_translation_handler_id');
+  foreach ($properties as $property) {
     if (!in_array($property, $to_skip) && isset($node->{$property})) {
-      if ($property === 'translations' && count($node->translations)) {
-        // Leave the translations property on the node.
-      }
-      else {
-        unset($node->{$property});
-      }
+      unset($node->{$property});
     }
   }
-
-  // Data!
-  unset($node->data);
 }
 
 /**
@@ -1395,8 +1528,7 @@ function aicappSaveNode($object, $type) {
     );
     $record = $qres->fetchObject();
   }
-
-  if ($type == AICAPP_TYPE_GALLERY) {
+  elseif ($type == AICAPP_TYPE_GALLERY) {
     if (!empty($object['gallery_id'])) {
       // Check for nid by SOLR gallery_id.
       $qres = db_query("SELECT entity_id
@@ -1422,7 +1554,7 @@ function aicappSaveNode($object, $type) {
     $node->comment = 0;
     $node->created = time();
   }
-
+  // Creating an artwork object node.
   if ($type == AICAPP_TYPE_OBJECT) {
     $node->field_object_id[$node->language][0]['value'] = $object['object_id'];
     $node->field_reference_num[$node->language][0]['value'] = $object['main_reference_number'];
@@ -1433,28 +1565,29 @@ function aicappSaveNode($object, $type) {
     // {scheme}://{server}{/prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
     $filename = AICAPP_IMAGE_CROP_QUALITY . '.' . AICAPP_IMAGE_CROP_FORMAT;
     // Image server URL begins like this for both thumnail and full.
-    $url = AICAPP_IMAGE_SERVER . '/' . $object['object_id'] . '/';
+    $url = !empty($object['preferred_image_id']) ? AICAPP_IMAGE_SERVER . '/' . $object['preferred_image_id'] . '/' : NULL;
 
     if (!empty($object['thumbnail_full_path'])) {
       $crop_size = variable_get('aicapp_image_thumb_crop', '!112,112');
-      // @TODO build a dynamic path to the thumnail image.
+      // Build a path to the thumnail image.
       $url .= AICAPP_IMAGE_CROP_REGION . '/' . $crop_size . '/';
       $url .= AICAPP_IMAGE_CROP_ROTATION . '/' . $filename;
-      // $node->field_thumbnail_image[$node->language][0]['value'] = $url;
+      $node->field_thumbnail_image[$node->language][0]['value'] = $url;
       // @TODO remove following after previous line is functioning.
-      $node->field_thumbnail_image[$node->language][0]['value'] = $object['thumbnail_full_path'];
+      // $node->field_thumbnail_image[$node->language][0]['value'] = $object['thumbnail_full_path'];
     }
     if (!empty($object['large_image_full_path'])) {
       $crop_size = variable_get('aicapp_image_full_crop', '!800,800');
-      // @TODO build a dynamic path to the full image.
+      // Build a path to the full image.
       $url .= AICAPP_IMAGE_CROP_REGION . '/' . $crop_size . '/';
       $url .= AICAPP_IMAGE_CROP_ROTATION . '/' . $filename;
-      // $node->field_large_image[$node->language][0]['value'] = $url;
+      $node->field_large_image[$node->language][0]['value'] = $url;
       // @TODO remove following after previous line is functioning.
-      $node->field_large_image[$node->language][0]['value'] = $object['large_image_full_path'];
+      //$node->field_large_image[$node->language][0]['value'] = $object['large_image_full_path'];
     }
+    // Set node to unbpublished.
     $node->status = 0;
-
+    // Set whether the object is in a gallery, or not.
     if ($object['in_gallery']) {
       $node->field_in_gallery[$node->language][0]['value'] = $object['in_gallery'];
     }
@@ -1462,7 +1595,7 @@ function aicappSaveNode($object, $type) {
       $node->field_in_gallery[$node->language][0]['value'] = 0;
     }
   }
-  if ($type == AICAPP_TYPE_GALLERY) {
+  elseif ($type == AICAPP_TYPE_GALLERY) {
     if (isset($object['title_t'])) {
       $node->title = $object['title_t'];
     }
@@ -1495,6 +1628,7 @@ function aicappSaveNode($object, $type) {
         $node->field_floor_reference[$node->language][0]['target_id'] = $floor_reference;
       }
     }
+    // Set node to published.
     $node->status = 1;
   }
   try {
@@ -2056,7 +2190,63 @@ function aicapp_admin() {
     '#default_value' => (variable_get('aicapp_image_large_crop_lock', 0)) ? 1 : 0,
     '#description' => t('Whether or not to lock the crop dimensions to this aspect ratio.'),
   );
-
+  // Data aggregrator API
+  $form['aicapp_data_aggregator'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#title' => t('Data Aggregator API'),
+    '#tree' => TRUE,
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_api_host'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Data API HOST URL'),
+    '#default_value' => variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'),
+    '#description' => t('.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_events'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Events Endpoint.'),
+    '#default_value' => variable_get('aicapp_data_endpoint_events', '/api/v1/events'),
+    '#description' => t('Query for an event via this endpoint.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_exhibitions'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Exhibitions Endpoint.'),
+    '#default_value' => variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'),
+    '#description' => t('Query for an exhibition via this endpoint.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_artworks'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Artworks endpoint.'),
+    '#default_value' => variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'),
+    '#description' => t('Query for an artwork via this endpoint.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_galleries'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Galleries endpoint.'),
+    '#default_value' => variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'),
+    '#description' => t('Query for a gallery via this endpoint.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_images'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Images endpoint.'),
+    '#default_value' => variable_get('aicapp_data_endpoint_images', '/api/v2/images'),
+    '#description' => t('Query for a image via this endpoint.'),
+  );
+  // Data migration between v1 and v2.
   $form['aicapp_data'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -2113,15 +2303,16 @@ function aicapp_admin_validate($form, &$form_state) {
   }
   // Save the variable as a lowercase string for use in JS.
   if ($form_state['values']['aicapp_image_thumb_crop_lock'] == FALSE) {
-    // Leave as lowercase for use in JS
+    // Leave as lowercase for use in JS.
     $form_state['values']['aicapp_image_thumb_crop_lock'] = false;
   }
   else {
+    // Leave as lowercase for use in JS.
     $form_state['values']['aicapp_image_thumb_crop_lock'] = 'true';
   }
   // Save the variable as a lowercase string for use in JS.
   if ($form_state['values']['aicapp_image_large_crop_lock'] == FALSE) {
-    // Leave as lowercase for use in JS
+    // Leave as lowercase for use in JS.
     $form_state['values']['aicapp_image_large_crop_lock'] = false;
   }
   else {
@@ -2137,7 +2328,7 @@ function aicapp_admin_validate($form, &$form_state) {
       default:
         drupal_set_message('There were no items to migrate');
       break;
-      case 'audio':
+      case AICAPP_TYPE_AUDIO:
         $query->propertyCondition('language', LANGUAGE_NONE, '=');
         $result = $query->execute();
         if (!empty($result['node'])) {
@@ -2156,7 +2347,7 @@ function aicapp_admin_validate($form, &$form_state) {
         }
         break;
 
-      case 'object':
+      case AICAPP_TYPE_OBJECT:
         // Load all objects that have no audio commentary items.
         $query->addTag('no_commentary_items');
         $result = $query->execute();
@@ -2291,7 +2482,7 @@ function aicapp_admin_validate($form, &$form_state) {
         }
         break;
 
-      case 'tour':
+      case AICAPP_TYPE_TOUR:
         // Load all tous.
         $query->addTag('no_tour_stop');
         // Five at a time.
@@ -2351,8 +2542,8 @@ function aicapp_admin_validate($form, &$form_state) {
                   'field_t_object' => array(
                     LANGUAGE_NONE => array(array(
                       'target_id' => $audio_id,
-                    )),
-                  ),
+                    ))
+                  )
                 );
                 if (isset($found['field_t_audio'][$k])) {
                   $item_values['field_t_audio'] = array(
@@ -2385,7 +2576,7 @@ function aicapp_admin_validate($form, &$form_state) {
             }
             $i++;
           }
-          drupal_set_message('All tour nodes have been set to English if no language had been set, and tour stops have been udpated.');
+          drupal_set_message(t('All tour nodes have been set to English if no language had been set, and tour stops have been udpated.'));
 
         }
         break;
@@ -2394,7 +2585,7 @@ function aicapp_admin_validate($form, &$form_state) {
 }
 
 /**
- * Implements hook_query_TAG_alter()
+ * Implements hook_query_TAG_alter().This is used for data migration queries.
  */
 function aicapp_query_no_commentary_items_alter(QueryAlterableInterface $query) {
   $query->leftJoin('field_data_field_audio_commentary', 'o', 'node.nid = o.entity_id');
@@ -2402,7 +2593,7 @@ function aicapp_query_no_commentary_items_alter(QueryAlterableInterface $query) 
 }
 
 /**
- * Implements hook_query_TAG_alter()
+ * Implements hook_query_TAG_alter(). This is used for data migration queries.
  */
 function aicapp_query_no_tour_stops_items_alter(QueryAlterableInterface $query) {
   $query->leftJoin('field_data_field_tour_stops', 'o', 'node.nid = o.entity_id');
@@ -2413,9 +2604,11 @@ function aicapp_query_no_tour_stops_items_alter(QueryAlterableInterface $query) 
  * Check a connection beofre making a query.
  */
 function _aicapp_check_connection($url) {
+  // Filter out invalid URLs.
   if (!filter_var($url, FILTER_VALIDATE_URL)) {
     return FALSE;
   }
+  // Initialize CURL to test a connection to a URL.
   $curl_init = curl_init($url);
   curl_setopt($curl_init, CURLOPT_CONNECTTIMEOUT, 5);
   curl_setopt($curl_init, CURLOPT_HEADER, TRUE);
@@ -2423,11 +2616,10 @@ function _aicapp_check_connection($url) {
   curl_setopt($curl_init, CURLOPT_RETURNTRANSFER, TRUE);
   $response = curl_exec($curl_init);
   curl_close($curl_init);
-
+  // Return TRUE if a response is valid.
   if ($response) {
     return TRUE;
   }
-
   return FALSE;
 }
 
@@ -2448,10 +2640,6 @@ function aicapp_get_featured($type = 'node', $bundles = array()) {
  * Save remote objects to nodes.
  */
 function aicapp_process_remote_object() {
-  // @TODO expose these via the admin UI.
-  define('AICAPP_API_HOST', 'http://aggregator-data-test.artic.edu');
-  define('AICAPP_EVENT_API_ENDPOINT', '/api/v1/events');
-  define('AICAPP_EXHIBITION_API_ENDPOINT', '/api/v1/exhibitions');
   $limit = 'limit=';
   $limit_count = 50;
   $max_page = 10;
@@ -2459,11 +2647,11 @@ function aicapp_process_remote_object() {
   // Define what we're going to import.
   $objects = array(
     AICAPP_TYPE_EVENT => array(
-      'endpoint' => AICAPP_API_HOST . AICAPP_EVENT_API_ENDPOINT,
+      'endpoint' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EVENT,
       'remote' => array(),
     ),
     AICAPP_TYPE_EXHIBITION => array(
-      'endpoint' => AICAPP_API_HOST . AICAPP_EXHIBITION_API_ENDPOINT,
+      'endpoint' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION,
       'remote' => array(),
     ),
   );
@@ -2577,7 +2765,7 @@ function aicapp_process_remote_object() {
           // Exhibition dates.
           $ewrapper->field_exhibit_dates->set($to_import['dates']);
         }
-        else if ($type === AICAPP_TYPE_EVENT) {
+        elseif ($type === AICAPP_TYPE_EVENT) {
           $start = new DateTime($to_import['start_at']);
           $end = new DateTime($to_import['end_at']);
           // Event start and end dates
@@ -2605,8 +2793,8 @@ function aicapp_process_remote_object() {
         if (empty($remote['remote'][$remote_id])) {
           continue;
         }
-        // Update node fields with values from remote enities, but only if remote
-        // updated date is more recent than local date.
+        // Update node fields with values from remote enities, but only if
+        // remote updated date is more recent than local date.
         $to_import = $remote['remote'][$remote_id];
         // Creating a new object $node and setting its 'type' and uid property.
         $values = array(

@@ -41,6 +41,38 @@ function aic_mobile_cms_content_types_field_group_info() {
   $field_group = new stdClass();
   $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
   $field_group->api_version = 1;
+  $field_group->identifier = 'group_custom_object|node|object|form';
+  $field_group->group_name = 'group_custom_object';
+  $field_group->entity_type = 'node';
+  $field_group->bundle = 'object';
+  $field_group->mode = 'form';
+  $field_group->parent_name = '';
+  $field_group->data = array(
+    'label' => 'Custom Object Info',
+    'weight' => '4',
+    'children' => array(
+      0 => 'field_artist_name',
+      1 => 'field_artist_origin',
+      2 => 'field_credit_line',
+      3 => 'field_copyright_notice',
+    ),
+    'format_type' => 'fieldset',
+    'format_settings' => array(
+      'label' => 'Custom Object Info',
+      'instance_settings' => array(
+        'required_fields' => 0,
+        'id' => '',
+        'classes' => '',
+        'description' => '',
+      ),
+      'formatter' => 'collapsed',
+    ),
+  );
+  $field_groups['group_custom_object|node|object|form'] = $field_group;
+
+  $field_group = new stdClass();
+  $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
+  $field_group->api_version = 1;
   $field_group->identifier = 'group_object_app_v1|node|object|form';
   $field_group->group_name = 'group_object_app_v1';
   $field_group->entity_type = 'node';
@@ -80,7 +112,7 @@ function aic_mobile_cms_content_types_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Deprecated - App Version 1',
-    'weight' => '14',
+    'weight' => '15',
     'children' => array(
       0 => 'field_stops2',
       1 => 'field_floor',
@@ -110,7 +142,7 @@ function aic_mobile_cms_content_types_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Tour Audio',
-    'weight' => '9',
+    'weight' => '11',
     'children' => array(
       0 => 'field_tour_audio',
       1 => 'field_selector_number',
@@ -139,7 +171,7 @@ function aic_mobile_cms_content_types_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Tour Stops',
-    'weight' => '12',
+    'weight' => '14',
     'children' => array(
       0 => 'field_tour_stops',
     ),
@@ -159,6 +191,7 @@ function aic_mobile_cms_content_types_field_group_info() {
   // Translatables
   // Included for use with string extractors like potx.
   t('Audio');
+  t('Custom Object Info');
   t('Deprecated - App Version 1');
   t('Tour Audio');
   t('Tour Stops');
