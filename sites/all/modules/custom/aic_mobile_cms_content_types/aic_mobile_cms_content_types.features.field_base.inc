@@ -1092,7 +1092,7 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'settings' => array(
       'entity_translation_sync' => FALSE,
       'hide_blank_items' => 1,
-      'hide_initial_item' => FALSE,
+      'hide_initial_item' => 0,
       'path' => '',
     ),
     'translatable' => 0,

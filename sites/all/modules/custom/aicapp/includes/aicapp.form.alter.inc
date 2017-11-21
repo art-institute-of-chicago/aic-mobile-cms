@@ -64,7 +64,6 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
  */
 function _aicapp_form_afterbuild(&$form, &$form_state) {
   // Add a google map for pages that have a location field.
-
   if (!empty($form['field_location']) && empty(arg(3))) {
     $coords = !empty($form['#node']->field_location[LANGUAGE_NONE][0]['safe_value']) ? $form['#node']->field_location[LANGUAGE_NONE][0]['safe_value'] : 0;
     $map_markup = '<iframe width="650" height="600" frameborder="0" scrolling="no"';

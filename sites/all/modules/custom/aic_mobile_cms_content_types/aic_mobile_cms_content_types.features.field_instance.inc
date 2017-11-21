@@ -3326,7 +3326,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 5,
+      'weight' => 7,
     ),
   );
 
@@ -3408,7 +3408,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 11,
+      'weight' => 13,
     ),
   );
 
@@ -3459,7 +3459,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'progress_indicator' => 'throbber',
       ),
       'type' => 'image_image',
-      'weight' => 2,
+      'weight' => 6,
     ),
   );
 
@@ -3500,7 +3500,94 @@ Ex: ""Head of Buddha (Spanish)"""',
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 6,
+      'weight' => 8,
+    ),
+  );
+
+  // Exported field_instance: 'node-tour-field_large_image'.
+  $field_instances['node-tour-field_large_image'] = array(
+    'bundle' => 'tour',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 22,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_large_image',
+    'label' => 'Large Image',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 2,
+    ),
+  );
+
+  // Exported field_instance: 'node-tour-field_large_image_crop_rect'.
+  $field_instances['node-tour-field_large_image_crop_rect'] = array(
+    'bundle' => 'tour',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'field_collection',
+        'settings' => array(
+          'add' => 'Add',
+          'delete' => 'Delete',
+          'description' => TRUE,
+          'edit' => 'Edit',
+          'view_mode' => 'full',
+        ),
+        'type' => 'field_collection_view',
+        'weight' => 23,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_large_image_crop_rect',
+    'label' => 'Large Image Crop',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'field_collection_table',
+      'settings' => array(
+        'nodragging' => 0,
+      ),
+      'type' => 'field_collection_table',
+      'weight' => 3,
     ),
   );
 
@@ -3541,7 +3628,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 10,
+      'weight' => 12,
     ),
   );
 
@@ -3680,7 +3767,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 4,
+      'weight' => 5,
     ),
   );
 
@@ -3721,7 +3808,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 3,
+      'weight' => 4,
     ),
   );
 
@@ -3857,7 +3944,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'year_range' => '-0:+3',
       ),
       'type' => 'date_popup',
-      'weight' => 8,
+      'weight' => 10,
     ),
   );
 
@@ -3898,7 +3985,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 10,
       ),
       'type' => 'text_textfield',
-      'weight' => 7,
+      'weight' => 9,
     ),
   );
 
