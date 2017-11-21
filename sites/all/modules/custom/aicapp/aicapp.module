@@ -1224,12 +1224,9 @@ function strip_drupal_from_node(&$node) {
     foreach ($fc_items as $fc_item) {
       $item = field_collection_field_get_entity($fc_item);
       $audio_id = !empty($item->field_audio_commentary_audio) ? $item->field_audio_commentary_audio[LANGUAGE_NONE][0]['target_id'] : NULL;
-      $audio_commentary = field_collection_field_get_entity($audio_id);
-      $audio_entity = is_object($audio_commentary) ? $audio_commentary->hostEntity() : NULL;
-      $audio_node_id = isset($audio_entity->nid) ? $audio_entity->nid : NULL;
       $node->audio_commentary[] = array(
         'object_selector_number' => !empty($item->field_object_selector_number) ? $item->field_object_selector_number[LANGUAGE_NONE][0]['value'] : NULL,
-        'audio' => $audio_node_id,
+        'audio' => $audio_id,
       );
     }
   }
@@ -1319,13 +1316,11 @@ function strip_drupal_from_node(&$node) {
       foreach ($fc_items as $fc_item) {
         $item = field_collection_field_get_entity($fc_item);
         $audio_commentary_id = !empty($item->field_tour_stop_audio_commentary) ? $item->field_tour_stop_audio_commentary[LANGUAGE_NONE][0]['target_id'] : NULL;
-        $audio_commentary = field_collection_field_get_entity($audio_commentary_id);
-        $audio_entity = is_object($audio_commentary) ? $audio_commentary->hostEntity() : NULL;
-        $audio_node_id = isset($audio_entity->nid) ? $audio_entity->nid : NULL;
+        $audio_commentary = $audio_commentary_id ? entity_load_single('field_collection_item', $audio_commentary_id) : NULL;
+        $audio_node_id = !empty($audio_commentary->field_audio_commentary_audio) ? $audio_commentary->field_audio_commentary_audio[LANGUAGE_NONE][0]['target_id']: NULL;
         $bumper_commentary_id = !empty($item->field_tour_stop_audio_bumper) ? $item->field_tour_stop_audio_bumper[LANGUAGE_NONE][0]['target_id'] : NULL;
-        $bumper_commentary = field_collection_field_get_entity($bumper_commentary_id);
-        $bumper_entity = is_object($bumper_commentary) ? $bumper_commentary->hostEntity() : NULL;
-        $bumper_node_id = isset($bumper_entity->nid) ? $bumper_entity->nid : NULL;
+        $bumper_commentary = $bumper_commentary_id ? entity_load_single('field_collection_item', $bumper_commentary_id) : NULL;
+        $bumper_node_id = is_object($bumper_commentary) ? $bumper_commentary->hostEntityId() : NULL;
         $node->tour_stop_items[] = array(
           'object' => !empty($item->field_tour_stop_object) ? $item->field_tour_stop_object[LANGUAGE_NONE][0]['target_id'] : NULL,
           'audio_id' => $audio_node_id,
