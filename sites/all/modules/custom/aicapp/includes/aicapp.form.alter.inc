@@ -9,7 +9,6 @@
  */
 function _aicapp_form_alter(&$form, &$form_state, $form_id) {
   // Add an afterbuild callback.
-
   $form['#after_build'][] = 'aicapp_setup_afterbuild';
   // Only proceed if either object or tour node form.
   if ($form_id != 'object_node_form' && $form_id != 'tour_node_form') {
@@ -56,6 +55,31 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
     // Add JS to the page.
     drupal_add_js($js_to_add, $js_options);
   }
+
+  $field_name_stops = 'field_tour_stops';
+  $field_name_stops_object = 'field_tour_stop_object';
+  $field_name_stops_audio = 'field_tour_stop_audio_commentary';
+  if (!empty($form[$field_name_stops])) {
+    $stops_element =& $form[$field_name_stops];
+    foreach ($stops_element[LANGUAGE_NONE] as $delta => $values) {
+      if (!is_numeric($delta)) {
+        continue;
+      }
+      $form_path = array($field_name_stops, LANGUAGE_NONE, $delta);
+      $form_path[] = $field_name_stops_audio;
+      $form_state['aicapp_object_limit_ajax_return'] = $form_path;
+      $audio_commentary_id = 'edit-field-tour-stops-und-' . $delta . '-field-tour-stop-audio-commentary';
+      $stops_element[LANGUAGE_NONE][$delta][$field_name_stops_object][LANGUAGE_NONE][0]['target_id']['#ajax'] = array(
+        'callback' => 'aicapp_object_limit_js',
+        'wrapper' => $audio_commentary_id,
+        'method' => 'replace',
+        'effect' => 'fade',
+        'event' => 'change',
+      );
+      $stops_element[LANGUAGE_NONE][$delta][$field_name_stops_audio][LANGUAGE_NONE][0]['#prefix'] = '<div id="' . $audio_commentary_id . '">';
+      $stops_element[LANGUAGE_NONE][$delta][$field_name_stops_audio][LANGUAGE_NONE][0]['#suffix'] = '</div>';
+    }
+  }
 }
 
 /**
@@ -98,8 +122,6 @@ function _aicapp_form_afterbuild(&$form, &$form_state) {
     $form['field_audio_commentary'][$form['field_audio_commentary']['#language']]['add_more']['#value'] = t('Add another audio track');
   }
 }
-
-
 
 /**
  * Helper function to crop an Image.
