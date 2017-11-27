@@ -1969,7 +1969,7 @@ function aicapp_node_presave($node) {
   variable_set('aicapp_pending', 1);
 
   if ($node->type == AICAPP_TYPE_TOUR) {
-    aicapp_check_for_object_problems($node);
+    aicapp_check_for_tour_problems($node);
   }
   if ($node->type == AICAPP_TYPE_OBJECT) {
     if (isset($node->field_object_id[LANGUAGE_NONE][0]['value'])) {
@@ -1994,32 +1994,48 @@ function aicapp_node_presave($node) {
 /**
  * Check for problems with the object.
  */
-function aicapp_check_for_object_problems($node) {
+function aicapp_check_for_tour_problems($tour) {
   $noLocs = array();
   $unpubs = array();
   $noaudio = array();
   $noImage = array();
   $inGallery = array();
+  $stops = array();
+
+  // App V2 - field_tour_stops is a field collection of tour stop items..
+  if (!empty($tour->field_tour_stops[LANGUAGE_NONE])) {
+    if ($fc_items = field_get_items('node', $tour, 'field_tour_stops')) {
+      foreach ($fc_items as $fc_item) {
+        $item = field_collection_field_get_entity($fc_item);
+        if (!empty($item->field_tour_stop_object)) {
+          $stops[] = array(
+            'nid' => $item->field_tour_stop_object[LANGUAGE_NONE][0]['target_id'],
+          );
+        }
+      }
+    }
+  }
   // App V1 - To be deprecated. field_stops2 will no longer be used.
-  if (!empty($node->field_stops2[LANGUAGE_NONE][0]['entity']->field_t_object[LANGUAGE_NONE])) {
-    $stops = $node->field_stops2[LANGUAGE_NONE][0]['entity']->field_t_object[LANGUAGE_NONE];
-    foreach ($stops as $stop) {
-      $node = node_load($stop['nid']);
-      if (empty($node->field_location)) {
-        $noLocs[] = array('nid' => $node->nid, 'title' => $node->title);
-      }
-      if (!$node->status) {
-        $unpubs[] = array('nid' => $node->nid, 'title' => $node->title);
-      }
-      if (empty($node->field_object_audio[LANGUAGE_NONE][0])) {
-        $noaudio[] = array('nid' => $node->nid, 'title' => $node->title);
-      }
-      if ((empty($node->field_thumbnail_image) || empty($node->field_large_image)) && empty($node->field_image)) {
-        $noImage[] = array('nid' => $node->nid, 'title' => $node->title);
-      }
-      if ($node->field_in_gallery[LANGUAGE_NONE][0]['value'] != TRUE) {
-        $inGallery[] = array('nid' => $node->nid, 'title' => $node->title);
-      }
+  if (empty($stops) && !empty($tour->field_stops2[LANGUAGE_NONE][0]['entity']->field_t_object[LANGUAGE_NONE])) {
+    $stops = $tour->field_stops2[LANGUAGE_NONE][0]['entity']->field_t_object[LANGUAGE_NONE];
+  }
+  // Loop through stops to check for problems.
+  foreach ($stops as $stop) {
+    $node = node_load($stop['nid']);
+    if (empty($node->field_location)) {
+      $noLocs[] = array('nid' => $node->nid, 'title' => $node->title);
+    }
+    if (!$node->status) {
+      $unpubs[] = array('nid' => $node->nid, 'title' => $node->title);
+    }
+    if (empty($node->field_object_audio[LANGUAGE_NONE][0])) {
+      $noaudio[] = array('nid' => $node->nid, 'title' => $node->title);
+    }
+    if ((empty($node->field_thumbnail_image) || empty($node->field_large_image)) && empty($node->field_image)) {
+      $noImage[] = array('nid' => $node->nid, 'title' => $node->title);
+    }
+    if ($node->field_in_gallery[LANGUAGE_NONE][0]['value'] != TRUE) {
+      $inGallery[] = array('nid' => $node->nid, 'title' => $node->title);
     }
   }
   if (!empty($noLocs)) {
@@ -2845,4 +2861,24 @@ function aicapp_process_remote_object() {
   catch (Exception $e) {
     drupal_set_message(t("An error occurred when importing events: " . $e), 'error');
   }
+}
+
+/**
+ * Ajax callback for the updated term reference field.
+ */
+function aicapp_object_limit_js($form, $form_state) {
+  // Get the delta of the parent field collection item that triggered the ajax.
+  $parent_delta = $form_state['triggering_element']['#parents'][2];
+  // Use the triggering elments parents to form a path to the element to replace.
+  $element_path = array_slice($form_state['triggering_element']['#parents'], 0, 3);
+  // Add the field name we're replacing.
+  $element_path[] = 'field_tour_stop_audio_commentary';
+  $form_return_element = drupal_array_get_nested_value($form, $element_path);
+  // Add any messages.
+  if ($messages = theme('status_messages')) {
+    $form_return_element['messages'] = array(
+      '#markup' => '<div class="views-messages">' . $messages . '</div>',
+    );
+  }
+  return $form_return_element;
 }

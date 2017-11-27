@@ -9,7 +9,6 @@
  */
 function _aicapp_form_alter(&$form, &$form_state, $form_id) {
   // Add an afterbuild callback.
-
   $form['#after_build'][] = 'aicapp_setup_afterbuild';
   // Only proceed if either object or tour node form.
   if ($form_id != 'object_node_form' && $form_id != 'tour_node_form') {
@@ -56,6 +55,56 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
     // Add JS to the page.
     drupal_add_js($js_to_add, $js_options);
   }
+  // Within the tour node page, we want improve the user experience of choosing
+  // audio commentary for a particular tour stop limiting audio choices to ones
+  // that have already been linked with a particular artwork object. By adding
+  // an #ajax property to each artwork object autocomplete we can refresh the
+  // list of autio options available after a object has been selected.
+  // Begin with a of few of the fields that are involved in saving tour stops.
+  $field_name_stops = 'field_tour_stops';
+  $field_name_stops_object = 'field_tour_stop_object';
+  $field_name_stops_audio = 'field_tour_stop_audio_commentary';
+  // Check that the field_tour_stops field collection field is present.
+  if (!empty($form[$field_name_stops])) {
+    // Create a referenced form element to add the #ajax proerties to.
+    $stops_element =& $form[$field_name_stops];
+    // Loop through all tour stop elements.
+    foreach (element_children($stops_element[LANGUAGE_NONE]) as $delta) {
+      if (!is_numeric($delta)) {
+        continue;
+      }
+      // Define a CSS ID that will be replaced in the DOM when the updated
+      // select form element is object from the server response.
+      $audio_commentary_id = 'edit-field-tour-stops-und-' . $delta . '-field-tour-stop-audio-commentary';
+      // Add all the ajax properties to each stop element.
+      $stops_element[LANGUAGE_NONE][$delta][$field_name_stops_object][LANGUAGE_NONE][0]['target_id']['#ajax'] = array(
+        'callback' => 'aicapp_object_limit_js',
+        'wrapper' => $audio_commentary_id,
+        'method' => 'replace',
+        'effect' => 'fade',
+        'event' => 'change',
+      );
+      // Create a wrapper with the CSS ID to make replacement targeting easier.
+      $stops_element[LANGUAGE_NONE][$delta][$field_name_stops_audio][LANGUAGE_NONE]['#prefix'] = '<div id="' . $audio_commentary_id . '">';
+      $stops_element[LANGUAGE_NONE][$delta][$field_name_stops_audio][LANGUAGE_NONE]['#suffix'] = '</div>';
+
+      // Reset and disable the audio select element unless a arwork object is selected.
+      if (empty($stops_element[LANGUAGE_NONE][$delta][$field_name_stops_object][LANGUAGE_NONE][0]['target_id']['#default_value'])) {
+        $element_selector = ':input[name="' . $field_name_stops . '[';
+        $element_selector .= LANGUAGE_NONE . '][' . $delta . '][';
+        $element_selector .= $field_name_stops_object . '][' . LANGUAGE_NONE;
+        $element_selector .= '][0][target_id]"]';
+        $stops_element[LANGUAGE_NONE][$delta][$field_name_stops_audio][LANGUAGE_NONE]['#states'] = array(
+          // Only show this field when the 'toggle_me' checkbox is enabled.
+          'disabled' => array(
+            $element_selector => array(
+              array('value' => ''),
+            ),
+          ),
+        );
+      }
+    }
+  }
 }
 
 /**
@@ -91,15 +140,17 @@ function _aicapp_form_afterbuild(&$form, &$form_state) {
     // Add EN as the default language.
     $form_state['values']['language'] = AICAPP_DEFAULT_LANG;
   }
-  if (!empty($form['field_tour_stops']) && empty(arg(3))) {
-    $form['field_tour_stops'][$form['field_tour_stops']['#language']]['add_more']['#value'] = t('Add another stop');
+  // Tour stop element alterations.
+  $field_name_stops = 'field_tour_stops';
+  if (!empty($form[$field_name_stops]) && empty(arg(3))) {
+    $langcode = $form[$field_name_stops]['#language'];
+    // Change the add annother text to add another stop.
+    $form[$field_name_stops][$langcode]['add_more']['#value'] = t('Add another stop');
   }
   elseif (!empty($form['field_audio_commentary']) && empty(arg(3))) {
     $form['field_audio_commentary'][$form['field_audio_commentary']['#language']]['add_more']['#value'] = t('Add another audio track');
   }
 }
-
-
 
 /**
  * Helper function to crop an Image.
