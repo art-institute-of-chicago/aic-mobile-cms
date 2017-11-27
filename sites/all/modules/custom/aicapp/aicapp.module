@@ -2867,13 +2867,18 @@ function aicapp_process_remote_object() {
  * Ajax callback for the updated term reference field.
  */
 function aicapp_object_limit_js($form, $form_state) {
-  // We stored the path of the form element we need to return earlier on.
-  $form_return_element = drupal_array_get_nested_value($form, $form_state['aicapp_object_limit_ajax_return']);
+  // Get the delta of the parent field collection item that triggered the ajax.
+  $parent_delta = $form_state['triggering_element']['#parents'][2];
+  // Use the triggering elments parents to form a path to the element to replace.
+  $element_path = array_slice($form_state['triggering_element']['#parents'], 0, 3);
+  // Add the field name we're replacing.
+  $element_path[] = 'field_tour_stop_audio_commentary';
+  $form_return_element = drupal_array_get_nested_value($form, $element_path);
+  // Add any messages.
   if ($messages = theme('status_messages')) {
     $form_return_element['messages'] = array(
       '#markup' => '<div class="views-messages">' . $messages . '</div>',
     );
   }
-
   return $form_return_element;
 }
