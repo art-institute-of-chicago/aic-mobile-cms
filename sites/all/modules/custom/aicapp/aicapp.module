@@ -825,9 +825,9 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   foreach ($tours as $key => $tour) {
     // If tour is featured (ie, promote = 1), then add to featued lists.
     if ($tour->promote && $tour->status) {
-      $featured['node'][$tour->nid] = new stdClass();
-      $featured['node'][$tour->nid]->nid = $tour->nid;
-      $featured['node'][$tour->nid]->type = AICAPP_TYPE_TOUR;
+      $featured[$tour->nid] = new stdClass();
+      $featured[$tour->nid]->nid = $tour->nid;
+      $featured[$tour->nid]->type = AICAPP_TYPE_TOUR;
     }
     // Clean the tour node of extra properties.
     strip_drupal_from_node($tour);
@@ -852,7 +852,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
         db_query("UPDATE {node_revision} SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
         unset($tours[$key]);
         // Also remove from featured.
-        unset($featured['node'][$tour->nid]);
+        unset($featured[$tour->nid]);
       }
     }
     elseif (empty($tour->tour_dates) && $tour->status == 0) {
@@ -888,8 +888,8 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   }
   // Format featured events, tours and exhibitions.
   $featured_sorted = array();
-  if (!empty($featured['node'])) {
-    foreach ($featured['node'] as $feature) {
+  if (!empty($featured)) {
+    foreach ($featured as $feature) {
       $featured_sorted[$feature->type][] = $feature->nid;
     }
   }
