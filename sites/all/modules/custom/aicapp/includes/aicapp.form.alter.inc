@@ -148,7 +148,7 @@ function _aicapp_form_afterbuild(&$form, &$form_state) {
     // Change the add annother text to add another stop.
     $form[$field_name_stops][$langcode]['add_more']['#value'] = t('Add another stop');
   }
-  elseif (!empty($form['field_audio_commentary']) && empty(arg(3))) {
+  elseif (!empty($form['field_audio_commentary']) && empty($path_part_3)) {
     $form['field_audio_commentary'][$form['field_audio_commentary']['#language']]['add_more']['#value'] = t('Add another audio track');
   }
 }
