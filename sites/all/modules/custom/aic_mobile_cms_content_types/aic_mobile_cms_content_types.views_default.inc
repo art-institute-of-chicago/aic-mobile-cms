@@ -324,6 +324,10 @@ function aic_mobile_cms_content_types_views_default_views() {
     'multiple_to' => '',
     'show_remaining_days' => 0,
   );
+  /* Field: Content: Event ID */
+  $handler->display->display_options['fields']['field_imported_object_id']['id'] = 'field_imported_object_id';
+  $handler->display->display_options['fields']['field_imported_object_id']['table'] = 'field_data_field_imported_object_id';
+  $handler->display->display_options['fields']['field_imported_object_id']['field'] = 'field_imported_object_id';
   /* Field: Content: Event Description */
   $handler->display->display_options['fields']['field_event_description']['id'] = 'field_event_description';
   $handler->display->display_options['fields']['field_event_description']['table'] = 'field_data_field_event_description';
@@ -437,6 +441,11 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['field_exhibit_dates']['table'] = 'field_data_field_exhibit_dates';
   $handler->display->display_options['fields']['field_exhibit_dates']['field'] = 'field_exhibit_dates';
   $handler->display->display_options['fields']['field_exhibit_dates']['element_label_colon'] = FALSE;
+  /* Field: Content: Event ID */
+  $handler->display->display_options['fields']['field_imported_object_id']['id'] = 'field_imported_object_id';
+  $handler->display->display_options['fields']['field_imported_object_id']['table'] = 'field_data_field_imported_object_id';
+  $handler->display->display_options['fields']['field_imported_object_id']['field'] = 'field_imported_object_id';
+  $handler->display->display_options['fields']['field_imported_object_id']['label'] = 'Exhibition ID';
   /* Field: Content: Description */
   $handler->display->display_options['fields']['field_exhibit_description']['id'] = 'field_exhibit_description';
   $handler->display->display_options['fields']['field_exhibit_description']['table'] = 'field_data_field_exhibit_description';
@@ -605,10 +614,12 @@ function aic_mobile_cms_content_types_views_default_views() {
     t('Featured'),
     t('Title'),
     t('Dates'),
+    t('Event ID'),
     t('Description'),
     t('Event Short Description'),
     t('Exhibitions Page'),
     t('Exhibitions'),
+    t('Exhibition ID'),
     t('Featured Events Block'),
     t('Exhibitions Block'),
   );
@@ -1852,7 +1863,9 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['field_object_id']['field'] = 'field_object_id';
   $handler->display->display_options['fields']['field_object_id']['relationship'] = 'field_audio_commentary_node';
   $handler->display->display_options['fields']['field_object_id']['label'] = '';
+  $handler->display->display_options['fields']['field_object_id']['element_type'] = '0';
   $handler->display->display_options['fields']['field_object_id']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_object_id']['element_default_classes'] = FALSE;
   $handler->display->display_options['fields']['field_object_id']['settings'] = array(
     'thousand_separator' => '',
     'prefix_suffix' => 1,
@@ -1863,7 +1876,9 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['title']['field'] = 'title';
   $handler->display->display_options['fields']['title']['relationship'] = 'field_audio_commentary_node';
   $handler->display->display_options['fields']['title']['label'] = '';
+  $handler->display->display_options['fields']['title']['element_type'] = '0';
   $handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['title']['element_default_classes'] = FALSE;
   $handler->display->display_options['fields']['title']['link_to_node'] = FALSE;
   /* Field: Content: Nid */
   $handler->display->display_options['fields']['nid_1']['id'] = 'nid_1';
@@ -1883,14 +1898,18 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['title_field_et']['field'] = 'title_field_et';
   $handler->display->display_options['fields']['title_field_et']['relationship'] = 'field_audio_commentary_audio_target_id';
   $handler->display->display_options['fields']['title_field_et']['label'] = '';
+  $handler->display->display_options['fields']['title_field_et']['element_type'] = '0';
   $handler->display->display_options['fields']['title_field_et']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['title_field_et']['element_default_classes'] = FALSE;
   /* Field: Entity translation: Track Title: translated */
   $handler->display->display_options['fields']['field_track_title_et']['id'] = 'field_track_title_et';
   $handler->display->display_options['fields']['field_track_title_et']['table'] = 'field_data_field_track_title';
   $handler->display->display_options['fields']['field_track_title_et']['field'] = 'field_track_title_et';
   $handler->display->display_options['fields']['field_track_title_et']['relationship'] = 'field_audio_commentary_audio_target_id';
   $handler->display->display_options['fields']['field_track_title_et']['label'] = '';
+  $handler->display->display_options['fields']['field_track_title_et']['element_type'] = '0';
   $handler->display->display_options['fields']['field_track_title_et']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_track_title_et']['element_default_classes'] = FALSE;
   /* Contextual filter: Content: Nid */
   $handler->display->display_options['arguments']['nid']['id'] = 'nid';
   $handler->display->display_options['arguments']['nid']['table'] = 'node';
@@ -1942,6 +1961,8 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['defaults']['row_plugin'] = FALSE;
   $handler->display->display_options['row_plugin'] = 'entityreference_fields';
   $handler->display->display_options['row_options']['separator'] = '--';
+  $handler->display->display_options['row_options']['hide_empty'] = TRUE;
+  $handler->display->display_options['row_options']['default_field_elements'] = FALSE;
   $handler->display->display_options['defaults']['row_options'] = FALSE;
 
   /* Display: Block */
