@@ -34,6 +34,7 @@ function aicapp_init() {
   define('AICAPP_TYPE_EVENT', 'event');
   define('AICAPP_TYPE_EXHIBITION', 'exhibition');
   define('AICAPP_TYPE_MAP_ANNOTATION', 'map_annotation');
+  define('AICAPP_TYPE_MAP_FLOOR', 'map_floor');
   define('AICAPP_DATA_AGGREGATOR', 'aic_data_aggregrator');
   define('AICAPP_DATA_SOLR', 'aic_data_solr');
   define('AICAPP_DATA_API_HOST', rtrim(variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'), '/'));
@@ -758,6 +759,8 @@ function _update_object_galleries($recent_added, $locations) {
 function aicapp_gendata_form_submit($form, &$form_state) {
   global $base_path;
   // Load the general info by loading node number 1.
+  // @TODO instead of hard coding node 1, maybe add a configuration field in the
+  // admin settings page for this module?
   $node_gen = node_load(1);
   strip_drupal_from_node($node_gen);
   // Load all published gallery nodes.
@@ -770,6 +773,8 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $tours = node_load_multiple(array(), array('type' => AICAPP_TYPE_TOUR));
   // Load map annontations that are published.
   $map_annotations = node_load_multiple(array(), array('type' => AICAPP_TYPE_MAP_ANNOTATION, 'status' => 1));
+  // Load map floor that are published. There should only be 1 node loaded.
+  $map_floor = node_load_multiple(array(), array('type' => AICAPP_TYPE_MAP_FLOOR, 'status' => 1));
   // Load featured Events & Objects via an entity field query because we Only
   // need a list of node IDs instead of entire objects.
   $query = new EntityFieldQuery();
@@ -875,6 +880,12 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   foreach ($map_annotations as $annontation) {
     strip_drupal_from_node($annontation);
   }
+  // Format map annontations.
+  foreach ($map_floor as $floor) {
+    strip_drupal_from_node($floor);
+    // There should only be 1 map floor node.
+    $map_floor = $floor->floors;
+  }
   // Format featured events, tours and exhibitions.
   $featured_sorted = array();
   if (!empty($featured['node'])) {
@@ -904,6 +915,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'audio_files' => $audio_files,
     'tours' => $tours,
     'annontations' => $map_annotations,
+    'map_floors' => !empty($map_floor) ? $map_floor : array(),
   );
   // Write JSON output to files.
   // v1 verion file output.
@@ -1517,6 +1529,27 @@ function strip_drupal_from_node(&$node) {
         'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : '',
         'label' => isset($node->field_annotation_label[$lang_key][0]['safe_value']) ? $node->field_annotation_label[$lang_key][0]['safe_value'] : '',
       );
+    }
+  }
+  // Map Floors.
+  if (isset($node->field_floor_map)) {
+    if ($fc_items = field_get_items('node', $node, 'field_floor_map')) {
+      $node->floors = array();
+      // Extract the field collection items.
+      $i = 0;
+      foreach ($fc_items as $fc_item) {
+        $item = field_collection_field_get_entity($fc_item);
+        $floor_plan = !empty($item->field_floor_map_file) ? file_create_url($item->field_floor_map_file[LANGUAGE_NONE][0]['uri']) : NULL;
+        $node->floors['map_floor' . $i] = array(
+          'label' => !empty($item->field_floor_label) ? $item->field_floor_label[LANGUAGE_NONE][0]['value'] : NULL,
+          'floor_plan' => $floor_plan,
+          'anchor_pixel_1' => !empty($item->field_floor_map_anchor_pixel) ? $item->field_floor_map_anchor_pixel[LANGUAGE_NONE][0]['value'] : NULL,
+          'anchor_pixel_2' => !empty($item->field_floor_map_anchor_pixel_2) ? $item->field_floor_map_anchor_pixel_2[LANGUAGE_NONE][0]['value'] : NULL,
+          'anchor_location_1' => !empty($item->field_floor_anchor_geolocation) ? $item->field_floor_anchor_geolocation[LANGUAGE_NONE][0]['value'] : NULL,
+          'anchor_location_2' => !empty($item->field_floor_anchor_geolocation_2) ? $item->field_floor_anchor_geolocation_2[LANGUAGE_NONE][0]['value'] : NULL,
+        );
+        $i++;
+      }
     }
   }
   // Final Clean-up. Unset language, and the rest of the saved properties.
@@ -2939,7 +2972,13 @@ function aicapp_object_limit_js($form, $form_state) {
   // Use the triggering elments parents to form a path to the element to replace.
   $element_path = array_slice($form_state['triggering_element']['#parents'], 0, 3);
   // Add the field name we're replacing.
-  $element_path[] = 'field_tour_stop_audio_commentary';
+  $type = !empty($form['type']['#value']) ? $form['type']['#value'] : NULL;
+  if ($type === AICAPP_TYPE_TOUR) {
+    $element_path[] = 'field_tour_stop_audio_commentary';
+  }
+  elseif ($type === AICAPP_TYPE_OBJECT) {
+    $element_path[] = 'field_audio_commentary_audio';
+  }
   $form_return_element = drupal_array_get_nested_value($form, $element_path);
   // Add any messages.
   if ($messages = theme('status_messages')) {
