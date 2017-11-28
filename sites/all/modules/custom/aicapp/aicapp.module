@@ -2939,7 +2939,13 @@ function aicapp_object_limit_js($form, $form_state) {
   // Use the triggering elments parents to form a path to the element to replace.
   $element_path = array_slice($form_state['triggering_element']['#parents'], 0, 3);
   // Add the field name we're replacing.
-  $element_path[] = 'field_tour_stop_audio_commentary';
+  $type = !empty($form['type']['#value']) ? $form['type']['#value'] : NULL;
+  if ($type === AICAPP_TYPE_TOUR) {
+    $element_path[] = 'field_tour_stop_audio_commentary';
+  }
+  elseif ($type === AICAPP_TYPE_OBJECT) {
+    $element_path[] = 'field_audio_commentary_audio';
+  }
   $form_return_element = drupal_array_get_nested_value($form, $element_path);
   // Add any messages.
   if ($messages = theme('status_messages')) {

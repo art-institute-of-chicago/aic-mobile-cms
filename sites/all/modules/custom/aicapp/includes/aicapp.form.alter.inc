@@ -105,6 +105,34 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
       }
     }
   }
+  // Use ajax to update an audio commentary element with the status of available translations.
+  $field_name_audio_commentary = 'field_audio_commentary';
+  $field_name_audio_commentary_audio = 'field_audio_commentary_audio';
+  // Check that the field_tour_stops field collection field is present.
+  if (!empty($form[$field_name_audio_commentary])) {
+    // Create a referenced form element to add the #ajax proerties to.
+    $audio_element =& $form[$field_name_audio_commentary];
+    // Loop through all tour stop elements.
+    foreach (element_children($audio_element[LANGUAGE_NONE]) as $delta) {
+      if (!is_numeric($delta)) {
+        continue;
+      }
+      // Define a CSS ID that will be replaced in the DOM when the updated
+      // select form element is object from the server response.
+      $audio_commentary_id = 'edit-field-audio-commentary-und-' . $delta . '-field-audio-commentary-audio';
+      // Add all the ajax properties to each stop element.
+      $audio_element[LANGUAGE_NONE][$delta][$field_name_audio_commentary_audio][LANGUAGE_NONE][0]['target_id']['#ajax'] = array(
+        'callback' => 'aicapp_object_limit_js',
+        'wrapper' => $audio_commentary_id,
+        'method' => 'replace',
+        'effect' => 'fade',
+        'event' => 'change',
+      );
+      // Create a wrapper with the CSS ID to make replacement targeting easier.
+      $audio_element[LANGUAGE_NONE][$delta][$field_name_audio_commentary_audio][LANGUAGE_NONE]['#prefix'] = '<div id="' . $audio_commentary_id . '">';
+      $audio_element[LANGUAGE_NONE][$delta][$field_name_audio_commentary_audio][LANGUAGE_NONE]['#suffix'] = '</div>';
+    }
+  }
 }
 
 /**
@@ -141,15 +169,107 @@ function _aicapp_form_afterbuild(&$form, &$form_state) {
     // Add EN as the default language.
     $form_state['values']['language'] = AICAPP_DEFAULT_LANG;
   }
-  // Tour stop element alterations.
+  // Tour stop and object audio commentary elements get altered here.
   $field_name_stops = 'field_tour_stops';
+  $field_name_commentary = 'field_audio_commentary';
   if (!empty($form[$field_name_stops]) && empty($path_part_3)) {
     $langcode = $form[$field_name_stops]['#language'];
     // Change the add annother text to add another stop.
     $form[$field_name_stops][$langcode]['add_more']['#value'] = t('Add another stop');
   }
-  elseif (!empty($form['field_audio_commentary']) && empty($path_part_3)) {
-    $form['field_audio_commentary'][$form['field_audio_commentary']['#language']]['add_more']['#value'] = t('Add another audio track');
+  elseif (!empty($form[$field_name_commentary]) && empty($path_part_3)) {
+    $field_langcode = $form[$field_name_commentary]['#language'];
+    // Change the add annother text to add another audio track..
+    $form[$field_name_commentary][$field_langcode]['add_more']['#value'] = t('Add another audio track');
+    // Show any available translations, as well as a link to create a new translation.
+    include_once DRUPAL_ROOT . '/includes/language.inc';
+
+    foreach (element_children($form[$field_name_commentary][$field_langcode]) as $delta) {
+      if (!is_numeric($delta)) {
+        continue;
+      }
+      $header = $rows = array();
+      $audio_node_id = $audio_node = $audio_raw = $audio_suffix = NULL;
+      $audio_field =& $form[$field_name_commentary][$field_langcode][$delta]['field_audio_commentary_audio'];
+      $field_language = $audio_field['#language'];
+      if (!empty($audio_field[$field_language][0]['target_id']['#value'])) {
+        $audio_raw = $audio_field[$field_language][0]['target_id']['#value'];
+      }
+      elseif (!empty($audio_field[$field_language][0]['target_id']['#default_value'])) {
+        $audio_raw = $audio_field[$field_language][0]['target_id']['#default_value'];
+      }
+
+      if (!empty($audio_raw)) {
+        // This value is in the format of "Node Title (Node ID)", so we
+        // split or regex depending on how many '(' are found.
+        $bracket_count = substr_count($audio_raw, '(');
+        if ($bracket_count === 1) {
+          // Only 1 set was found, use split method.
+          $parts = explode('(', trim($audio_raw, ' )'));
+          $audio_node_id = end($parts);
+        }
+        elseif ($bracket_count > 1) {
+          preg_match('/\((\d+)\)$/', $audio_raw, $parts);
+          $audio_node_id = !empty($parts[1]) ? $parts[1] : NULL;
+        }
+      }
+      if (!empty($audio_node_id)) {
+        $audio_suffix = '<div class="audio-translations"><h4>' . t('Translations') . '</h4></div>';
+        $audio_node = node_load($audio_node_id);
+        if ($audio_node->tnid) {
+          // Already part of a set, grab that set.
+          $tnid = $audio_node->tnid;
+          $translations = translation_node_get_translations($audio_node->tnid);
+        }
+        else {
+          // We have no translation source nid, this could be a new set, emulate that.
+          $tnid = $audio_node->nid;
+          $translations = array(entity_language('node', $audio_node) => $audio_node);
+        }
+
+        $type = variable_get('translation_language_type', LANGUAGE_TYPE_INTERFACE);
+        $header = array(t('Language'), t('Status'), t('Operations'));
+
+        foreach (language_list() as $langcode => $language) {
+          $options = array();
+          $language_name = $language->name;
+          if (isset($translations[$langcode])) {
+            // Existing translation in the translation set: display status.
+            // We load the full node to check whether the user can edit it.
+            $translation_node = node_load($translations[$langcode]->nid);
+            $path = 'node/' . $translation_node->nid;
+            $links = language_negotiation_get_switch_links($type, $path);
+            $title = empty($links->links[$langcode]['href']) ? l($translation_node->title, $path) : l($translation_node->title, $links->links[$langcode]['href'], $links->links[$langcode]);
+            if (node_access('update', $translation_node)) {
+              $text = t('edit');
+              $path = 'node/' . $translation_node->nid . '/edit';
+              $links = language_negotiation_get_switch_links($type, $path);
+              $options[] = empty($links->links[$langcode]['href']) ? l($text, $path) : l($text, $links->links[$langcode]['href'], $links->links[$langcode]);
+            }
+            $status = $translation_node->status ? t('Published') : t('Not published');
+            $status .= $translation_node->translate ? ' - <span class="marker">' . t('outdated') . '</span>' : '';
+            if ($translation_node->nid == $tnid) {
+              $language_name = t('<strong>@language_name</strong> (source)', array('@language_name' => $language_name));
+            }
+          }
+          else {
+            // No such translation in the set yet: help user to create it.
+            $title = t('n/a');
+            if (node_access('create', $audio_node)) {
+              $text = t('add translation');
+              $path = 'node/add/' . str_replace('_', '-', $audio_node->type);
+              $links = language_negotiation_get_switch_links($type, $path);
+              $query = array('query' => array('translation' => $audio_node->nid, 'target' => $langcode));
+              $options[] = empty($links->links[$langcode]['href']) ? l($text, $path, $query) : l($text, $links->links[$langcode]['href'], array_merge_recursive($links->links[$langcode], $query));
+            }
+            $status = t('Not translated');
+          }
+          $rows[] = array($language_name, $status, implode(" | ", $options));
+        }
+        $audio_suffix .= theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('No translations available.')));
+        $audio_field[$field_language][0]['target_id']['#suffix'] = $audio_suffix;
+      }
+    }
   }
 }
 
