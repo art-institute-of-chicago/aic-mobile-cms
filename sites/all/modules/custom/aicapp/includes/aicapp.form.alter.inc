@@ -112,8 +112,9 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
  * have been added.
  */
 function _aicapp_form_afterbuild(&$form, &$form_state) {
+  $path_part_3 = arg(3);
   // Add a google map for pages that have a location field.
-  if (!empty($form['field_location']) && empty(arg(3))) {
+  if (!empty($form['field_location']) && empty($path_part_3)) {
     $coords = !empty($form['#node']->field_location[LANGUAGE_NONE][0]['safe_value']) ? $form['#node']->field_location[LANGUAGE_NONE][0]['safe_value'] : 0;
     $map_markup = '<iframe width="650" height="600" frameborder="0" scrolling="no"';
     $map_markup .= ' marginheight="0" marginwidth="0" src="' . base_path();
@@ -142,7 +143,7 @@ function _aicapp_form_afterbuild(&$form, &$form_state) {
   }
   // Tour stop element alterations.
   $field_name_stops = 'field_tour_stops';
-  if (!empty($form[$field_name_stops]) && empty(arg(3))) {
+  if (!empty($form[$field_name_stops]) && empty($path_part_3)) {
     $langcode = $form[$field_name_stops]['#language'];
     // Change the add annother text to add another stop.
     $form[$field_name_stops][$langcode]['add_more']['#value'] = t('Add another stop');
