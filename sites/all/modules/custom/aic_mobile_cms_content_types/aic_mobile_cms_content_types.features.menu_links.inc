@@ -27,6 +27,40 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
     'weight' => -49,
     'customized' => 1,
   );
+  // Exported menu link: main-menu_events:events.
+  $menu_links['main-menu_events:events'] = array(
+    'menu_name' => 'main-menu',
+    'link_path' => 'events',
+    'router_path' => 'events',
+    'link_title' => 'Events',
+    'options' => array(
+      'identifier' => 'main-menu_events:events',
+    ),
+    'module' => 'system',
+    'hidden' => 0,
+    'external' => 0,
+    'has_children' => 0,
+    'expanded' => 0,
+    'weight' => 6,
+    'customized' => 0,
+  );
+  // Exported menu link: main-menu_exhibitions:exhibitions.
+  $menu_links['main-menu_exhibitions:exhibitions'] = array(
+    'menu_name' => 'main-menu',
+    'link_path' => 'exhibitions',
+    'router_path' => 'exhibitions',
+    'link_title' => 'Exhibitions',
+    'options' => array(
+      'identifier' => 'main-menu_exhibitions:exhibitions',
+    ),
+    'module' => 'system',
+    'hidden' => 0,
+    'external' => 0,
+    'has_children' => 0,
+    'expanded' => 0,
+    'weight' => 6,
+    'customized' => 0,
+  );
   // Exported menu link: main-menu_galleries:galleries.
   $menu_links['main-menu_galleries:galleries'] = array(
     'menu_name' => 'main-menu',
@@ -60,6 +94,40 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
     'expanded' => 0,
     'weight' => -50,
     'customized' => 1,
+  );
+  // Exported menu link: main-menu_map-annotations:annotations.
+  $menu_links['main-menu_map-annotations:annotations'] = array(
+    'menu_name' => 'main-menu',
+    'link_path' => 'annotations',
+    'router_path' => 'annotations',
+    'link_title' => 'Map Annotations',
+    'options' => array(
+      'identifier' => 'main-menu_map-annotations:annotations',
+    ),
+    'module' => 'system',
+    'hidden' => 0,
+    'external' => 0,
+    'has_children' => 0,
+    'expanded' => 0,
+    'weight' => 9,
+    'customized' => 0,
+  );
+  // Exported menu link: main-menu_map-floors:floors.
+  $menu_links['main-menu_map-floors:floors'] = array(
+    'menu_name' => 'main-menu',
+    'link_path' => 'floors',
+    'router_path' => 'floors',
+    'link_title' => 'Map Floors',
+    'options' => array(
+      'identifier' => 'main-menu_map-floors:floors',
+    ),
+    'module' => 'system',
+    'hidden' => 0,
+    'external' => 0,
+    'has_children' => 0,
+    'expanded' => 0,
+    'weight' => 9,
+    'customized' => 0,
   );
   // Exported menu link: main-menu_objects:objects.
   $menu_links['main-menu_objects:objects'] = array(
@@ -99,8 +167,12 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
   // Translatables
   // Included for use with string extractors like potx.
   t('Audio');
+  t('Events');
+  t('Exhibitions');
   t('Galleries');
   t('General Info');
+  t('Map Annotations');
+  t('Map Floors');
   t('Objects');
   t('Tours');
 
