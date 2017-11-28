@@ -2756,6 +2756,8 @@ function aicapp_get_featured($type = 'node', $bundles = array()) {
  * Save remote objects to nodes.
  */
 function aicapp_process_remote_object() {
+  $now = new DateTime();
+  $remote_objects = array();
   $limit = 'limit=';
   $limit_count = 50;
   $max_page = 10;
@@ -2771,7 +2773,6 @@ function aicapp_process_remote_object() {
       'remote' => array(),
     ),
   );
-  $remote_objects = array();
   try {
     // Fetch all recent remote objects.
     foreach ($objects as $type => &$remote) {
@@ -2782,10 +2783,10 @@ function aicapp_process_remote_object() {
       $discover = file_get_contents($url . '?' . $limit . $limit_count);
       // If connection not available.
       if (!$discover) {
-        return;
+        continue;
       }
       $json = json_decode($discover, TRUE);
-      if (isset($json['data'])) {
+      if (!empty($json['data'])) {
         foreach ($json['data'] as $remote_record) {
           if ($type === AICAPP_TYPE_EXHIBITION) {
             // Skip any that are not active
@@ -2795,7 +2796,8 @@ function aicapp_process_remote_object() {
           }
           else if ($type === AICAPP_TYPE_EVENT) {
             // Skip any that have end dates in the past.
-            if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
+            if ($now > new DateTime($remote_record['end_at'])) {
+              # Now is greater than Event end time, i.e. in the past.
               continue;
             }
           }
@@ -2820,7 +2822,8 @@ function aicapp_process_remote_object() {
                 }
                 else if ($type === AICAPP_TYPE_EVENT) {
                   // Skip any that have end dates in the past.
-                  if (strtotime($remote_record['end_at']) > strtotime('-7 day') ) {
+                  if ($now > new DateTime($remote_record['end_at'])) {
+                    # Now is greater than Event end time, i.e. in the past.
                     continue;
                   }
                 }
@@ -2836,11 +2839,13 @@ function aicapp_process_remote_object() {
       // Fetch all locally saved objects using the key of remote ids.
       $remote['local'] = array();
       $remote['to_import'] = array_keys($remote['remote']);
-
+      // Find nodes that match the id of the remote object.
       $query = new EntityFieldQuery();
       $query->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', $type, '=')
-        ->fieldCondition('field_imported_object_id', 'value', $remote['to_import'], 'IN');
+        ->entityCondition('bundle', $type, '=');
+      if (!empty($remote['to_import'])) {
+        $query->fieldCondition('field_imported_object_id', 'value', $remote['to_import'], 'IN');
+      }
       $result = $query->execute();
       if (isset($result['node'])) {
         $nids = array_keys($result['node']);
