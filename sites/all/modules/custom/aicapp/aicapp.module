@@ -1121,8 +1121,15 @@ function _getSOLRdata(&$object, $object_id = NULL) {
  * Clear out all the Drupal stuff from the node, so we can deliver JSON data.
  */
 function strip_drupal_from_node(&$node) {
-  // Node properties that we want to save.
-  $to_skip = array('title', 'status', 'type', 'nid', 'translations', 'in_gallery');
+  // Node properties that we want to save, so we skip unsetting them.
+  $to_skip = array(
+    'title', 'status', 'type', 'nid', 'translations',
+    // Artwork object properties that we do not want to strip away.
+    'in_gallery', 'gallery_location', 'credit_line', 'copyright_notice',
+    'artist_culture_place_delim', 'objecct_id', 'main_reference_number',
+    'title_t', 'artist_sort_name', 'artist_culture_place', 'dimensions',
+    'date_display', 'date_range', 'thumbnail_full_path', 'large_image_full_path',
+  );
   // Node properties that we want to strip.
   $to_unset = array(
     'vid', 'uid', 'log', 'comment', 'promote', 'sticky', 'created', 'changed',
@@ -1277,14 +1284,14 @@ function strip_drupal_from_node(&$node) {
   }
   // Gallery node field items.
   if (isset($node->field_gallery_id)) {
-    $node->gallery_id = '';
+    $node->gallery_id = empty($node->gallery_id) ? '' : $node->gallery_id;
     if (isset($node->field_gallery_id[LANGUAGE_NONE][0]['safe_value'])) {
       $node->gallery_id = $node->field_gallery_id[LANGUAGE_NONE][0]['safe_value'];
     }
   }
   // Gallery Number.
   if (isset($node->field_gallery_number)) {
-    $node->gallery_number = '';
+    $node->gallery_number = empty($node->gallery_number) ? '' : $node->gallery_number;
     // This is overriding the SOLR data.  This is why we sync.
     if (isset($node->field_gallery_number[LANGUAGE_NONE][0]['safe_value'])) {
       $node->gallery_number = $node->field_gallery_number[LANGUAGE_NONE][0]['safe_value'];
@@ -1292,30 +1299,30 @@ function strip_drupal_from_node(&$node) {
   }
   // Object node type field items, starging with the object id.
   if (isset($node->field_object_id)) {
-    $node->object_id = '';
+    $node->object_id = empty($node->object_id) ? '' : $node->object_id;
     if (isset($node->field_object_id[LANGUAGE_NONE][0]['value'])) {
       $node->object_id = $node->field_object_id[LANGUAGE_NONE][0]['value'];
     }
   }
   // Object reference number.
   if (isset($node->field_reference_num)) {
-    $node->reference_num = '';
+    $node->reference_num = empty($node->reference_num) ? '' : $node->reference_num;
     if (isset($node->field_reference_num[LANGUAGE_NONE][0]['safe_value'])) {
       $node->reference_num = $node->field_reference_num[LANGUAGE_NONE][0]['safe_value'];
     }
   }
   // What is this object's gallery location?
   if (isset($node->field_gallery_location)) {
-    $node->gallery_location = '';
+    $node->gallery_location = empty($node->gallery_location) ? '' : $node->gallery_location;
     if (isset($node->field_gallery_location[LANGUAGE_NONE][0]['safe_value'])) {
       $node->gallery_location = $node->field_gallery_location[LANGUAGE_NONE][0]['safe_value'];
     }
   }
   // Is this object in a gallery?
   if (isset($node->field_in_gallery)) {
-    $node->in_gallery = '';
-    if (isset($node->field_reference_num[LANGUAGE_NONE][0]['safe_value'])) {
-      $node->reference_num = $node->field_reference_num[LANGUAGE_NONE][0]['safe_value'];
+    $node->in_gallery = empty($node->in_gallery) ? '' : $node->in_gallery;
+    if (isset($node->field_in_gallery[LANGUAGE_NONE][0]['safe_value'])) {
+      $node->in_gallery = $node->field_in_gallery[LANGUAGE_NONE][0]['safe_value'];
     }
   }
   // Audio Commentary field collection items.
