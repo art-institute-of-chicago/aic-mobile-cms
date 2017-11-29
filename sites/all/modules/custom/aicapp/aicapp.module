@@ -784,7 +784,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     ->propertyCondition('status', 1, '=')
     ->propertyCondition('promote', 1, '=')
     ->execute();
-  // Load all featued nodes.
+  // Load all featured nodes.
   $featured = isset($results['node']) ? node_load_multiple(array_keys($results['node'])) : array('node' => array());
   // Strip out Drupal native stuff we don't need in the JSON output.
   foreach ($galleries as $gallery) {
@@ -1121,6 +1121,9 @@ function _getSOLRdata(&$object, $object_id = NULL) {
  * Clear out all the Drupal stuff from the node, so we can deliver JSON data.
  */
 function strip_drupal_from_node(&$node) {
+  // Node properties that we want to save.
+  $to_skip = array('title', 'status', 'type', 'nid', 'translations', 'in_gallery');
+  // Node properties that we want to strip.
   $to_unset = array(
     'vid', 'uid', 'log', 'comment', 'promote', 'sticky', 'created', 'changed',
     'tnid', 'translate', 'revision_timestamp', 'revision_uid', 'path', 'name',
@@ -1552,8 +1555,7 @@ function strip_drupal_from_node(&$node) {
       }
     }
   }
-  // Final Clean-up. Unset language, and the rest of the saved properties.
-  $to_skip = array('title', 'status', 'type', 'nid', 'translations');
+  // Final clean-up. Unset language, and the rest of the saved properties.
   $properties += array('data', 'entity_translation_handler_id');
   foreach ($properties as $property) {
     if (!in_array($property, $to_skip) && isset($node->{$property})) {
