@@ -204,6 +204,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
   $handler->display->display_options['title'] = 'Events';
+  $handler->display->display_options['use_ajax'] = TRUE;
   $handler->display->display_options['use_more_always'] = FALSE;
   $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['cache']['type'] = 'none';
@@ -367,6 +368,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   /* Filter criterion: Content: Promoted to front page */
   $handler->display->display_options['filters']['promote']['id'] = 'promote';
   $handler->display->display_options['filters']['promote']['table'] = 'node';
+  $handler->display->display_options['filters']['promote']['value'] = 'All';
   $handler->display->display_options['filters']['promote']['field'] = 'promote';
   $handler->display->display_options['filters']['promote']['exposed'] = TRUE;
   $handler->display->display_options['filters']['promote']['expose']['operator_id'] = '';
@@ -426,6 +428,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   );
   /* Field: Content: Promoted to front page */
   $handler->display->display_options['fields']['promote']['id'] = 'promote';
+  $handler->display->display_options['filters']['promote']['value'] = 'All';
   $handler->display->display_options['fields']['promote']['table'] = 'node';
   $handler->display->display_options['fields']['promote']['field'] = 'promote';
   $handler->display->display_options['fields']['promote']['label'] = 'Featured';
