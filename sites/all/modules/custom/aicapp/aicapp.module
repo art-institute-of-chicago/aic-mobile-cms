@@ -314,6 +314,18 @@ function aicapp_gendata_form() {
 /**
  * Hook_form() implementation.
  */
+function aicapp_load_remote_form() {
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Refresh Events'),
+    '#attributes' => array('class' => array('button')),
+  );
+  return $form;
+};
+
+/**
+ * Hook_form() implementation.
+ */
 function aicapp_file_sync_form() {
   $form['submit'] = array(
     '#type' => 'submit',
@@ -2042,7 +2054,7 @@ function aicapp_cron() {
   }
   // At 1am - assuming Cron is running every hour.
   if (date('G') == 2 || !variable_get('aicapp_remote_entities_imported', 0)) {
-    aicapp_process_remote_object();
+    aicapp_load_remote_form_submit($fm, $fm2);
     variable_set('aicapp_remote_entities_imported', 1);
   }
 }
@@ -2371,6 +2383,11 @@ function aicapp_admin() {
     '#default_value' => variable_get('aicapp_data_endpoint_images', '/api/v2/images'),
     '#description' => t('Query for a image via this endpoint.'),
   );
+  $form['aicapp_data_aggregator']['import_submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Import Remote Data'),
+    '#suffix' => t('Click this button to load remote events and exhitions.'),
+  );
   // Data migration between v1 and v2.
   $form['aicapp_data'] = array(
     '#type' => 'fieldset',
@@ -2443,7 +2460,13 @@ function aicapp_admin_validate($form, &$form_state) {
   else {
     $form_state['values']['aicapp_image_large_crop_lock'] = 'true';
   }
-  if ($form_state['clicked_button']['#value'] === 'Migrate Data') {
+  // @TODO move to submit.
+  if ($form_state['clicked_button']['#value'] === 'Import Remote Data') {
+    $a = array();
+    $b = array();
+    aicapp_load_remote_form_submit($a, $b);
+  }
+  elseif ($form_state['clicked_button']['#value'] === 'Migrate Data') {
     global $language;
     $type = $form_state['values']['aicapp_data']['migration_type'];
     $query = new EntityFieldQuery();
@@ -2764,7 +2787,7 @@ function aicapp_get_featured($type = 'node', $bundles = array()) {
 /**
  * Save remote objects to nodes.
  */
-function aicapp_process_remote_object() {
+function aicapp_load_remote_form_submit($form, &$form_state) {
   $now = new DateTime();
   $remote_objects = array();
   $limit = 'limit=';
@@ -2772,7 +2795,7 @@ function aicapp_process_remote_object() {
   $max_page = 10;
   $page = 'page=';
   // Define what we're going to import.
-  $objects = array(
+  $defaults = array(
     AICAPP_TYPE_EVENT => array(
       'endpoint' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EVENT,
       'remote' => array(),
@@ -2784,7 +2807,7 @@ function aicapp_process_remote_object() {
   );
   try {
     // Fetch all recent remote objects.
-    foreach ($objects as $type => &$remote) {
+    foreach ($defaults as $type => &$remote) {
       $page_start = 2;
       $url = $remote['endpoint'];
       // This will require first discovering which events and exhibitions are
