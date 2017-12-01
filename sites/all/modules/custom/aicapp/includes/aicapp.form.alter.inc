@@ -302,6 +302,9 @@ function _aicapp_add_translations(&$form, $field) {
       }
       $audio_suffix = '<div class="audio-translations">' . $translation_title . '</div>';
       $audio_node = node_load($target_id);
+      if (empty($audio_node->field_audio_file) || $audio_node->field_audio_file['#field_language'] === LANGUAGE_NONE) {
+        continue;
+      }
       $entity_type = 'node';
       $handler = entity_translation_get_handler($entity_type, $audio_node);
       // Ensure $entity holds an entity object and not an id.
