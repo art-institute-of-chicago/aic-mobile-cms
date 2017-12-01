@@ -1164,7 +1164,7 @@ function strip_drupal_from_node(&$node) {
   $to_skip = array(
     'title', 'status', 'type', 'nid', 'translations',
     // Artwork object properties that we do not want to strip away.
-    'in_gallery', 'gallery_location', 'credit_line', 'copyright_notice',
+    'id', 'in_gallery', 'gallery_location', 'credit_line', 'copyright_notice',
     'artist_culture_place_delim', 'objecct_id', 'main_reference_number',
     'title_t', 'artist_sort_name', 'artist_culture_place', 'dimensions',
     'date_display', 'date_range', 'thumbnail_full_path', 'large_image_full_path',

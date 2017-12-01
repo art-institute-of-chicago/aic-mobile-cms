@@ -321,7 +321,7 @@ function _aicapp_add_translations(&$form, $field) {
         // FIXME!
         entity_translation_entity_save($entity_type, $entity);
       }
-      if (variable_get('aicapp_show_translation_links', TRUE)) {
+      if (variable_get('aicapp_show_translation_links', FALSE)) {
         $header = array(t('Language'), t('Status'), t('Operations'));
       }
       else {
@@ -398,7 +398,7 @@ function _aicapp_add_translations(&$form, $field) {
             }
             $status = t('Not translated');
           }
-          if (variable_get('aicapp_show_translation_links', TRUE)) {
+          if (variable_get('aicapp_show_translation_links', FALSE)) {
             $row_data = array($language_name, $status, implode(" | ", $options));
           }
           else  {
