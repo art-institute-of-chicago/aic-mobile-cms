@@ -3043,10 +3043,6 @@ function aicapp_object_limit_js($form, $form_state) {
   elseif (!empty($form_state['triggering_element']['field_name'])) {
     $field_trigger = $form_state['triggering_element']['field_name'];
   }
-  else {
-   var_dump(array_keys($form_state['triggering_element']));
-    die();
-  }
   // Depending on what field is being updated...
   switch ($field_trigger) {
     default:
