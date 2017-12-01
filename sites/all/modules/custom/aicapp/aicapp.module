@@ -802,6 +802,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   foreach ($galleries as $gallery) {
     strip_drupal_from_node($gallery);
     // Add in other gallery fields from SOLR.
+    // @TODO switch away from SOLR.
     $result = _runSolrQuery(AICAPP_GALLERY_QUERY, 'gallery_id', $gallery->gallery_id);
     if (!empty($result['response']['docs'])) {
       foreach ($result['response']['docs'][0] as $key => $val) {
@@ -1142,7 +1143,7 @@ function _getSOLRdata(&$object, $object_id = NULL) {
       return;
     }
   }
-
+  // @TODO switch away from SOLR.
   $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
   if (!empty($result['response']['docs'])) {
     foreach ($result['response']['docs'][0] as $key => $val) {
@@ -1614,8 +1615,8 @@ function strip_drupal_from_node(&$node) {
  * Get gallery count.
  */
 function aicapp_gallery_count() {
+  // @TODO switch away from SOLR.
   $result = _runSolrQuery(AICAPP_GALLERY_QUERY, '*', '*', 500);
-
   $SOLR_count = count($result['response']['docs']);
   $result = db_query("SELECT COUNT(nid) as count FROM {node} WHERE type = :s AND status = 1", array(':s' => AICAPP_TYPE_GALLERY));
   $galleries = $result->fetchObject();
@@ -1628,6 +1629,7 @@ function aicapp_gallery_count() {
  * Used to multi-load in the galleries.  Objects don't use this, they are loaded one at a time via search.
  */
 function aicapp_loadgalleries_form_submit($form, &$form_state) {
+  // @TODO switch away from SOLR.
   $result = _runSolrQuery(AICAPP_GALLERY_QUERY, '*', '*', 500);
 
   // first delete any old galleries not in SOLR anymore
@@ -1708,31 +1710,18 @@ function aicappSaveNode($object, $type) {
     $node->field_reference_num[$node->language][0]['value'] = $object['main_reference_number'];
     $node->field_gallery_location[$node->language][0]['value'] = $object['gallery_location'];
 
-    // @TODO build a dynamic path to the image using the Image Server URL and
-    // the image ID using the following format:
-    // {scheme}://{server}{/prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
-    $filename = AICAPP_IMAGE_CROP_QUALITY . '.' . AICAPP_IMAGE_CROP_FORMAT;
     // Image server URL begins like this for both thumnail and full.
-    $url = !empty($object['preferred_image_id']) ? AICAPP_IMAGE_SERVER . '/' . $object['preferred_image_id'] . '/' : NULL;
+    $preferred_image_id = !empty($object['preferred_image_id']) ? $object['preferred_image_id'] : NULL;
 
-    if (!empty($object['thumbnail_full_path'])) {
-      $crop_size = variable_get('aicapp_image_thumb_crop', '!112,112');
-      // Build a path to the thumnail image.
-      $url .= AICAPP_IMAGE_CROP_REGION . '/' . $crop_size . '/';
-      $url .= AICAPP_IMAGE_CROP_ROTATION . '/' . $filename;
-      $node->field_thumbnail_image[$node->language][0]['value'] = $url;
-      // @TODO remove following after previous line is functioning.
-      // $node->field_thumbnail_image[$node->language][0]['value'] = $object['thumbnail_full_path'];
+    if (!empty($preferred_image_id)) {
+      // Thumbnail.
+      $thumnail_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'thumbnail'));
+      $node->field_thumbnail_image[$node->language][0]['value'] = $thumnail_url;
+      // Full size image.
+      $full_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'large'));
+      $node->field_large_image[$node->language][0]['value'] = $full_url;
     }
-    if (!empty($object['large_image_full_path'])) {
-      $crop_size = variable_get('aicapp_image_full_crop', '!800,800');
-      // Build a path to the full image.
-      $url .= AICAPP_IMAGE_CROP_REGION . '/' . $crop_size . '/';
-      $url .= AICAPP_IMAGE_CROP_ROTATION . '/' . $filename;
-      $node->field_large_image[$node->language][0]['value'] = $url;
-      // @TODO remove following after previous line is functioning.
-      //$node->field_large_image[$node->language][0]['value'] = $object['large_image_full_path'];
-    }
+
     // Set node to unbpublished.
     $node->status = 0;
     // Set whether the object is in a gallery, or not.
@@ -1831,6 +1820,7 @@ function aicapp_node_view($node, $view_mode, $langcode) {
   if ($node->type == AICAPP_TYPE_OBJECT && $node->field_object_id) {
     $ref_num = $node->field_object_id[LANGUAGE_NONE][0]['value'];
     if (!empty($ref_num)) {
+      // @TODO switch away from SOLR.
       $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $ref_num);
 
       if (!empty($result['response']['docs'])) {
@@ -1855,6 +1845,7 @@ function aicapp_node_view($node, $view_mode, $langcode) {
       $gallery_id = 0;
     }
     if (!empty($gallery_id)) {
+      // @TODO switch away from SOLR.
       $result = _runSolrQuery(AICAPP_GALLERY_QUERY, 'gallery_id', $gallery_id);
 
       if (!empty($result['response']['docs'])) {
@@ -1977,6 +1968,7 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
 
   $srchtermArray = explode(",", $srchterm);
   foreach ($srchtermArray as $key => $srchterm) {
+    // @TODO switch away from SOLR.
     $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, $field, $srchterm, $rows, $start);
 
     $collect = array();
@@ -2120,9 +2112,14 @@ function aicapp_node_presave($node) {
     aicapp_check_for_tour_problems($node);
   }
   if ($node->type == AICAPP_TYPE_OBJECT) {
+    // If the crop dimensions have been updated, update the image paths as well.
+    _aicapp_update_image_fields($node);
+
+    // Check if the object has a full size image in SOLR.
     if (isset($node->field_object_id[LANGUAGE_NONE][0]['value'])) {
       $ref_num = $node->field_object_id[LANGUAGE_NONE][0]['value'];
       if (!empty($ref_num)) {
+        // @TODO switch away from SOLR.
         $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $ref_num);
 
         if (empty($result['response']['docs'][0]['large_image_full_path'])) {
@@ -2137,6 +2134,115 @@ function aicapp_node_presave($node) {
       drupal_set_message('The object ' . $node->title . ' has no audio file attached.', 'warning');
     }
   }
+}
+
+/**
+ * Update image fields to use new crop dimensions.
+ */
+function _aicapp_update_image_fields($node) {
+  $image_fields = array(
+    'field_thumbnail_image' => 'field_thumbnail_crop_rect',
+    'field_large_image' => 'field_large_image_crop_rect',
+  );
+  $preferred_image_id = _aicapp_get_preferred_image_id($node);
+  foreach ($image_fields as $field => $crop_field) {
+    if (!isset($node->{$field}) || !isset($node->{$crop_field})) {
+      continue;
+    }
+    // Crop dimension
+    $field_values = $node->{$crop_field}[LANGUAGE_NONE][0];
+    $crop_values = array(
+      'x1' => $field_values['field_x'][LANGUAGE_NONE][0]['value'],
+      'x2' => $field_values['field_x2'][LANGUAGE_NONE][0]['value'],
+      'y1' => $field_values['field_y'][LANGUAGE_NONE][0]['value'],
+      'y2' => $field_values['field_y2'][LANGUAGE_NONE][0]['value'],
+      'h' => $field_values['field_height'][LANGUAGE_NONE][0]['value'],
+      'w' => $field_values['field_width'][LANGUAGE_NONE][0]['value'],
+    );
+    $node->{$field}[LANGUAGE_NONE][0]['value'] = _aicapp_get_image_crop($preferred_image_id, $crop_values);
+  }
+}
+
+/**
+ * Return a object id from the data hub, given a object node.
+ */
+function _aicapp_get_preferred_image_id($object_node) {
+  if (empty($object_node->nid)) {
+    return;
+  }
+  $entity = entity_metadata_wrapper('node', $object_node);
+  $object_id = $entity->field_object_id->value();
+  $object_id = '';
+  $options = array(
+    'ids' => array($object_id),
+    'key' => 'object_id',
+  );
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  // Query the data aggregrator.
+  $results = _aicapp_fetch_data($url, $options);
+  if (!empty($results[0])) {
+    return !empty($results[0]['preferred_image_id']) ? $results[0]['preferred_image_id'] : NULL;
+  }
+}
+
+/**
+ * Prepare a URL to a cropped remote image.
+ */
+function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
+  if (empty($preferred_image_id)) {
+    return;
+  }
+  $defaults = array(
+    'default' => 'thumbnail',
+    'presets' => array(
+      'thumbnail' => array(
+        'iiif_size' => variable_get('aicapp_image_thumb_crop', '!112,112'),
+        'x' => 0,
+        'x1' => 112,
+        'y' => 0,
+        'y2' => 112,
+        'h' => 112,
+        'w' => 112,
+      ),
+      'large' => array(
+        'iiif_size' => variable_get('aicapp_image_full_crop', '!800,800'),
+        'x' => 0,
+        'x1' => 800,
+        'y' => 0,
+        'y2' => 800,
+        'h' => 800,
+        'w' => 800,
+      ),
+    ),
+    'region' => AICAPP_IMAGE_CROP_REGION,
+    'filename' => AICAPP_IMAGE_CROP_QUALITY . '.' . AICAPP_IMAGE_CROP_FORMAT,
+    'server' => AICAPP_IMAGE_SERVER,
+    'rotation' => AICAPP_IMAGE_CROP_ROTATION,
+  );
+  $crop_values += $defaults;
+  $preset = !empty($crop_values['presets'][$crop_values['default']])
+         ? $crop_values['presets'][$crop_values['default']]
+         : $crop_values['presets']['thumbnail'];
+
+  // If actual crop values were passed, use those intead of presets.
+  if (isset($crop_values['x1']) && isset($crop_values['y1'])
+    && isset($crop_values['h']) && isset($crop_values['w'])) {
+    // @TODO to use a percentage we need the full width and heigth of the source image.
+    // Convert to a percentage using the following formula:
+    // x = round(x1 / full width)
+    // y = round(y1 / full height)
+    // w = round((x2 - x1) / full width)
+    // h = round((y2 - y1) / full heigth)
+    // size = pct:x,y,w,h
+    $preset['iiif_size'] = $crop_values['x1'] . ',' . $crop_values['y1'] . ',' . $crop_values['w'] . ',' . $crop_values['h'];
+  }
+  // @TODO build a dynamic path to the image using the Image Server URL and
+  // the image ID using the following format:
+  // {scheme}://{server}{/prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
+  // Build a path to the thumnail image.
+  $url = $crop_values['server'] . '/' . $preferred_image_id . '/' . $crop_values['region'] . '/' . $preset['iiif_size'] . '/';
+  $url .= $crop_values['rotation'] . '/' . $crop_values['filename'];
+  return $url;
 }
 
 /**
@@ -2247,6 +2353,7 @@ function aicapp_object_noimg() {
   // Examine in SOLR and see if image is there.
   $rows = array();
   while ($record = $result->fetchAssoc()) {
+    // @TODO switch away from SOLR.
     $json = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $record['field_object_id_value']);
     foreach ($json['response']['docs'] as $item) {
       if (empty($item['large_image_full_path'])) {
@@ -2315,7 +2422,7 @@ function aicapp_admin() {
     '#size' => 200,
     '#maxlength' => 256,
     '#title' => t('Full image crop dimensions.'),
-    '#default_value' => variable_get('aicapp_image_thumb_crop', '!800,800'),
+    '#default_value' => variable_get('aicapp_image_full_crop', '!800,800'),
     '#description' => t('Minimum crop dimensions for the full image.'),
   );
   $form['aicapp_image_thumb_crop'] = array(
@@ -2470,6 +2577,9 @@ function aicapp_admin_validate($form, &$form_state) {
   if (strpos($form_state['values']['aicapp_image_thumb_crop_aspect'], ':') === FALSE) {
     $form_state['values']['aicapp_image_thumb_crop_aspect'] = $form_state['values']['aicapp_image_thumb_crop_aspect'] . ':1';
   }
+  $form_state['values']['aicapp_image_full_crop'] = trim($form_state['values']['aicapp_image_full_crop']);
+  $form_state['values']['aicapp_image_thumb_crop'] = trim($form_state['values']['aicapp_image_thumb_crop']);
+
   // Save the variable as a lowercase string for use in JS.
   if ($form_state['values']['aicapp_image_thumb_crop_lock'] == FALSE) {
     // Leave as lowercase for use in JS.
@@ -3042,10 +3152,6 @@ function aicapp_object_limit_js($form, $form_state) {
   }
   elseif (!empty($form_state['triggering_element']['field_name'])) {
     $field_trigger = $form_state['triggering_element']['field_name'];
-  }
-  else {
-   var_dump(array_keys($form_state['triggering_element']));
-    die();
   }
   // Depending on what field is being updated...
   switch ($field_trigger) {

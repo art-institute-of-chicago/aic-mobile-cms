@@ -302,6 +302,9 @@ function _aicapp_add_translations(&$form, $field) {
       }
       $audio_suffix = '<div class="audio-translations">' . $translation_title . '</div>';
       $audio_node = node_load($target_id);
+      if (empty($audio_node->field_audio_file) || $audio_node->field_audio_file['#field_language'] === LANGUAGE_NONE) {
+        continue;
+      }
       $entity_type = 'node';
       $handler = entity_translation_get_handler($entity_type, $audio_node);
       // Ensure $entity holds an entity object and not an id.
@@ -429,6 +432,9 @@ function _aicapp_add_translations(&$form, $field) {
 function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
   // initializing image.
   $thumbUrl = $imageToCrop[LANGUAGE_NONE][0]['value'];
+  if (empty($thumbUrl)) {
+    return;
+  }
   $thumbImageinfo = getimagesize($thumbUrl);
   $thumbWidth = $thumbImageinfo[0];
   $thumbHeight = $thumbImageinfo[1];
