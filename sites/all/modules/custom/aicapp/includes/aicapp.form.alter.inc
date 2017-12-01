@@ -429,6 +429,9 @@ function _aicapp_add_translations(&$form, $field) {
 function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
   // initializing image.
   $thumbUrl = $imageToCrop[LANGUAGE_NONE][0]['value'];
+  if (empty($thumbUrl)) {
+    return;
+  }
   $thumbImageinfo = getimagesize($thumbUrl);
   $thumbWidth = $thumbImageinfo[0];
   $thumbHeight = $thumbImageinfo[1];
