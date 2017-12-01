@@ -907,13 +907,6 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   }
   // Prepare to output JSON data.
   // Add all the entities to a single array for encoding.
-  $v1_data = array(
-    'general_info' => $node_gen,
-    'galleries' => $galleries,
-    'objects' => $objects,
-    'audio_files' => $audio_files,
-    'tours' => $tours,
-  );
   // Version 2 JSON data.
   $v2_data = array(
     'dashboard' => array(
@@ -929,15 +922,49 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'annontations' => $map_annotations,
     'map_floors' => !empty($map_floor) ? $map_floor : array(),
   );
+  // Version 2 file output.
+  $v2_json_output = json_encode($v2_data);
+  $v2_filename = 'appData-v2';
+  $v2_file = file_put_contents('sites/default/files/' . $v2_filename . '.json', $v2_json_output);
+  // Version 1 data
+  $v1_data = array(
+    'general_info' => $node_gen,
+    'galleries' => $galleries,
+    'objects' => $objects,
+    'audio_files' => $audio_files,
+    'tours' => $tours,
+  );
+  // Remove translations property to prevent any changes to v1 JSON.
+  foreach ($v1_data as $type => $items) {
+    if ($type === 'general_info') {
+      if (isset($items->translations)) {
+        unset($items->translations);
+      }
+      $v1_data[$type] = $items;
+      continue;
+    }
+    elseif ($type === 'tours') {
+      foreach ($items as &$item) {
+        if (isset($item->translations)) {
+          unset($item->translations);
+        }
+        $v1_data[$type][] = $item;
+      }
+      continue;
+    }
+    foreach ($items as $key => &$item) {
+      if (isset($item->translations)) {
+        unset($item->translations);
+      }
+      $v1_data[$type][$key] = $item;
+    }
+  }
   // Write JSON output to files.
   // v1 verion file output.
   $v1_json_output = json_encode($v1_data);
   $v1_filename = 'appData';
   $v1_file = file_put_contents('sites/default/files/' . $v1_filename . '.json', $v1_json_output);
-  // Version 2 file output.
-  $v2_json_output = json_encode($v2_data);
-  $v2_filename = 'appData-v2';
-  $v2_file = file_put_contents('sites/default/files/' . $v2_filename . '.json', $v2_json_output);
+
   // If both v1 & v1 files were written successfully.
   if ($v1_file && $v2_file) {
     drupal_set_message('Updated files <strong>v1</strong>: <a href="' . $base_path . 'sites/default/files/appData.json' . '">appData.json</a> or <strong>v2</strong>: <a href="' . $base_path . 'sites/default/files/appData-v2.json' . '">appData-v2.json</a><br>When you click to view one of the files, be sure to refresh your browser as it might be cached. Best viewed in Chrome.', 'status');
@@ -1137,7 +1164,7 @@ function strip_drupal_from_node(&$node) {
   $to_skip = array(
     'title', 'status', 'type', 'nid', 'translations',
     // Artwork object properties that we do not want to strip away.
-    'in_gallery', 'gallery_location', 'credit_line', 'copyright_notice',
+    'id', 'in_gallery', 'gallery_location', 'credit_line', 'copyright_notice',
     'artist_culture_place_delim', 'objecct_id', 'main_reference_number',
     'title_t', 'artist_sort_name', 'artist_culture_place', 'dimensions',
     'date_display', 'date_range', 'thumbnail_full_path', 'large_image_full_path',
@@ -3010,12 +3037,31 @@ function aicapp_object_limit_js($form, $form_state) {
   $element_path = array_slice($form_state['triggering_element']['#parents'], 0, 3);
   // Add the field name we're replacing.
   $type = !empty($form['type']['#value']) ? $form['type']['#value'] : NULL;
-  if ($type === AICAPP_TYPE_TOUR) {
-    $element_path[] = 'field_tour_stop_audio_commentary';
+  if (!empty($form_state['triggering_element']['#field_name'])) {
+    $field_trigger = $form_state['triggering_element']['#field_name'];
   }
-  elseif ($type === AICAPP_TYPE_OBJECT) {
-    $element_path[] = 'field_audio_commentary_audio';
+  elseif (!empty($form_state['triggering_element']['field_name'])) {
+    $field_trigger = $form_state['triggering_element']['field_name'];
   }
+  else {
+   var_dump(array_keys($form_state['triggering_element']));
+    die();
+  }
+  // Depending on what field is being updated...
+  switch ($field_trigger) {
+    default:
+      $element_path[] = $field_trigger;
+      break;
+    case 'field_tour_stop_object':
+      $element_path[] = 'field_tour_stop_audio_commentary';
+      break;
+  }
+  // if ($type === AICAPP_TYPE_TOUR) {
+  //
+  // }
+  // elseif ($type === AICAPP_TYPE_OBJECT) {
+  //   $element_path[] = 'field_audio_commentary_audio';
+  // }
   $form_return_element = drupal_array_get_nested_value($form, $element_path);
   // Add any messages.
   if ($messages = theme('status_messages')) {
