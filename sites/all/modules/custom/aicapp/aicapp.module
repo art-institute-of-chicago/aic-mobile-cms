@@ -1727,7 +1727,7 @@ function aicappSaveNode($object, $type) {
     $qres = db_query("SELECT entity_id
                  FROM {field_data_field_object_id}
                  WHERE field_object_id_value = :id",
-        array(':id' => $object['object_id'])
+        array(':id' => $object['id'])
     );
     $record = $qres->fetchObject();
   }
@@ -1749,7 +1749,7 @@ function aicappSaveNode($object, $type) {
   else {
     // Create a new node.
     $node = new stdClass();
-    $node->title = $object['title_t'];
+    $node->title = $object['title'];
     $node->type = $type;
     $node->language = LANGUAGE_NONE;
     $node->uid = 1;
@@ -1759,9 +1759,10 @@ function aicappSaveNode($object, $type) {
   }
   // Creating an artwork object node.
   if ($type == AICAPP_TYPE_OBJECT) {
-    $node->field_object_id[$node->language][0]['value'] = $object['object_id'];
+    $node->field_object_id[$node->language][0]['value'] = $object['id'];
     $node->field_reference_num[$node->language][0]['value'] = $object['main_reference_number'];
-    $node->field_gallery_location[$node->language][0]['value'] = $object['gallery_location'];
+    // The 'gallery_locaiton' property seems to have changed to just 'gallery'.
+    $node->field_gallery_location[$node->language][0]['value'] = $object['gallery'];
 
     // Image server URL begins like this for both thumnail and full.
     $preferred_image_id = !empty($object['preferred_image_id']) ? $object['preferred_image_id'] : NULL;
@@ -1778,8 +1779,8 @@ function aicappSaveNode($object, $type) {
     // Set node to unbpublished.
     $node->status = 0;
     // Set whether the object is in a gallery, or not.
-    if ($object['in_gallery']) {
-      $node->field_in_gallery[$node->language][0]['value'] = $object['in_gallery'];
+    if (!empty($object['is_in_gallery'])) {
+      $node->field_in_gallery[$node->language][0]['value'] = $object['is_in_gallery'];
     }
     else {
       $node->field_in_gallery[$node->language][0]['value'] = 0;
