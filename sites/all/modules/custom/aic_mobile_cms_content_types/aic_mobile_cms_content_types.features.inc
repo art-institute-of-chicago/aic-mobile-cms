@@ -24,6 +24,89 @@ function aic_mobile_cms_content_types_views_api($module = NULL, $api = NULL) {
 }
 
 /**
+ * Implements hook_image_default_styles().
+ */
+function aic_mobile_cms_content_types_image_default_styles() {
+  $styles = array();
+
+  // Exported image style: large_landscape.
+  $styles['large_landscape'] = array(
+    'label' => 'Large Landscape',
+    'effects' => array(
+      6 => array(
+        'name' => 'image_scale',
+        'data' => array(
+          'width' => 600,
+          'height' => '',
+          'upscale' => 0,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: large_portrait.
+  $styles['large_portrait'] = array(
+    'label' => 'Large Portrait',
+    'effects' => array(
+      5 => array(
+        'name' => 'image_scale',
+        'data' => array(
+          'width' => '',
+          'height' => 600,
+          'upscale' => 0,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: large_six_hundred.
+  $styles['large_six_hundred'] = array(
+    'label' => 'Large',
+    'effects' => array(
+      4 => array(
+        'name' => 'canvasactions_aspect',
+        'data' => array(
+          'portrait' => 'large_portrait',
+          'landscape' => 'large_landscape',
+          'ratio_adjustment' => 1,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: one_twelve_square.
+  $styles['one_twelve_square'] = array(
+    'label' => 'One Twelve Square',
+    'effects' => array(
+      2 => array(
+        'name' => 'image_scale',
+        'data' => array(
+          'width' => '',
+          'height' => 112,
+          'upscale' => 1,
+        ),
+        'weight' => 2,
+      ),
+      7 => array(
+        'name' => 'image_crop',
+        'data' => array(
+          'width' => 112,
+          'height' => 112,
+          'anchor' => 'center-center',
+        ),
+        'weight' => 2,
+      ),
+    ),
+  );
+
+  return $styles;
+}
+
+
+/**
  * Implements hook_node_info().
  */
 function aic_mobile_cms_content_types_node_info() {

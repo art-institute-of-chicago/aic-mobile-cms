@@ -90,12 +90,60 @@ function aicapp_menu() {
   $items['admin/settings/aic-api'] = array(
     'title' => 'AIC API module settings',
     'description' => 'Specify the URLs of your API',
-    'page callback' => 'drupal_get_form',
-    'access callback' => TRUE,
-    'page arguments' => array('aicapp_admin'),
+    'page callback' => 'aicapp_admin_redirect',
+    'access callback' => 'user_access',
     'access arguments' => array('administer aic api settings'),
     'type' => MENU_CALLBACK,
+    'file' => 'aicapp.admin.inc',
+    'file path' => drupal_get_path('module', 'aicapp') . '/includes',
   );
+  $items['admin/config/system/aic'] = array(
+    'title' => 'AIC module settings',
+    'description' => 'Global Settings For AIC APP',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('aicapp_admin'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer aic api settings'),
+    'file' => 'aicapp.admin.inc',
+    'file path' => drupal_get_path('module', 'aicapp') . '/includes',
+  );
+  $items['admin/config/system/aic/global'] = array(
+    'title' => 'AIC module settings',
+    'description' => 'Global Settings For AIC APP',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('aicapp_admin'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer aic api settings'),
+    'file' => 'aicapp.admin.inc',
+    'file path' => drupal_get_path('module', 'aicapp') . '/includes',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -20,
+  );
+  // API Configurations
+  $items['admin/config/system/aic/api'] = array(
+    'title' => 'AIC API settings',
+    'description' => 'Specify the URLs of your API',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('aicapp_admin_api'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer aic api settings'),
+    'file' => 'aicapp.admin.inc',
+    'file path' => drupal_get_path('module', 'aicapp') . '/includes',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -10,
+  );
+  $items['admin/config/system/aic/migrations'] = array(
+    'title' => 'Content Migration',
+    'description' => 'Tools to migrate content types and from v1 format to v2 format.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('aicapp_admin_migrate'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer aic api settings'),
+    'file' => 'aicapp.admin.inc',
+    'file path' => drupal_get_path('module', 'aicapp') . '/includes',
+    'type' => MENU_LOCAL_TASK,
+  );
+
   return $items;
 }
 
@@ -107,6 +155,11 @@ function aicapp_permission() {
     'add objects' => array(
       'description' => t('Add or edit objects in the museum'),
       'title' => t('Add or Edit Objects'),
+      'restrict access' => FALSE,
+    ),
+    'administer aic api settings' => array(
+      'description' => t('Configure AIC Custom Module Settings'),
+      'title' => t('Administer AIC Settings'),
       'restrict access' => FALSE,
     ),
   );
@@ -1098,7 +1151,7 @@ function _aicapp_fetch_data($endpoint, $options = array()) {
   if (!empty($options['fields'])) {
     $url .= '&fields=' . implode(',', $options['fields']);
   }
-  if (!empty($options['fields'])) {
+  if (!empty($options['ids'])) {
     $url .= '&ids=' . implode(',', $options['ids']);
   }
   $remote_objects = array();
@@ -2110,11 +2163,10 @@ function aicapp_node_presave($node) {
 
   if ($node->type == AICAPP_TYPE_TOUR) {
     aicapp_check_for_tour_problems($node);
-  }
-  if ($node->type == AICAPP_TYPE_OBJECT) {
-    // If the crop dimensions have been updated, update the image paths as well.
     _aicapp_update_image_fields($node);
-
+  }
+  elseif ($node->type == AICAPP_TYPE_OBJECT) {
+    _aicapp_update_image_fields($node);
     // Check if the object has a full size image in SOLR.
     if (isset($node->field_object_id[LANGUAGE_NONE][0]['value'])) {
       $ref_num = $node->field_object_id[LANGUAGE_NONE][0]['value'];
@@ -2137,29 +2189,38 @@ function aicapp_node_presave($node) {
 }
 
 /**
- * Update image fields to use new crop dimensions.
+ * Update image fields if a local has been uploaded.
  */
-function _aicapp_update_image_fields($node) {
+function _aicapp_update_image_fields(&$node) {
   $image_fields = array(
-    'field_thumbnail_image' => 'field_thumbnail_crop_rect',
-    'field_large_image' => 'field_large_image_crop_rect',
+    'field_thumbnail_image',
+    'field_large_image',
   );
-  $preferred_image_id = _aicapp_get_preferred_image_id($node);
-  foreach ($image_fields as $field => $crop_field) {
-    if (!isset($node->{$field}) || !isset($node->{$crop_field})) {
+  foreach ($image_fields as $field) {
+    if (!isset($node->{$field})) {
       continue;
     }
-    // Crop dimension
-    $field_values = $node->{$crop_field}[LANGUAGE_NONE][0];
-    $crop_values = array(
-      'x1' => $field_values['field_x'][LANGUAGE_NONE][0]['value'],
-      'x2' => $field_values['field_x2'][LANGUAGE_NONE][0]['value'],
-      'y1' => $field_values['field_y'][LANGUAGE_NONE][0]['value'],
-      'y2' => $field_values['field_y2'][LANGUAGE_NONE][0]['value'],
-      'h' => $field_values['field_height'][LANGUAGE_NONE][0]['value'],
-      'w' => $field_values['field_width'][LANGUAGE_NONE][0]['value'],
-    );
-    $node->{$field}[LANGUAGE_NONE][0]['value'] = _aicapp_get_image_crop($preferred_image_id, $crop_values);
+    elseif (empty($node->field_image[LANGUAGE_NONE])) {
+      // No image has uploaded to this node. If the host node is an artwork
+      // object and this field has no value, attempt to fill the field with
+      // a remote artwork image.
+      // @TODO
+      continue;
+    }
+    // An uploaded image is present, this will fill a field with a URL that
+    // points to a styled/cropped version of the image.
+    $image_file = file_load($node->field_image[LANGUAGE_NONE][0]['fid']);
+    $url = $field === 'field_thumbnail_image'
+        ? image_style_url('one_twelve_square', $image_file->uri)
+        : image_style_url('large_six_hundred', $image_file->uri);
+    if ($node->type === AICAPP_TYPE_OBJECT) {
+      // Path to cropped local image goes here.
+      $node->{$field}[LANGUAGE_NONE][0]['value'] = $url;
+    }
+    elseif ($node->type === AICAPP_TYPE_TOUR) {
+      // Path to cropped locally stored image goes here.
+      $node->{$field}[LANGUAGE_NONE][0]['value'] = $url;
+    }
   }
 }
 
@@ -2172,16 +2233,17 @@ function _aicapp_get_preferred_image_id($object_node) {
   }
   $entity = entity_metadata_wrapper('node', $object_node);
   $object_id = $entity->field_object_id->value();
-  $object_id = '';
-  $options = array(
-    'ids' => array($object_id),
-    'key' => 'object_id',
-  );
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
-  // Query the data aggregrator.
-  $results = _aicapp_fetch_data($url, $options);
-  if (!empty($results[0])) {
-    return !empty($results[0]['preferred_image_id']) ? $results[0]['preferred_image_id'] : NULL;
+  if (!empty($object_id)) {
+    $options = array(
+      'ids' => array($object_id),
+      'key' => 'object_id',
+    );
+    $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+    // Query the data aggregrator.
+    $results = _aicapp_fetch_data($url, $options);
+    if (!empty($results[0])) {
+      return !empty($results[0]['preferred_image_id']) ? $results[0]['preferred_image_id'] : NULL;
+    }
   }
 }
 
@@ -2189,14 +2251,13 @@ function _aicapp_get_preferred_image_id($object_node) {
  * Prepare a URL to a cropped remote image.
  */
 function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
-  if (empty($preferred_image_id)) {
-    return;
-  }
+  $image_ids = &drupal_static(__FUNCTION__);
   $defaults = array(
     'default' => 'thumbnail',
     'presets' => array(
       'thumbnail' => array(
         'iiif_size' => variable_get('aicapp_image_thumb_crop', '!112,112'),
+        'region' => 'full',
         'x' => 0,
         'x1' => 112,
         'y' => 0,
@@ -2206,6 +2267,7 @@ function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
       ),
       'large' => array(
         'iiif_size' => variable_get('aicapp_image_full_crop', '!800,800'),
+        'region' => 'full',
         'x' => 0,
         'x1' => 800,
         'y' => 0,
@@ -2215,11 +2277,20 @@ function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
       ),
     ),
     'region' => AICAPP_IMAGE_CROP_REGION,
-    'filename' => AICAPP_IMAGE_CROP_QUALITY . '.' . AICAPP_IMAGE_CROP_FORMAT,
+    'quality' => AICAPP_IMAGE_CROP_QUALITY,
+    'filename' => AICAPP_IMAGE_CROP_FORMAT,
     'server' => AICAPP_IMAGE_SERVER,
     'rotation' => AICAPP_IMAGE_CROP_ROTATION,
   );
   $crop_values += $defaults;
+
+  if (empty($preferred_image_id)) {
+    return;
+  }
+  elseif (!empty($crop_values['default']) && isset($image_ids[$preferred_image_id]) && !empty($image_ids[$preferred_image_id][$crop_values['default']])) {
+    return $image_ids[$preferred_image_id][$crop_values['default']];
+  }
+
   $preset = !empty($crop_values['presets'][$crop_values['default']])
          ? $crop_values['presets'][$crop_values['default']]
          : $crop_values['presets']['thumbnail'];
@@ -2228,21 +2299,51 @@ function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
   if (isset($crop_values['x1']) && isset($crop_values['y1'])
     && isset($crop_values['h']) && isset($crop_values['w'])) {
     // @TODO to use a percentage we need the full width and heigth of the source image.
+    // {scheme}://{server}{/prefix}/{identifier}/info.json
+    $soure_info_url = $crop_values['server'] . '/' . $preferred_image_id . '/info.json';
+    if ($results = file_get_contents($soure_info_url)) {
+      $results = json_decode($results, 1);
+      dsm($results);
+    }
     // Convert to a percentage using the following formula:
-    // x = round(x1 / full width)
-    // y = round(y1 / full height)
-    // w = round((x2 - x1) / full width)
-    // h = round((y2 - y1) / full heigth)
-    // size = pct:x,y,w,h
-    $preset['iiif_size'] = $crop_values['x1'] . ',' . $crop_values['y1'] . ',' . $crop_values['w'] . ',' . $crop_values['h'];
+    $percentages['x'] = round($crop_values['x1'] / $preset['w'], 3) * 100;
+    $percentages['y'] = round($crop_values['y1'] / $preset['h'], 3) * 100;
+    $percentages['w'] = round(($crop_values['x2'] - $crop_values['x1']) / $preset['w'], 3) * 100;
+    $percentages['h'] = round(($crop_values['y2'] - $crop_values['y1']) / $preset['h'], 3) * 100;
+    $preset['region'] = 'pct:' . implode(',', $percentages);
+    $preset['region'] = $crop_values['x1'] . ',' . $crop_values['y1'] . ',' . $crop_values['w'] . ',' . $crop_values['h'];
   }
   // @TODO build a dynamic path to the image using the Image Server URL and
   // the image ID using the following format:
   // {scheme}://{server}{/prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
   // Build a path to the thumnail image.
-  $url = $crop_values['server'] . '/' . $preferred_image_id . '/' . $crop_values['region'] . '/' . $preset['iiif_size'] . '/';
-  $url .= $crop_values['rotation'] . '/' . $crop_values['filename'];
-  return $url;
+  $url = $crop_values['server'] . '/' . $preferred_image_id . '/';
+  // Here the region and size of the crop are applied. Region options are:
+  // full	The complete image is returned, without any cropping.
+  // square	The region is defined as an area where the width and height are both equal to the length of the shorter dimension of the complete image. The region may be positioned anywhere in the longer dimension of the image content at the server’s discretion, and centered is often a reasonable default.
+  // x,y,w,h	The region of the full image to be returned is specified in terms of absolute pixel values. The value of x represents the number of pixels from the 0 position on the horizontal axis. The value of y represents the number of pixels from the 0 position on the vertical axis. Thus the x,y position 0,0 is the upper left-most pixel of the image. w represents the width of the region and h represents the height of the region in pixels.
+  // pct:x,y,w,h	The region to be returned is specified as a sequence of percentages of the full image’s dimensions, as reported in the image information document. Thus, x represents the number of pixels from the 0 position on the horizontal axis, calculated as a percentage of the reported width. w represents the width of the region, also calculated as a percentage of the reported width. The same applies to y and h respectively. These may be floating point numbers.
+  $url .= $preset['region'] . '/';
+  // Size "determines the dimensions to which the extracted region is to be scaled."
+  // Size options are:
+  // max	The image or region is returned at the maximum size available, as indicated by maxWidth, maxHeight, maxArea in the profile description. This is the same as full if none of these properties are provided.
+  // w,	The image or region should be scaled so that its width is exactly equal to w, and the height will be a calculated value that maintains the aspect ratio of the extracted region.
+  // ,h	The image or region should be scaled so that its height is exactly equal to h, and the width will be a calculated value that maintains the aspect ratio of the extracted region.
+  // pct:n	The width and height of the returned image is scaled to n% of the width and height of the extracted region. The aspect ratio of the returned image is the same as that of the extracted region.
+  // w,h	The width and height of the returned image are exactly w and h. The aspect ratio of the returned image may be different than the extracted region, resulting in a distorted image.
+  // !w,h	The image content is scaled for the best fit such that the resulting width and height are less than or equal to the requested width and height. The exact scaling may be determined by the service provider, based on characteristics including image quality and system performance. The dimensions of the returned image content are calculated to maintain the aspect ratio of the extracted region.
+  $url .= $preset['iiif_size'] . '/';
+  // Rotation is the "The degrees of clockwise rotation from 0 up to 360."
+  // "A leading exclamation mark (“!n”) indicates that the image should be
+  // mirrored by reflection on the vertical axis before any rotation is applied."
+  $url .= $crop_values['rotation'] . '/';
+  // Quality "determines whether the image is delivered in color, grayscale or
+  // black and white." Options are color, gray, bitonal, default.
+  $url .= $crop_values['quality'] . '.';
+  // Filename options: jpg tif	png	gif jp2 pdf webp
+  $url .= $crop_values['filename'];
+  $image_ids[$preferred_image_id][$crop_values['default']] = $url;
+  return $image_ids[$preferred_image_id][$crop_values['default']];
 }
 
 /**
@@ -2380,495 +2481,6 @@ function aicapp_object_noimg() {
   );
   return $output;
 }
-
-/**
- * Admin setting form callback.
- */
-function aicapp_admin() {
-  $form = array();
-  $form['aicapp_artwork_query'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Artwork query URL'),
-    '#default_value' => variable_get('aicapp_artwork_query', ''),
-    '#rows' => 4,
-    '#description' => t("Use {{rows}}, {{start}}, {{term}}, and {{value}} to note where different values should be used."),
-  );
-  $form['aicapp_gallery_query'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Gallery query URL'),
-    '#default_value' => variable_get('aicapp_gallery_query', ''),
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#description' => t("Use {{rows}}, {{start}}, {{term}}, and {{value}} to note where different values should be used."),
-  );
-  $form['aicapp_gmap_key'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Google Maps API Key'),
-    '#default_value' => variable_get('aicapp_gmap_key', ''),
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#description' => t("Go to https:// developers.google.com/maps/documentation/javascript/get-api-key to get an API key"),
-  );
-  $form['aicapp_image_server_url'] = array(
-    '#type' => 'textfield',
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#title' => t('Image Server URL'),
-    '#default_value' => variable_get('aicapp_image_server_url', ' https://lakeimagesweb.artic.edu/iiif2/'),
-    '#description' => t('URL to the Image Server.'),
-  );
-  $form['aicapp_image_full_crop'] = array(
-    '#type' => 'textfield',
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#title' => t('Full image crop dimensions.'),
-    '#default_value' => variable_get('aicapp_image_full_crop', '!800,800'),
-    '#description' => t('Minimum crop dimensions for the full image.'),
-  );
-  $form['aicapp_image_thumb_crop'] = array(
-    '#type' => 'textfield',
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#title' => t('Thumbnail image crop dimensions.'),
-    '#default_value' => variable_get('aicapp_image_thumb_crop', ' !112,112'),
-    '#description' => t('Minimum crop dimensions for the thumnail image.'),
-  );
-  $form['aicapp_image_thumb_crop_aspect'] = array(
-    '#type' => 'textfield',
-    '#size' => 25,
-    '#maxlength' => 25,
-    '#title' => t('Thumbnail crop aspect ratio.'),
-    '#default_value' => variable_get('aicapp_image_thumb_crop_aspect', '1:1'),
-    '#description' => t('The aspect ratio of the tool used to crop.'),
-  );
-  $form['aicapp_image_thumb_crop_lock'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Thumbnail crop aspect ratio can be changed?'),
-    '#default_value' => (variable_get('aicapp_image_thumb_crop_lock', 1)) ? 1 : 0,
-    '#description' => t('Whether or not to lock the crop dimensions to this aspect ratio.'),
-  );
-  $form['aicapp_image_large_crop_aspect'] = array(
-    '#type' => 'textfield',
-    '#size' => 25,
-    '#maxlength' => 25,
-    '#title' => t('Full size image crop aspect ratio.'),
-    '#default_value' => variable_get('aicapp_image_large_crop_aspect', '1.82:1'),
-    '#description' => t('.'),
-  );
-  $form['aicapp_image_large_crop_lock'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Full size image crop aspect ratio can be changed?'),
-    '#default_value' => (variable_get('aicapp_image_large_crop_lock', 0)) ? 1 : 0,
-    '#description' => t('Whether or not to lock the crop dimensions to this aspect ratio.'),
-  );
-  // Data aggregrator API
-  $form['aicapp_data_aggregator'] = array(
-    '#type' => 'fieldset',
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-    '#title' => t('Data Aggregator API'),
-    '#tree' => TRUE,
-  );
-  $form['aicapp_data_aggregator']['aicapp_data_api_host'] = array(
-    '#type' => 'textfield',
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#title' => t('Data API HOST URL'),
-    '#default_value' => variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'),
-    '#description' => t('.'),
-  );
-  $form['aicapp_data_aggregator']['aicapp_data_endpoint_events'] = array(
-    '#type' => 'textfield',
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#title' => t('Events Endpoint.'),
-    '#default_value' => variable_get('aicapp_data_endpoint_events', '/api/v1/events'),
-    '#description' => t('Query for an event via this endpoint.'),
-  );
-  $form['aicapp_data_aggregator']['aicapp_data_endpoint_exhibitions'] = array(
-    '#type' => 'textfield',
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#title' => t('Exhibitions Endpoint.'),
-    '#default_value' => variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'),
-    '#description' => t('Query for an exhibition via this endpoint.'),
-  );
-  $form['aicapp_data_aggregator']['aicapp_data_endpoint_artworks'] = array(
-    '#type' => 'textfield',
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#title' => t('Artworks endpoint.'),
-    '#default_value' => variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'),
-    '#description' => t('Query for an artwork via this endpoint.'),
-  );
-  $form['aicapp_data_aggregator']['aicapp_data_endpoint_galleries'] = array(
-    '#type' => 'textfield',
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#title' => t('Galleries endpoint.'),
-    '#default_value' => variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'),
-    '#description' => t('Query for a gallery via this endpoint.'),
-  );
-  $form['aicapp_data_aggregator']['aicapp_data_endpoint_images'] = array(
-    '#type' => 'textfield',
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#title' => t('Images endpoint.'),
-    '#default_value' => variable_get('aicapp_data_endpoint_images', '/api/v2/images'),
-    '#description' => t('Query for a image via this endpoint.'),
-  );
-  $form['aicapp_data_aggregator']['import_submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Import Remote Data'),
-    '#suffix' => t('Click this button to load remote events and exhitions.'),
-  );
-  // Data migration between v1 and v2.
-  $form['aicapp_data'] = array(
-    '#type' => 'fieldset',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#title' => t('Data migration'),
-    '#tree' => TRUE,
-  );
-  $options = array(
-    'audio' => t('Audio'),
-    'object' => t('Objects'),
-    'tour' => t('Tours'),
-  );
-  $form['aicapp_data']['migration_type'] = array(
-    '#type' => 'select',
-    '#title' => t('Select which Content type to migrate:'),
-    '#options' => $options,
-    '#default_value' => 'audio',
-    '#description' => t('Choose a content type to migrate data from.'),
-  );
-  $form['aicapp_data']['migration_submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Migrate Data'),
-  );
-  return system_settings_form($form);
-}
-
-/**
- * Admin setting validation callback.
- */
-function aicapp_admin_validate($form, &$form_state) {
-  $query = $form_state['values']['aicapp_artwork_query'];
-  if (substr($query, 0, 7) !== "http://" && substr($query, 0, 8) !== "https://") {
-    form_set_error('aicapp_artwork_query', t('You must enter a URL.'));
-  }
-  if (strpos($query, '{{term}}') === FALSE) {
-    form_set_error('aicapp_artwork_query', t('You must include {{term}} somewhere in your URL.'));
-  }
-  $query = $form_state['values']['aicapp_gallery_query'];
-  if (substr($query, 0, 7) !== "http://" && substr($query, 0, 8) !== "https://") {
-    form_set_error('aicapp_gallery_query', t('You must enter a URL.'));
-  }
-  if (strpos($query, '{{term}}') === FALSE) {
-    form_set_error('aicapp_gallery_query', t('You must include {{term}} somewhere in your URL.'));
-  }
-  // Check if Image Server value is a URL.
-  if (!filter_var($form_state['values']['aicapp_image_server_url'], FILTER_VALIDATE_URL)) {
-    form_set_error('aicapp_image_server_url', t('You must provide a valid URL for the Image Server.'));
-  }
-  if (strpos($form_state['values']['aicapp_image_large_crop_aspect'], ':') === FALSE) {
-    $form_state['values']['aicapp_image_large_crop_aspect'] = $form_state['values']['aicapp_image_large_crop_aspect'] . ':1';
-  }
-  if (strpos($form_state['values']['aicapp_image_thumb_crop_aspect'], ':') === FALSE) {
-    $form_state['values']['aicapp_image_thumb_crop_aspect'] = $form_state['values']['aicapp_image_thumb_crop_aspect'] . ':1';
-  }
-  $form_state['values']['aicapp_image_full_crop'] = trim($form_state['values']['aicapp_image_full_crop']);
-  $form_state['values']['aicapp_image_thumb_crop'] = trim($form_state['values']['aicapp_image_thumb_crop']);
-
-  // Save the variable as a lowercase string for use in JS.
-  if ($form_state['values']['aicapp_image_thumb_crop_lock'] == FALSE) {
-    // Leave as lowercase for use in JS.
-    $form_state['values']['aicapp_image_thumb_crop_lock'] = false;
-  }
-  else {
-    // Leave as lowercase for use in JS.
-    $form_state['values']['aicapp_image_thumb_crop_lock'] = 'true';
-  }
-  // Save the variable as a lowercase string for use in JS.
-  if ($form_state['values']['aicapp_image_large_crop_lock'] == FALSE) {
-    // Leave as lowercase for use in JS.
-    $form_state['values']['aicapp_image_large_crop_lock'] = false;
-  }
-  else {
-    $form_state['values']['aicapp_image_large_crop_lock'] = 'true';
-  }
-  // @TODO move to submit.
-  if ($form_state['clicked_button']['#value'] === 'Import Remote Data') {
-    $a = array();
-    $b = array();
-    aicapp_load_remote_form_submit($a, $b);
-  }
-  elseif ($form_state['clicked_button']['#value'] === 'Migrate Data') {
-    global $language;
-    $type = $form_state['values']['aicapp_data']['migration_type'];
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-         ->entityCondition('bundle', $type, '=');
-    switch ($type) {
-      default:
-        drupal_set_message('There were no items to migrate');
-      break;
-      case AICAPP_TYPE_AUDIO:
-        $query->propertyCondition('language', LANGUAGE_NONE, '=');
-        $result = $query->execute();
-        if (!empty($result['node'])) {
-          $count = count($result['node']);
-          if ($count < 1) {
-            drupal_set_message('There were no audio items to migrate');
-            break;
-          }
-          foreach ($result['node'] as $nid => $obj) {
-            $node = node_load($nid);
-            $node->language = $language->language;
-            node_save($node);
-          }
-          drupal_set_message('All audio nodes have been set to English if no language had been set.');
-
-        }
-        break;
-
-      case AICAPP_TYPE_OBJECT:
-        // Load all objects that have no audio commentary items.
-        $query->addTag('no_commentary_items');
-        $result = $query->execute();
-        if (!empty($result['node'])) {
-          $i = 0;
-          foreach ($result['node'] as $nid => $obj) {
-            $changed = FALSE;
-            $to_add = array();
-            $node = node_load($nid);
-            $found = array(
-              'field_object_selector_numbers' => NULL,
-              'field_object_selector_number' => NULL,
-              'field_object_audio' => NULL,
-            );
-            // Check for field_object_selector_numbers, field_object_selector_number, and field_object_audio
-            if (!empty($node->field_object_selector_numbers[LANGUAGE_NONE])) {
-              $found['field_object_selector_numbers'] = $node->field_object_selector_numbers[LANGUAGE_NONE];
-            }
-            if (!empty($node->field_object_selector_number[LANGUAGE_NONE])) {
-              $found['field_object_selector_number'] = $node->field_object_selector_number[LANGUAGE_NONE];
-            }
-            if (!empty($node->field_object_audio[LANGUAGE_NONE])) {
-              // Uses 'nid' as value key instead of 'value'
-              $found['field_object_audio'] = $node->field_object_audio[LANGUAGE_NONE];
-            }
-            // In terms of selector numbers, there are 3 cases.
-            $count_multi = count($found['field_object_selector_numbers']);
-            $count_audio = count($found['field_object_audio']);
-            if ($count_multi === 1) {
-              // One of each, make sure they are the same.
-              if ($found['field_object_selector_number'] &&
-                $found['field_object_selector_number'][0]['value'] === $found['field_object_selector_numbers'][0]['value']) {
-
-
-                // Numbers match, there is 1 matching selector being used.
-                $to_add[$i]['selector'][] = $found['field_object_selector_number'][0]['value'];
-                if ($count_audio) {
-                  foreach ($found['field_object_audio'] as $k => $v) {
-                    $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
-                  }
-                }
-                else {
-                  // No audio found unset this selector to add.
-                  unset($to_add[$i]['selector']);
-                }
-              }
-              else {
-                // Number will take precendence.
-                $to_add[$i]['selector'][] = $found['field_object_selector_number'][0]['value'];
-                $to_add[$i]['selector'][] = $found['field_object_selector_numbers'][LANGUAGE_NONE][0]['value'];
-                // Multi and single do not match. Check audio count.
-                if ($count_audio > 1) {
-                  foreach ($found['field_object_audio'] as $k => $v) {
-                    $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
-                  }
-
-                }
-                elseif ($count_audio === 1) {
-                  $to_add[$i]['audio'][] = $found['field_object_audio'][0]['nid'];
-                  unset($to_add[$i]['selector'][1]);
-                }
-                else {
-                  // No audio found unset this selector to add.
-                  unset($to_add[$i]['selector']);
-                }
-              }
-            }
-            elseif ($count_multi > 1) {
-              foreach ($found['field_object_selector_numbers'][LANGUAGE_NONE] as $k => $v) {
-                $to_add[$i]['selector'][] = $found['field_object_selector_numbers'][$k]['value'];
-              }
-              if ($count_audio) {
-                foreach ($found['field_object_audio'][LANGUAGE_NONE] as $k => $v) {
-                  $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
-                }
-              }
-              else {
-                unset($to_add[$i]['selector']);
-              }
-            }
-            elseif ($found['field_object_selector_number']) {
-              // No multiple count but found one selector
-              $to_add[$i]['selector'][] = $found['field_object_selector_number'][0]['value'];
-              if ($count_audio) {
-                foreach ($found['field_object_audio'] as $k => $v) {
-                  $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
-                }
-              }
-            }
-            else {
-              $i++;
-              continue;
-            }
-            // Check if there are currently audio commentary items.
-            if (!empty($node->field_audio_commentary[LANGUAGE_NONE])) {
-              foreach ($node->field_audio_commentary[LANGUAGE_NONE] as $key => $value) {
-                $field_collection_item_values[] = $value['value'];
-              }
-            }
-            // Add the new audio commentary
-            if (!empty($to_add[$i]) && !empty($to_add[$i]['audio']) && empty($field_collection_item_values)) {
-              foreach ($to_add[$i]['audio'] as $k => $audio_id) {
-                // Setup the values in the structure expected by the field_collection entity.
-                $item_values = array(
-                  'field_name' => 'field_audio_commentary',
-                  'field_audio_commentary_audio' => array(
-                    LANGUAGE_NONE => array(array(
-                      'target_id' => $audio_id
-                    )),
-                  ),
-                );
-                if (isset($to_add[$i]['selector'][$k])) {
-                  $item_values['field_object_selector_number'] = array(
-                    LANGUAGE_NONE => array(array(
-                      'value' => $to_add[$i]['selector'][$k]
-                    ))
-                  );
-                }
-                $fc_item = entity_create('field_collection_item', $item_values);
-                $fc_item->setHostEntity('node', $node);
-                $fc_item->save();
-              }
-              $changed = TRUE;
-            }
-            if ($changed === TRUE) {
-              node_save($node);
-            }
-            $i++;
-          }
-          drupal_set_message('All object nodes have been set to English if no language had been set.');
-
-        }
-        break;
-
-      case AICAPP_TYPE_TOUR:
-        // Load all tous.
-        $query->addTag('no_tour_stop');
-        // Five at a time.
-        $query->range(0, 5);
-        $result = $query->execute();
-        if (!empty($result['node'])) {
-          $i = 0;
-          foreach ($result['node'] as $nid => $obj) {
-            $changed = FALSE;
-            $to_add = array();
-            $node = node_load($nid);
-            $found = array(
-              'field_t_object' => NULL,
-              'field_t_audio' => NULL,
-              'field_t_audio_bumper' => NULL,
-            );
-
-            // Check for field_object_selector_numbers, field_object_selector_number, and field_object_audio
-            if (!empty($node->field_stops2[LANGUAGE_NONE])) {
-              $ids = array();
-              foreach ($node->field_stops2[LANGUAGE_NONE] as $key => $value) {
-                $ids[] = $value['value'];
-              }
-              $stops = field_collection_item_load_multiple($ids);
-              $stops = current($stops);
-              foreach ($found as $field => $n) {
-                if (!isset($stops->{$field}[LANGUAGE_NONE])) {
-                  continue;
-                }
-                foreach ($stops->{$field}[LANGUAGE_NONE] as $id => $stop) {
-                  $found[$field][] = $stop['nid'];
-                }
-              }
-            }
-            // In terms of selector numbers, there are 3 cases.
-            $count_object = count($found['field_t_object']);
-            $count_audio = count($found['field_t_audio']);
-            $count_bumper = count($found['field_t_audio_bumper']);
-            if ($count_object > $count_audio) {
-
-            }
-            elseif ($count_object < $count_audio) {
-
-            }
-            // Check if there are currently audio commentary items.
-            if (!empty($node->field_tour_stops[LANGUAGE_NONE])) {
-              foreach ($node->field_tour_stops[LANGUAGE_NONE] as $key => $value) {
-                $field_collection_item_values[] = $value['value'];
-              }
-            }
-            // Add the new audio commentary
-            if (!empty($found['field_t_audio']) && empty($field_collection_item_values)) {
-              foreach ($found['field_t_audio'] as $k => $audio_id) {
-                // Setup the values in the structure expected by the field_collection entity.
-                $item_values = array(
-                  'field_name' => 'field_tour_stops',
-                  'field_t_object' => array(
-                    LANGUAGE_NONE => array(array(
-                      'target_id' => $audio_id,
-                    ))
-                  )
-                );
-                if (isset($found['field_t_audio'][$k])) {
-                  $item_values['field_t_audio'] = array(
-                    LANGUAGE_NONE => array(array(
-                      'target_id' => $found['field_t_audio'][$k],
-                    ))
-                  );
-                }
-                if (isset($found['field_t_audio_bumper'][$k])) {
-                  $item_values['field_t_audio_bumper'] = array(
-                    LANGUAGE_NONE => array(array(
-                      'target_id' => $found['field_t_audio_bumper'][$k],
-                    ))
-                  );
-                }
-                $fc_item = entity_create('field_collection_item', $item_values);
-                $fc_item->setHostEntity('node', $node);
-                $fc_item->save();
-              }
-              $changed = TRUE;
-            }
-
-            // Set language to en.
-            if ($node->language === LANGUAGE_NONE) {
-              $node->language = $language->language;
-              $changed = TRUE;
-            }
-            if ($changed === TRUE) {
-              node_save($node);
-            }
-            $i++;
-          }
-          drupal_set_message(t('All tour nodes have been set to English if no language had been set, and tour stops have been udpated.'));
-
-        }
-        break;
-    }
-  }
-}
-
 /**
  * Implements hook_query_TAG_alter().This is used for data migration queries.
  */

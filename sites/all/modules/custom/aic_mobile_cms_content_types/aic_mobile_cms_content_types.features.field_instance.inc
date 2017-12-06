@@ -3550,7 +3550,7 @@ Ex: ""Head of Buddha (Spanish)"""',
     'bundle' => 'tour',
     'default_value' => NULL,
     'deleted' => 0,
-    'description' => '',
+    'description' => 'Move the crop square around to set new crop for tour images in the app. This crop can be resized.',
     'display' => array(
       'default' => array(
         'label' => 'above',
@@ -3730,7 +3730,7 @@ Ex: ""Head of Buddha (Spanish)"""',
     'bundle' => 'tour',
     'default_value' => NULL,
     'deleted' => 0,
-    'description' => '',
+    'description' => 'Move the crop square around to set new crop for tour image thumbnails in the app. This crop cannot be resized.',
     'display' => array(
       'default' => array(
         'label' => 'above',
@@ -4130,6 +4130,8 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Location');
   t('Move the crop square around to set new crop for map annotations in the app. This crop cannot be resized.');
   t('Move the crop square around to set new crop for the tours carousel in the app. This crop can be resized with the minimum size being 364(w) x 200(h).');
+  t('Move the crop square around to set new crop for tour image thumbnails in the app. This crop cannot be resized.');
+  t('Move the crop square around to set new crop for tour images in the app. This crop can be resized.');
   t('Museum Hours');
   t('Note: If adding multiple object numbers, first number here should be the value from the original Object Selector Number field which will be deprecated soon.');
   t('Object');
