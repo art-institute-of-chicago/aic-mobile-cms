@@ -1018,6 +1018,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'annontations' => $map_annotations,
     'map_floors' => !empty($map_floor) ? $map_floor : array(),
   );
+
   // Version 2 file output.
   $v2_json_output = json_encode($v2_data);
   $v2_filename = 'appData-v2';
@@ -1040,12 +1041,14 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       continue;
     }
     elseif ($type === 'tours') {
+      $cleaned_items = array();
       foreach ($items as &$item) {
         if (isset($item->translations)) {
           unset($item->translations);
         }
-        $v1_data[$type][] = $item;
+        $cleaned_items[] = $item;
       }
+      $v1_data[$type] = $cleaned_items;
       continue;
     }
     foreach ($items as $key => &$item) {
@@ -1055,6 +1058,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       $v1_data[$type][$key] = $item;
     }
   }
+
   // Write JSON output to files.
   // v1 verion file output.
   $v1_json_output = json_encode($v1_data);
