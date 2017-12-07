@@ -925,7 +925,6 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     }
   }
 
-
   // Format audio node.
   foreach ($audio_files as $audio) {
     strip_drupal_from_node($audio);
@@ -2042,7 +2041,7 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
     }
     // Query the data aggregrator.
     $results = _aicapp_fetch_data($api_endpoint, $options, TRUE);
-    if (!empty($results['data']) && !empty($results['pagination'])) {
+    if (!empty($results['data'])) {
       $result_count = !empty($results['pagination']['total']) ? $results['pagination']['total'] : count($results['data']);
       $collect[] = '<p>' . $result_count . ' objects found. Showing ' . $start . ' - ' . ($start + $rows) . ' | ';
       if ($start > 0) {
