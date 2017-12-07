@@ -176,12 +176,11 @@ function aicapp_search_object() {
  * Page callback for adding an object.
  */
 function aicapp_add_object($object_id = 0) {
-  $objectidArray = array();
-  $objectidArray = explode(",", $object_id);
+  $object_ids = explode(",", $object_id);
   // Collecting information to present to the user.
   $collect = array();
 
-  foreach ($objectidArray as $object_id) {
+  foreach ($object_ids as $object_id) {
     // An object ID was passed and is not empty, query based on object ID.
     $options = array(
       'ids' => array($object_id),
@@ -200,7 +199,6 @@ function aicapp_add_object($object_id = 0) {
       $collect[] = t('Ran into a problem attempting data hub query with object id:') . $object_id . '<br />';
     }
   }
-
   $output = implode(' ', $collect);
   return $output;
 }
@@ -538,7 +536,7 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
   // need a simple array
   $gals = array();
   foreach ($galleries as $gallery) {
-    $gals[] = $gallery->title_t;
+    $gals[] = $gallery->title;
   }
 
   $bad_obj_galleries = '';
@@ -845,23 +843,32 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     ->execute();
   // Load all featured nodes.
   $featured = isset($results['node']) ? node_load_multiple(array_keys($results['node'])) : array('node' => array());
-  // Strip out Drupal native stuff we don't need in the JSON output.
+  // Gallery nodes.
+  $gallery_ids = array();
+  $by_gallery_id = array();
   foreach ($galleries as $gallery) {
+    // Strip out Drupal native stuff we don't need in the JSON output from galleries.
     strip_drupal_from_node($gallery);
-    // Add in other gallery fields from data hub.
-    $options = array(
-      'limit' => 1,
-      'ids' => array($gallery->gallery_id),
-    );
-    $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
-    // Query the data aggregrator for recent data.
-    $results = _aicapp_fetch_data($url, $options);
-    if (!empty($results[0])) {
-      foreach ($results[0] as $key => $val) {
+    $gallery_ids[] = $gallery->gallery_id;
+    $by_gallery_id[$gallery->gallery_id] = $gallery;
+  }
+  // Query the data aggregrator for recent data using the gallery ids.
+  $options = array('ids' => $gallery_ids);
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+  $results = _aicapp_fetch_data($url, $options);
+  if (!empty($results)) {
+    foreach ($results as $item) {
+      $id = isset($item['id']) ? $item['id'] : NULL;
+      if (empty($id) || !isset($by_gallery_id[$id])) {
+        continue;
+      }
+      $gallery = $by_gallery_id[$id];
+      foreach ($item as $key => $val) {
         $gallery->{$key} = $val;
       }
     }
   }
+
   // Now we build up the objects array for JSON output.
   foreach ($objects as $key => $object) {
     _aicapp_update_remote_artwork_data($object);
@@ -1246,10 +1253,10 @@ function strip_drupal_from_node(&$node) {
         $item = field_collection_field_get_entity($itemid);
         if ($item->field_x) {
           $node->thumbnail_crop_rect = array(
-            'x' => $item->field_x[LANGUAGE_NONE][0]['value'],
-            'y' => $item->field_y[LANGUAGE_NONE][0]['value'],
-            'width' => $item->field_width[LANGUAGE_NONE][0]['value'],
-            'height' => $item->field_height[LANGUAGE_NONE][0]['value'],
+            'x' => !empty($item->field_x) ? $item->field_x[LANGUAGE_NONE][0]['value'] : NULL,
+            'y' => !empty($item->field_y) ? $item->field_y[LANGUAGE_NONE][0]['value'] : NULL,
+            'width' => !empty($item->field_width) ? $item->field_width[LANGUAGE_NONE][0]['value'] : NULL,
+            'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
           );
           json_encode($node->thumbnail_crop_rect);
         }
@@ -1272,10 +1279,10 @@ function strip_drupal_from_node(&$node) {
         $item = field_collection_field_get_entity($itemid);
         if ($item->field_x) {
           $node->large_image_crop_rect = array(
-            'x' => $item->field_x[LANGUAGE_NONE][0]['value'],
-            'y' => $item->field_y[LANGUAGE_NONE][0]['value'],
-            'width' => $item->field_width[LANGUAGE_NONE][0]['value'],
-            'height' => $item->field_height[LANGUAGE_NONE][0]['value'],
+            'x' => !empty($item->field_x) ? $item->field_x[LANGUAGE_NONE][0]['value'] : NULL,
+            'y' => !empty($item->field_y) ? $item->field_y[LANGUAGE_NONE][0]['value'] : NULL,
+            'width' => !empty($item->field_width) ? $item->field_width[LANGUAGE_NONE][0]['value'] : NULL,
+            'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
           );
           json_encode($node->large_image_crop_rect);
         }
@@ -2227,20 +2234,14 @@ function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
     && isset($crop_values['h']) && isset($crop_values['w'])) {
     // @TODO to use a percentage we need the full width and heigth of the source image.
     // {scheme}://{server}{/prefix}/{identifier}/info.json
-    $soure_info_url = $crop_values['server'] . '/' . $preferred_image_id . '/info.json';
-    if ($results = file_get_contents($soure_info_url)) {
-      $results = json_decode($results, 1);
-      dsm($results);
-    }
     // Convert to a percentage using the following formula:
     $percentages['x'] = round($crop_values['x1'] / $preset['w'], 3) * 100;
     $percentages['y'] = round($crop_values['y1'] / $preset['h'], 3) * 100;
     $percentages['w'] = round(($crop_values['x2'] - $crop_values['x1']) / $preset['w'], 3) * 100;
     $percentages['h'] = round(($crop_values['y2'] - $crop_values['y1']) / $preset['h'], 3) * 100;
-    $preset['region'] = 'pct:' . implode(',', $percentages);
     $preset['region'] = $crop_values['x1'] . ',' . $crop_values['y1'] . ',' . $crop_values['w'] . ',' . $crop_values['h'];
   }
-  // @TODO build a dynamic path to the image using the Image Server URL and
+  // Build a dynamic path to the image using the Image Server URL and
   // the image ID using the following format:
   // {scheme}://{server}{/prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
   // Build a path to the thumnail image.
