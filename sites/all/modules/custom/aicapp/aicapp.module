@@ -850,21 +850,16 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   foreach ($galleries as $gallery) {
     strip_drupal_from_node($gallery);
     // Add in other gallery fields from SOLR.
-    // @TODO switch away from SOLR.
-    $result = _runSolrQuery(AICAPP_GALLERY_QUERY, 'gallery_id', $gallery->gallery_id);
-    if (!empty($result['response']['docs'])) {
-      foreach ($result['response']['docs'][0] as $key => $val) {
-        if ($val == '<NOT Closed>' || $val == '<Closed>') {
-          if ($val == '<NOT Closed>') {
-            $gallery->$key = 'False';
-          }
-          elseif ($val == '<Closed>') {
-            $gallery->$key = 'True';
-          }
-        }
-        else {
-          $gallery->$key = $val;
-        }
+    $options = array(
+      'limit' => 1,
+      'ids' => array($gallery->gallery_id),
+    );
+    $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+    // Query the data aggregrator for recent data.
+    $results = _aicapp_fetch_data($url, $options);
+    if (!empty($results[0])) {
+      foreach ($results[0] as $key => $val) {
+        $gallery->{$key} = $val;
       }
     }
   }
@@ -1075,7 +1070,7 @@ function sort_objects_by_weight($a, $b) {
 /**
  * Add the SOLR data to the node.
  */
-function aicapp_fetch_remote_artwork(&$object, $object_id = NULL, $provider = AICAPP_DATA_SOLR) {
+function aicapp_fetch_remote_artwork(&$object, $object_id = NULL, $provider = AICAPP_DATA_AGGREGATOR) {
   // For now, just return the same as before. Eventually switch to getting
   // data from https://art-institute-of-chicago.github.io/data-aggregator.
   if ($provider === AICAPP_DATA_SOLR) {
@@ -1168,37 +1163,37 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
  * Add the SOLR data to the node.
  * To be deprecated.
  */
-function _getSOLRdata(&$object, $object_id = NULL) {
-  $entity = entity_metadata_wrapper('node', $object);
-  if (empty($object_id)) {
-    $object_id = $entity->field_object_id->value();
-    if (empty($object_id)) {
-      // if there is no object id, then we have a custom object. Reference values entered for object data.
-      $object->in_gallery = $entity->field_in_gallery->value();
-      $object->gallery_location = $entity->field_gallery_location->value();
-      $object->credit_line = $entity->field_credit_line->value();
-      $object->copyright_notice = $entity->field_copyright_notice->value();
-      if ($entity->field_artist_origin->value()) {
-        $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
-      }
-      else {
-        $object->artist_culture_place_delim = $entity->field_artist_name->value();
-      }
-      return;
-    }
-  }
-  $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
-  if (!empty($result['response']['docs'])) {
-    foreach ($result['response']['docs'][0] as $key => $val) {
-      if ($key == 'date_range') {
-        $val = implode('-', $val);
-      }
-      if ($key != 'provenance_text' && $key != 'exhibition_history') {
-        $object->$key = $val;
-      }
-    }
-  }
-}
+// function _getSOLRdata(&$object, $object_id = NULL) {
+//   $entity = entity_metadata_wrapper('node', $object);
+//   if (empty($object_id)) {
+//     $object_id = $entity->field_object_id->value();
+//     if (empty($object_id)) {
+//       // if there is no object id, then we have a custom object. Reference values entered for object data.
+//       $object->in_gallery = $entity->field_in_gallery->value();
+//       $object->gallery_location = $entity->field_gallery_location->value();
+//       $object->credit_line = $entity->field_credit_line->value();
+//       $object->copyright_notice = $entity->field_copyright_notice->value();
+//       if ($entity->field_artist_origin->value()) {
+//         $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
+//       }
+//       else {
+//         $object->artist_culture_place_delim = $entity->field_artist_name->value();
+//       }
+//       return;
+//     }
+//   }
+//   $result = _runSolrQuery(AICAPP_ARTWORK_QUERY, 'object_id', $object_id);
+//   if (!empty($result['response']['docs'])) {
+//     foreach ($result['response']['docs'][0] as $key => $val) {
+//       if ($key == 'date_range') {
+//         $val = implode('-', $val);
+//       }
+//       if ($key != 'provenance_text' && $key != 'exhibition_history') {
+//         $object->$key = $val;
+//       }
+//     }
+//   }
+// }
 
 /**
  * Clear out all the Drupal stuff from the node, so we can deliver JSON data.
@@ -1658,13 +1653,17 @@ function strip_drupal_from_node(&$node) {
  * Get gallery count.
  */
 function aicapp_gallery_count() {
-  // @TODO switch away from SOLR.
-  $result = _runSolrQuery(AICAPP_GALLERY_QUERY, '*', '*', 500);
-  $SOLR_count = count($result['response']['docs']);
+  $count = t('None found');
+  $options = array('limit' => 1,);
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+  // Query the data aggregrator.
+  $results = _aicapp_fetch_data($url, $options, TRUE);
+  if (!empty($results['pagination'])) {
+    $count = $results['pagination']['total'];
+  }
   $result = db_query("SELECT COUNT(nid) as count FROM {node} WHERE type = :s AND status = 1", array(':s' => AICAPP_TYPE_GALLERY));
   $galleries = $result->fetchObject();
-
-  return '<div class="callout"><p>' . t('Galleries in SOLR: ' . $SOLR_count) . '<br />' . t('Galleries in Drupal: ' . $galleries->count) . '</p></div>';
+  return '<div class="callout"><p>' . t('Galleries in Data Aggregator: ' . $count) . '<br />' . t('Galleries in Drupal: ' . $galleries->count) . '</p></div>';
 }
 
 /**
@@ -1672,22 +1671,25 @@ function aicapp_gallery_count() {
  * Used to multi-load in the galleries.  Objects don't use this, they are loaded one at a time via search.
  */
 function aicapp_loadgalleries_form_submit($form, &$form_state) {
-  // @TODO switch away from SOLR.
-  $result = _runSolrQuery(AICAPP_GALLERY_QUERY, '*', '*', 500);
-
+  $options = array('limit' => 500);
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+  // Query the data aggregrator.
+  $results = _aicapp_fetch_data($url, $options);
+  if (empty($results)) {
+    return;
+  }
   // first delete any old galleries not in SOLR anymore
   $galleries = node_load_multiple(array(), array('type' => AICAPP_TYPE_GALLERY, 'status' => 1));
-
   try {
     // Now loop through the $result JSON.
-    foreach ($result['response']['docs'] as $object) {
+    foreach ($results as $object) {
       aicappSaveNode($object, AICAPP_TYPE_GALLERY); // create new or update existing
     }
     foreach ($galleries as $gallery) {
       // look for the Drupal gallery in the SOLR gallery
       $match = FALSE;
-      foreach ($result['response']['docs'] as $item) {
-        if ($item['gallery_id'] == $gallery->field_gallery_id[LANGUAGE_NONE][0]['value']) {
+      foreach ($results as $item) {
+        if ($item['id'] == $gallery->field_gallery_id[LANGUAGE_NONE][0]['value']) {
           $match = TRUE;
         }
       }
@@ -1722,12 +1724,12 @@ function aicappSaveNode($object, $type) {
     $record = $qres->fetchObject();
   }
   elseif ($type == AICAPP_TYPE_GALLERY) {
-    if (!empty($object['gallery_id'])) {
+    if (!empty($object['id'])) {
       // Check for nid by SOLR gallery_id.
       $qres = db_query("SELECT entity_id
                    FROM {field_data_field_gallery_id}
                    WHERE field_gallery_id_value = :id",
-          array(':id' => $object['gallery_id'])
+          array(':id' => $object['id'])
       );
     }
     $record = $qres->fetchObject();
@@ -1777,14 +1779,14 @@ function aicappSaveNode($object, $type) {
     }
   }
   elseif ($type == AICAPP_TYPE_GALLERY) {
-    if (isset($object['title_t'])) {
-      $node->title = $object['title_t'];
+    if (isset($object['title'])) {
+      $node->title = $object['title'];
     }
-    if (isset($object['gallery_id'])) {
-      $node->field_gallery_id[$node->language][0]['value'] = $object['gallery_id'];
+    if (isset($object['id'])) {
+      $node->field_gallery_id[$node->language][0]['value'] = $object['id'];
     }
-    if (isset($object['gallery_number'])) {
-      $node->field_gallery_number[$node->language][0]['value'] = $object['gallery_number'];
+    if (isset($object['number'])) {
+      $node->field_gallery_number[$node->language][0]['value'] = $object['number'];
     }
     if (!empty($object['latitude']) && !empty($object['longitude'])) {
       $node->field_location[$node->language][0]['value'] = $object['latitude'] . ',' . $object['longitude'];
@@ -1893,12 +1895,16 @@ function aicapp_node_view($node, $view_mode, $langcode) {
       $gallery_id = 0;
     }
     if (!empty($gallery_id)) {
-      // @TODO switch away from SOLR.
-      $result = _runSolrQuery(AICAPP_GALLERY_QUERY, 'gallery_id', $gallery_id);
-
-      if (!empty($result['response']['docs'])) {
+      $options = array(
+        'limit' => 1,
+        'ids' => array($gallery_id),
+      );
+      $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+      // Query the data aggregrator.
+      $results = _aicapp_fetch_data($url, $options);
+      if (!empty($result[0])) {
         $w = 10;
-        foreach ($result['response']['docs'][0] as $key => $val) {
+        foreach ($result[0] as $key => $val) {
           $node->content[$key] = array(
             '#markup' => aicapp_field_markup($key, $val),
             '#weight' => $w++,
@@ -2084,9 +2090,6 @@ function _runSolrQuery($query_type, $term, $value, $rows = 1, $start = 0) {
   $query = variable_get('aicapp_artwork_query');
   if ($query_type == AICAPP_GALLERY_QUERY) {
     $query = variable_get('aicapp_gallery_query');
-  }
-  elseif ($query_type == AICAPP_ARTWORK_QUERY) {
-    // all good
   }
   else {
     drupal_set_message('Unsure what type of query to run: ' . $query_type, 'error');
