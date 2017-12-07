@@ -506,13 +506,7 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
 
   // flush drupal cache.
   drupal_flush_all_caches();
-  dsm($art_gone);
-  dsm($art_in_gallery);
 
-  dsm($locations);
-  dsm($objects);
-  dsm($changed);
-return;
   // notify of any objects no longer on display.
   _email_art_removed($art_gone);
 
