@@ -42,6 +42,9 @@ function aicapp_init() {
   define('AICAPP_DATA_API_ENDPOINT_ARTWORKS', variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'));
   define('AICAPP_DATA_API_ENDPOINT_GALLERIES', variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'));
   define('AICAPP_DATA_API_ENDPOINT_IMAGES', variable_get('aicapp_data_endpoint_images', '/api/v1/images'));
+  define('AICAPP_JSON_FILENAME', variable_get('aicapp_json_filename', 'appData'));
+  define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
+
 }
 
 /**
@@ -1001,9 +1004,8 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       $featured_sorted[$feature->type][] = $feature->nid;
     }
   }
-  // Prepare to output JSON data.
-  // Add all the entities to a single array for encoding.
-  // Version 2 JSON data.
+  // Prepare to output JSON Version 2 JSON data.
+  // Add all the entities to a single array for JSON encoding.
   $v2_data = array(
     'dashboard' => array(
       'featured_tours' => isset($featured_sorted[AICAPP_TYPE_TOUR]) ? $featured_sorted[AICAPP_TYPE_TOUR] : array(),
@@ -1018,11 +1020,11 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'annontations' => $map_annotations,
     'map_floors' => !empty($map_floor) ? $map_floor : array(),
   );
-
-  // Version 2 file output.
+  // Writing version 2 file output.
   $v2_json_output = json_encode($v2_data);
-  $v2_filename = 'appData-v2';
-  $v2_file = file_put_contents('sites/default/files/' . $v2_filename . '.json', $v2_json_output);
+  $v2_filename = variable_get('file_public_path', conf_path() . '/files');
+  $v2_filename .= '/' . AICAPP_JSON_FILENAME . '-' . AICAPP_JSON_V2 . '.json';
+  $v2_file = file_put_contents($v2_filename, $v2_json_output);
   // Version 1 data
   $v1_data = array(
     'general_info' => $node_gen,
@@ -1058,13 +1060,12 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       $v1_data[$type][$key] = $item;
     }
   }
-
   // Write JSON output to files.
   // v1 verion file output.
   $v1_json_output = json_encode($v1_data);
-  $v1_filename = 'appData';
-  $v1_file = file_put_contents('sites/default/files/' . $v1_filename . '.json', $v1_json_output);
-
+  $v1_filename = variable_get('file_public_path', conf_path() . '/files');
+  $v1_filename .= '/' . AICAPP_JSON_FILENAME . '.json';
+  $v1_file = file_put_contents($v1_filename, $v1_json_output);
   // If both v1 & v1 files were written successfully.
   if ($v1_file && $v2_file) {
     drupal_set_message('Updated files <strong>v1</strong>: <a href="' . $base_path . 'sites/default/files/appData.json' . '">appData.json</a> or <strong>v2</strong>: <a href="' . $base_path . 'sites/default/files/appData-v2.json' . '">appData-v2.json</a><br>When you click to view one of the files, be sure to refresh your browser as it might be cached. Best viewed in Chrome.', 'status');
