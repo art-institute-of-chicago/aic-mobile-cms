@@ -443,18 +443,16 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
     $thumbUrl = $imageToCrop[LANGUAGE_NONE][0]['value'];
   }
   elseif (!empty($imageToCrop[LANGUAGE_NONE][0]['uri'])) {
-    // use image_style_path to avoid an http lookup for local files.
-    $thumbUrl = $imageType === 'thumbnail' ? image_style_path('one_twelve_square', $imageToCrop[LANGUAGE_NONE][0]['uri']) : image_style_path('large_six_hundred', $imageToCrop[LANGUAGE_NONE][0]['uri']);
+    $thumbUrl = $imageType === 'thumbnail' ? image_style_url('one_twelve_square', $imageToCrop[LANGUAGE_NONE][0]['uri']) : image_style_url('large_six_hundred', $imageToCrop[LANGUAGE_NONE][0]['uri']);
   }
-  if (empty($thumbUrl)) {
+  if (empty($thumbUrl) || !filter_var($thumbUrl, FILTER_VALIDATE_URL)) {
     return;
   }
-  $thumbImageinfo = getimagesize($thumbUrl);
-  // If this is a local file, now we want a URL to use in an html tag.
-  if (!empty($imageToCrop[LANGUAGE_NONE][0]['uri'])) {
-    $url = file_create_url($thumbUrl);
-    $url = parse_url($url);
-    $thumbUrl = $url['path'];
+  try {
+    $thumbImageinfo = getimagesize($thumbUrl);
+  }
+  catch (Exception $e) {
+    return;
   }
   $thumbWidth = $thumbImageinfo[0];
   $thumbHeight = $thumbImageinfo[1];
