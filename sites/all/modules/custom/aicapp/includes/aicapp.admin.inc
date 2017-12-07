@@ -144,14 +144,14 @@ function aicapp_admin_api() {
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
     '#title' => t('Image API'),
-    '#tree' => TRUE,
+    '#tree' => FALSE,
   );
   $form['aicapp_image_api']['aicapp_image_server_url'] = array(
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
     '#title' => t('Image Server URL'),
-    '#default_value' => variable_get('aicapp_image_server_url', 'https://lakeimagesweb.artic.edu/iiif/2/'),
+    '#default_value' => variable_get('aicapp_image_server_url', 'https://lakeimagesweb.artic.edu/iiif/2'),
     '#description' => t('URL to the Image Server.'),
   );
   // Data aggregrator API
@@ -160,7 +160,7 @@ function aicapp_admin_api() {
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
     '#title' => t('Data Aggregator API'),
-    '#tree' => TRUE,
+    '#tree' => FALSE,
   );
   $form['aicapp_data_aggregator']['aicapp_data_api_host'] = array(
     '#type' => 'textfield',
@@ -346,7 +346,7 @@ function aicapp_admin_api_validate($form, &$form_state) {
     form_set_error('aicapp_gallery_query', t('You must include {{term}} somewhere in your URL.'));
   }
   // Check if Image Server value is a URL.
-  if (!filter_var($form_state['values']['aicapp_image_api']['aicapp_image_server_url'], FILTER_VALIDATE_URL)) {
+  if (!filter_var($form_state['values']['aicapp_image_server_url'], FILTER_VALIDATE_URL)) {
     form_set_error('aicapp_image_server_url', t('You must provide a valid URL for the Image Server.'));
   }
 }
