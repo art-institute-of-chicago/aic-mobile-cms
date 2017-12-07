@@ -151,7 +151,7 @@ function aicapp_admin_api() {
     '#size' => 200,
     '#maxlength' => 256,
     '#title' => t('Image Server URL'),
-    '#default_value' => variable_get('aicapp_image_server_url', ' https://lakeimagesweb.artic.edu/iiif/2/'),
+    '#default_value' => variable_get('aicapp_image_server_url', 'https://lakeimagesweb.artic.edu/iiif/2/'),
     '#description' => t('URL to the Image Server.'),
   );
   // Data aggregrator API
