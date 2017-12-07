@@ -868,17 +868,64 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       }
     }
   }
-
   // Now we build up the objects array for JSON output.
+  $object_ids = array();
+  $by_object_id = array();
+  foreach ($objects as $object) {
+    $entity = entity_metadata_wrapper('node', $object);
+    $object_id = $entity->field_object_id->value();
+    if (empty($object_id)) {
+      // If there is no object id, then we have a custom object.
+      // Reference values entered for object data.
+      $object->in_gallery = $entity->field_in_gallery->value();
+      $object->gallery_location = $entity->field_gallery_location->value();
+      $object->credit_line = $entity->field_credit_line->value();
+      $object->copyright_notice = $entity->field_copyright_notice->value();
+      if ($entity->field_artist_origin->value()) {
+        $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
+      }
+      else {
+        $object->artist_culture_place_delim = $entity->field_artist_name->value();
+      }
+    }
+    else {
+      $object_ids[] = $object_id;
+      $by_object_id[$object_id] = $object;
+    }
+  }
+  // Query the data aggregrator for recent data using the object ids.
+  $options = array('ids' => $object_ids);
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  $results = _aicapp_fetch_data($url, $options);
+  if (!empty($results)) {
+    foreach ($results as $item) {
+      $id = isset($item['id']) ? $item['id'] : NULL;
+      if (empty($id) || !isset($by_object_id[$id])) {
+        continue;
+      }
+      $object = $by_object_id[$id];
+      foreach ($item as $key => $val) {
+        if ($key == 'date_range') {
+          $val = implode('-', $val);
+        }
+        if ($key != 'provenance_text' && $key != 'exhibition_history') {
+          $object->{$key} = $val;
+        }
+      }
+    }
+  }
+  // Only show objects that are in a gallery, and have lat/long values,
+  // and that are published.
   foreach ($objects as $key => $object) {
-    _aicapp_update_remote_artwork_data($object);
+    // Strip out Drupal native stuff we don't need in the JSON output from galleries.
     strip_drupal_from_node($object);
-    // Only show objects that are in a gallery, and have lat/long values,
-    // and that are published.
+    // unset object that do not qualify.
     if (empty($object->in_gallery) || !$object->in_gallery || empty($object->location) || !$object->status) {
       unset($objects[$key]);
     }
   }
+
+
   // Format audio node.
   foreach ($audio_files as $audio) {
     strip_drupal_from_node($audio);
