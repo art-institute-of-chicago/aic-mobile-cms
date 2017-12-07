@@ -439,8 +439,54 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
   $art_in_gallery = array();
   $locations = array();
   $changed = array();
-  foreach ($objects as $key => $object) {
-    _aicapp_update_remote_artwork_data($object);
+  $object_ids = array();
+  foreach ($objects as $object) {
+    $entity = entity_metadata_wrapper('node', $object);
+    $object_id = $entity->field_object_id->value();
+    if (!empty($object_id)) {
+      $object_ids[] = $object_id;
+    }
+    else {
+      // If there is no object id, then we have a custom object.
+      // Reference values entered for object data.
+      $object->in_gallery = $entity->field_in_gallery->value();
+      $object->gallery_location = $entity->field_gallery_location->value();
+      $object->credit_line = $entity->field_credit_line->value();
+      $object->copyright_notice = $entity->field_copyright_notice->value();
+      if ($entity->field_artist_origin->value()) {
+        $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
+      }
+      else {
+        $object->artist_culture_place_delim = $entity->field_artist_name->value();
+      }
+    }
+  }
+  // Query the data aggregrator for recent data using the object ids.
+  $options = array('ids' => $object_ids);
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  $results = _aicapp_fetch_data($url, $options);
+  $objects['#updated'] = array();
+  if (!empty($results)) {
+    foreach ($results as $item) {
+      $id = isset($item['id']) ? $item['id'] : NULL;
+      if (empty($id) || !isset($by_object_id[$id])) {
+        continue;
+      }
+      $object = $by_object_id[$id];
+      foreach ($item as $key => $val) {
+        if ($key == 'date_range') {
+          $val = implode('-', $val);
+        }
+        if ($key != 'provenance_text' && $key != 'exhibition_history') {
+          $object->$key = $val;
+        }
+      }
+      $objects['#updated'][$object->nid] = $object;
+    }
+  }
+
+  foreach ($objects['#updated'] as $key => $object) {
+    //_aicapp_update_remote_artwork_data($object);
     // Check objects here to see if they recently went off display.
     // We send email notice in that case - (they may need to update a tour?)
     // First collect the ones marked not on display in current data hub data.
