@@ -20,7 +20,11 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
   );
   $form['#attached']['js'][] = array(
     'type' => 'file',
-    'data' => drupal_get_path('module', 'aicapp') . '/jquery.imgareaselect.min.js',
+    'data' => drupal_get_path('module', 'aicapp') . '/js/jquery.imgareaselect.min.js',
+  );
+  $form['#attached']['js'][] = array(
+    'type' => 'file',
+    'data' => drupal_get_path('module', 'aicapp') . '/js/imagecrop.js',
   );
   // Options for how javascript is added to page.
   $js_options = array(
@@ -533,79 +537,39 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
       setDefaults($form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, $thumbValues);
     }
   }
-  $javascript_to_add = '(function ($) {
-    $(document).ready(function () {
-      // display ' . $imageType . ' image
-      $( "div#' . $formID . '-crop-rect-add-more-wrapper .fieldset-description" ).append( "<p>&nbsp;</p><p><img id=\"' . $formValue . '\" src=\"' . $thumbUrl . '\" /></p>" );
-      // make fields readonly
-      $("#' . $formID . '-crop-rect-add-more-wrapper input").prop("readonly", "readonly");
-      var imageType = "' . $imageType . '",
-         imageWidth = ' . $thumbValues['width'] . ',
-         imageHeight = ' . $thumbValues['height'] . ',
-         resizable = ' . $resizable . ',
-         x1 = ' . (($thumbValues['width'] > $thumbValues['x1']) ? $thumbValues['x1'] : 0) . ',
-         x2 = ' . (($thumbValues['width'] > $thumbValues['x2']) ? $thumbValues['x2'] : $thumbValues['width'] + $thumbValues['x1']) . ',
-         y1 = ' . (($thumbValues['height'] > $thumbValues['y1']) ? $thumbValues['y1'] : 0) . ',
-         y2 = ' . (($thumbValues['height'] > $thumbValues['y2']) ? $thumbValues['y2'] : $thumbValues['height'] + $thumbValues['y1']) . ';
-      if ((imageType == "large" && (imageWidth < 364 || imageHeight < 200)) || (imageType == "thumbnail" && imageWidth < 50)) {
-        $( "div#' . $formID . '-crop-rect-add-more-wrapper .fieldset-wrapper" ).append( "<p class=\"warning\">WARNING: THIS IMAGE IS SMALLER THAN THE RECOMMENDED MINIMUM AND WILL BE SCALED TO FIT IN THE APP.</p>" );
-      }
-      var imgAreaSelectOptions =  {
-        x1: x1,
-        y1: y1,
-        x2: x2,
-        y2: y2,
-        persistent: true,
-        handles: true,
-        onSelectEnd: function (img, selection) {
-          $("input[name=\"' . $formValue . '_crop_rect[und][0][field_x][und][0][value]\"]").val(selection.x1);
-          $("input[name=\"' . $formValue . '_crop_rect[und][0][field_y][und][0][value]\"]").val(selection.y1);
-          $("input[name=\"' . $formValue . '_crop_rect[und][0][field_x2][und][0][value]\"]").val(selection.x2);
-          $("input[name=\"' . $formValue . '_crop_rect[und][0][field_y2][und][0][value]\"]").val(selection.y2);
-          $("input[name=\"' . $formValue . '_crop_rect[und][0][field_width][und][0][value]\"]").val(selection.width);
-          $("input[name=\"' . $formValue . '_crop_rect[und][0][field_height][und][0][value]\"]").val(selection.height);
-        }
-      };';
-  if ($imageType === 'thumbnail') {
-    $javascript_to_add .= '
-      imgAreaSelectOptions.minWidth = 74;
-      imgAreaSelectOptions.minHeight = 74;
-      imgAreaSelectOptions.resizable = resizable;
-      imgAreaSelectOptions.aspectRatio = "' . $aspectRatio . '";
-      if (imgAreaSelectOptions.x2 > (imageWidth + imgAreaSelectOptions.x1)) {
-        imgAreaSelectOptions.x2 = imgAreaSelectOptions.minWidth;
-      }
-      if (imgAreaSelectOptions.y2 > (imageHeight + imgAreaSelectOptions.y1)) {
-        imgAreaSelectOptions.y2 = imgAreaSelectOptions.minHeight;
-      }';
+  $js_settings = array(
+    'aicapp_crop' => array(
+      'images' => array(0 => array(
+        'type' => $imageType,
+        'wrapperID' => $formID,
+        'id' => $formValue,
+        'url' => $thumbUrl,
+        'crop_inputs_selector' => '#' . $formID . '-crop-rect-add-more-wrapper input',
+        'width' => intval($thumbWidth),
+        'height' => intval($thumbHeight),
+        'resizable' => $resizable,
+        'aspectRatio' => !empty($aspectRatio) ? $aspectRatio : NULL,
+        'minWidth' => $imageType === 'large' ? 364 : 74,
+        'minHeight' => $imageType === 'large' ? 200 : 74,
+        'x1' => (($thumbWidth > $thumbValues['x1']) ? intval($thumbValues['x1']) : 0) ,
+        'x2' => (($thumbWidth > ($thumbValues['x2'] + $thumbValues['x1'])) ? intval($thumbValues['x2']) : intval($thumbWidth - $thumbValues['x1'])),
+        'y1' => (($thumbHeight > $thumbValues['y1']) ? intval($thumbValues['y1']) : 0),
+        'y2' => (($thumbHeight > ($thumbValues['y2'] + $thumbValues['y1'])) ? intval($thumbValues['y2']) : intval($thumbHeight - $thumbValues['y1'])),
+      ))
+    ),
+  );
+  if ($imageType === 'thumbnail' || !$resizable) {
+    $js_settings['aicapp_crop']['images'][0]['aspectRatio'] = $aspectRatio;
   }
-  elseif ($imageType === 'large') {
-    $javascript_to_add .= '
-      imgAreaSelectOptions.minWidth = 364;
-      imgAreaSelectOptions.minHeight = 200;
-      imgAreaSelectOptions.resizable = resizable;
-      if (!resizable) {
-        imgAreaSelectOptions.aspectRatio = "' . $aspectRatio . '";
-      }
-      if (imgAreaSelectOptions.x2 > (imageWidth + imgAreaSelectOptions.x1)) {
-        imgAreaSelectOptions.x2 = imgAreaSelectOptions.minWidth;
-      }
-      if (imgAreaSelectOptions.y2 > (imageHeight + imgAreaSelectOptions.y1)) {
-        imgAreaSelectOptions.y2 = imgAreaSelectOptions.minHeight;
-      }';
+  if ($js_settings['aicapp_crop']['images'][0]['x2'] > ($js_settings['aicapp_crop']['images'][0]['width'] + $js_settings['aicapp_crop']['images'][0]['x1'])) {
+    $js_settings['aicapp_crop']['images'][0]['x2'] = $js_settings['aicapp_crop']['images'][0]['minWidth'];
   }
-  $javascript_to_add .= '
-    $("img#' . $formValue . '").imgAreaSelect(imgAreaSelectOptions);
-    });})(jQuery);';
-  // Add the Javascript to the page.
-  // @TODO use a file instead of adding JS inline. Only pass configurations for the file to act upon.
-  drupal_add_js($javascript_to_add,
-    array(
-      'type' => 'inline',
-      'scope' => 'footer',
-      'group' => JS_THEME,
-      'weight' => 15,
-    )
+  if ($js_settings['aicapp_crop']['images'][0]['y2'] > ($js_settings['aicapp_crop']['images'][0]['height'] + $js_settings['aicapp_crop']['images'][0]['y1'])) {
+    $js_settings['aicapp_crop']['images'][0]['y2'] = $js_settings['aicapp_crop']['images'][0]['minHeight'];
+  };
+  $form['#attached']['js'][] = array(
+    'data' => $js_settings,
+    'type' => 'setting',
   );
 }
 
