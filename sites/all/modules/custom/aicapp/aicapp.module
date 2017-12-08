@@ -468,7 +468,7 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
     }
   }
   // Query the data aggregrator for recent data using the object ids.
-  $options = array('ids' => $object_ids);
+  $options = array('ids' => $object_ids, 'limit' => count($object_ids));
   $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
   $results = _aicapp_fetch_data($url, $options);
   if (!empty($results)) {
@@ -624,7 +624,7 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
   }
 
   // Query the data aggregrator for recent data using the object ids.
-  $options = array('ids' => $object_ids);
+  $options = array('ids' => $object_ids, 'limit' => count($object_ids));
   $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
   $results = _aicapp_fetch_data($url, $options);
   if (!empty($results)) {
@@ -959,7 +959,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     $by_gallery_id[$gallery->gallery_id] = $gallery;
   }
   // Query the data aggregrator for recent data using the gallery ids.
-  $options = array('ids' => $gallery_ids);
+  $options = array('ids' => $gallery_ids, 'limit' => count($gallery_ids));
   $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
   $results = _aicapp_fetch_data($url, $options);
   $galleries['#updated'] = array();
@@ -1023,7 +1023,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     }
   }
   // Query the data aggregrator for recent data using the object ids.
-  $options = array('ids' => $object_ids);
+  $options = array('ids' => $object_ids, 'limit' => count($object_ids));
   $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
   $results = _aicapp_fetch_data($url, $options);
   if (!empty($results)) {
@@ -1313,15 +1313,41 @@ function _aicapp_update_remote_artwork_data(&$object, $object_id = NULL) {
 /**
  * Fetch data from the data aggregrator.
  */
-function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALSE) {
+function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALSE, $batch_start = 0) {
+  $batch_count = 67;
   $results = array();
   // Format a couple fields if they were used.
   if (!empty($options['fields'])) {
     $options['fields'] = is_array($options['fields']) ? implode(',', $options['fields']) : $options['fields'];
   }
   if (!empty($options['ids'])) {
-    $options['ids'] = is_array($options['ids']) ? implode(',', $options['ids']) : $options['ids'];
+    if (!is_array($options['ids'])) {
+      $options['ids'] = explode(',', $options['ids']);
+    }
+    // Combine all ids to eliminate duplicates;
+    $options['ids'] = array_combine($options['ids'], $options['ids']);
+    // Batch large number of ids or large limit requests into a small number of
+    // separate requests and then send back all results.
+    $id_count = count($options['ids']);
+    if ($id_count > $batch_count) {
+      // Separate the request into batches.
+      $batch_options = $options;
+      $all_ids = array_combine($batch_options['ids'], $batch_options['ids']);
+      while ($batch_start <= $id_count) {
+        $batch = array_slice($all_ids, $batch_start, $batch_count, TRUE);
+        $batch_options['ids'] = array_values($batch);
+        $new_results = _aicapp_fetch_data($endpoint, $batch_options);
+        $results = array_merge($results, $new_results);
+        $batch_start += $batch_count;
+      }
+      // Return all results.
+      return $results;
+    }
+    else {
+      $options['ids'] = implode(',', $options['ids']);
+    }
   }
+
   $url = $endpoint . '?' . http_build_query($options);
   try {
     $connection = file_get_contents($url);
