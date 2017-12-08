@@ -936,7 +936,11 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   // Now we build up the objects array for JSON output.
   $object_ids = array();
   $by_object_id = array();
+  $objects['#updated'] = array();
   foreach ($objects as $object) {
+    if (!is_object($object)) {
+      continue;
+    }
     $entity = entity_metadata_wrapper('node', $object);
     $object_id = $entity->field_object_id->value();
     if (empty($object_id)) {
@@ -952,6 +956,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       else {
         $object->artist_culture_place_delim = $entity->field_artist_name->value();
       }
+      $objects['#updated'][$object->nid] = $object;
     }
     else {
       $object_ids[] = $object_id;
@@ -962,14 +967,13 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $options = array('ids' => $object_ids);
   $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
   $results = _aicapp_fetch_data($url, $options);
-  $objects['#updated'] = array();
   if (!empty($results)) {
     // @TODO a better way would be to only request the fields we want.
     $object_props_to_skip = array(
       'description', 'medium', 'inscriptions', 'provenance_text', 'exhibition_history',
       'object_type', 'object_type_id', 'publication_history',
       'publishing_verification_level', 'copyright_notice',
-      'place_of_origin','collection_status', 'gallery_id',
+      'place_of_origin', 'collection_status', 'gallery_id',
     );
     foreach ($results as $item) {
       $id = isset($item['id']) ? $item['id'] : NULL;
@@ -1003,12 +1007,11 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     // Remove object that do not qualify because they are a) not in a gallery,
     // b) have no location, or c) are not published.
     if (empty($object->in_gallery) || !$object->in_gallery || empty($object->location) || !$object->status) {
-    //  unset($objects['#updated'][$key]);
+      unset($objects['#updated'][$key]);
     }
   }
   // Overwrite the objects with the updated copy.
   $objects = $objects['#updated'];
-
   // Format audio node.
   foreach ($audio_files as $audio) {
     strip_drupal_from_node($audio);
