@@ -1311,6 +1311,13 @@ function _aicapp_update_remote_artwork_data(&$object, $object_id = NULL) {
 }
 
 /**
+ * Test if a value is positive.
+ */
+function is_positive($number) {
+  return is_numeric($number) && $number >= 0;
+}
+
+/**
  * Fetch data from the data aggregrator.
  */
 function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALSE, $batch_start = 0) {
@@ -1324,8 +1331,9 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
     if (!is_array($options['ids'])) {
       $options['ids'] = explode(',', $options['ids']);
     }
-    // Combine all ids to eliminate duplicates;
-    $options['ids'] = array_combine($options['ids'], $options['ids']);
+    // Combine all ids to eliminate duplicates, also the array_filter removes
+    // negative values. @TODO confirm we want to remove negative gallery ids.
+    $options['ids'] = array_filter(array_combine($options['ids'], $options['ids']), 'is_positive');
     // Batch large number of ids or large limit requests into a small number of
     // separate requests and then send back all results.
     $id_count = count($options['ids']);
