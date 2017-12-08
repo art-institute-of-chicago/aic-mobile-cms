@@ -433,18 +433,23 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
   // Load all objects, including unpublished, because we compare if objects
   // previously not in a gallery (and unpublished) are now displayed.
   $objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
-
   // Now we build up the objects array for JSON output.
   $art_gone = array();
   $art_in_gallery = array();
   $locations = array();
   $changed = array();
   $object_ids = array();
+  $by_object_id = array();
+  $objects['#updated'] = array();
   foreach ($objects as $object) {
+    if (!is_object($object)) {
+      continue;
+    }
     $entity = entity_metadata_wrapper('node', $object);
     $object_id = $entity->field_object_id->value();
     if (!empty($object_id)) {
       $object_ids[] = $object_id;
+      $by_object_id[$object_id] = $object;
     }
     else {
       // If there is no object id, then we have a custom object.
@@ -459,13 +464,13 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
       else {
         $object->artist_culture_place_delim = $entity->field_artist_name->value();
       }
+      $objects['#updated'][$object->nid] = $object;
     }
   }
   // Query the data aggregrator for recent data using the object ids.
   $options = array('ids' => $object_ids);
   $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
   $results = _aicapp_fetch_data($url, $options);
-  $objects['#updated'] = array();
   if (!empty($results)) {
     foreach ($results as $item) {
       $id = isset($item['id']) ? $item['id'] : NULL;
@@ -484,7 +489,6 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
       $objects['#updated'][$object->nid] = $object;
     }
   }
-
   foreach ($objects['#updated'] as $key => $object) {
     //_aicapp_update_remote_artwork_data($object);
     // Check objects here to see if they recently went off display.
@@ -575,7 +579,7 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
       WHERE node.nid = fi.entity_id
       AND fi.bundle = :bundle
       AND node.status = 1";
-  $objects = db_query($object_query, array(':bundle' => AICAPP_TYPE_OBJECT));
+  $db_objects = db_query($object_query, array(':bundle' => AICAPP_TYPE_OBJECT));
   $gallery_query = "SELECT nid, title
       FROM {node}
       WHERE node.type = :bundle
@@ -587,10 +591,63 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
   foreach ($galleries as $gallery) {
     $gals[] = $gallery->title;
   }
-
+  $objects = array('#updated' => array());
   $bad_obj_galleries = '';
-  foreach ($objects as $object) {
-    _aicapp_update_remote_artwork_data($object, $object->object_id);
+  $object_ids = array();
+  $by_object_id = array();
+  foreach ($db_objects as $object) {
+    if (empty($object->nid)) {
+      continue;
+    }
+    $object = node_load($object->nid);
+    $entity = entity_metadata_wrapper('node', $object);
+    $object_id = $entity->field_object_id->value();
+    if (!empty($object_id)) {
+      $object_ids[] = $object_id;
+      $by_object_id[$object_id] = $object;
+    }
+    else {
+      // If there is no object id, then we have a custom object.
+      // Reference values entered for object data.
+      $object->in_gallery = $entity->field_in_gallery->value();
+      $object->gallery_location = $entity->field_gallery_location->value();
+      $object->credit_line = $entity->field_credit_line->value();
+      $object->copyright_notice = $entity->field_copyright_notice->value();
+      if ($entity->field_artist_origin->value()) {
+        $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
+      }
+      else {
+        $object->artist_culture_place_delim = $entity->field_artist_name->value();
+      }
+      $objects['#updated'][$object->nid] = node_load($object->nid);
+    }
+  }
+
+  // Query the data aggregrator for recent data using the object ids.
+  $options = array('ids' => $object_ids);
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  $results = _aicapp_fetch_data($url, $options);
+  if (!empty($results)) {
+    foreach ($results as $item) {
+      $id = isset($item['id']) ? $item['id'] : NULL;
+      if (empty($id) || !isset($by_object_id[$id])) {
+        continue;
+      }
+      $object = $by_object_id[$id];
+      foreach ($item as $key => $val) {
+        if ($key == 'date_range') {
+          $val = implode('-', $val);
+        }
+        if ($key != 'provenance_text' && $key != 'exhibition_history') {
+          $object->$key = $val;
+        }
+      }
+      $objects['#updated'][$object->nid] = $object;
+    }
+  }
+
+  foreach ($objects['#updated'] as $object) {
+    //_aicapp_update_remote_artwork_data($object, $object->object_id);
     $match = FALSE;
     if (isset($object->gallery_location)) {
       $match = array_search($object->gallery_location, $gals);
@@ -1723,7 +1780,7 @@ function aicapp_gallery_count() {
  * Used to multi-load in the galleries.  Objects don't use this, they are loaded one at a time via search.
  */
 function aicapp_loadgalleries_form_submit($form, &$form_state) {
-  $options = array('limit' => 500);
+  $options = array('limit' => 1000);
   $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
   // Query the data aggregrator.
   $results = _aicapp_fetch_data($url, $options);
