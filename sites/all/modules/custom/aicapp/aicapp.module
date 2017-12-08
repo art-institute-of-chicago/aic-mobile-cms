@@ -452,19 +452,7 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
       $by_object_id[$object_id] = $object;
     }
     else {
-      // If there is no object id, then we have a custom object.
-      // Reference values entered for object data.
-      $object->in_gallery = $entity->field_in_gallery->value();
-      $object->gallery_location = $entity->field_gallery_location->value();
-      $object->credit_line = $entity->field_credit_line->value();
-      $object->copyright_notice = $entity->field_copyright_notice->value();
-      if ($entity->field_artist_origin->value()) {
-        $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
-      }
-      else {
-        $object->artist_culture_place_delim = $entity->field_artist_name->value();
-      }
-      $objects['#updated'][$object->nid] = $object;
+      $objects['#updated'][$object->nid] = _aicapp_update_local_artwork_data($object, $entity);
     }
   }
   // Query the data aggregrator for recent data using the object ids.
@@ -490,7 +478,6 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
     }
   }
   foreach ($objects['#updated'] as $key => $object) {
-    //_aicapp_update_remote_artwork_data($object);
     // Check objects here to see if they recently went off display.
     // We send email notice in that case - (they may need to update a tour?)
     // First collect the ones marked not on display in current data hub data.
@@ -607,19 +594,7 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
       $by_object_id[$object_id] = $object;
     }
     else {
-      // If there is no object id, then we have a custom object.
-      // Reference values entered for object data.
-      $object->in_gallery = $entity->field_in_gallery->value();
-      $object->gallery_location = $entity->field_gallery_location->value();
-      $object->credit_line = $entity->field_credit_line->value();
-      $object->copyright_notice = $entity->field_copyright_notice->value();
-      if ($entity->field_artist_origin->value()) {
-        $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
-      }
-      else {
-        $object->artist_culture_place_delim = $entity->field_artist_name->value();
-      }
-      $objects['#updated'][$object->nid] = node_load($object->nid);
+      $objects['#updated'][$object->nid] = _aicapp_update_local_artwork_data($object, $entity);
     }
   }
 
@@ -647,7 +622,6 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
   }
 
   foreach ($objects['#updated'] as $object) {
-    //_aicapp_update_remote_artwork_data($object, $object->object_id);
     $match = FALSE;
     if (isset($object->gallery_location)) {
       $match = array_search($object->gallery_location, $gals);
@@ -1004,18 +978,8 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       // If there is no object id, then we have a custom object.
       $object->id = NULL;
       $object->object_id = NULL;
-      // Reference values entered for object data.
-      $object->in_gallery = $entity->field_in_gallery->value();
-      $object->gallery_location = $entity->field_gallery_location->value();
-      $object->credit_line = $entity->field_credit_line->value();
-      $object->copyright_notice = $entity->field_copyright_notice->value();
-      if ($entity->field_artist_origin->value()) {
-        $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
-      }
-      else {
-        $object->artist_culture_place_delim = $entity->field_artist_name->value();
-      }
-      $objects['#updated'][$object->nid] = $object;
+      // Add local values.
+      $objects['#updated'][$object->nid] = _aicapp_update_local_artwork_data($object, $entity);
     }
     else {
       $object_ids[] = $object_id;
@@ -1058,6 +1022,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       $objects['#updated'][$object->nid] = $object;
     }
   }
+
   // Only show objects that are in a gallery, and have lat/long values,
   // and that are published.
   foreach ($objects['#updated'] as $key => $object) {
@@ -1168,7 +1133,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $v2_filename = variable_get('file_public_path', conf_path() . '/files');
   $v2_filename .= '/' . AICAPP_JSON_FILENAME . '-' . AICAPP_JSON_V2 . '.json';
   $v2_file = file_put_contents($v2_filename, $v2_json_output);
-  // Version 1 data
+  // Version 1 data.
   $v1_data = array(
     'general_info' => $node_gen,
     'galleries' => $galleries,
@@ -1270,44 +1235,23 @@ function sort_objects_by_weight($a, $b) {
 /**
  * Add the remote artwork object data to the object node.
  */
-function _aicapp_update_remote_artwork_data(&$object, $object_id = NULL) {
-  $entity = entity_metadata_wrapper('node', $object);
-  if (empty($object_id)) {
-    $object_id = $entity->field_object_id->value();
-    if (empty($object_id)) {
-      // If there is no object id, then we have a custom object.
-      // Reference values entered for object data.
-      $object->in_gallery = $entity->field_in_gallery->value();
-      $object->gallery_location = $entity->field_gallery_location->value();
-      $object->credit_line = $entity->field_credit_line->value();
-      $object->copyright_notice = $entity->field_copyright_notice->value();
-      if ($entity->field_artist_origin->value()) {
-        $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
-      }
-      else {
-        $object->artist_culture_place_delim = $entity->field_artist_name->value();
-      }
-      return;
-    }
+function _aicapp_update_local_artwork_data(&$object, $entity = NULL) {
+  if (!$entity) {
+    $entity = entity_metadata_wrapper('node', $object);
   }
-  // An object ID was passed and is not empty, query based on object ID.
-  $options = array(
-    'ids' => array($object_id),
-    'limit' => 1,
-  );
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
-  // Query the data aggregrator.
-  $results = _aicapp_fetch_data($url, $options);
-  if (!empty($results[0])) {
-    foreach ($results[0] as $key => $val) {
-      if ($key == 'date_range') {
-        $val = implode('-', $val);
-      }
-      if ($key != 'provenance_text' && $key != 'exhibition_history') {
-        $object->$key = $val;
-      }
-    }
+  // If there is no object id, then we have a custom object.
+  // Reference values entered for object data.
+  $object->in_gallery = $entity->field_in_gallery->value();
+  $object->gallery_location = $entity->field_gallery_location->value();
+  $object->credit_line = $entity->field_credit_line->value();
+  $object->copyright_notice = $entity->field_copyright_notice->value();
+  if ($entity->field_artist_origin->value()) {
+    $object->artist_culture_place_delim = $entity->field_artist_name->value() . '|' . $entity->field_artist_origin->value();
   }
+  else {
+    $object->artist_culture_place_delim = $entity->field_artist_name->value();
+  }
+  return $object;
 }
 
 /**
@@ -1387,7 +1331,7 @@ function strip_drupal_from_node(&$node) {
     'artist_culture_place_delim', 'object_id', 'main_reference_number',
     'title_t', 'artist_sort_name', 'artist_culture_place', 'dimensions',
     'date_display', 'date_range', 'thumbnail_full_path', 'large_image_full_path',
-    'reference_num',
+    'reference_num', 'artist_display',
   );
   // Node properties that we want to strip.
   $to_unset = array(
@@ -1894,10 +1838,11 @@ function aicappSaveNode($object, $type) {
     $node->field_reference_num[$node->language][0]['value'] = $object['main_reference_number'];
     // The 'gallery_locaiton' property seems to have changed to just 'gallery'.
     $node->field_gallery_location[$node->language][0]['value'] = $object['gallery'];
+    // Artist Display Name
+    $node->field_artist_name[$node->language][0]['value'] = $object['artist_display'];
 
     // Image server URL begins like this for both thumnail and full.
     $preferred_image_id = !empty($object['preferred_image_id']) ? $object['preferred_image_id'] : NULL;
-
     if (!empty($preferred_image_id)) {
       // Thumbnail.
       $thumnail_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'thumbnail'));
