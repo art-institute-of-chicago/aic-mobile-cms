@@ -1332,12 +1332,13 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
     if ($id_count > $batch_count) {
       // Separate the request into batches.
       $batch_options = $options;
+      $batch_options['limit'] = $batch_count;
       $all_ids = array_combine($batch_options['ids'], $batch_options['ids']);
       while ($batch_start <= $id_count) {
         $batch = array_slice($all_ids, $batch_start, $batch_count, TRUE);
         $batch_options['ids'] = array_values($batch);
         $new_results = _aicapp_fetch_data($endpoint, $batch_options);
-        $results = array_merge($results, $new_results);
+        $results = is_array($new_results) ? array_merge($results, $new_results) : $results;
         $batch_start += $batch_count;
       }
       // Return all results.
