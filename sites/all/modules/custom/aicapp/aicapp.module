@@ -1065,7 +1065,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     strip_drupal_from_node($object);
     // Remove object that do not qualify because they are a) not in a gallery,
     // b) have no location, or c) are not published.
-    if (empty($object->in_gallery) || !$object->in_gallery || empty($object->location) || !$object->status) {
+    if (empty($object->in_gallery) || empty($object->location) || empty($object->status)) {
       unset($objects['#updated'][$key]);
     }
   }
@@ -1311,13 +1311,6 @@ function _aicapp_update_remote_artwork_data(&$object, $object_id = NULL) {
 }
 
 /**
- * Test if a value is positive.
- */
-function is_positive($number) {
-  return is_numeric($number) && $number >= 0;
-}
-
-/**
  * Fetch data from the data aggregrator.
  */
 function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALSE, $batch_start = 0) {
@@ -1336,6 +1329,8 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
     $options['ids'] = array_filter(array_combine($options['ids'], $options['ids']), 'is_positive');
     // Batch large number of ids or large limit requests into a small number of
     // separate requests and then send back all results.
+    // @TODO In order to handle large number of requests, explore whether
+    // https://www.drupal.org/project/httprl would help by making parallel http requests.
     $id_count = count($options['ids']);
     if ($id_count > $batch_count) {
       // Separate the request into batches.
@@ -2866,8 +2861,15 @@ function aicapp_load_remote_form_submit($form, &$form_state) {
     }
   }
   catch (Exception $e) {
-    drupal_set_message(t("An error occurred when importing events: " . $e), 'error');
+    drupal_set_message(t("An error occurred when importing events: @e", array('@e' => $e)), 'error');
   }
+}
+
+/**
+ * Test if a value is positive.
+ */
+function is_positive($value) {
+  return $value >= 0 && is_numeric($value);
 }
 
 /**
