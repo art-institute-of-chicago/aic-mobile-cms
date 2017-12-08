@@ -25,8 +25,8 @@
              cropDescription = '#' + element.wrapperID + '-crop-rect-add-more-wrapper .fieldset-description',
              cropWrapper = '#' + element.wrapperID + '-crop-rect-add-more-wrapper .fieldset-wrapper',
              imageType = element.type,
-             imageHeight = element.width,
-             imageWidth = element.height,
+             imageHeight = element.height,
+             imageWidth = element.width,
              imagePreview = '<p>&nbsp;</p><p><img id="' + element.id + '"' + ' src="' + element.url + '" /></p>"',
              imgAreaSelectOptions = {
                x1: element.x1,
@@ -49,8 +49,8 @@
                aspectRatio : element.aspectRatio
              };
 
-          if ((imageType == "large" && (imageWidth < 364 || imageHeight < 200))
-          || (imageType == "thumbnail" && imageWidth < 50)) {
+          if ((imageType == "large" && (imageWidth < imgAreaSelectOptions.minWidth || imageHeight < imgAreaSelectOptions.minHeight))
+          || (imageType == "thumbnail" && imageWidth < imgAreaSelectOptions.minWidth)) {
             if ($(cropWrapper).length) {
               $(cropWrapper).append(aicImageSmallWarning);
             }

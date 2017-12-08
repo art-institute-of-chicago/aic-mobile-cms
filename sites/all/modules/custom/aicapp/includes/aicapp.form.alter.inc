@@ -552,9 +552,9 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
         'minWidth' => $imageType === 'large' ? 364 : 74,
         'minHeight' => $imageType === 'large' ? 200 : 74,
         'x1' => (($thumbWidth > $thumbValues['x1']) ? intval($thumbValues['x1']) : 0) ,
-        'x2' => (($thumbWidth > $thumbValues['x2'] + $thumbValues['x1']) ? intval($thumbValues['x2']) : intval($thumbWidth - $thumbValues['x1'])),
+        'x2' => (($thumbWidth > ($thumbValues['x2'] + $thumbValues['x1'])) ? intval($thumbValues['x2']) : intval($thumbWidth - $thumbValues['x1'])),
         'y1' => (($thumbHeight > $thumbValues['y1']) ? intval($thumbValues['y1']) : 0),
-        'y2' => (($thumbHeight > $thumbValues['y2']) ? intval($thumbValues['y2']) : intval($thumbHeight - $thumbValues['y1'])),
+        'y2' => (($thumbHeight > ($thumbValues['y2'] + $thumbValues['y1'])) ? intval($thumbValues['y2']) : intval($thumbHeight - $thumbValues['y1'])),
       ))
     ),
   );
