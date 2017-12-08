@@ -891,7 +891,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     ->propertyCondition('promote', 1, '=')
     ->execute();
   // Load all featured nodes.
-  $featured = isset($results['node']) ? node_load_multiple(array_keys($results['node'])) : array('node' => array());
+  $featured = isset($results['node']) ? node_load_multiple(array_keys($results['node'])) : array();
   // Gallery nodes.
   $gallery_ids = array();
   $by_gallery_id = array();
