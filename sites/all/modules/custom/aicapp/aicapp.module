@@ -945,6 +945,8 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     $object_id = $entity->field_object_id->value();
     if (empty($object_id)) {
       // If there is no object id, then we have a custom object.
+      $object->id = NULL;
+      $object->object_id = NULL;
       // Reference values entered for object data.
       $object->in_gallery = $entity->field_in_gallery->value();
       $object->gallery_location = $entity->field_gallery_location->value();
@@ -1298,6 +1300,7 @@ function strip_drupal_from_node(&$node) {
     'artist_culture_place_delim', 'object_id', 'main_reference_number',
     'title_t', 'artist_sort_name', 'artist_culture_place', 'dimensions',
     'date_display', 'date_range', 'thumbnail_full_path', 'large_image_full_path',
+    'reference_num',
   );
   // Node properties that we want to strip.
   $to_unset = array(
@@ -1470,6 +1473,9 @@ function strip_drupal_from_node(&$node) {
     // Is this object in a gallery?
     if (isset($node->is_in_gallery)) {
       $node->in_gallery = $node->is_in_gallery;
+    }
+    if (isset($node->main_reference_number)) {
+      $node->reference_num = $node->main_reference_number;
     }
     // Audio Commentary field collection items.
     if ($fc_items = field_get_items('node', $node, 'field_audio_commentary')) {
