@@ -131,6 +131,13 @@ function aicapp_migrate_admin_migrate() {
         '#default_value' => array(),
         '#description' => t('Every node of the chosen type(s) fields will be updated.'),
       );
+      $form['aicapp_data']['migration_fields_batch'] = array(
+        '#type' => 'textfield',
+        '#size' => 10,
+        '#length' => 10,
+        '#value' => 50,
+        '#title' => t('Number of content items to update time.')
+      );
       $form['aicapp_data']['migration_fields_submit'] = array(
         '#type' => 'submit',
         '#value' => t('Update Content Fields'),
@@ -201,7 +208,7 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
   }
   if ($form_state['clicked_button']['#value'] === 'Update Content Fields') {
     $counts = array();
-    $batch_size = 20;
+    $batch_size = !empty($form_state['values']['migration_fields_batch']) ? $form_state['values']['migration_fields_batch' : 50;
     $types = $form_state['values']['aicapp_data']['migration_fields_types'];
     foreach ($types as $type) {
       if (empty($type)) {
