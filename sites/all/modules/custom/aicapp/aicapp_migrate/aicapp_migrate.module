@@ -124,6 +124,13 @@ function aicapp_migrate_admin_migrate() {
       );
     }
     else {
+      // Only allow tour after all objects have been updated.
+      if (!empty($counts[AICAPP_TYPE_OBJECT])) {
+        unset($types[AICAPP_TYPE_TOUR]);
+      }
+      else {
+        unset($types[AICAPP_TYPE_OBJECT]);
+      }
       $form['aicapp_data']['migration_fields_types'] = array(
         '#type' => 'checkboxes',
         '#title' => t('Select content type(s) with fields to updated:'),
@@ -263,7 +270,7 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array()) {
     'field_t_audio_bumper' => NULL,
   );
 
-  // Check for field_object_selector_numbers, field_object_selector_number, and field_object_audio
+  // Check for field_stops2 field collection items.
   if (!empty($node->field_stops2[LANGUAGE_NONE])) {
     $ids = array();
     foreach ($node->field_stops2[LANGUAGE_NONE] as $key => $value) {
@@ -280,6 +287,7 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array()) {
       }
     }
   }
+
   // In terms of selector numbers, there are 3 cases.
   $count_object = count($found['field_t_object']);
   $count_audio = count($found['field_t_audio']);
@@ -290,46 +298,51 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array()) {
   elseif ($count_object < $count_audio) {
 
   }
-  // Check if there are currently audio commentary items.
+  //Check if there are currently audio commentary items.
   if (!empty($node->field_tour_stops[LANGUAGE_NONE])) {
     foreach ($node->field_tour_stops[LANGUAGE_NONE] as $key => $value) {
       $field_collection_item_values[] = $value['value'];
     }
   }
   // Add the new audio commentary
-  if (!empty($found['field_t_audio']) && empty($field_collection_item_values)) {
-    foreach ($found['field_t_audio'] as $k => $audio_id) {
-      // Setup the values in the structure expected by the field_collection entity.
+  if (!empty($found['field_t_object'])) {
+    foreach ($found['field_t_object'] as $k => $object_id) {
       $item_values = array(
-        'field_name' => 'field_tour_stops',
-        'field_t_object' => array(
-          LANGUAGE_NONE => array(array(
-            'target_id' => $audio_id,
-          ))
-        )
+        'field_tour_stop_object' => array(
+          'value' => $object_id,
+        ),
       );
       if (isset($found['field_t_audio'][$k])) {
-        $item_values['field_t_audio'] = array(
-          LANGUAGE_NONE => array(array(
-            'target_id' => $found['field_t_audio'][$k],
-          ))
-        );
+        $object_node = node_load($object_id);
+        $field_items = field_get_items('node', $object_node, 'field_audio_commentary');
+        if (!empty($field_items[0])) {
+          $field_collection_entity = field_collection_field_get_entity($field_items[0]);
+          $audio_items = field_get_items('field_collection_item', $field_collection_entity, 'field_audio_commentary_audio');
+          if (!empty($audio_items[0]) && !empty($audio_items[0]['target_id']) && $audio_items[0]['target_id'] === $found['field_t_audio'][$k]) {
+            $item_values['field_tour_stop_audio_commentary'] = array(
+              'value' => $field_collection_entity->item_id,
+            );
+          }
+        }
       }
       if (isset($found['field_t_audio_bumper'][$k])) {
-        $item_values['field_t_audio_bumper'] = array(
-          LANGUAGE_NONE => array(array(
-            'target_id' => $found['field_t_audio_bumper'][$k],
-          ))
+        $item_values['field_tour_stop_audio_bumper'] = array(
+          'value' => $found['field_t_audio_bumper'][$k],
         );
       }
-      $fc_item = entity_create('field_collection_item', $item_values);
-      $fc_item->setHostEntity('node', $node);
-      $fc_item->save();
+      // Create the collection entity and set it's "host".
+      $collection = entity_create('field_collection_item', array('field_name' => 'field_tour_stops'));
+      $collection->setHostEntity('node', $node);
+      $collection_wrapper = entity_metadata_wrapper('field_collection_item', $collection);
+      foreach ($item_values as $key => $values) {
+        $collection_wrapper->{$key}->set($values['value']);
+      }
+      $collection_wrapper->save();
     }
     $changed = TRUE;
   }
   if ($changed === TRUE) {
-    node_save($node);
+    $entity_wrapper->save();
   }
 }
 
@@ -399,7 +412,6 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
   }
   // More than one field_object_selector_numbers found.
   elseif ($count_multi > 1) {
-    //dsm('found multi for node : ' . $node->nid);
     foreach ($found['field_object_selector_numbers'][LANGUAGE_NONE] as $k => $v) {
       $to_add[$i]['selector'][] = $found['field_object_selector_numbers'][$k]['value'];
     }
@@ -421,35 +433,19 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
       }
     }
   }
-  else {
-  //  $i++;
-  }
-
-  // Check if there are currently audio commentary items.
-  // if (!empty($node->field_audio_commentary[LANGUAGE_NONE])) {
-  //   foreach ($node->field_audio_commentary[LANGUAGE_NONE] as $key => $value) {
-  //     $field_collection_item_values[] = $value['value'];
-  //   }
-  // }
 
   // Add the new audio commentary
-  if (!empty($to_add[$i]) && !empty($to_add[$i]['audio']) && empty($field_collection_item_values)) {
+  if (!empty($to_add[$i]) && !empty($to_add[$i]['audio'])) {
     foreach ($to_add[$i]['audio'] as $k => $audio_id) {
       // Setup the values in the structure expected by the field_collection entity.
       $item_values = array(
         'field_audio_commentary_audio' => array(
           'value' => $audio_id,
-          // LANGUAGE_NONE => array(array(
-          //   'target_id' => $audio_id
-          // )),
         ),
       );
       if (isset($to_add[$i]['selector'][$k])) {
         $item_values['field_object_selector_number'] = array(
           'value' => $to_add[$i]['selector'][$k],
-          // LANGUAGE_NONE => array(array(
-          //   'value' => $to_add[$i]['selector'][$k]
-          // ))
         );
       }
 
@@ -465,7 +461,6 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
     $changed = TRUE;
   }
   if ($changed === TRUE) {
-    //node_save($node);
     $entity_wrapper->save();
   }
 }

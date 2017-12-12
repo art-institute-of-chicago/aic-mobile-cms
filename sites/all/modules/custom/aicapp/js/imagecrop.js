@@ -52,6 +52,7 @@
           if ((imageType == "large" && (imageWidth < imgAreaSelectOptions.minWidth || imageHeight < imgAreaSelectOptions.minHeight))
           || (imageType == "thumbnail" && imageWidth < imgAreaSelectOptions.minWidth)) {
             if ($(cropWrapper).length) {
+              $(cropWrapper).find('p.warning').remove();
               $(cropWrapper).append(aicImageSmallWarning);
             }
           }
