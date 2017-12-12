@@ -208,7 +208,7 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
   }
   if ($form_state['clicked_button']['#value'] === 'Update Content Fields') {
     $counts = array();
-    $batch_size = !empty($form_state['values']['migration_fields_batch']) ? $form_state['values']['migration_fields_batch' : 50;
+    $batch_size = !empty($form_state['values']['migration_fields_batch']) ? $form_state['values']['migration_fields_batch'] : 50;
     $types = $form_state['values']['aicapp_data']['migration_fields_types'];
     foreach ($types as $type) {
       if (empty($type)) {
