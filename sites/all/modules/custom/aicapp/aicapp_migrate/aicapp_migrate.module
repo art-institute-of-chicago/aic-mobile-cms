@@ -250,7 +250,7 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
           $callback = 'aicapp_migrate_migrate_type_' . $type;
           call_user_func_array($callback, array($nid, &$counts, $i, &$to_add));
         }
-        $type_message = array('@type' => $type, '@size' => $batch_size, '@remain' => max($counts[$type] - $batch_size, 0);
+        $type_message = array('@type' => $type, '@size' => $batch_size, '@remain' => max($counts[$type] - $batch_size, 0));
         drupal_set_message(t('@size @type items have been migrated to use the new field format. There are @remain @type items remaining to migrate.', $type_message));
       }
     }
