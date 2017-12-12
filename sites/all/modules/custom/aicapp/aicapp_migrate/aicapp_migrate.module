@@ -74,7 +74,6 @@ function aicapp_migrate_admin_migrate() {
       ->propertyCondition('language', LANGUAGE_NONE, '=');
     $result = $query->execute();
     $form['aicapp_data']['migration_language_prefix']['#markup'] = '<p><strong>' . t('Content Language Migration') . '</strong></p>';
-
     if (empty($result['node'])) {
       variable_set('aicapp_migrate_v1_v2_language', TRUE);
       $form['aicapp_data']['migration_language_complete'] = array(
@@ -172,6 +171,14 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
       }
       foreach ($result['node'] as $nid => $obj) {
         $node = node_load($nid);
+        $field_languages = field_language('node', $node);
+        foreach ($field_languages as $field => $field_language) {
+          $items = field_get_items('node', $node, $field, $field_language);
+          if (!empty($items)) {
+            $node->{$field}[$language->language] = $items;
+            unset($node->{$field}[$field_language]);
+          }
+        }
         $node->language = $language->language;
         node_save($node);
       }
@@ -180,7 +187,7 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
     }
   }
   if ($form_state['clicked_button']['#value'] === 'Update Content Fields') {
-    $counts = $to_add = array();
+    $counts = array();
     $batch_size = 20;
     $types = $form_state['values']['aicapp_data']['migration_fields_types'];
     foreach ($types as $type) {
@@ -217,7 +224,7 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
           call_user_func_array($callback, array($nid, &$counts, $i, &$to_add));
         }
         $type_message = array('@type' => $type, '@size' => $batch_size, '@remain' => $counts[$type] - $batch_size);
-        drupal_set_message(t('@size @type items have been migrated to use the new field format. There are @remain @type items items remaining to migrate.', $type_message));
+        drupal_set_message(t('@size @type items have been migrated to use the new field format. There are @remain @type items remaining to migrate.', $type_message));
       }
     }
   }
@@ -440,7 +447,5 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
   if ($changed === TRUE) {
     //node_save($node);
     $entity_wrapper->save();
-    dsm(node_load($node->nid));
-
   }
 }
