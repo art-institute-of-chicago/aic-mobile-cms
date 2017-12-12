@@ -125,18 +125,12 @@ function aicapp_migrate_admin_migrate() {
     }
     else {
       // Only allow tour after all objects have been updated.
-      if (!empty($counts[AICAPP_TYPE_OBJECT])) {
-        unset($types[AICAPP_TYPE_TOUR]);
-      }
-      else {
-        unset($types[AICAPP_TYPE_OBJECT]);
-      }
       $form['aicapp_data']['migration_fields_types'] = array(
         '#type' => 'checkboxes',
         '#title' => t('Select content type(s) with fields to updated:'),
         '#options' => $types,
         '#default_value' => array(),
-        '#description' => t('Every node of the chosen type(s) fields will be updated.'),
+        '#description' => t('Every node of the chosen type(s) fields will be updated. Before updating tours, make sure that all objects have been updated.'),
       );
       $form['aicapp_data']['migration_fields_batch'] = array(
         '#type' => 'textfield',
