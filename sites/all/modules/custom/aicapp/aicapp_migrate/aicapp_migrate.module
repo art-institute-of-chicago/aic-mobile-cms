@@ -173,11 +173,25 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
         $node = node_load($nid);
         $field_languages = field_language('node', $node);
         foreach ($field_languages as $field => $field_language) {
-          $items = field_get_items('node', $node, $field, $field_language);
-          if (!empty($items)) {
-            $node->{$field}[$language->language] = $items;
-            unset($node->{$field}[$field_language]);
+          if ($field_language !== LANGUAGE_NONE) {
+            continue;
           }
+          if ($field === 'title_field') {
+            $node->title_sync_source_lang = $language->language;
+            // $node->{$field}[$language->language] = array(
+            //   0 => array('value' => $node->title_original),
+            // );
+            unset($node->{$field}[LANGUAGE_NONE]);
+          }
+          else {
+            $items = field_get_items('node', $node, $field, $field_language);
+            if (!empty($items)) {
+              $node->{$field}[$language->language] = $items;
+            }
+          }
+        }
+        if (!empty($node->{$field}[LANGUAGE_NONE])) {
+          unset($node->{$field}[LANGUAGE_NONE]);
         }
         $node->language = $language->language;
         node_save($node);
