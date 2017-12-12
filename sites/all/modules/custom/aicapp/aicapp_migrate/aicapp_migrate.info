@@ -1,0 +1,6 @@
+name = AIC App Content Migration
+description = Custom module for migrating content between versions.
+package = WC Custom Modules
+version = 1
+core = 7.x
+files[] = aicapp_migrate.module
