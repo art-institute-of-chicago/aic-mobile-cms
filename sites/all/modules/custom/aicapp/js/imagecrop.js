@@ -27,7 +27,7 @@
              imageType = element.type,
              imageHeight = element.height,
              imageWidth = element.width,
-             imagePreview = '<p>&nbsp;</p><p><img id="' + element.id + '"' + ' src="' + element.url + '" /></p>"',
+             imagePreview = '<p>&nbsp;</p><p><img id="' + element.id + '"' + ' src="' + element.url + '" /></p>',
              imgAreaSelectOptions = {
                x1: element.x1,
                y1: element.y1,

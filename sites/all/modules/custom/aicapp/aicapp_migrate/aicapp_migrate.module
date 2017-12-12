@@ -162,7 +162,6 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
     $result = $query->execute();
     if (empty($result['node']) || empty($types)) {
       drupal_set_message('There were no items to migrate');
-      variable_set('aicapp_migrate_v1_v2_language', TRUE);
       return;
     }
     foreach ($types as $type) {
@@ -178,9 +177,9 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
           }
           if ($field === 'title_field') {
             $node->title_sync_source_lang = $language->language;
-            // $node->{$field}[$language->language] = array(
-            //   0 => array('value' => $node->title_original),
-            // );
+            $node->{$field}[$language->language] = array(
+              0 => array('value' => $node->title_original),
+            );
             unset($node->{$field}[LANGUAGE_NONE]);
           }
           else {
