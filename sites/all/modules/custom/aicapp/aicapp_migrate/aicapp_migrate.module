@@ -101,7 +101,7 @@ function aicapp_migrate_admin_migrate() {
     // Set object and reset tour counts;
     $counts[AICAPP_TYPE_OBJECT] = 0;
     $counts[AICAPP_TYPE_TOUR] = 0;
-    foreach ($types as $type) {
+    foreach ($types as $type => $label) {
       $query = new EntityFieldQuery();
       $query
         ->entityCondition('entity_type', 'node')
@@ -117,7 +117,7 @@ function aicapp_migrate_admin_migrate() {
         $counts[$type] = count($result['node']);
       }
     }
-    if ($counts[AICAPP_TYPE_OBJECT] && $counts[AICAPP_TYPE_TOUR]) {
+    if (empty($counts[AICAPP_TYPE_OBJECT]) && empty($counts[AICAPP_TYPE_TOUR])) {
       variable_set('aicapp_migrate_v1_v2_fields', TRUE);
       $form['aicapp_data']['migration_fields_complete'] = array(
         '#markup' => '<p>' . t('All content items fields have been updated.') . '</p>',
@@ -143,7 +143,7 @@ function aicapp_migrate_admin_migrate() {
         '#size' => 10,
         '#length' => 10,
         '#default_value' => 50,
-        '#title' => t('Number of content items to update time.')
+        '#title' => t('Number of content items to update per batch.')
       );
       $form['aicapp_data']['migration_fields_submit'] = array(
         '#type' => 'submit',
