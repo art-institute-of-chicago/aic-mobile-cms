@@ -241,55 +241,6 @@ function aicapp_admin_api() {
 }
 
 /**
- * Admin setting form callback.
- */
-function aicapp_admin_migrate() {
-  $form = array();
-  $all_migrations_complete = variable_get('aicapp_migrate_v1_v2', FALSE);
-  // Data migration between v1 and v2.
-  // @TODO show an overview of what has and hasn't been migrated.
-  if (0) {
-    $all_migrations_complete = TRUE;
-    $overview = t('All migrations complete');
-  }
-  $form['aicapp_data'] = array(
-    '#type' => 'fieldset',
-    '#collapsible' => $all_migrations_complete,
-    '#collapsed' => $all_migrations_complete,
-    '#title' => t('Data migration'),
-    '#tree' => TRUE,
-  );
-  if ($all_migrations_complete) {
-    $form['aicapp_data']['migration_repeat'] = array(
-      '#prefix' => t('All data has been migrated.'),
-      '#type' => 'submit',
-      '#value' => t('Repeat Migration'),
-    );
-  }
-  else {
-    // @TODO check which types have been or haven't been migrated. Only list those
-    // that still require migration.
-    $options = array(
-      'audio' => t('Audio'),
-      'object' => t('Objects'),
-      'tour' => t('Tours'),
-    );
-    $form['aicapp_data']['migration_type'] = array(
-      '#type' => 'checkboxes',
-      '#title' => t('Select content type(s) to migrate:'),
-      '#options' => $options,
-      '#default_value' => array('audio'),
-      '#description' => t('Choose content type(s) to migrate.'),
-    );
-    $form['aicapp_data']['migration_submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Migrate Data'),
-    );
-  }
-  return $form;
-}
-
-/**
  * Admin setting validation callback.
  */
 function aicapp_admin_validate($form, &$form_state) {
@@ -351,276 +302,219 @@ function aicapp_admin_api_validate($form, &$form_state) {
   }
 }
 
+
 /**
- * Admin setting validation callback.
+ * Save remote objects to nodes.
  */
-function aicapp_admin_migrate_validate($form, &$form_state) {
-  if ($form_state['clicked_button']['#value'] === 'Repeat Migration') {
-    variable_set('aicapp_migrate_v1_v2', FALSE);
-    return;
-  }
-  if ($form_state['clicked_button']['#value'] === 'Migrate Data') {
-    global $language;
-    $type = $form_state['values']['aicapp_data']['migration_type'];
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-         ->entityCondition('bundle', $type, '=');
-    switch ($type) {
-      default:
-        drupal_set_message('There were no items to migrate');
-      break;
-      case AICAPP_TYPE_AUDIO:
-        $query->propertyCondition('language', LANGUAGE_NONE, '=');
-        $result = $query->execute();
-        if (!empty($result['node'])) {
-          $count = count($result['node']);
-          if ($count < 1) {
-            drupal_set_message('There were no audio items to migrate');
-            break;
-          }
-          foreach ($result['node'] as $nid => $obj) {
-            $node = node_load($nid);
-            $node->language = $language->language;
-            node_save($node);
-          }
-          drupal_set_message('All audio nodes have been set to English if no language had been set.');
-
-        }
-        break;
-
-      case AICAPP_TYPE_OBJECT:
-        // Load all objects that have no audio commentary items.
-        $query->addTag('no_commentary_items');
-        $result = $query->execute();
-        if (!empty($result['node'])) {
-          $i = 0;
-          foreach ($result['node'] as $nid => $obj) {
-            $changed = FALSE;
-            $to_add = array();
-            $node = node_load($nid);
-            $found = array(
-              'field_object_selector_numbers' => NULL,
-              'field_object_selector_number' => NULL,
-              'field_object_audio' => NULL,
-            );
-            // Check for field_object_selector_numbers, field_object_selector_number, and field_object_audio
-            if (!empty($node->field_object_selector_numbers[LANGUAGE_NONE])) {
-              $found['field_object_selector_numbers'] = $node->field_object_selector_numbers[LANGUAGE_NONE];
-            }
-            if (!empty($node->field_object_selector_number[LANGUAGE_NONE])) {
-              $found['field_object_selector_number'] = $node->field_object_selector_number[LANGUAGE_NONE];
-            }
-            if (!empty($node->field_object_audio[LANGUAGE_NONE])) {
-              // Uses 'nid' as value key instead of 'value'
-              $found['field_object_audio'] = $node->field_object_audio[LANGUAGE_NONE];
-            }
-            // In terms of selector numbers, there are 3 cases.
-            $count_multi = count($found['field_object_selector_numbers']);
-            $count_audio = count($found['field_object_audio']);
-            if ($count_multi === 1) {
-              // One of each, make sure they are the same.
-              if ($found['field_object_selector_number'] &&
-                $found['field_object_selector_number'][0]['value'] === $found['field_object_selector_numbers'][0]['value']) {
-
-
-                // Numbers match, there is 1 matching selector being used.
-                $to_add[$i]['selector'][] = $found['field_object_selector_number'][0]['value'];
-                if ($count_audio) {
-                  foreach ($found['field_object_audio'] as $k => $v) {
-                    $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
-                  }
-                }
-                else {
-                  // No audio found unset this selector to add.
-                  unset($to_add[$i]['selector']);
-                }
-              }
-              else {
-                // Number will take precendence.
-                $to_add[$i]['selector'][] = $found['field_object_selector_number'][0]['value'];
-                $to_add[$i]['selector'][] = $found['field_object_selector_numbers'][LANGUAGE_NONE][0]['value'];
-                // Multi and single do not match. Check audio count.
-                if ($count_audio > 1) {
-                  foreach ($found['field_object_audio'] as $k => $v) {
-                    $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
-                  }
-
-                }
-                elseif ($count_audio === 1) {
-                  $to_add[$i]['audio'][] = $found['field_object_audio'][0]['nid'];
-                  unset($to_add[$i]['selector'][1]);
-                }
-                else {
-                  // No audio found unset this selector to add.
-                  unset($to_add[$i]['selector']);
-                }
-              }
-            }
-            elseif ($count_multi > 1) {
-              foreach ($found['field_object_selector_numbers'][LANGUAGE_NONE] as $k => $v) {
-                $to_add[$i]['selector'][] = $found['field_object_selector_numbers'][$k]['value'];
-              }
-              if ($count_audio) {
-                foreach ($found['field_object_audio'][LANGUAGE_NONE] as $k => $v) {
-                  $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
-                }
-              }
-              else {
-                unset($to_add[$i]['selector']);
-              }
-            }
-            elseif ($found['field_object_selector_number']) {
-              // No multiple count but found one selector
-              $to_add[$i]['selector'][] = $found['field_object_selector_number'][0]['value'];
-              if ($count_audio) {
-                foreach ($found['field_object_audio'] as $k => $v) {
-                  $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
-                }
-              }
-            }
-            else {
-              $i++;
+function aicapp_load_remote_form_submit($form, &$form_state) {
+  $now = new DateTime();
+  $remote_objects = array();
+  $limit = 'limit=';
+  $limit_count = 50;
+  $max_page = 10;
+  $page = 'page=';
+  // Define what we're going to import.
+  $defaults = array(
+    AICAPP_TYPE_EVENT => array(
+      'endpoint' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EVENT,
+      'remote' => array(),
+    ),
+    AICAPP_TYPE_EXHIBITION => array(
+      'endpoint' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION,
+      'remote' => array(),
+    ),
+  );
+  try {
+    // Fetch all recent remote objects.
+    foreach ($defaults as $type => &$remote) {
+      $page_start = 2;
+      $url = $remote['endpoint'];
+      // This will require first discovering which events and exhibitions are
+      // active by using paging in the API.
+      $discover = file_get_contents($url . '?' . $limit . $limit_count);
+      // If connection not available.
+      if (!$discover) {
+        continue;
+      }
+      $json = json_decode($discover, TRUE);
+      if (!empty($json['data'])) {
+        foreach ($json['data'] as $remote_record) {
+          if ($type === AICAPP_TYPE_EXHIBITION) {
+            // Skip any that are not active
+            if (!$remote_record['is_active']) {
               continue;
             }
-            // Check if there are currently audio commentary items.
-            if (!empty($node->field_audio_commentary[LANGUAGE_NONE])) {
-              foreach ($node->field_audio_commentary[LANGUAGE_NONE] as $key => $value) {
-                $field_collection_item_values[] = $value['value'];
-              }
-            }
-            // Add the new audio commentary
-            if (!empty($to_add[$i]) && !empty($to_add[$i]['audio']) && empty($field_collection_item_values)) {
-              foreach ($to_add[$i]['audio'] as $k => $audio_id) {
-                // Setup the values in the structure expected by the field_collection entity.
-                $item_values = array(
-                  'field_name' => 'field_audio_commentary',
-                  'field_audio_commentary_audio' => array(
-                    LANGUAGE_NONE => array(array(
-                      'target_id' => $audio_id
-                    )),
-                  ),
-                );
-                if (isset($to_add[$i]['selector'][$k])) {
-                  $item_values['field_object_selector_number'] = array(
-                    LANGUAGE_NONE => array(array(
-                      'value' => $to_add[$i]['selector'][$k]
-                    ))
-                  );
-                }
-                $fc_item = entity_create('field_collection_item', $item_values);
-                $fc_item->setHostEntity('node', $node);
-                $fc_item->save();
-              }
-              $changed = TRUE;
-            }
-            if ($changed === TRUE) {
-              node_save($node);
-            }
-            $i++;
           }
-          drupal_set_message('All object nodes have been set to English if no language had been set.');
-
-        }
-        break;
-
-      case AICAPP_TYPE_TOUR:
-        // Load all tous.
-        $query->addTag('no_tour_stop');
-        // Five at a time.
-        $query->range(0, 5);
-        $result = $query->execute();
-        if (!empty($result['node'])) {
-          $i = 0;
-          foreach ($result['node'] as $nid => $obj) {
-            $changed = FALSE;
-            $to_add = array();
-            $node = node_load($nid);
-            $found = array(
-              'field_t_object' => NULL,
-              'field_t_audio' => NULL,
-              'field_t_audio_bumper' => NULL,
-            );
-
-            // Check for field_object_selector_numbers, field_object_selector_number, and field_object_audio
-            if (!empty($node->field_stops2[LANGUAGE_NONE])) {
-              $ids = array();
-              foreach ($node->field_stops2[LANGUAGE_NONE] as $key => $value) {
-                $ids[] = $value['value'];
-              }
-              $stops = field_collection_item_load_multiple($ids);
-              $stops = current($stops);
-              foreach ($found as $field => $n) {
-                if (!isset($stops->{$field}[LANGUAGE_NONE])) {
-                  continue;
-                }
-                foreach ($stops->{$field}[LANGUAGE_NONE] as $id => $stop) {
-                  $found[$field][] = $stop['nid'];
-                }
-              }
+          else if ($type === AICAPP_TYPE_EVENT) {
+            // Skip any that have end dates in the past.
+            if ($now > new DateTime($remote_record['end_at'])) {
+              # Now is greater than Event end time, i.e. in the past.
+              continue;
             }
-            // In terms of selector numbers, there are 3 cases.
-            $count_object = count($found['field_t_object']);
-            $count_audio = count($found['field_t_audio']);
-            $count_bumper = count($found['field_t_audio_bumper']);
-            if ($count_object > $count_audio) {
-
-            }
-            elseif ($count_object < $count_audio) {
-
-            }
-            // Check if there are currently audio commentary items.
-            if (!empty($node->field_tour_stops[LANGUAGE_NONE])) {
-              foreach ($node->field_tour_stops[LANGUAGE_NONE] as $key => $value) {
-                $field_collection_item_values[] = $value['value'];
-              }
-            }
-            // Add the new audio commentary
-            if (!empty($found['field_t_audio']) && empty($field_collection_item_values)) {
-              foreach ($found['field_t_audio'] as $k => $audio_id) {
-                // Setup the values in the structure expected by the field_collection entity.
-                $item_values = array(
-                  'field_name' => 'field_tour_stops',
-                  'field_t_object' => array(
-                    LANGUAGE_NONE => array(array(
-                      'target_id' => $audio_id,
-                    ))
-                  )
-                );
-                if (isset($found['field_t_audio'][$k])) {
-                  $item_values['field_t_audio'] = array(
-                    LANGUAGE_NONE => array(array(
-                      'target_id' => $found['field_t_audio'][$k],
-                    ))
-                  );
-                }
-                if (isset($found['field_t_audio_bumper'][$k])) {
-                  $item_values['field_t_audio_bumper'] = array(
-                    LANGUAGE_NONE => array(array(
-                      'target_id' => $found['field_t_audio_bumper'][$k],
-                    ))
-                  );
-                }
-                $fc_item = entity_create('field_collection_item', $item_values);
-                $fc_item->setHostEntity('node', $node);
-                $fc_item->save();
-              }
-              $changed = TRUE;
-            }
-
-            // Set language to en.
-            if ($node->language === LANGUAGE_NONE) {
-              $node->language = $language->language;
-              $changed = TRUE;
-            }
-            if ($changed === TRUE) {
-              node_save($node);
-            }
-            $i++;
           }
-          drupal_set_message(t('All tour nodes have been set to English if no language had been set, and tour stops have been udpated.'));
-
+          $remote['remote'][$remote_record['id']] = $remote_record;
         }
-        break;
+      }
+      // Now loop though up to $max_page adding records that are active and
+      // having an end date in the past.
+      if (isset($json['pagination']) && isset($json['pagination']['next_url'])) {
+        $loop_url = $json['pagination']['next_url'];
+        while ($page_start <= $max_page) {
+          $loop_json = file_get_contents($loop_url);
+          if ($loop_json) {
+            $decoded_loop = json_decode($loop_json, TRUE);
+            if (isset($decoded_loop['data'])) {
+              foreach ($decoded_loop['data'] as $remote_record) {
+                if ($type === AICAPP_TYPE_EXHIBITION) {
+                  // Skip any that are not active
+                  if (!$remote_record['is_active']) {
+                    continue;
+                  }
+                }
+                else if ($type === AICAPP_TYPE_EVENT) {
+                  // Skip any that have end dates in the past.
+                  if ($now > new DateTime($remote_record['end_at'])) {
+                    # Now is greater than Event end time, i.e. in the past.
+                    continue;
+                  }
+                }
+                $remote['remote'][$remote_record['id']] = $remote_record;
+              }
+            }
+            $loop_url = isset($decoded_loop['pagination']) ? $decoded_loop['pagination']['next_url'] : NULL;
+          }
+          $page_start++;
+        }
+      }
+
+      // Fetch all locally saved objects using the key of remote ids.
+      $remote['local'] = array();
+      $remote['to_import'] = array_keys($remote['remote']);
+      // Find nodes that match the id of the remote object.
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', $type, '=');
+      if (!empty($remote['to_import'])) {
+        $query->fieldCondition('field_imported_object_id', 'value', $remote['to_import'], 'IN');
+      }
+      $result = $query->execute();
+      if (isset($result['node'])) {
+        $nids = array_keys($result['node']);
+        $remote['local'] = entity_load('node', $nids);
+      }
+      // Loop through cached objects and save updated values from API.
+      foreach ($remote['local'] as $local_node) {
+        // Load an entity.
+        $ewrapper = entity_metadata_wrapper('node', $local_node);
+        $remote_id = $ewrapper->field_imported_object_id->value();
+
+        if (empty($remote['remote'][$remote_id])) {
+          continue;
+        }
+        // Update node fields with values from remote enities, but only if remote
+        // updated date is more recent than local date.
+        // Update all local objects that have local update date previous to last
+        // updated remote object dates.
+        $to_import = $remote['remote'][$remote_id];
+        // Ttile
+        $ewrapper->title->set($to_import['title']);
+        // Object ID
+        $ewrapper->field_imported_object_id->set($to_import['id']);
+        // Object JSON
+        $ewrapper->field_imported_object->set(json_encode($to_import));
+
+        if ($type === AICAPP_TYPE_EXHIBITION) {
+          // Description
+          $ewrapper->field_exhibit_description->set($to_import['description']);
+          // Is exhibition active
+          $current_state = $ewrapper->field_exhibit_is_active->value();
+          $ewrapper->field_exhibit_is_active->set($to_import['is_active']);
+          if ($current_state && !$to_import['is_active']) {
+            // Unpubish and demote this node.
+            $ewrapper->status->set(0);
+            $ewrapper->promote->set(0);
+          }
+          // Exhibition dates.
+          $ewrapper->field_exhibit_dates->set($to_import['dates']);
+        }
+        elseif ($type === AICAPP_TYPE_EVENT) {
+          $start = new DateTime($to_import['start_at']);
+          $end = new DateTime($to_import['end_at']);
+          // Event start and end dates
+          $ewrapper->field_event_dates->set(array(
+            'value' => $start->format('Y-m-d H:i:s'),
+            'value2' => $end->format('Y-m-d H:i:s'),
+          ));
+          if (strtotime($to_import['end_at']) < strtotime('now')) {
+            // Unpubish and demote this node.
+            $ewrapper->status->set(0);
+            $ewrapper->promote->set(0);
+          }
+        }
+        // Now just save the wrapper and the entity
+        $ewrapper->save();
+        // Get the key value for this remote id.
+        $remote_key = array_search($remote_id, $remote['to_import']);
+        // Unset this item from the import stack.
+        if (!empty($remote['to_import'][$remote_key])) {
+          unset($remote['to_import'][$remote_key]);
+        }
+      }
+      // Add any new remote objects that do not exist locally.
+      foreach ($remote['to_import'] as $remote_id) {
+        if (empty($remote['remote'][$remote_id])) {
+          continue;
+        }
+        // Update node fields with values from remote enities, but only if
+        // remote updated date is more recent than local date.
+        $to_import = $remote['remote'][$remote_id];
+        // Creating a new object $node and setting its 'type' and uid property.
+        $values = array(
+          'type' => $type,
+          'uid' => 1,
+          'status' => 1,
+          'promote' => 0,
+        );
+        $entity = entity_create('node', $values);
+
+        // The entity is now created, but we have not yet simplified use of it.
+        // Now create an entity_metadata_wrapper around the new node entity
+        // to make getting and setting values easier.
+        $ewrapper = entity_metadata_wrapper('node', $entity);
+        // Ttile.
+        $ewrapper->title->set($to_import['title']);
+        // Object ID.
+        $ewrapper->field_imported_object_id->set($to_import['id']);
+        // Object JSON.
+        $ewrapper->field_imported_object->set(json_encode($to_import));
+
+        if ($type === AICAPP_TYPE_EXHIBITION) {
+          // Description.
+          $ewrapper->field_exhibit_description->set($to_import['description']);
+          // Is exhibition active.
+          $ewrapper->field_exhibit_is_active->set($to_import['is_active']);
+          // Exhibition dates..
+          $ewrapper->field_exhibit_dates->set($to_import['dates']);
+        }
+        elseif ($type === AICAPP_TYPE_EVENT) {
+          $start = new DateTime($to_import['start_at']);
+          $end = new DateTime($to_import['end_at']);
+          // Event start and end dates.
+          $ewrapper->field_event_dates->set(array(
+            'value' => $start->format('Y-m-d H:i:s'),
+            'value2' => $end->format('Y-m-d H:i:s'),
+          ));
+          // Description.
+          $ewrapper->field_event_description->set($to_import['description']);
+          // Short Description.
+          $ewrapper->field_event_short_description->set($to_import['short_description']);
+        }
+        // Now just save the wrapper and the entity.
+        $ewrapper->save();
+      }
     }
+  }
+  catch (Exception $e) {
+    drupal_set_message(t("An error occurred when importing events: @e", array('@e' => $e)), 'error');
   }
 }
