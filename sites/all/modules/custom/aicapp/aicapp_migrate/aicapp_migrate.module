@@ -308,7 +308,7 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array()) {
       );
       if (isset($found['field_t_audio'][$k])) {
         $object_node = node_load($object_id);
-        $field_items = field_get_items('node', $object_node, 'field_audio_commentary');
+        $field_items = $object_node ? field_get_items('node', $object_node, 'field_audio_commentary') : array();
         if (!empty($field_items[0])) {
           $field_collection_entity = field_collection_field_get_entity($field_items[0]);
           $audio_items = field_get_items('field_collection_item', $field_collection_entity, 'field_audio_commentary_audio');
