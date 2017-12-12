@@ -2542,21 +2542,6 @@ function aicapp_object_noimg() {
   );
   return $output;
 }
-/**
- * Implements hook_query_TAG_alter().This is used for data migration queries.
- */
-function aicapp_query_no_commentary_items_alter(QueryAlterableInterface $query) {
-  $query->leftJoin('field_data_field_audio_commentary', 'o', 'node.nid = o.entity_id');
-  $query->isNull('o.field_audio_commentary_value');
-}
-
-/**
- * Implements hook_query_TAG_alter(). This is used for data migration queries.
- */
-function aicapp_query_no_tour_stops_items_alter(QueryAlterableInterface $query) {
-  $query->leftJoin('field_data_field_tour_stops', 'o', 'node.nid = o.entity_id');
-  $query->isNull('o.field_tour_stops_value');
-}
 
 /**
  * Check a connection beofre making a query.
