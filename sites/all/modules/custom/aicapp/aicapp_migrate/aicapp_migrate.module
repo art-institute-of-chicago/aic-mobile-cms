@@ -194,10 +194,6 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
       if ($type === AICAPP_TYPE_OBJECT) {
         // Load all objects that have 0 audio commentary items.
         $query->addTag('no_commentary_items');
-        if ($batch_size !== 0 && is_numeric($batch_size)) {
-          // Limit to the $batch_size amount.
-          $query->range(0, $batch_size);
-        }
       }
       elseif ($type === AICAPP_TYPE_TOUR) {
         // Load all tours.
@@ -208,6 +204,10 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
       if ($counts[$type]) {
         $i = 0;
         $to_add = array();
+        if ($batch_size !== 0 && is_numeric($batch_size)) {
+          // Limit to the $batch_size amount.
+          $result['node'] = array_slice($result['node'], 0, $batch_size, TRUE);
+        }
         foreach ($result['node'] as $nid => $obj) {
           if (empty($obj->type) || $obj->type !== $type) {
             continue;
@@ -216,8 +216,8 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
           $callback = 'aicapp_migrate_migrate_type_' . $type;
           call_user_func_array($callback, array($nid, &$counts, $i, &$to_add));
         }
-        $type_message = array('@type' => $type);
-        drupal_set_message(t('All @type nodes have been migrated to use the new field format.', $type_message));
+        $type_message = array('@type' => $type, '@size' => $batch_size, '@remain' => $remain);
+        drupal_set_message(t('@size @type nodes have been migrated to use the new field format. @remain items are left to migrate.', $type_message));
       }
     }
   }
