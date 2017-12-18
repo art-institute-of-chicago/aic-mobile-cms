@@ -467,10 +467,20 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
       }
       $object = $by_object_id[$id];
       foreach ($item as $key => $val) {
-        if ($key == 'date_range') {
+        if ($key === 'date_range') {
           $val = implode('-', $val);
         }
-        if ($key != 'provenance_text' && $key != 'exhibition_history') {
+        elseif ($key === 'id') {
+          $key = 'object_id';
+        }
+        elseif ($key === 'is_in_gallery') {
+          $key = 'in_gallery';
+        }
+        elseif ($key === 'lake_guid') {
+          $key = 'id';
+          unset($object->lake_guid);
+        }
+        if ($key !== 'provenance_text' && $key !== 'exhibition_history') {
           $object->$key = $val;
         }
       }
@@ -495,9 +505,11 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
     // Make sure any objects that have changed galleries get updated.
     if (isset($object->gallery_location)) {
       $loc = $object->gallery_location;
-      $ingallery = $object->in_gallery;
       if (empty($object->in_gallery)) {
         $ingallery = 0;
+      }
+      else {
+        $ingallery = $object->in_gallery;
       }
     }
     else {
@@ -551,7 +563,7 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
   _email_art_removed($art_gone);
 
   // notify of any objects BACK on display
-  _email_art_gallery($art_in_gallery, $locations, $objects);
+  _email_art_gallery($art_in_gallery, $locations, $objects['#updated']);
 
   // notify of any objects that have changed gallery location.
   _email_object_gallery_change($changed);
@@ -610,10 +622,10 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
       }
       $object = $by_object_id[$id];
       foreach ($item as $key => $val) {
-        if ($key == 'date_range') {
+        if ($key === 'date_range') {
           $val = implode('-', $val);
         }
-        if ($key != 'provenance_text' && $key != 'exhibition_history') {
+        if ($key !== 'provenance_text' && $key !== 'exhibition_history') {
           $object->$key = $val;
         }
       }
@@ -804,6 +816,9 @@ function _email_art_gallery($art_in_gallery, $locations, $objects) {
   // Now collect all objects from our Drupal DB (field_in_gallery table) that are NOT in gallery
   $not_displayed = array();
   foreach ($objects as $obj) {
+    if (!is_object($obj) || empty($obj->field_in_gallery)) {
+      continue;
+    }
     if ($obj->field_in_gallery[LANGUAGE_NONE][0]['value'] == 0) {
       $not_displayed[] = $obj->nid;
     }
@@ -1010,6 +1025,9 @@ function aicapp_gendata_form_submit($form, &$form_state) {
         }
         elseif ($key === 'id') {
           $key = 'object_id';
+        }
+        elseif ($key === 'is_in_gallery') {
+          $key = 'in_gallery';
         }
         elseif ($key === 'lake_guid') {
           $key = 'id';
@@ -1502,7 +1520,7 @@ function strip_drupal_from_node(&$node) {
       $node->gallery_location = $node->gallery;
     }
     // Is this object in a gallery?
-    if (isset($node->is_in_gallery)) {
+    if (isset($node->is_in_gallery) && !isset($node->in_gallery)) {
       $node->in_gallery = $node->is_in_gallery;
     }
     if (isset($node->main_reference_number)) {
@@ -1766,10 +1784,11 @@ function aicapp_loadgalleries_form_submit($form, &$form_state) {
   try {
     // Now loop through the $result JSON.
     foreach ($results as $object) {
-      aicappSaveNode($object, AICAPP_TYPE_GALLERY); // create new or update existing
+      // Create new or update existing gallery node.
+      aicappSaveNode($object, AICAPP_TYPE_GALLERY);
     }
     foreach ($galleries as $gallery) {
-      // look for the Drupal gallery in the data hub gallery
+      // Look for the Drupal gallery node in the data hub gallery.
       $match = FALSE;
       foreach ($results as $item) {
         if ($item['id'] == $gallery->field_gallery_id[LANGUAGE_NONE][0]['value']) {
@@ -1960,7 +1979,7 @@ function aicapp_node_view($node, $view_mode, $langcode) {
       if (!empty($results[0])) {
         $w = 10;
         foreach ($results[0] as $key => $val) {
-          if ($key == 'date_range') {
+          if ($key === 'date_range') {
             $val = implode('-', $val);
           }
           $node->content[$key] = array(
