@@ -563,7 +563,7 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
   _email_art_removed($art_gone);
 
   // notify of any objects BACK on display
-  _email_art_gallery($art_in_gallery, $locations, $objects);
+  _email_art_gallery($art_in_gallery, $locations, $objects['#updated']);
 
   // notify of any objects that have changed gallery location.
   _email_object_gallery_change($changed);
@@ -816,6 +816,9 @@ function _email_art_gallery($art_in_gallery, $locations, $objects) {
   // Now collect all objects from our Drupal DB (field_in_gallery table) that are NOT in gallery
   $not_displayed = array();
   foreach ($objects as $obj) {
+    if (!is_object($obj) || empty($obj->field_in_gallery)) {
+      continue;
+    }
     if ($obj->field_in_gallery[LANGUAGE_NONE][0]['value'] == 0) {
       $not_displayed[] = $obj->nid;
     }
