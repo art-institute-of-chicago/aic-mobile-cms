@@ -473,6 +473,9 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
         elseif ($key === 'id') {
           $key = 'object_id';
         }
+        elseif ($key === 'is_in_gallery') {
+          $key = 'in_gallery';
+        }
         elseif ($key === 'lake_guid') {
           $key = 'id';
           unset($object->lake_guid);
@@ -488,7 +491,7 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
     // Check objects here to see if they recently went off display.
     // We send email notice in that case - (they may need to update a tour?)
     // First collect the ones marked not on display in current data hub data.
-    if (empty($object->is_in_gallery)) {
+    if (empty($object->in_gallery)) {
       $art_gone[] = $object->nid;
     }
     else {
@@ -502,9 +505,11 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
     // Make sure any objects that have changed galleries get updated.
     if (isset($object->gallery_location)) {
       $loc = $object->gallery_location;
-      $ingallery = $object->is_in_gallery;
-      if (empty($object->is_in_gallery)) {
+      if (empty($object->in_gallery)) {
         $ingallery = 0;
+      }
+      else {
+        $ingallery = $object->in_gallery;
       }
     }
     else {
@@ -1018,6 +1023,9 @@ function aicapp_gendata_form_submit($form, &$form_state) {
         elseif ($key === 'id') {
           $key = 'object_id';
         }
+        elseif ($key === 'is_in_gallery') {
+          $key = 'in_gallery';
+        }
         elseif ($key === 'lake_guid') {
           $key = 'id';
           unset($object->lake_guid);
@@ -1509,7 +1517,7 @@ function strip_drupal_from_node(&$node) {
       $node->gallery_location = $node->gallery;
     }
     // Is this object in a gallery?
-    if (isset($node->is_in_gallery)) {
+    if (isset($node->is_in_gallery) && !isset($node->in_gallery)) {
       $node->in_gallery = $node->is_in_gallery;
     }
     if (isset($node->main_reference_number)) {
