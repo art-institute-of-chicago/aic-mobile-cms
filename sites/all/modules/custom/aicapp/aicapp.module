@@ -430,10 +430,6 @@ function aicapp_verify_obj_gallery() {
  * Object Gallery Status submit.
  */
 function aicapp_objectGalleryStatus_submit($form, &$form_state) {
-  // Load all objects, including unpublished, because we compare if objects
-  // previously not in a gallery (and unpublished) are now displayed.
-  $objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
-  // Now we build up the objects array for JSON output.
   $art_gone = array();
   $art_in_gallery = array();
   $locations = array();
@@ -441,6 +437,9 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
   $object_ids = array();
   $by_object_id = array();
   $objects['#updated'] = array();
+  // Load all objects, including unpublished, because we compare if objects
+  // previously not in a gallery (and unpublished) are now displayed.
+  $objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
   foreach ($objects as $object) {
     if (!is_object($object)) {
       continue;
@@ -506,25 +505,26 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
     if (isset($object->gallery_location)) {
       $loc = $object->gallery_location;
       if (empty($object->in_gallery)) {
-        $ingallery = 0;
+        $in_gallery = 0;
       }
       else {
-        $ingallery = $object->in_gallery;
+        // The value must be either 0 or 1, so test for truthiness and set to 1.
+        $in_gallery = $object->in_gallery ? 1 : 0;
       }
     }
     else {
       $loc = '';
-      $ingallery = 0;
+      $in_gallery = 0;
     }
     // Check if 'in gallery' statuses have changed and sync with data hub data.
-    if (isset($object->field_in_gallery[LANGUAGE_NONE][0]['value']) && $ingallery != $object->field_in_gallery[LANGUAGE_NONE][0]['value']) {
+    if (isset($object->field_in_gallery[LANGUAGE_NONE][0]['value']) && $in_gallery != $object->field_in_gallery[LANGUAGE_NONE][0]['value']) {
       db_query("UPDATE {field_data_field_in_gallery}
         SET field_in_gallery_value = :ingal
-        WHERE entity_id = :nid", array(':nid' => $object->nid, ':ingal' => $ingallery));
+        WHERE entity_id = :nid", array(':nid' => $object->nid, ':ingal' => $in_gallery));
 
       db_query("UPDATE {field_revision_field_in_gallery}
         SET field_in_gallery_value = :ingal
-        WHERE entity_id = :nid", array(':nid' => $object->nid, ':ingal' => $ingallery));
+        WHERE entity_id = :nid", array(':nid' => $object->nid, ':ingal' => $in_gallery));
     }
     // Update gallery locations.
     if (isset($object->field_gallery_location[LANGUAGE_NONE][0]['value']) && $loc != $object->field_gallery_location[LANGUAGE_NONE][0]['value']) {
