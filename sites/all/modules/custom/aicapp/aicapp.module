@@ -1722,8 +1722,9 @@ function strip_drupal_from_node(&$node) {
   }
   // Map Floors.
   if (isset($node->field_floor_map)) {
+    // Set default floors to an empty array.
+    $node->floors = array();
     if ($fc_items = field_get_items('node', $node, 'field_floor_map')) {
-      $node->floors = array();
       // Extract the field collection items.
       $i = 0;
       foreach ($fc_items as $fc_item) {
