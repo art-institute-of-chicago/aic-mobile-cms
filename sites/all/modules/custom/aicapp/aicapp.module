@@ -2211,6 +2211,7 @@ function _aicapp_remote_object_properties(&$object, $item, $options = array()) {
       $object->{$key} = $val;
     }
   }
+  return $object;
 }
 
 /**
