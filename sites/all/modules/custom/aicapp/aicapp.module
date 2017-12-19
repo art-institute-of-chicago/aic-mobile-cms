@@ -465,25 +465,7 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
         continue;
       }
       $object = $by_object_id[$id];
-      foreach ($item as $key => $val) {
-        if ($key === 'date_range') {
-          $val = implode('-', $val);
-        }
-        elseif ($key === 'id') {
-          $key = 'object_id';
-        }
-        elseif ($key === 'is_in_gallery') {
-          $key = 'in_gallery';
-        }
-        elseif ($key === 'lake_guid') {
-          $key = 'id';
-          unset($object->lake_guid);
-        }
-        if ($key !== 'provenance_text' && $key !== 'exhibition_history') {
-          $object->$key = $val;
-        }
-      }
-      $objects['#updated'][$object->nid] = $object;
+      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($object, $item);
     }
   }
   foreach ($objects['#updated'] as $key => $object) {
@@ -621,18 +603,9 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
         continue;
       }
       $object = $by_object_id[$id];
-      foreach ($item as $key => $val) {
-        if ($key === 'date_range') {
-          $val = implode('-', $val);
-        }
-        if ($key !== 'provenance_text' && $key !== 'exhibition_history') {
-          $object->$key = $val;
-        }
-      }
-      $objects['#updated'][$object->nid] = $object;
+      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($object, $item);
     }
   }
-
   foreach ($objects['#updated'] as $object) {
     $match = FALSE;
     if (isset($object->gallery_location)) {
@@ -1007,37 +980,19 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $results = _aicapp_fetch_data($url, $options);
   if (!empty($results)) {
     // @TODO a better way would be to only request the fields we want.
-    $object_props_to_skip = array(
+    $object_props_to_skip = array('#skip' => array(
       'description', 'medium', 'inscriptions', 'provenance_text', 'exhibition_history',
       'object_type', 'object_type_id', 'publication_history',
       'publishing_verification_level', 'copyright_notice',
       'place_of_origin', 'collection_status', 'gallery_id',
-    );
+    ));
     foreach ($results as $item) {
       $id = isset($item['id']) ? $item['id'] : NULL;
       if (empty($id) || !isset($by_object_id[$id])) {
         continue;
       }
       $object = $by_object_id[$id];
-      foreach ($item as $key => $val) {
-        if ($key === 'date_range') {
-          $val = implode('-', $val);
-        }
-        elseif ($key === 'id') {
-          $key = 'object_id';
-        }
-        elseif ($key === 'is_in_gallery') {
-          $key = 'in_gallery';
-        }
-        elseif ($key === 'lake_guid') {
-          $key = 'id';
-          unset($object->lake_guid);
-        }
-        if (!in_array($key, $object_props_to_skip)) {
-          $object->{$key} = $val;
-        }
-      }
-      $objects['#updated'][$object->nid] = $object;
+      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($object, $item, $object_props_to_skip);
     }
   }
 
@@ -2226,6 +2181,35 @@ function aicapp_file_sync_form_submit() {
   }
   else {
     drupal_set_message('The file-sync trigger has been generated.', 'status');
+  }
+}
+
+/**
+ * Rewrite the object properties of a few specific properties.
+ */
+function _aicapp_remote_object_properties(&$object, $item, $options = array()) {
+  $defaults = array(
+    '#skip' => array('provenance_text', 'exhibition_history'),
+  );
+  $options += $defaults;
+  $object_props_to_skip = $options['#skip'];
+  foreach ($item as $key => $val) {
+    if ($key === 'date_range') {
+      $val = implode('-', $val);
+    }
+    elseif ($key === 'id') {
+      $key = 'object_id';
+    }
+    elseif ($key === 'is_in_gallery') {
+      $key = 'in_gallery';
+    }
+    elseif ($key === 'lake_guid') {
+      $key = 'id';
+      unset($object->lake_guid);
+    }
+    if (!in_array($key, $object_props_to_skip)) {
+      $object->{$key} = $val;
+    }
   }
 }
 
