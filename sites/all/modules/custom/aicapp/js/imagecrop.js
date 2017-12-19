@@ -27,7 +27,8 @@
              imageType = element.type,
              imageHeight = element.height,
              imageWidth = element.width,
-             imagePreview = '<p>&nbsp;</p><p><img id="' + element.id + '"' + ' src="' + element.url + '" /></p>',
+             previewClass = 'crop-preview-' + imageType,
+             imagePreview = '<div class="' + previewClass + '"><img id="' + element.id + '"' + ' src="' + element.url + '" /></div>',
              imgAreaSelectOptions = {
                x1: element.x1,
                y1: element.y1,
@@ -58,8 +59,7 @@
           }
           // make fields readonly
           $cropInputs.prop('readonly', 'readonly');
-
-          if ($(cropDescription).length) {
+          if ($(cropDescription).length && $('.' + previewClass).length === 0) {
             $(cropDescription).append(imagePreview);
           }
           // Initialize the crop tool.
