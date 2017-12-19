@@ -1813,9 +1813,6 @@ function aicappSaveNode($object, $type) {
     $node->field_reference_num[$node->language][0]['value'] = $object['main_reference_number'];
     // The 'gallery_locaiton' property seems to have changed to just 'gallery'.
     $node->field_gallery_location[$node->language][0]['value'] = $object['gallery'];
-    // Artist Display Name
-    $node->field_artist_name[$node->language][0]['value'] = $object['artist_display'];
-
     // Image server URL begins like this for both thumnail and full.
     $preferred_image_id = !empty($object['preferred_image_id']) ? $object['preferred_image_id'] : NULL;
     if (!empty($preferred_image_id)) {
