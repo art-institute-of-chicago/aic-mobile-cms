@@ -551,10 +551,14 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
         'aspectRatio' => !empty($aspectRatio) ? $aspectRatio : NULL,
         'minWidth' => $imageType === 'large' ? 364 : 74,
         'minHeight' => $imageType === 'large' ? 200 : 74,
-        'x1' => (($thumbWidth > $thumbValues['x1']) ? intval($thumbValues['x1']) : 0) ,
-        'x2' => (($thumbWidth > ($thumbValues['x2'] + $thumbValues['x1'])) ? intval($thumbValues['x2']) : intval($thumbWidth - $thumbValues['x1'])),
-        'y1' => (($thumbHeight > $thumbValues['y1']) ? intval($thumbValues['y1']) : 0),
-        'y2' => (($thumbHeight > ($thumbValues['y2'] + $thumbValues['y1'])) ? intval($thumbValues['y2']) : intval($thumbHeight - $thumbValues['y1'])),
+        'x1' => intval($thumbValues['x1']),
+        'x2' => intval($thumbValues['x2']),
+        'y1' => intval($thumbValues['y1']),
+        'y2' => intval($thumbValues['y2']),
+        // 'x1' => (($thumbWidth > $thumbValues['x1']) ? intval($thumbValues['x1']) : 0) ,
+        // 'x2' => (($thumbWidth > ($thumbValues['x2'] + $thumbValues['x1'])) ? intval($thumbValues['x2']) : intval($thumbWidth - $thumbValues['x1'])),
+        // 'y1' => (($thumbHeight > $thumbValues['y1']) ? intval($thumbValues['y1']) : 0),
+        // 'y2' => (($thumbHeight > ($thumbValues['y2'] + $thumbValues['y1'])) ? intval($thumbValues['y2']) : intval($thumbHeight - $thumbValues['y1'])),
       ))
     ),
   );
@@ -593,37 +597,9 @@ function getDefaults($items, &$thumbValues, $imageType) {
  */
 function setDefaults(&$form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, &$thumbValues) {
   $thumbValues['x1'] = $thumbX1;
-  $form[$formName][LANGUAGE_NONE][0]['field_x'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x1'];
   $thumbValues['y1'] = $thumbY1;
-  $form[$formName][LANGUAGE_NONE][0]['field_y'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y1'];
   $thumbValues['x2'] = $thumbX2;
-  $form[$formName][LANGUAGE_NONE][0]['field_x2'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
   $thumbValues['y2'] = $thumbY2;
-  $form[$formName][LANGUAGE_NONE][0]['field_y2'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
-
-  if ($imageType == 'thumbnail') {
-    if ($thumbWidth > $thumbHeight) {
-      // if landscape image
-      $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
-      $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'];
-    }
-    elseif ($thumbHeight > $thumbWidth) {
-      // if portrait image
-      $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-      $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-    }
-    else {
-      // perfect square
-      $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-      $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-    }
-    $thumbValues['width'] = $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'];
-    $thumbValues['height'] = $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'];
-  }
-  elseif ($imageType == 'large') {
-    $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['x2'];
-    $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'] = $thumbValues['y2'] - $thumbValues['y1'];
-    $thumbValues['width'] = $form[$formName][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#value'];
-    $thumbValues['height'] = $form[$formName][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#value'];
-  }
+  $thumbValues['width'] = $thumbValues['x2'] - $thumbValues['x1'] >= 0 ? $thumbValues['x2'] - $thumbValues['x1'] : 0;
+  $thumbValues['height'] = $thumbValues['y2'] - $thumbValues['y1'] >= 0 ? $thumbValues['y2'] - $thumbValues['y1'] : 0;
 }
