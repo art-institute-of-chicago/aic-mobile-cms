@@ -2247,7 +2247,7 @@ function aicapp_node_presave($node) {
     // set it back to unpublished and give warning.
     if (!field_get_items('node', $node, 'field_audio_commentary')) {
       $node->status = 0;
-      drupal_set_message('The object ' . $node->title . ' has no audio commentary files attached.', 'warning');
+      drupal_set_message('The object ' . $node->title . ' has no audio files attached, and has been unpublished.', 'warning');
     }
   }
 }
