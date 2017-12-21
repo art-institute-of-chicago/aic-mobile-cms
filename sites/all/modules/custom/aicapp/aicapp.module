@@ -1494,18 +1494,19 @@ function strip_drupal_from_node(&$node) {
         );
       }
     }
-    // Object audio files.
+    // Is this a highlighed object?
+    if (isset($node->field_highlighted_object[LANGUAGE_NONE][0])) {
+      $node->highlighted_object = $node->field_highlighted_object[LANGUAGE_NONE][0]['value'];
+    }
+    // App v1 property: audio.
     if (isset($node->field_object_audio[LANGUAGE_NONE][0]['nid'])) {
       foreach ($node->field_object_audio[LANGUAGE_NONE] as $audiofld) {
         $node->audio[] = $audiofld['nid'];
       }
     }
+    // App v1 property: audio_transcript
     if (isset($node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'])) {
       $node->audio_transcript = $node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'];
-    }
-    // Is this a highlighed object?
-    if (isset($node->field_highlighted_object[LANGUAGE_NONE][0])) {
-      $node->highlighted_object = $node->field_highlighted_object[LANGUAGE_NONE][0]['value'];
     }
     // App v1 property: Object selector number.
     $node->object_selector_number = '';
@@ -2441,7 +2442,7 @@ function aicapp_check_for_tour_problems($tour) {
     if (!$node->status) {
       $unpubs[] = array('nid' => $node->nid, 'title' => $node->title);
     }
-    if (empty($node->field_object_audio[LANGUAGE_NONE][0])) {
+    if (empty($node->field_audio_commentary[LANGUAGE_NONE][0])) {
       $noaudio[] = array('nid' => $node->nid, 'title' => $node->title);
     }
     if ((empty($node->field_thumbnail_image) || empty($node->field_large_image)) && empty($node->field_image)) {
