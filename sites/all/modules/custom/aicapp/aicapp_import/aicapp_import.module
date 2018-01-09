@@ -1,0 +1,334 @@
+<?php
+
+/**
+ * @file
+ * Manage objects and galleries that are used in the Mobile APP.
+ * Objects and galleries have some data stored in Drupal, and some coming from SOLR queries to the
+ * Chicago Art Institute's existing DB. Objects physical location can be pinned on a Google Map of the Institute.
+ * This module creates a button that when clicked, pulls all the published content into a JSON file (appData.json) at
+ * the site root, which is then called by the mobile APP.
+ * Email notices are also fired when objects are pulled out of galleries or added back into galleries.
+ */
+
+/**
+ * Implementation of hook_menu()
+ */
+function aicapp_import_menu() {
+  $items['admin/config/system/aic/batch'] = array(
+    'title' => 'Batch import',
+    'description' => 'Tools to batch update from CSV files..',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('aicapp_import_batch'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer nodes'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 100,
+  );
+
+  return $items;
+}
+
+
+/**
+ * Form callback.
+ */
+function aicapp_import_batch() {
+  $counts = $form = array();
+  $form['aicapp_data'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t('Import Content'),
+    '#tree' => FALSE,
+  );
+
+  $counts[] = TRUE;
+
+  // Action button to begin a batch of imports.
+  if (empty($counts)) {
+    $form['aicapp_data']['migration_fields_complete'] = array(
+      '#markup' => '<p>' . t('All content items fields have been imported.') . '</p>',
+    );
+  }
+  else {
+    // Configure file names and directory locations.
+    $form['aicapp_data']['aicapp_import_directory'] = array(
+      '#type' => 'textfield',
+      '#size' => 255,
+      '#maxlength' => 255,
+      '#title' => t('Name of directory.'),
+      '#default_value' => variable_get('aicapp_import_directory', 'import'),
+      '#description' => t('The directory where the import file can be found.'),
+    );
+    $form['aicapp_data']['aicapp_import_filename'] = array(
+      '#type' => 'textfield',
+      '#size' => 100,
+      '#maxlength' => 100,
+      '#title' => t('Name of file to import'),
+      '#default_value' => variable_get('aicapp_import_filename', 'aic-audio-import.csv'),
+      '#description' => t('The exact name of the file to import from.'),
+    );
+    $form['aicapp_data']['aicapp_import_files_directory'] = array(
+      '#type' => 'textfield',
+      '#size' => 255,
+      '#maxlength' => 255,
+      '#title' => t('Name of directory to import files from.'),
+      '#default_value' => variable_get('aicapp_import_files_directory', 'import'),
+      '#description' => t('The path to the directory that contains the audio (mp3) files.'),
+    );
+    $form['aicapp_data']['migration_fields_submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Import Content'),
+    );
+  }
+  return $form;
+}
+
+/**
+ * Admin setting validation callback.
+ */
+function aicapp_import_batch_validate($form, &$form_state) {
+  $values = $form_state['values'];
+  if ($form_state['clicked_button']['#value'] === 'Import Content') {
+    $path = variable_get('file_public_path', conf_path() . '/files') . '/';
+    $path .= $values['aicapp_import_directory'] . '/';
+    $path .= $values['aicapp_import_filename'];
+    if (empty($values['aicapp_import_directory']) || !file_exists(variable_get('file_public_path', conf_path() . '/files') . '/' . $values['aicapp_import_directory'])) {
+      form_set_error('aicapp_import_directory', t('The directory was not found.'));
+      return;
+    }
+    elseif (empty($values['aicapp_import_filename']) || !file_exists($path)) {
+      form_set_error('aicapp_import_filename', t('The file was not found in the directory.'));
+      return;
+    }
+    // Look for audio files
+    $audio_file_path = FALSE;
+    if (file_exists(variable_get('file_public_path', conf_path() . '/files') . '/' . $values['aicapp_import_files_directory'])) {
+      $audio_file_path = $values['aicapp_import_files_directory'];
+    }
+
+    // Get a file handle
+    // Check that files are available and readable.
+    if ($audio_file_path && $content = file_get_contents($path, NULL, NULL, 0, 10000)) {
+      $items = aicapp_import_parse_csv($content);
+      aicapp_import_items($items, $audio_file_path);
+    }
+    else {
+      form_set_error('aicapp_import_filename', t('The file was not readable.'));
+    }
+  }
+  // Save the values that were submitted.
+  variable_set('aicapp_import_directory', $values['aicapp_import_directory']);
+  variable_set('aicapp_import_filename', $values['aicapp_import_filename']);
+  variable_set('aicapp_import_files_directory', $values['aicapp_import_files_directory']);
+}
+
+/**
+ * Parse a CSV file into an array.
+ */
+function aicapp_import_parse_csv($content) {
+  if (mb_detect_encoding($content, 'UTF-8, ISO-8859-1', TRUE) == 'ISO-8859-1') {
+    $content = iconv('macintosh', 'UTF-8', $content);
+  }
+  else {
+    $content = mb_convert_encoding($content, 'UTF-8', mb_detect_encoding($content, 'UTF-8, ISO-8859-1', TRUE));
+  }
+  $lines = array_filter(explode(PHP_EOL, $content));
+  $headers = str_getcsv(array_shift($lines));
+  $data = array();
+  foreach ($lines as $line) {
+    $row = array();
+    foreach (str_getcsv($line) as $key => $field) {
+      $header = $headers[$key];
+      $row[$header] = $field;
+    }
+    $data[] = $row;
+  }
+  return $data;
+}
+
+/**
+ * Import an item
+ */
+function aicapp_import_items($items, $audio_file_path) {
+  module_load_include('inc', 'entity', 'file_entity.file_api');
+  $skip_text = array(
+    'No transcript',
+    'placeholder',
+    'Placeholder transcript',
+    'Placeholder transcript until we get this'
+  );
+  try {
+    $row = 0;
+
+    // Read file for number of records.
+    foreach ($items as $values) {
+      if (!empty($values['Title']) && !empty($values['Track Title Eng']) && !empty($values['filename_eng.mp3'])) {
+        // Create a audio node entity.
+        $default_values = array(
+          'type' => AICAPP_TYPE_AUDIO,
+          'uid' => 1,
+          'status' => 1,
+          'promote' => 0,
+          'language' => 'en',
+        );
+
+        // Create the new audio node.
+        $audio_node = entity_create('node', $default_values);
+        // Get the translation handler.
+        $handler = entity_translation_get_handler('node', $audio_node);
+        $entity = entity_metadata_wrapper('node', $audio_node);
+        // Set the entity titlel and track title.
+        $entity->title = $values['Title'];
+
+        $entity->language('en')->field_track_title->set($values['Track Title Eng']);
+        // Look for the English file for this item.
+        if ($file_obj = _aicapp_import_file_uri_to_object('public://' . $audio_file_path . '/' . $values['filename_eng.mp3'])) {
+          $entity->language('en')->field_audio_file->file->set($file_obj);
+        }
+        // Set English transcripts and credits.
+        if (!in_array($values['Transcripts Eng'], $skip_text)) {
+          $entity->language('en')->field_audio_transcript->set($values['Transcripts Eng']);
+        }
+        if (!in_array($values['Credits Eng'], $skip_text)) {
+          $entity->language('en')->field_credits->set($values['Credits Eng']);
+        }
+        // // Check which languages to translate to.
+        $translate_to = array();
+        if (!empty($values['filename_esp.mp3']) && !empty($values['Track Title Esp'])) {
+          $translate_to['es'] = 'es';
+          $entity->language('es')->title_field->set($values['Title']);
+          $entity->language('es')->field_track_title->set($values['Track Title Esp']);
+          if (!in_array($values['Transcripts Esp'], $skip_text)) {
+            $entity->language('es')->field_audio_transcript->set($values['Transcripts Esp']);
+          }
+          if (!in_array($values['Credits Esp'], $skip_text)) {
+            $entity->language('es')->field_credits->set($values['Credits Esp']);
+          }
+          // Spanish audio file
+          if ($file_obj = _aicapp_import_file_uri_to_object('public://' . $audio_file_path . '/' . $values['filename_esp.mp3'])) {
+            $entity->language('es')->field_audio_file->file->set($file_obj);
+          }
+        }
+        if (!empty($values['filename_chn.mp3']) && !empty($values['Track Title Chn'])) {
+          $translate_to['zh-hans'] = 'zh-hans';
+          $entity->language('zh-hans')->title_field->set($values['Title']);
+          $entity->language('zh-hans')->field_track_title->set($values['Track Title Chn']);
+          if (!in_array($values['Transcripts Chn'], $skip_text)) {
+            $entity->language('zh-hans')->field_audio_transcript->set($values['Transcripts Chn']);
+          }
+          if (!in_array($values['Credits Chn'], $skip_text)) {
+            $entity->language('zh-hans')->field_credits->set($values['Credits Chn']);
+          }
+          // Chinese audio file
+          if ($file_obj = _aicapp_import_file_uri_to_object('public://' . $audio_file_path . '/' . $values['filename_chn.mp3'])) {
+            $entity->language('zh-hans')->field_audio_file->file->set($file_obj);
+          }
+        }
+        // For each translation to the English version of this node.
+        foreach ($translate_to as $to_language) {
+          $translation = array(
+            'translate' => 0,
+            'status' => 1,
+            // The language you're translating to
+            'language' => $to_language,
+            // English is always the source language
+            'source' => 'en',
+          );
+          $handler->setTranslation($translation, $entity->value());
+        }
+        $entity->save();
+        $audio_id = $entity->nid->value();
+        // Now associate this audio node with the object that matches the
+        // given object id.
+        $query = new EntityFieldQuery();
+        $query
+          ->entityCondition('entity_type', 'node')
+          ->propertyCondition('type', AICAPP_TYPE_OBJECT, '=')
+          ->fieldCondition('field_object_id', 'value', $values['Object ID'], '=');
+        $result = $query->execute();
+        if (!empty($result['node'])) {
+          $object_nids = array_keys($result['node']);
+          $object_nodes = entity_load('node', $object_nids);
+          if (count($object_nodes)) {
+            $object_node = current($object_nodes);
+            $entity = entity_metadata_wrapper('node', $object_node);
+            $collection = entity_create('field_collection_item', array('field_name' => 'field_audio_commentary'));
+            $collection->setHostEntity('node', $object_node);
+            $collection_wrapper = entity_metadata_wrapper('field_collection_item', $collection);
+            $item_values = array(
+              'field_audio_commentary_audio' => array(
+                'value' => $audio_id,
+              ),
+            );
+            if (!empty($values['Object Selector #'])) {
+              $item_values['field_object_selector_number'] = array(
+                'value' => $values['Object Selector #'],
+              );
+            }
+            foreach ($item_values as $key => $values) {
+              $collection_wrapper->{$key}->set($values['value']);
+            }
+            $collection_wrapper->save();
+            $entity->save();
+          }
+        }
+      }
+    }
+  }
+  catch (EntityMetadataWrapperException $e) {
+    drupal_set_message(t('There was a problem importing audio.'), 'error');
+  }
+  catch (Exception $e) {
+    $details = '';
+    if (isset($e->errorInfo) && !empty($e->errorInfo[2])) {
+      $details = $e->errorInfo[2];
+    }
+    drupal_set_message(t('There was a problem: %e', array('%e' => $details)), 'error');
+  }
+}
+
+/**
+ * Helper function to prepare and save file objects.
+ */
+function _aicapp_import_file_uri_to_object($uri, $use_existing = TRUE) {
+  $file = FALSE;
+  $uri = file_stream_wrapper_uri_normalize($uri);
+  if ($use_existing) {
+    // We should always attempt to re-use a file if possible.
+    $files = entity_load('file', FALSE, array('uri' => $uri));
+    $file = !empty($files) ? reset($files) : FALSE;
+  }
+
+  if (empty($file)) {
+    $file = new stdClass();
+    $file->uid = $GLOBALS['user']->uid;
+    $file->filename = basename($uri);
+    $file->uri = $uri;
+    $file->filemime = file_get_mimetype($uri);
+    // We can't use filesize() because that doesn't handle remote streams.
+    $file_path = drupal_realpath($uri);
+    $fp = fopen($file_path, 'r');
+    if ($fp !== FALSE) {
+      // Gather statistics and set the filesize;
+      $fstat = fstat($fp);
+      $file->filesize = $fstat['size'];
+    }
+    $file->timestamp = REQUEST_TIME;
+    $file->status = FILE_STATUS_PERMANENT;
+    // Repeat file_save actions
+    module_invoke_all('file_presave', $file);
+    module_invoke_all('entity_presave', $file, 'file');
+    // Save the file to db.
+    drupal_write_record('file_managed', $file);
+    // Inform modules about the newly added file.
+    module_invoke_all('file_insert', $file);
+    module_invoke_all('entity_insert', $file, 'file');
+    // Clear internal properties.
+    unset($file->original);
+    // Clear the static loading cache.
+    entity_get_controller('file')->resetCache(array($file->fid));
+  }
+
+  return $file;
+}

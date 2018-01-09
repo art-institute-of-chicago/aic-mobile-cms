@@ -1231,8 +1231,14 @@ function _aicapp_update_local_artwork_data(&$object, $entity = NULL) {
  * Fetch data from the data aggregrator.
  */
 function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALSE, $batch_start = 0) {
-  $batch_count = 67;
   $results = array();
+  $defaults = array(
+    'batch_count' => 67,
+    'http' => 'GET',
+  );
+  // Merge in default values.
+  $options += $defaults;
+
   // Format a couple fields if they were used.
   if (!empty($options['fields'])) {
     $options['fields'] = is_array($options['fields']) ? implode(',', $options['fields']) : $options['fields'];
@@ -1249,17 +1255,17 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
     // @TODO In order to handle large number of requests, explore whether
     // https://www.drupal.org/project/httprl would help by making parallel http requests.
     $id_count = count($options['ids']);
-    if ($id_count > $batch_count) {
+    if ($id_count > $options['batch_count']) {
       // Separate the request into batches.
       $batch_options = $options;
-      $batch_options['limit'] = $batch_count;
+      $batch_options['limit'] = $options['batch_count'];
       $all_ids = array_combine($batch_options['ids'], $batch_options['ids']);
       while ($batch_start <= $id_count) {
-        $batch = array_slice($all_ids, $batch_start, $batch_count, TRUE);
+        $batch = array_slice($all_ids, $batch_start, $options['batch_count'], TRUE);
         $batch_options['ids'] = array_values($batch);
         $new_results = _aicapp_fetch_data($endpoint, $batch_options);
         $results = is_array($new_results) ? array_merge($results, $new_results) : $results;
-        $batch_start += $batch_count;
+        $batch_start += $options['batch_count'];
       }
       // Return all results.
       return $results;
@@ -1268,15 +1274,29 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
       $options['ids'] = implode(',', $options['ids']);
     }
   }
-
-  $url = $endpoint . '?' . http_build_query($options);
   try {
-    $connection = file_get_contents($url);
+    $data = NULL;
+    if (strtoupper($options['http']) === 'POST') {
+      // POST'ing a query.
+      $post_options = array(
+        'method' => 'POST',
+        'data' => $options['query'],
+        'headers' => array('Content-Type' => 'application/json'),
+      );
+      $result = drupal_http_request($endpoint, $post_options);
+      if ($result->code === '200' && !empty($result->data)) {
+        $data = $result->data;
+      }
+    }
+    else {
+      $url = $endpoint . '?' . http_build_query($options);
+      $data = file_get_contents($url);
+    }
     // If connection not available.
-    if (!$connection) {
+    if (!$data) {
       return;
     }
-    $json = json_decode($connection, TRUE);
+    $json = json_decode($data, TRUE);
     if ($full_response && !empty($json)) {
       $results = $json;
     }
@@ -2058,6 +2078,7 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
   $options = array(
     'size' => $rows,
     'from' => $start,
+    'search_type' => 'search_title',
   );
   $search_term_array = array();
   $object_ids;
@@ -2067,6 +2088,7 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
   }
   elseif (!empty($form_state['values']['search_ref_num'])) {
     $search_term = $form_state['values']['search_ref_num'];
+    $options['search_type'] = 'main_reference_number';
   }
   elseif (!empty($form_state['values']['search_object_id'])) {
     // collecting value, removing spaces
@@ -2091,9 +2113,21 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
     if (!empty($form_state['values']['search_object_id'])) {
       $options['ids'] = array($search_term);
     }
+    elseif ($options['search_type'] === 'main_reference_number') {
+      $options['http'] = 'POST';
+      $options['query'] = json_encode(array(
+        'type' => 'artworks',
+        'query' => array(
+          'term' => array(
+            'main_reference_number' => $search_term,
+          )
+        )
+      ));
+    }
     else {
       $options['q'] = $search_term;
     }
+
     // Query the data aggregrator.
     $results = _aicapp_fetch_data($api_endpoint, $options, TRUE);
     if (!empty($results['data'])) {
