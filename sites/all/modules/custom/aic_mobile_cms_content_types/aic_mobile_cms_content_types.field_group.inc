@@ -112,7 +112,7 @@ function aic_mobile_cms_content_types_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Deprecated - App Version 1',
-    'weight' => '15',
+    'weight' => '16',
     'children' => array(
       0 => 'field_stops2',
       1 => 'field_floor',
@@ -142,7 +142,7 @@ function aic_mobile_cms_content_types_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Tour Audio',
-    'weight' => '11',
+    'weight' => '12',
     'children' => array(
       0 => 'field_tour_audio',
       1 => 'field_selector_number',
@@ -171,7 +171,7 @@ function aic_mobile_cms_content_types_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Tour Stops',
-    'weight' => '14',
+    'weight' => '15',
     'children' => array(
       0 => 'field_tour_stops',
     ),

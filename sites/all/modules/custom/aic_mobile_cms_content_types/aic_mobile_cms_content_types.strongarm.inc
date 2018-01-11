@@ -23,7 +23,7 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->name = 'entity_translation_entity_types';
   $strongarm->value = array(
     'node' => 'node',
-    'taxonomy_term' => 0,
+    'taxonomy_term' => 'taxonomy_term',
     'field_collection_item' => 0,
     'user' => 0,
   );
@@ -340,7 +340,7 @@ function aic_mobile_cms_content_types_strongarm() {
     'extra_fields' => array(
       'form' => array(
         'path' => array(
-          'weight' => '5',
+          'weight' => '7',
         ),
         'language' => array(
           'weight' => '0',
@@ -423,7 +423,7 @@ function aic_mobile_cms_content_types_strongarm() {
     'extra_fields' => array(
       'form' => array(
         'path' => array(
-          'weight' => '16',
+          'weight' => '17',
         ),
         'language' => array(
           'weight' => '0',

@@ -105,7 +105,6 @@ function aic_mobile_cms_content_types_image_default_styles() {
   return $styles;
 }
 
-
 /**
  * Implements hook_node_info().
  */

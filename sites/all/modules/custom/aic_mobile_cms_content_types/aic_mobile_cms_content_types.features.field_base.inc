@@ -33,6 +33,68 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'type' => 'text_with_summary',
   );
 
+  // Exported field_base: 'description_field'.
+  $field_bases['description_field'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'description_field',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'text',
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+    ),
+    'translatable' => 1,
+    'type' => 'text_with_summary',
+  );
+
+  // Exported field_base: 'field_annotation_amenity_type'.
+  $field_bases['field_annotation_amenity_type'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_annotation_amenity_type',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'value' => array(
+        0 => 'value',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'list',
+    'settings' => array(
+      'allowed_values' => array(
+        'FamilyRestroom' => 'Family Restroom',
+        'MensRoom' => 'Men\'s Room',
+        'WomensRoom' => 'Women\'s Room',
+        'Dining' => 'Dining',
+        'Elevator' => 'Elevator',
+        'WheelchairRamp' => 'Wheelchair Ramp',
+        'Giftshop' => 'Gift Shop',
+        'Tickets' => 'Tickets',
+        'Information' => 'Information',
+        'Checkroom' => 'Check Room',
+        'AudioGuide' => 'Audio Guide',
+      ),
+      'allowed_values_function' => '',
+      'entity_translation_sync' => FALSE,
+    ),
+    'translatable' => 0,
+    'type' => 'list_text',
+  );
+
   // Exported field_base: 'field_annotation_label'.
   $field_bases['field_annotation_label'] = array(
     'active' => 1,
@@ -57,6 +119,37 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'type' => 'text_long',
   );
 
+  // Exported field_base: 'field_annotation_text_type'.
+  $field_bases['field_annotation_text_type'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_annotation_text_type',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'value' => array(
+        0 => 'value',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'list',
+    'settings' => array(
+      'allowed_values' => array(
+        'Landmark' => 'Landmark',
+        'Garden' => 'Garden',
+        'Gallery' => 'Gallery',
+        'Space' => 'Space',
+      ),
+      'allowed_values_function' => '',
+      'entity_translation_sync' => FALSE,
+    ),
+    'translatable' => 0,
+    'type' => 'list_text',
+  );
+
   // Exported field_base: 'field_annotation_type'.
   $field_bases['field_annotation_type'] = array(
     'active' => 1,
@@ -76,12 +169,10 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'module' => 'list',
     'settings' => array(
       'allowed_values' => array(
-        'restroom' => 'Restroom',
-        'gift_shop' => 'Gift Shop',
-        'dining' => 'Dining',
-        'architectural_feature' => 'Architectural Feature',
-        'department' => 'Department',
-        'building' => 'Building',
+        'Text' => 'Text',
+        'Amenity' => 'Amenity',
+        'Department' => 'Department',
+        'Image' => 'Image',
       ),
       'allowed_values_function' => '',
       'entity_translation_sync' => FALSE,
@@ -1936,6 +2027,31 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     ),
     'translatable' => 0,
     'type' => 'number_integer',
+  );
+
+  // Exported field_base: 'name_field'.
+  $field_bases['name_field'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'name_field',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'text',
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'max_length' => 255,
+    ),
+    'translatable' => 1,
+    'type' => 'text',
   );
 
   // Exported field_base: 'title_field'.
