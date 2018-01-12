@@ -2042,6 +2042,96 @@ Ex: ""Head of Buddha (Spanish)"""',
     ),
   );
 
+  // Exported field_instance:
+  // 'node-map_annotation-field_annotation_amenity_type'.
+  $field_instances['node-map_annotation-field_annotation_amenity_type'] = array(
+    'bundle' => 'map_annotation',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'list',
+        'settings' => array(),
+        'type' => 'list_default',
+        'weight' => 9,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_annotation_amenity_type',
+    'label' => 'Amenity Type',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'options',
+      'settings' => array(),
+      'type' => 'options_select',
+      'weight' => 5,
+    ),
+  );
+
+  // Exported field_instance: 'node-map_annotation-field_annotation_image'.
+  $field_instances['node-map_annotation-field_annotation_image'] = array(
+    'bundle' => 'map_annotation',
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'image',
+        'settings' => array(
+          'image_link' => '',
+          'image_style' => '',
+        ),
+        'type' => 'image',
+        'weight' => 10,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_annotation_image',
+    'label' => 'Image',
+    'required' => 0,
+    'settings' => array(
+      'alt_field' => 0,
+      'default_image' => 0,
+      'entity_translation_sync' => FALSE,
+      'file_directory' => 'annotations',
+      'file_extensions' => 'png jpg jpeg',
+      'max_filesize' => '',
+      'max_resolution' => '',
+      'min_resolution' => '',
+      'title_field' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'image',
+      'settings' => array(
+        'preview_image_style' => 'thumbnail',
+        'progress_indicator' => 'throbber',
+      ),
+      'type' => 'image_image',
+      'weight' => 2,
+    ),
+  );
+
   // Exported field_instance: 'node-map_annotation-field_annotation_label'.
   $field_instances['node-map_annotation-field_annotation_label'] = array(
     'bundle' => 'map_annotation',
@@ -2083,6 +2173,44 @@ Ex: ""Head of Buddha (Spanish)"""',
     ),
   );
 
+  // Exported field_instance: 'node-map_annotation-field_annotation_text_type'.
+  $field_instances['node-map_annotation-field_annotation_text_type'] = array(
+    'bundle' => 'map_annotation',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'list',
+        'settings' => array(),
+        'type' => 'list_default',
+        'weight' => 8,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_annotation_text_type',
+    'label' => 'Text Type',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'options',
+      'settings' => array(),
+      'type' => 'options_select',
+      'weight' => 4,
+    ),
+  );
+
   // Exported field_instance: 'node-map_annotation-field_annotation_type'.
   $field_instances['node-map_annotation-field_annotation_type'] = array(
     'bundle' => 'map_annotation',
@@ -2107,7 +2235,7 @@ Ex: ""Head of Buddha (Spanish)"""',
     'entity_type' => 'node',
     'field_name' => 'field_annotation_type',
     'label' => 'Type',
-    'required' => 0,
+    'required' => 1,
     'settings' => array(
       'entity_translation_sync' => FALSE,
       'user_register_form' => FALSE,
@@ -2117,7 +2245,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 2,
+      'weight' => 3,
     ),
   );
 
@@ -2158,7 +2286,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 4,
+      'weight' => 7,
     ),
   );
 
@@ -2199,7 +2327,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 3,
+      'weight' => 6,
     ),
   );
 
@@ -3596,7 +3724,7 @@ Ex: ""Head of Buddha (Spanish)"""',
     'bundle' => 'tour',
     'default_value' => NULL,
     'deleted' => 0,
-    'description' => 'Start location of the Tour.',
+    'description' => 'Start location of the Tour. Move the market on the map to select an exact lat/long position.',
     'display' => array(
       'default' => array(
         'label' => 'above',
@@ -3925,7 +4053,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'active' => 1,
       'module' => 'options',
       'settings' => array(),
-      'type' => 'options_select',
+      'type' => 'options_buttons',
       'weight' => 1,
     ),
   );
@@ -4116,11 +4244,86 @@ Ex: ""Head of Buddha (Spanish)"""',
     ),
   );
 
+  // Exported field_instance: 'taxonomy_term-categories-description_field'.
+  $field_instances['taxonomy_term-categories-description_field'] = array(
+    'bundle' => 'categories',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 1,
+      ),
+    ),
+    'entity_type' => 'taxonomy_term',
+    'field_name' => 'description_field',
+    'label' => 'Description',
+    'required' => 0,
+    'settings' => array(
+      'display_summary' => 0,
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 1,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 20,
+        'summary_rows' => 5,
+      ),
+      'type' => 'text_textarea_with_summary',
+      'weight' => -5,
+    ),
+  );
+
+  // Exported field_instance: 'taxonomy_term-categories-name_field'.
+  $field_instances['taxonomy_term-categories-name_field'] = array(
+    'bundle' => 'categories',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'taxonomy_term',
+    'field_name' => 'name_field',
+    'label' => 'Name',
+    'required' => 1,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'hide_label' => array(
+        'entity' => 0,
+        'page' => 0,
+      ),
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => -5,
+    ),
+  );
+
   // Translatables
   // Included for use with string extractors like potx.
   t('"Descriptive Title for the Admin to easily identify the Audio Files within the CMS Admin UI.
 Ex: ""Head of Buddha (Spanish)"""');
   t('Add audio references in the same order as object selector numbers above.');
+  t('Amenity Type');
   t('Anchor Geolocation 1');
   t('Anchor Geolocation 2');
   t('Anchor Pixel 1');
@@ -4171,6 +4374,7 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Move the crop square around to set new crop for tour image thumbnails in the app. This crop cannot be resized.');
   t('Move the crop square around to set new crop for tour images in the app. This crop can be resized.');
   t('Museum Hours');
+  t('Name');
   t('Note: If adding multiple object numbers, first number here should be the value from the original Object Selector Number field which will be deprecated soon.');
   t('Object');
   t('Object ID');
@@ -4179,7 +4383,8 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Reference Number');
   t('Selector Number');
   t('Start Location');
-  t('Start location of the Tour.');
+  t('Start location of the Tour. Move the market on the map to select an exact lat/long position.');
+  t('Text Type');
   t('This field will be deprecated soon. For the time being, please enter first audio stop number here and also as the first number in the Object Selector Numbers fields below.');
   t('Thumbail Image');
   t('Thumbnail Crop');

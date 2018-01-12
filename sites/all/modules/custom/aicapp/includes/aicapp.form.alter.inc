@@ -11,7 +11,27 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
   // Add an afterbuild callback.
   $form['#after_build'][] = 'aicapp_setup_afterbuild';
   // Only proceed if either object or tour node form.
-  if ($form_id != 'object_node_form' && $form_id != 'tour_node_form') {
+  if ($form_id === 'map_annotation_node_form') {
+    // Only show this field when the value of field_annotation_type is 'Text'.
+    $form['field_annotation_text_type'][LANGUAGE_NONE]['#states'] = array(
+      'visible' => array(
+        ':input[name="field_annotation_type[und]"]' => array(
+          array('value' => 'Text'),
+        ),
+      ),
+    );
+    // Only show this field when the value of field_annotation_type is 'Amenity'.
+    $form['field_annotation_amenity_type'][LANGUAGE_NONE]['#states'] = array(
+      'visible' => array(
+        ':input[name="field_annotation_type[und]"]' => array(
+          array('value' => 'Amenity'),
+        ),
+      ),
+    );
+    // Remove "Selet a Value" from field_annotation_type options.
+    unset($form['field_annotation_type'][LANGUAGE_NONE]['#options']['_none']);
+  }
+  elseif ($form_id != 'object_node_form' && $form_id != 'tour_node_form') {
     return;
   }
   // Attach CSS & JS assets to the form.

@@ -36,19 +36,6 @@ function aic_mobile_cms_content_types_locale_default_languages() {
     'prefix' => 'es',
     'weight' => -9,
   );
-  // Exported language: zh-hans.
-  $languages['zh-hans'] = array(
-    'language' => 'zh-hans',
-    'name' => 'Chinese, Simplified',
-    'native' => '简体中文',
-    'direction' => 0,
-    'enabled' => 1,
-    'plurals' => 0,
-    'formula' => '',
-    'domain' => '',
-    'prefix' => 'zh-hans',
-    'weight' => -8,
-  );
   // Exported language: zh-hant.
   $languages['zh-hant'] = array(
     'language' => 'zh-hant',
