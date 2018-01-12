@@ -2083,10 +2083,7 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
   $search_term_array = array();
   $object_ids;
   // determining if searching by title, ref number, or id
-  if (!empty($form_state['values']['search_title'])) {
-    $search_term = $form_state['values']['search_title'];
-  }
-  elseif (!empty($form_state['values']['search_ref_num'])) {
+  if (!empty($form_state['values']['search_ref_num'])) {
     $search_term = $form_state['values']['search_ref_num'];
     $options['search_type'] = 'main_reference_number';
   }
@@ -2101,6 +2098,9 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
     // The following are not used for the artworks endpoint.
     unset($options['size']);
     unset($options['from']);
+  }
+  elseif (!empty($form_state['values']['search_title'])) {
+    $search_term = $form_state['values']['search_title'];
   }
   else {
     drupal_set_message('Problem running search.', 'error');
@@ -2125,7 +2125,19 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
       ));
     }
     else {
-      $options['q'] = $search_term;
+      // This is a search by title. Use fuzziness to increase result set.
+      $options['http'] = 'POST';
+      $options['query'] = json_encode(array(
+        'type' => 'artworks',
+        'query' => array(
+          'match' => array(
+            'title' => array(
+              'query' => $search_term,
+              'fuzziness' => 'AUTO',
+            ),
+          )
+        )
+      ));
     }
 
     // Query the data aggregrator.
