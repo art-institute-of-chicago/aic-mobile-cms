@@ -953,6 +953,13 @@ function aic_mobile_cms_content_types_views_default_views() {
       'empty_column' => 0,
     ),
   );
+  /* Header: Global: Text area */
+  $handler->display->display_options['header']['area']['id'] = 'area';
+  $handler->display->display_options['header']['area']['table'] = 'views';
+  $handler->display->display_options['header']['area']['field'] = 'area';
+  $handler->display->display_options['header']['area']['empty'] = TRUE;
+  $handler->display->display_options['header']['area']['content'] = '<a href="/node/add/map-annotation">Create new map annotation</a>';
+  $handler->display->display_options['header']['area']['format'] = 'full_html';
   /* Field: Content: Nid */
   $handler->display->display_options['fields']['nid']['id'] = 'nid';
   $handler->display->display_options['fields']['nid']['table'] = 'node';
@@ -1071,6 +1078,7 @@ function aic_mobile_cms_content_types_views_default_views() {
     t('‹ previous'),
     t('next ›'),
     t('last »'),
+    t('<a href="/node/add/map-annotation">Create new map annotation</a>'),
     t('[edit]'),
     t('Title'),
     t('Type'),

@@ -2077,7 +2077,58 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 4,
+      'weight' => 5,
+    ),
+  );
+
+  // Exported field_instance: 'node-map_annotation-field_annotation_image'.
+  $field_instances['node-map_annotation-field_annotation_image'] = array(
+    'bundle' => 'map_annotation',
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'image',
+        'settings' => array(
+          'image_link' => '',
+          'image_style' => '',
+        ),
+        'type' => 'image',
+        'weight' => 10,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_annotation_image',
+    'label' => 'Image',
+    'required' => 0,
+    'settings' => array(
+      'alt_field' => 0,
+      'default_image' => 0,
+      'entity_translation_sync' => FALSE,
+      'file_directory' => 'annotations',
+      'file_extensions' => 'png jpg jpeg',
+      'max_filesize' => '',
+      'max_resolution' => '',
+      'min_resolution' => '',
+      'title_field' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'image',
+      'settings' => array(
+        'preview_image_style' => 'thumbnail',
+        'progress_indicator' => 'throbber',
+      ),
+      'type' => 'image_image',
+      'weight' => 2,
     ),
   );
 
@@ -2156,7 +2207,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 3,
+      'weight' => 4,
     ),
   );
 
@@ -2194,7 +2245,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 2,
+      'weight' => 3,
     ),
   );
 
@@ -2235,7 +2286,7 @@ Ex: ""Head of Buddha (Spanish)"""',
       'module' => 'options',
       'settings' => array(),
       'type' => 'options_select',
-      'weight' => 6,
+      'weight' => 7,
     ),
   );
 
@@ -2276,7 +2327,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 5,
+      'weight' => 6,
     ),
   );
 
@@ -3673,7 +3724,7 @@ Ex: ""Head of Buddha (Spanish)"""',
     'bundle' => 'tour',
     'default_value' => NULL,
     'deleted' => 0,
-    'description' => 'Start location of the Tour.',
+    'description' => 'Start location of the Tour. Move the market on the map to select an exact lat/long position.',
     'display' => array(
       'default' => array(
         'label' => 'above',
@@ -4332,7 +4383,7 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Reference Number');
   t('Selector Number');
   t('Start Location');
-  t('Start location of the Tour.');
+  t('Start location of the Tour. Move the market on the map to select an exact lat/long position.');
   t('Text Type');
   t('This field will be deprecated soon. For the time being, please enter first audio stop number here and also as the first number in the Object Selector Numbers fields below.');
   t('Thumbail Image');
