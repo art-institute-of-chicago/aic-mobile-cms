@@ -1762,13 +1762,13 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'type' => 'text',
   );
 
-  // Exported field_base: 'field_tour_stop_audio_bumper'.
-  $field_bases['field_tour_stop_audio_bumper'] = array(
+  // Exported field_base: 'field_tour_stop_bumper'.
+  $field_bases['field_tour_stop_bumper'] = array(
     'active' => 1,
     'cardinality' => 1,
     'deleted' => 0,
     'entity_types' => array(),
-    'field_name' => 'field_tour_stop_audio_bumper',
+    'field_name' => 'field_tour_stop_bumper',
     'field_permissions' => array(
       'type' => 0,
     ),
@@ -1790,11 +1790,11 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
         ),
         'view' => array(
           'args' => array(),
-          'display_name' => 'entityreference_2',
-          'view_name' => 'tour_stop_audio_commentaries',
+          'display_name' => 'entityreference_1',
+          'view_name' => 'audio_files',
         ),
       ),
-      'target_type' => 'field_collection_item',
+      'target_type' => 'node',
     ),
     'translatable' => 0,
     'type' => 'entityreference',

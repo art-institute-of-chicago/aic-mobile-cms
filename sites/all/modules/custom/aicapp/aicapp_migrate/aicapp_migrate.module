@@ -320,7 +320,7 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array()) {
         }
       }
       if (isset($found['field_t_audio_bumper'][$k])) {
-        $item_values['field_tour_stop_audio_bumper'] = array(
+        $item_values['field_tour_stop_bumper'] = array(
           'value' => $found['field_t_audio_bumper'][$k],
         );
       }

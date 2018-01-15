@@ -98,7 +98,7 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
     ),
     array(
       'name' => 'field_tour_stops',
-      'audio_field' => 'field_tour_stop_audio_bumper',
+      'audio_field' => 'field_tour_stop_bumper',
       'translation_label' => t('Audio Bumper Translations'),
     ),
     array(
@@ -152,7 +152,7 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
     ),
     array(
       'field_name' => 'field_tour_stops',
-      'field_to_ajaxify' => 'field_tour_stop_audio_bumper',
+      'field_to_ajaxify' => 'field_tour_stop_bumper',
       'callback' => 'aicapp_object_limit_js',
     ),
   );
@@ -295,7 +295,7 @@ function _aicapp_add_translations(&$form, $field) {
       }
     }
     elseif ($field['name'] === 'field_audio_commentary'
-      || $field['audio_field'] === 'field_tour_stop_audio_bumper') {
+      || $field['audio_field'] === 'field_tour_stop_bumper') {
       if (!empty($audio_field[$field_language][0]['target_id']['#value'])) {
         $audio_raw = $audio_field[$field_language][0]['target_id']['#value'];
       }
@@ -448,7 +448,7 @@ function _aicapp_add_translations(&$form, $field) {
       // Add the table of translations to the suffix of the element.
       $audio_suffix .= theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('No translations available.')));
       if ($field['name'] === 'field_audio_commentary'
-        || $field['audio_field'] === 'field_tour_stop_audio_bumper') {
+        || $field['audio_field'] === 'field_tour_stop_bumper') {
         $audio_field[$field_language][0]['target_id']['#suffix'] = $audio_suffix;
       }
       elseif ($field['audio_field'] === 'field_tour_stop_audio_commentary') {

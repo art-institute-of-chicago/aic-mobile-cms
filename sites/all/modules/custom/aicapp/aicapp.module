@@ -754,7 +754,7 @@ function _aicapp_get_tour_stops($tour) {
       $audio_commentary_id = !empty($item->field_tour_stop_audio_commentary) ? $item->field_tour_stop_audio_commentary[LANGUAGE_NONE][0]['target_id'] : NULL;
       $audio_commentary = $audio_commentary_id ? entity_load_single('field_collection_item', $audio_commentary_id) : NULL;
       $audio_node_id = !empty($audio_commentary->field_audio_commentary_audio) ? $audio_commentary->field_audio_commentary_audio[LANGUAGE_NONE][0]['target_id']: NULL;
-      $bumper_commentary_id = !empty($item->field_tour_stop_audio_bumper) ? $item->field_tour_stop_audio_bumper[LANGUAGE_NONE][0]['target_id'] : NULL;
+      $bumper_commentary_id = !empty($item->field_tour_stop_bumper) ? $item->field_tour_stop_bumper[LANGUAGE_NONE][0]['target_id'] : NULL;
       $bumper_commentary = $bumper_commentary_id ? entity_load_single('field_collection_item', $bumper_commentary_id) : NULL;
       $bumper_node_id = is_object($bumper_commentary) ? $bumper_commentary->hostEntityId() : NULL;
       $object_node_id = !empty($item->field_tour_stop_object) ? $item->field_tour_stop_object[LANGUAGE_NONE][0]['target_id'] : NULL;
