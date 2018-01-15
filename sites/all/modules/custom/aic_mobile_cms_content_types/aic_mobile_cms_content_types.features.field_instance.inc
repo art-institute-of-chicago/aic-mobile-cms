@@ -905,8 +905,8 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   );
 
   // Exported field_instance:
-  // 'field_collection_item-field_tour_stops-field_tour_stop_audio_bumper'.
-  $field_instances['field_collection_item-field_tour_stops-field_tour_stop_audio_bumper'] = array(
+  // 'field_collection_item-field_tour_stops-field_tour_stop_bumper'.
+  $field_instances['field_collection_item-field_tour_stops-field_tour_stop_bumper'] = array(
     'bundle' => 'field_tour_stops',
     'default_value' => NULL,
     'deleted' => 0,
@@ -924,7 +924,7 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       ),
     ),
     'entity_type' => 'field_collection_item',
-    'field_name' => 'field_tour_stop_audio_bumper',
+    'field_name' => 'field_tour_stop_bumper',
     'label' => 'Audio Bumper',
     'required' => 0,
     'settings' => array(
