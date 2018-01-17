@@ -37,7 +37,7 @@ function aicapp_import_batch($form, $form_state) {
   if (file_exists($import_file_path)) {
     $form['csv_file'] = array(
       '#prefix' => '<div id="csv-wrapper">',
-      '#markup' => '<strong>Import from:</strong>' . $import_file_path,
+      '#markup' => '<h6>Import content from:</strong> ' . file_create_url($import_file_path) . '</h6>',
       '#suffix' => '</div>',
     );
     $form['migration_fields_submit'] = array(
@@ -292,7 +292,7 @@ function aicapp_import_items($items, $audio_file_path) {
     drupal_set_message(t('There was a problem: %e', array('%e' => $details)), 'error');
   }
   if ($imported) {
-    drupal_set_message(format_plural($imported, '1 item has ', '@count items have ') . t('been imported. See the !link.', array('!link' => l('new content items', 'node/admin'))));
+    drupal_set_message(format_plural($imported, '1 item has ', '@count items have ') . t('been imported. See the !link.', array('!link' => l('new content items', 'admin/content'))));
   }
 }
 
