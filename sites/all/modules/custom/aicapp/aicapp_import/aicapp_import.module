@@ -48,19 +48,11 @@ function aicapp_import_batch($form, $form_state) {
   $form['aicapp_data'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
-    '#collapsed' => !$import_file_path ? FALSE : TRUE,
+    '#collapsed' => $import_file_path === FALSE ? FALSE : TRUE,
     '#title' => t('CSV File Upload'),
     '#tree' => FALSE,
   );
   // Configure file names and directory locations.
-  $form['aicapp_data']['aicapp_import_directory'] = array(
-    '#type' => 'textfield',
-    '#size' => 255,
-    '#maxlength' => 255,
-    '#title' => t('Name of directory to save the CSV file to.'),
-    '#default_value' => variable_get('aicapp_import_directory', 'import'),
-    '#description' => t('The directory where the import file should be saved.'),
-  );
   $form['aicapp_data']['aicapp_import_files_directory'] = array(
     '#type' => 'textfield',
     '#size' => 255,
@@ -89,15 +81,17 @@ function aicapp_import_batch($form, $form_state) {
  * Admin setting validation callback.
  */
 function aicapp_import_batch_validate($form, &$form_state) {
+  $directory = variable_get('file_public_path', conf_path() . '/files');
   $values = $form_state['values'];
+  $destination = file_prepare_directory($directory);
+  if (!$destination) {
+    form_set_error('aicapp_import_filename', t('The public files directory could not be written to.'));
+    return;
+  }
   $action = $form_state['clicked_button']['#value'];
   if ($action === 'Import Content') {
     $path = variable_get('aicapp_import_file', NULL);
-    if (empty($values['aicapp_import_directory']) || !file_exists(variable_get('file_public_path', conf_path() . '/files') . '/' . $values['aicapp_import_directory'])) {
-      form_set_error('aicapp_import_directory', t('The directory was not found.'));
-      return;
-    }
-    elseif (!file_exists($path)) {
+    if (!file_exists($path)) {
       form_set_error('aicapp_import_filename', t('The CSV file was not found in the import directory.'));
       return;
     }
@@ -118,7 +112,7 @@ function aicapp_import_batch_validate($form, &$form_state) {
     }
   }
   elseif ($action === 'Upload CSV') {
-    $destination = 'public://' . $form_state['values']['aicapp_import_directory'];
+    $destination = 'public://';
     $file = file_save_upload('csv_file', array('file_validate_extensions' => array('csv')), $destination, FILE_EXISTS_REPLACE);
     if (!is_object($file)) {
       drupal_set_message('There was a problem uploading the CSV file, please try again.');
@@ -130,7 +124,6 @@ function aicapp_import_batch_validate($form, &$form_state) {
     }
   }
   // Save the values that were submitted.
-  variable_set('aicapp_import_directory', $values['aicapp_import_directory']);
   variable_set('aicapp_import_files_directory', $values['aicapp_import_files_directory']);
 }
 
