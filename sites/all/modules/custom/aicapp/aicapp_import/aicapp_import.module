@@ -28,59 +28,60 @@ function aicapp_import_menu() {
   return $items;
 }
 
-
 /**
  * Form callback.
  */
-function aicapp_import_batch() {
-  $counts = $form = array();
-  $form['aicapp_data'] = array(
-    '#type' => 'fieldset',
-    '#collapsible' => FALSE,
-    '#collapsed' => FALSE,
-    '#title' => t('Import Content'),
-    '#tree' => FALSE,
-  );
-
-  $counts[] = TRUE;
-
-  // Action button to begin a batch of imports.
-  if (empty($counts)) {
-    $form['aicapp_data']['migration_fields_complete'] = array(
-      '#markup' => '<p>' . t('All content items fields have been imported.') . '</p>',
+function aicapp_import_batch($form, $form_state) {
+  $counts = array();
+  $import_file_path = variable_get('aicapp_import_file', FALSE);
+  if (file_exists($import_file_path)) {
+    $form['csv_file'] = array(
+      '#prefix' => '<div id="csv-wrapper">',
+      '#markup' => '<strong>Import from:</strong>' . $import_file_path,
+      '#suffix' => '</div>',
     );
-  }
-  else {
-    // Configure file names and directory locations.
-    $form['aicapp_data']['aicapp_import_directory'] = array(
-      '#type' => 'textfield',
-      '#size' => 255,
-      '#maxlength' => 255,
-      '#title' => t('Name of directory.'),
-      '#default_value' => variable_get('aicapp_import_directory', 'import'),
-      '#description' => t('The directory where the import file can be found.'),
-    );
-    $form['aicapp_data']['aicapp_import_filename'] = array(
-      '#type' => 'textfield',
-      '#size' => 100,
-      '#maxlength' => 100,
-      '#title' => t('Name of file to import'),
-      '#default_value' => variable_get('aicapp_import_filename', 'aic-audio-import.csv'),
-      '#description' => t('The exact name of the file to import from.'),
-    );
-    $form['aicapp_data']['aicapp_import_files_directory'] = array(
-      '#type' => 'textfield',
-      '#size' => 255,
-      '#maxlength' => 255,
-      '#title' => t('Name of directory to import files from.'),
-      '#default_value' => variable_get('aicapp_import_files_directory', 'import'),
-      '#description' => t('The path to the directory that contains the audio (mp3) files.'),
-    );
-    $form['aicapp_data']['migration_fields_submit'] = array(
+    $form['migration_fields_submit'] = array(
       '#type' => 'submit',
       '#value' => t('Import Content'),
     );
   }
+  $form['aicapp_data'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => !$import_file_path ? FALSE : TRUE,
+    '#title' => t('CSV File Upload'),
+    '#tree' => FALSE,
+  );
+  // Configure file names and directory locations.
+  $form['aicapp_data']['aicapp_import_directory'] = array(
+    '#type' => 'textfield',
+    '#size' => 255,
+    '#maxlength' => 255,
+    '#title' => t('Name of directory to save the CSV file to.'),
+    '#default_value' => variable_get('aicapp_import_directory', 'import'),
+    '#description' => t('The directory where the import file should be saved.'),
+  );
+  $form['aicapp_data']['aicapp_import_files_directory'] = array(
+    '#type' => 'textfield',
+    '#size' => 255,
+    '#maxlength' => 255,
+    '#title' => t('Name of directory to import MP3 files from.'),
+    '#default_value' => variable_get('aicapp_import_files_directory', 'import'),
+    '#description' => t('The path to the directory that contains the audio (mp3) files.'),
+  );
+  $form['aicapp_data']['csv_container'] = array(
+    '#prefix' => '<div id="csv-wrapper">',
+    '#suffix' => '</div>',
+  );
+  $form['aicapp_data']['csv_file'] = array(
+    '#title' => t('CSV File.'),
+    '#type' => 'file',
+    '#description' => t('Choose the CSV file to import.'),
+  );
+  $form['aicapp_data']['upload'] = array(
+    '#type' => 'submit',
+    '#value' => 'Upload CSV',
+  );
   return $form;
 }
 
@@ -89,16 +90,15 @@ function aicapp_import_batch() {
  */
 function aicapp_import_batch_validate($form, &$form_state) {
   $values = $form_state['values'];
-  if ($form_state['clicked_button']['#value'] === 'Import Content') {
-    $path = variable_get('file_public_path', conf_path() . '/files') . '/';
-    $path .= $values['aicapp_import_directory'] . '/';
-    $path .= $values['aicapp_import_filename'];
+  $action = $form_state['clicked_button']['#value'];
+  if ($action === 'Import Content') {
+    $path = variable_get('aicapp_import_file', NULL);
     if (empty($values['aicapp_import_directory']) || !file_exists(variable_get('file_public_path', conf_path() . '/files') . '/' . $values['aicapp_import_directory'])) {
       form_set_error('aicapp_import_directory', t('The directory was not found.'));
       return;
     }
-    elseif (empty($values['aicapp_import_filename']) || !file_exists($path)) {
-      form_set_error('aicapp_import_filename', t('The file was not found in the directory.'));
+    elseif (!file_exists($path)) {
+      form_set_error('aicapp_import_filename', t('The CSV file was not found in the import directory.'));
       return;
     }
     // Look for audio files
@@ -114,12 +114,23 @@ function aicapp_import_batch_validate($form, &$form_state) {
       aicapp_import_items($items, $audio_file_path);
     }
     else {
-      form_set_error('aicapp_import_filename', t('The file was not readable.'));
+      form_set_error('migration_fields_submit', t('The file was not readable.'));
+    }
+  }
+  elseif ($action === 'Upload CSV') {
+    $destination = 'public://' . $form_state['values']['aicapp_import_directory'];
+    $file = file_save_upload('csv_file', array('file_validate_extensions' => array('csv')), $destination, FILE_EXISTS_REPLACE);
+    if (!is_object($file)) {
+      drupal_set_message('There was a problem uploading the CSV file, please try again.');
+    }
+    else {
+      $file->status = FILE_STATUS_PERMANENT;
+      file_save($file);
+      variable_set('aicapp_import_file', $file->uri);
     }
   }
   // Save the values that were submitted.
   variable_set('aicapp_import_directory', $values['aicapp_import_directory']);
-  variable_set('aicapp_import_filename', $values['aicapp_import_filename']);
   variable_set('aicapp_import_files_directory', $values['aicapp_import_files_directory']);
 }
 
@@ -158,9 +169,9 @@ function aicapp_import_items($items, $audio_file_path) {
     'Placeholder transcript',
     'Placeholder transcript until we get this'
   );
+  $imported = 0;
   try {
     $row = 0;
-
     // Read file for number of records.
     foreach ($items as $values) {
       if (!empty($values['Title']) && !empty($values['Track Title Eng']) && !empty($values['filename_eng.mp3'])) {
@@ -271,6 +282,7 @@ function aicapp_import_items($items, $audio_file_path) {
             }
             $collection_wrapper->save();
             $entity->save();
+            $imported++;
           }
         }
       }
@@ -285,6 +297,9 @@ function aicapp_import_items($items, $audio_file_path) {
       $details = $e->errorInfo[2];
     }
     drupal_set_message(t('There was a problem: %e', array('%e' => $details)), 'error');
+  }
+  if ($imported) {
+    drupal_set_message(format_plural($imported, '1 item has ', '@count items have ') . t('been imported. See the !link.', array('!link' => l('new content items', 'node/admin'))));
   }
 }
 
