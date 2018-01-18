@@ -905,6 +905,42 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   );
 
   // Exported field_instance:
+  // 'field_collection_item-field_tour_stops-field_tour_stop_audio_commentary'.
+  $field_instances['field_collection_item-field_tour_stops-field_tour_stop_audio_commentary'] = array(
+    'bundle' => 'field_tour_stops',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => FALSE,
+          'link' => FALSE,
+        ),
+        'type' => 'entityreference_label',
+        'weight' => 2,
+      ),
+    ),
+    'entity_type' => 'field_collection_item',
+    'field_name' => 'field_tour_stop_audio_commentary',
+    'label' => 'Audio Commentary',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'options',
+      'settings' => array(),
+      'type' => 'options_select',
+      'weight' => 1,
+    ),
+  );
+
+  // Exported field_instance:
   // 'field_collection_item-field_tour_stops-field_tour_stop_bumper'.
   $field_instances['field_collection_item-field_tour_stops-field_tour_stop_bumper'] = array(
     'bundle' => 'field_tour_stops',
@@ -941,42 +977,6 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       ),
       'type' => 'entityreference_autocomplete',
       'weight' => 2,
-    ),
-  );
-
-  // Exported field_instance:
-  // 'field_collection_item-field_tour_stops-field_tour_stop_audio_commentary'.
-  $field_instances['field_collection_item-field_tour_stops-field_tour_stop_audio_commentary'] = array(
-    'bundle' => 'field_tour_stops',
-    'default_value' => NULL,
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'module' => 'entityreference',
-        'settings' => array(
-          'bypass_access' => FALSE,
-          'link' => FALSE,
-        ),
-        'type' => 'entityreference_label',
-        'weight' => 2,
-      ),
-    ),
-    'entity_type' => 'field_collection_item',
-    'field_name' => 'field_tour_stop_audio_commentary',
-    'label' => 'Audio Commentary',
-    'required' => 0,
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'options',
-      'settings' => array(),
-      'type' => 'options_select',
-      'weight' => 1,
     ),
   );
 
@@ -3587,7 +3587,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'progress_indicator' => 'throbber',
       ),
       'type' => 'image_image',
-      'weight' => 7,
+      'weight' => 3,
     ),
   );
 
@@ -3669,7 +3669,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 3,
+      'weight' => 4,
     ),
   );
 
@@ -3715,7 +3715,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 4,
+      'weight' => 5,
     ),
   );
 
@@ -3895,7 +3895,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'nodragging' => 0,
       ),
       'type' => 'field_collection_table',
-      'weight' => 6,
+      'weight' => 7,
     ),
   );
 
@@ -3936,7 +3936,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 5,
+      'weight' => 6,
     ),
   );
 
