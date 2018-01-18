@@ -34,22 +34,11 @@ function aicapp_import_menu() {
 function aicapp_import_batch($form, $form_state) {
   $counts = array();
   $import_file_path = variable_get('aicapp_import_file', FALSE);
-  if (file_exists($import_file_path)) {
-    $form['csv_file'] = array(
-      '#prefix' => '<div id="csv-wrapper">',
-      '#markup' => '<h6>Import content from:</strong> ' . file_create_url($import_file_path) . '</h6>',
-      '#suffix' => '</div>',
-    );
-    $form['migration_fields_submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Import Content'),
-    );
-  }
   $form['aicapp_data'] = array(
     '#type' => 'fieldset',
-    '#collapsible' => TRUE,
-    '#collapsed' => $import_file_path === FALSE ? FALSE : TRUE,
-    '#title' => t('CSV File Upload'),
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t('Import Audio Content'),
     '#tree' => FALSE,
   );
   // Configure file names and directory locations.
@@ -61,10 +50,6 @@ function aicapp_import_batch($form, $form_state) {
     '#default_value' => variable_get('aicapp_import_files_directory', 'import'),
     '#description' => t('The path to the directory that contains the audio (mp3) files.'),
   );
-  $form['aicapp_data']['csv_container'] = array(
-    '#prefix' => '<div id="csv-wrapper">',
-    '#suffix' => '</div>',
-  );
   $form['aicapp_data']['csv_file'] = array(
     '#title' => t('CSV File.'),
     '#type' => 'file',
@@ -72,7 +57,7 @@ function aicapp_import_batch($form, $form_state) {
   );
   $form['aicapp_data']['upload'] = array(
     '#type' => 'submit',
-    '#value' => 'Upload CSV',
+    '#value' => 'Upload & Import',
   );
   return $form;
 }
@@ -89,39 +74,47 @@ function aicapp_import_batch_validate($form, &$form_state) {
     return;
   }
   $action = $form_state['clicked_button']['#value'];
-  if ($action === 'Import Content') {
-    $path = variable_get('aicapp_import_file', NULL);
-    if (!file_exists($path)) {
-      form_set_error('aicapp_import_filename', t('The CSV file was not found in the import directory.'));
+  if ($action === 'Upload & Import') {
+    if (!file_exists(variable_get('file_public_path', conf_path() . '/files') . '/' . $values['aicapp_import_files_directory'])) {
+      form_set_error('aicapp_import_files_directory', t('The files import directory was not readable.'));
       return;
     }
-    // Look for audio files
-    $audio_file_path = FALSE;
-    if (file_exists(variable_get('file_public_path', conf_path() . '/files') . '/' . $values['aicapp_import_files_directory'])) {
-      $audio_file_path = $values['aicapp_import_files_directory'];
-    }
-
-    // Get a file handle
-    // Check that files are available and readable.
-    if ($audio_file_path && $content = file_get_contents($path, NULL, NULL, 0, 10000)) {
-      $items = aicapp_import_parse_csv($content);
-      aicapp_import_items($items, $audio_file_path);
-    }
-    else {
-      form_set_error('migration_fields_submit', t('The file was not readable.'));
-    }
   }
-  elseif ($action === 'Upload CSV') {
-    $destination = 'public://';
-    $file = file_save_upload('csv_file', array('file_validate_extensions' => array('csv')), $destination, FILE_EXISTS_REPLACE);
-    if (!is_object($file)) {
-      drupal_set_message('There was a problem uploading the CSV file, please try again.');
-    }
-    else {
-      $file->status = FILE_STATUS_PERMANENT;
-      file_save($file);
-      variable_set('aicapp_import_file', $file->uri);
-    }
+}
+
+/**
+ * Admin setting validation callback.
+ */
+function aicapp_import_batch_submit($form, &$form_state) {
+  $directory = variable_get('file_public_path', conf_path() . '/files');
+  $values = $form_state['values'];
+  $destination = 'public://';
+  $file = file_save_upload('csv_file', array('file_validate_extensions' => array('csv')), $destination, FILE_EXISTS_REPLACE);
+  if (!is_object($file)) {
+    drupal_set_message('There was a problem uploading the CSV file, please try again.');
+    return;
+  }
+  else {
+    $file->status = FILE_STATUS_PERMANENT;
+    file_save($file);
+    variable_set('aicapp_import_file', $file->uri);
+  }
+  $path = variable_get('aicapp_import_file', NULL);
+  if (!file_exists($path)) {
+    form_set_error('aicapp_import_filename', t('The CSV file was not found.'));
+    return;
+  }
+  elseif (!file_get_contents($path, NULL, NULL, 0, 10000)) {
+    form_set_error('migration_fields_submit', t('The file was not readable.'));
+    return;
+  }
+  // Check that files are available and readable.
+  if ($content = file_get_contents($path, NULL, NULL, 0, 10000)) {
+    $items = aicapp_import_parse_csv($content);
+    aicapp_import_items($items, $values['aicapp_import_files_directory']);
+  }
+  else {
+    form_set_error('migration_fields_submit', t('The file was not readable.'));
   }
   // Save the values that were submitted.
   variable_set('aicapp_import_files_directory', $values['aicapp_import_files_directory']);
@@ -162,12 +155,30 @@ function aicapp_import_items($items, $audio_file_path) {
     'Placeholder transcript',
     'Placeholder transcript until we get this'
   );
-  $imported = 0;
+  $counts = array(
+    'audio' => array(
+      'imported' => 0,
+      'associated' => 0,
+      'ids' => array(),
+      'duplicated' => array(),
+    ),
+  );
   try {
     $row = 0;
     // Read file for number of records.
     foreach ($items as $values) {
       if (!empty($values['Title']) && !empty($values['Track Title Eng']) && !empty($values['filename_eng.mp3'])) {
+        $nid = _aicapp_import_title_exists($values['Title']);
+        $fid = _aicapp_import_filename_exists($values['filename_eng.mp3']);
+        if ($nid || $fid) {
+          $counts['audio']['duplicated'][] = array(
+            'title' => $values['Title'],
+            'found_nid' => $nid,
+            'filename' => $values['filename_eng.mp3'],
+            'found_fid' => $fid,
+          );
+          continue;
+        }
         // Create a audio node entity.
         $default_values = array(
           'type' => AICAPP_TYPE_AUDIO,
@@ -176,7 +187,6 @@ function aicapp_import_items($items, $audio_file_path) {
           'promote' => 0,
           'language' => 'en',
         );
-
         // Create the new audio node.
         $audio_node = entity_create('node', $default_values);
         // Get the translation handler.
@@ -243,6 +253,12 @@ function aicapp_import_items($items, $audio_file_path) {
         }
         $entity->save();
         $audio_id = $entity->nid->value();
+        if ($audio_id) {
+          $counts['audio']['imported']++;
+          $counts['audio']['ids'][$audio_id] = array(
+            'nid' => $audio_id,
+          );
+        }
         // Now associate this audio node with the object that matches the
         // given object id.
         $query = new EntityFieldQuery();
@@ -256,7 +272,7 @@ function aicapp_import_items($items, $audio_file_path) {
           $object_nodes = entity_load('node', $object_nids);
           if (count($object_nodes)) {
             $object_node = current($object_nodes);
-            $entity = entity_metadata_wrapper('node', $object_node);
+            $object_entity = entity_metadata_wrapper('node', $object_node);
             $collection = entity_create('field_collection_item', array('field_name' => 'field_audio_commentary'));
             $collection->setHostEntity('node', $object_node);
             $collection_wrapper = entity_metadata_wrapper('field_collection_item', $collection);
@@ -274,8 +290,9 @@ function aicapp_import_items($items, $audio_file_path) {
               $collection_wrapper->{$key}->set($values['value']);
             }
             $collection_wrapper->save();
-            $entity->save();
-            $imported++;
+            $object_entity->save();
+            $counts['audio']['object_associations']++;
+            $counts['audio']['ids'][$audio_id]['object'] = $object_entity->nid->value();
           }
         }
       }
@@ -291,8 +308,51 @@ function aicapp_import_items($items, $audio_file_path) {
     }
     drupal_set_message(t('There was a problem: %e', array('%e' => $details)), 'error');
   }
-  if ($imported) {
-    drupal_set_message(format_plural($imported, '1 item has ', '@count items have ') . t('been imported. See the !link.', array('!link' => l('new content items', 'admin/content'))));
+  if (!empty($counts['audio']['imported'])) {
+    drupal_set_message(format_plural($counts['audio']['imported'], '1 item has ', '@count items have ') . t('been imported. See the !link.', array('!link' => l('new content items', 'admin/content'))));
+  }
+  if (!empty($counts['audio']['duplicated'])) {
+    drupal_set_message(format_plural(count($counts['audio']['duplicated']), '1 duplicate item was ', '@count dupliate items were ') . t('found, and not imported.', array('!link' => l('new content items', 'admin/content'))));
+    foreach ($counts['audio']['duplicated'] as $duplicate) {
+      if (!empty($duplicate['found_nid'])) {
+        drupal_set_message(t('An audio node with the title !link already exists.', array('!link' => l($duplicate['title'], 'node/' . $duplicate['found_nid']))));
+      }
+      elseif (!empty($duplicate['found_fid'])) {
+        drupal_set_message(t('An file with the @filename already exists.', array('@filename' => $duplicate['filename'])));
+      }
+    }
+  }
+}
+
+/**
+ * Helper function to check if a audio node with the same title already exists.
+ */
+function _aicapp_import_title_exists($title) {
+  // Check if a audio node with the given title exists.
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', array(AICAPP_TYPE_AUDIO))
+    ->propertyCondition('title', $title, '=')
+    ->propertyCondition('status', 1);
+  $result = $query->execute();
+  if (!empty($result['node'])) {
+    $nids = array_keys($result['node']);
+    return current($nids);
+  }
+}
+
+/**
+ * Helper function to check if a filename already exists.
+ */
+function _aicapp_import_filename_exists($filename) {
+  // Check if a audio node with the given title exists.
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'file')
+    ->propertyCondition('filename', $filename, '=');
+  $result = $query->execute();
+  if (!empty($result['file'])) {
+    $fids = array_keys($result['file']);
+    return current($fids);
   }
 }
 
