@@ -58,6 +58,10 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
     'field_large_image',
   );
   foreach ($image_text_fields as $image_field) {
+    // Make the field readonly, since the values are filled programatically.
+    if (!empty($form[$image_field])) {
+      $form[$image_field][LANGUAGE_NONE][0]['value']['#attributes']['readonly'] = TRUE;
+    }
     $crop_type = $image_field === 'field_thumbnail_image' ? 'thumbnail' : 'large';
     // If node form has a field called field_image, which means a file has been
     // uploaded locally and will take precendence.
