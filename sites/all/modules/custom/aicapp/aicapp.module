@@ -1615,7 +1615,7 @@ function strip_drupal_from_node(&$node) {
     // Tour selector field.
     $node->selector_number = '';
     if (isset($node->field_selector_number[LANGUAGE_NONE][0]['value'])) {
-      $node->selector_number = $node->field_tour_banner[LANGUAGE_NONE][0]['value'];
+      $node->selector_number = $node->field_selector_number[LANGUAGE_NONE][0]['value'];
     }
     // Tour description field.
     $node->description = '';
