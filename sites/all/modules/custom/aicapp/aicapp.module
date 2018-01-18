@@ -351,7 +351,7 @@ function aicapp_info_for_no_image_page() {
 function aicapp_page_info_content() {
   // Get the object found at this path.
   $object = menu_get_object();
-  if (!is_object($object)) {
+  if (!is_object($object) || !node_access('update', $object)) {
     return;
   }
   // Get the path parts in an array.
@@ -392,11 +392,11 @@ function aicapp_page_info_content() {
       $types['@language'] = $langauges[$path_parts[3]];
     }
   }
-  // Start the output that best put into the block.
-  $content = '<div class="page-info">';
-  $content .= '<h5>' . t(implode(' ', $message_strings), $types) . '</h5>';
-  $content .= '</div>';
-  return $content;
+  if (!empty($path_parts[2]) && $path_parts[2] === 'edit') {
+    // Start the output that best put into the block.
+    $content = '<h5 style="border-bottom: 1px solid;background:#eee; padding:.5rem;text-align:center;">' . t(implode(' ', $message_strings), $types) . '</h5>';
+    return $content;
+  }
 }
 
 /**
