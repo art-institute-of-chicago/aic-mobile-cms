@@ -44,7 +44,7 @@ function aicapp_init() {
   define('AICAPP_DATA_API_ENDPOINT_IMAGES', variable_get('aicapp_data_endpoint_images', '/api/v1/images'));
   define('AICAPP_JSON_FILENAME', variable_get('aicapp_json_filename', 'appData'));
   define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
-
+  define('AICAPP_TOUR_VOCABULARY_NAME', variable_get('aicapp_tour_vocabular_name', 'categories'));
 }
 
 /**
@@ -1100,6 +1100,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'tours' => $tours,
     'annontations' => $map_annotations,
     'map_floors' => !empty($map_floor) ? $map_floor : array(),
+    'tour_categories' => _aicapp_get_tour_categories(),
   );
   // Writing version 2 file output.
   $v2_json_output = json_encode($v2_data);
@@ -1589,12 +1590,19 @@ function strip_drupal_from_node(&$node) {
     if (isset($node->field_tour_audio[LANGUAGE_NONE][0])) {
       $node->tour_audio = $node->field_tour_audio[LANGUAGE_NONE][0]['nid'];
     }
+    // Tour categories.
+    $node->category = '';
+    $term = NULL;
+    if (isset($node->field_tour_category[LANGUAGE_NONE][0])) {
+      $term = taxonomy_term_load($node->field_tour_category[LANGUAGE_NONE][0]['tid']);
+      $node->category = $term->name;
+    }
     // Tour translations.
     foreach ($translations as $lang_key => $details) {
       if ($lang_key === 'en') {
         continue;
       }
-      $node->translations[] = array(
+      $translation_data = array(
         'language' => $lang_key,
         'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : '',
         'description' => isset($node->field_description[$lang_key][0]['safe_value']) ? trim(strip_tags($node->field_description[$lang_key][0]['safe_value'])) : '',
@@ -1603,6 +1611,10 @@ function strip_drupal_from_node(&$node) {
         'intro_html' => isset($node->field_intro[$lang_key][0]['safe_value']) ? $node->field_intro[$lang_key][0]['safe_value'] : '',
         'tour_duration' => isset($node->field_tour_duration[$lang_key][0]['safe_value']) ? $node->field_tour_duration[$lang_key][0]['safe_value'] : '',
       );
+      if (is_object($term)) {
+        $translation_data['category'] = isset($term->name_field[$lang_key][0]['safe_value']) ? $term->name_field[$lang_key][0]['safe_value'] : '';
+      }
+      $node->translations[] = $translation_data;
     }
     // App V1 - version of tour stops.
     if (isset($node->field_stops2)) {
@@ -2613,6 +2625,31 @@ function _aicapp_check_connection($url) {
     return TRUE;
   }
   return FALSE;
+}
+
+/**
+ * Return an array of tour category terms.
+ */
+function _aicapp_get_tour_categories($vocabulary_name = AICAPP_TOUR_VOCABULARY_NAME) {
+  $categories = array();
+  $vocabulary = taxonomy_vocabulary_machine_name_load($vocabulary_name);
+  $terms = entity_load('taxonomy_term', FALSE, array('vid' => $vocabulary->vid));
+  foreach ($terms as $term) {
+    $categories[$term->tid] = array(
+      'category' => $term->name,
+      'translations' => array(),
+    );
+    foreach ($term->name_field as $lang_key => $details) {
+      if ($lang_key === 'en' || !isset($term->name_field[$lang_key][0]['safe_value'])) {
+        continue;
+      }
+      $categories[$term->tid]['translations'][] = array(
+        'language' => $lang_key,
+        'category' => $term->name_field[$lang_key][0]['safe_value'],
+      );
+    }
+  }
+  return $categories;
 }
 
 /**

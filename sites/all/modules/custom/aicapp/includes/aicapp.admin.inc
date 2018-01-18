@@ -24,6 +24,14 @@ function aicapp_admin() {
     '#maxlength' => 256,
     '#description' => t("Go to https:// developers.google.com/maps/documentation/javascript/get-api-key to get an API key"),
   );
+  $form['aicapp_tour_vocabular_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Tour category vocabulary name'),
+    '#default_value' => variable_get('aicapp_tour_vocabular_name', 'categories'),
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#description' => t('The machine name of the vocabulary used to stored tour category terms.'),
+  );
   $form['aicapp_images'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -301,7 +309,6 @@ function aicapp_admin_api_validate($form, &$form_state) {
     form_set_error('aicapp_image_server_url', t('You must provide a valid URL for the Image Server.'));
   }
 }
-
 
 /**
  * Save remote objects to nodes.
