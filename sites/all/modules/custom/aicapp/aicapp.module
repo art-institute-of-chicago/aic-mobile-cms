@@ -252,7 +252,13 @@ function aicapp_block_info() {
     'region' => 'content',
     'visibility' => 1,
   );
-
+  $blocks['page_info'] = array(
+    'info' => t('Content and Language Status'),
+    'status' => TRUE,
+    'weight' => -99,
+    'region' => 'content',
+    'visibility' => 1,
+  );
   return $blocks;
 }
 
@@ -292,6 +298,10 @@ function aicapp_block_view($delta = '') {
     case 'info_for_no-image_page':
       $block['subject'] = t('Info for no-image page');
       $block['content'] = aicapp_info_for_no_image_page();
+      break;
+    case 'page_info':
+      $block['subject'] = '';
+      $block['content'] = aicapp_page_info_content();
       break;
   }
   return $block;
@@ -333,6 +343,60 @@ function aicapp_pub_content() {
 function aicapp_info_for_no_image_page() {
   return '<p>This page is conducting a live search of each published object from the Drupal CMS in the data hub data to see if there is a full-sized image. If there is not an image in data hub or Drupal, then it is flagged.</p>
 ';
+}
+
+/**
+ * Block content callback.
+ */
+function aicapp_page_info_content() {
+  // Get the object found at this path.
+  $object = menu_get_object();
+  if (!is_object($object)) {
+    return;
+  }
+  // Get the path parts in an array.
+  $path_parts = arg();
+  // Node type info.
+  $node_type = node_type_get_type($object->type);
+  // Translation info.
+  $translations = $object->translations;
+  // Create an array of strings that will be imploded back into a single string.
+  $message_strings = array('This is @type item.');
+  // Create an array of replacement values, for use with the t().
+  $types = array(
+    '@type' => preg_match('/^[aeiou]/i', strtolower($object->type)) ? 'an ' . $node_type->name : 'a ' . $node_type->name,
+  );
+  // If this node has translation data.
+  if (!empty($translations->data)) {
+    global $language;
+    $types['@language'] = $language->name;
+    $message_strings[] = 'The current language is @language.';
+    // Get a list of enabled languages.
+    if (function_exists('locale_language_list')) {
+      $langauges = locale_language_list();
+    }
+    else {
+      $languages = language_list('enabled');
+      $languages = $languages[1];
+      $list = array();
+      foreach ($languages as $language) {
+        $list[$language->language] = ($field == 'name') ? t($language->name) : $language->$field;
+      }
+      $langauges = $list;
+    }
+    // Add replacement values of the current language based on the path.
+    if (!empty($path_parts[3]) && $path_parts[3] === 'add' && !empty($path_parts[5]) && array_key_exists($path_parts[5], $langauges) ) {
+      $types['@language'] =  $langauges[$path_parts[5]];
+    }
+    elseif (!empty($path_parts[2]) && $path_parts[2] === 'edit' && !empty($path_parts[3]) && array_key_exists($path_parts[3], $langauges) && empty($path_parts[4])) {
+      $types['@language'] = $langauges[$path_parts[3]];
+    }
+  }
+  // Start the output that best put into the block.
+  $content = '<div class="page-info">';
+  $content .= '<h5>' . t(implode(' ', $message_strings), $types) . '</h5>';
+  $content .= '</div>';
+  return $content;
 }
 
 /**
