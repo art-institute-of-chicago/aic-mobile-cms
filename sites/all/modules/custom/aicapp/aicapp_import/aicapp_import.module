@@ -312,7 +312,7 @@ function aicapp_import_items($items, $audio_file_path) {
     drupal_set_message(format_plural($counts['audio']['imported'], '1 item has ', '@count items have ') . t('been imported. See the !link.', array('!link' => l('new content items', 'admin/content'))));
   }
   if (!empty($counts['audio']['duplicated'])) {
-    drupal_set_message(format_plural(count($counts['audio']['duplicated']), '1 duplicate item was ', '@count dupliate items were ') . t('found, and not imported.', array('!link' => l('new content items', 'admin/content'))));
+    drupal_set_message(format_plural(count($counts['audio']['duplicated']), '1 duplicate item was ', '@count duplicate items were ') . t('found, and not imported.', array('!link' => l('new content items', 'admin/content'))));
     foreach ($counts['audio']['duplicated'] as $duplicate) {
       if (!empty($duplicate['found_nid'])) {
         drupal_set_message(t('An audio node with the title !link already exists.', array('!link' => l($duplicate['title'], 'node/' . $duplicate['found_nid']))));

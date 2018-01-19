@@ -333,8 +333,13 @@ function aicapp_data_content() {
  * Block content callback.
  */
 function aicapp_pub_content() {
-  $fm3 = drupal_get_form('aicapp_file_sync_form');
-  return render($fm3);
+  $output = '';
+  // Cron Test
+  $cron_form = drupal_get_form('aicapp_force_cron');
+  $output .= render($cron_form);
+  $file_sync_form = drupal_get_form('aicapp_file_sync_form');
+  $output .= render($file_sync_form);
+  return $output;
 }
 
 /**
@@ -451,19 +456,21 @@ function aicapp_file_sync_form() {
  * Page callback wth email aic-contours-notifications@artic.edu.
  */
 function aicapp_object_checks() {
-  $frm = drupal_get_form('aicapp_ObjectGalleryStatus');
-  $msg = '<p>This button will cause the system to compare all objects with the current data hub data, and update any objects that
+  // Compare objects to data hub.
+  $gallery_status_form = drupal_get_form('aicapp_ObjectGalleryStatus');
+  $gallery_status_message = '<p>This button will cause the system to compare all objects with the current data hub data, and update any objects that
   have been moved into galleries but are currently marked as "Not on display" in Drupal. It will send out an email to tell
   you which objects have recently been put into a gallery, update their gallery number field, and set "in Gallery" to checked.
   It will also set these objects to unpublished so you can review & enter lat / long values if needed.</p>
   <p style="margin-bottom:50px;">
   It will also check each object for any gallery location changes and update the object. An email will
   be sent out to notify of any changes. <em>It will take a while to do all this - please be patient!</em></p>';
-
-  $frm2 = drupal_get_form('aicapp_verify_obj_gallery');
-  $msg2 = '<p>This will check objects to make sure the data hub field "gallery_location" is a valid gallery (one listed here under Galleries).</p>';
-
-  return render($frm) . $msg . render($frm2) . $msg2;
+  $output = render($gallery_status_form) . $gallery_status_message;
+  // Verify object gallery status.
+  $verify_obj_form = drupal_get_form('aicapp_verify_obj_gallery');
+  $verify_obj_message = '<p>This will check objects to make sure the data hub field "gallery_location" is a valid gallery (one listed here under Galleries).</p>';
+  $output .= render($verify_obj_form) . $verify_obj_message;
+  return $output;
 }
 
 /**
@@ -476,6 +483,26 @@ function aicapp_ObjectGalleryStatus() {
     '#attributes' => array('class' => array('button')),
   );
   return $form;
+}
+
+/**
+ * Cron test callback.
+ */
+function aicapp_force_cron() {
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Test cron'),
+    '#description' => t('This will force all all cron function to run.'),
+    '#attributes' => array('class' => array('button')),
+  );
+  return $form;
+}
+
+/**
+ * Force cron submit.
+ */
+function aicapp_force_cron_submit() {
+  _aicapp_cron_runner(TRUE);
 }
 
 /**
@@ -503,8 +530,8 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
   $objects['#updated'] = array();
   // Load all objects, including unpublished, because we compare if objects
   // previously not in a gallery (and unpublished) are now displayed.
-  $objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
-  foreach ($objects as $object) {
+  $arwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
+  foreach ($arwork_objects as $object) {
     if (!is_object($object)) {
       continue;
     }
@@ -528,8 +555,7 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
       if (empty($id) || !isset($by_object_id[$id])) {
         continue;
       }
-      $object = $by_object_id[$id];
-      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($object, $item);
+      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($by_object_id[$id], $item);
     }
   }
   foreach ($objects['#updated'] as $key => $object) {
@@ -666,8 +692,7 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
       if (empty($id) || !isset($by_object_id[$id])) {
         continue;
       }
-      $object = $by_object_id[$id];
-      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($object, $item);
+      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($by_object_id[$id], $item);
     }
   }
   foreach ($objects['#updated'] as $object) {
@@ -1055,8 +1080,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       if (empty($id) || !isset($by_object_id[$id])) {
         continue;
       }
-      $object = $by_object_id[$id];
-      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($object, $item, $object_props_to_skip);
+      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($by_object_id[$id], $item, $object_props_to_skip);
     }
   }
 
@@ -2259,26 +2283,34 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
  * Set up nightly cron job.
  */
 function aicapp_cron() {
+  _aicapp_cron_runner();
+}
+
+function _aicapp_cron_runner($bypass_limit = FALSE) {
   // Run the form submit functions.
-  // Send in empty arrays representing the form as these are not used in the function anyway.
-  // I guess I could have set these up as regular menu items with page callbacks.
-  $fm = array();
-  $fm2 = array();
   // At 10pm - assuming Cron is running every hour.
-  if (date('G') == 22) {
+  if (date('G') == 22 || $bypass_limit) {
+    $fm = array();
+    $fm2 = array();
     aicapp_loadgalleries_form_submit($fm, $fm2);
   }
   // At 11pm - assuming Cron is running every hour.
-  if (date('G') == 23) {
+  if (date('G') == 23 || $bypass_limit) {
+    $fm = array();
+    $fm2 = array();
     aicapp_objectGalleryStatus_submit($fm, $fm2);
   }
   // At 12pm - assuming Cron is running every hour.
-  if (date('G') == 24) {
+  if (date('G') == 24 || $bypass_limit) {
+    $fm = array();
+    $fm2 = array();
     aicapp_gendata_form_submit($fm, $fm2);
   }
   // At 1am - assuming Cron is running every hour.
-  if (date('G') == 2 || !variable_get('aicapp_remote_entities_imported', 0)) {
+  if ((date('G') == 2 || $bypass_limit) && !variable_get('aicapp_remote_entities_imported', 0)) {
     module_load_include('inc', 'aicapp', 'includes/aicapp.admin');
+    $fm = array();
+    $fm2 = array();
     aicapp_load_remote_form_submit($fm, $fm2);
     variable_set('aicapp_remote_entities_imported', 1);
   }

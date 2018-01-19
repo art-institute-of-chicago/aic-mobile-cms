@@ -278,11 +278,14 @@ function aicapp_admin_validate($form, &$form_state) {
   else {
     $form_state['values']['aicapp_image_large_crop_lock'] = 'true';
   }
-  // @TODO move to submit.
+}
+
+/**
+ * Admin setting validation callback.
+ */
+function aicapp_admin_submit($form, &$form_state) {
   if ($form_state['clicked_button']['#value'] === 'Import Remote Data') {
-    $a = array();
-    $b = array();
-    aicapp_load_remote_form_submit($a, $b);
+    aicapp_load_remote_form_submit();
   }
 }
 
@@ -313,7 +316,7 @@ function aicapp_admin_api_validate($form, &$form_state) {
 /**
  * Save remote objects to nodes.
  */
-function aicapp_load_remote_form_submit($form, &$form_state) {
+function aicapp_load_remote_form_submit() {
   $now = new DateTime();
   $remote_objects = array();
   $limit = 'limit=';
@@ -443,6 +446,13 @@ function aicapp_load_remote_form_submit($form, &$form_state) {
           }
           // Exhibition dates.
           $ewrapper->field_exhibit_dates->set($to_import['dates']);
+          // $start = new DateTime($to_import['start_at']);
+          // $end = new DateTime($to_import['end_at']);
+          // // Event start and end dates
+          // $ewrapper->field_exhibition_dates->set(array(
+          //   'value' => $start->format('Y-m-d H:i:s'),
+          //   'value2' => $end->format('Y-m-d H:i:s'),
+          // ));
         }
         elseif ($type === AICAPP_TYPE_EVENT) {
           $start = new DateTime($to_import['start_at']);
@@ -502,6 +512,12 @@ function aicapp_load_remote_form_submit($form, &$form_state) {
           $ewrapper->field_exhibit_is_active->set($to_import['is_active']);
           // Exhibition dates..
           $ewrapper->field_exhibit_dates->set($to_import['dates']);
+          // $start = new DateTime($to_import['start_at']);
+          // $end = new DateTime($to_import['end_at']);
+          // $ewrapper->field_exhibition_dates->set(array(
+          //   'value' => $start->format('Y-m-d H:i:s'),
+          //   'value2' => $end->format('Y-m-d H:i:s'),
+          // ));
         }
         elseif ($type === AICAPP_TYPE_EVENT) {
           $start = new DateTime($to_import['start_at']);

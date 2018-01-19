@@ -345,7 +345,7 @@ function aic_mobile_cms_content_types_strongarm() {
     'extra_fields' => array(
       'form' => array(
         'path' => array(
-          'weight' => '6',
+          'weight' => '7',
         ),
       ),
       'display' => array(),

@@ -1,3 +1,6 @@
 name = Update Object Data
 description = This module obtains image data from the Art Institute’s instance of Solr to update object records.
+package = AIC Custom Modules
+version = VERSION
 core = 7.x
+files[] = aic_update_object.module
