@@ -16,7 +16,7 @@ function aic_update_object_cron() {
 /**
  * Helper function to update object image data.
  */
-function aic_update_object_image_data() {
+function aic_update_object_image_data($hard_limit = 50) {
   $object_ids = array();
   $by_object_id = array();
   // Load all objects, including unpublished, because we compare if objects
@@ -86,6 +86,15 @@ function aic_update_object_image_data() {
       $object->_has_changed = TRUE;
     }
     if (!empty($object->_has_changed)) {
+      // Add a hard limit here of how many updates can happen at once.
+      // This will reduce the possibility of failure due to too many requests.
+      if ($count >= $hard_limit) {
+        $message = $hard_limit . ' Object records have been updated. If running this manually, you may need to run again to process all objects.';
+        drupal_set_message($message);
+        // Clear drupal cache.
+        drupal_flush_all_caches();
+        return;
+      }
       try {
         $entity->save();
         $count++;
