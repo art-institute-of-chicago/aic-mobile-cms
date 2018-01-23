@@ -2412,10 +2412,23 @@ function aicapp_node_presave($node) {
  */
 function _aicapp_update_image_fields(&$node) {
   $image_fields = array(
-    'field_thumbnail_image',
-    'field_large_image',
+    'field_thumbnail_image' => 'field_thumbnail_crop_rect',
+    'field_large_image' => 'field_large_image_crop_rect',
   );
-  foreach ($image_fields as $field) {
+  $clear_crops = FALSE;
+  // Look at original to see if there is a newly uploaded image, and if so
+  // remove any pre-existing crop values.
+  $original = !empty($node->original) ? $node->original : $node;
+  if (!empty($node->field_image[LANGUAGE_NONE]) && !empty($original->field_image[LANGUAGE_NONE])
+    && $node->field_image[LANGUAGE_NONE][0]['fid'] !== $original->field_image[LANGUAGE_NONE][0]['fid']) {
+    $clear_crops = TRUE;
+  }
+
+  foreach ($image_fields as $field => $crop_field) {
+    // Check whether to clear crops.
+    if ($clear_crops) {
+      unset($node->$crop_field[LANGUAGE_NONE]);
+    }
     if (!isset($node->{$field})) {
       continue;
     }

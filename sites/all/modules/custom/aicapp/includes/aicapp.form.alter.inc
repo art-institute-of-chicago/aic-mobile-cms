@@ -504,10 +504,15 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
     if ($form['#node']->type === AICAPP_TYPE_OBJECT) {
       $aspectRatio = variable_get('aicapp_image_thumb_crop_aspect', '1:1');
       $resizable = (variable_get('aicapp_image_thumb_crop_lock', 'false')) ? 'true' : 'false';
+      $thumbValues['minWidth'] = variable_get('aicapp_object_image_min_width', '50');
+      $thumbValues['minHeight'] = variable_get('aicapp_object_image_min_height', '50');
+
     }
     elseif ($form['#node']->type === AICAPP_TYPE_TOUR) {
       $aspectRatio = variable_get('aicapp_image_thumb_crop_aspect_tour', '1:1');
       $resizable = (variable_get('aicapp_image_thumb_crop_lock_tour', 'false')) ? 'true' : 'false';
+      $thumbValues['minWidth'] = variable_get('aicapp_tour_image_min_width', '50');
+      $thumbValues['minHeight'] = variable_get('aicapp_tour_image_min_height', '50');
     }
     // original crops for thumbnail image.
     if ($thumbWidth > $thumbHeight) {
@@ -528,10 +533,14 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
     if ($form['#node']->type === AICAPP_TYPE_OBJECT) {
       $aspectRatio = variable_get('aicapp_image_large_crop_aspect', '1.82:1');
       $resizable = (variable_get('aicapp_image_large_crop_lock', 'true')) ? 'true' : 'false';
+      $thumbValues['minWidth'] = variable_get('aicapp_image_large_min_width', '364');
+      $thumbValues['minHeight'] = variable_get('aicapp_image_large_min_height', '200');
     }
     elseif ($form['#node']->type === AICAPP_TYPE_TOUR) {
       $aspectRatio = variable_get('aicapp_image_large_crop_aspect_tour', '1.82:1');
       $resizable = (variable_get('aicapp_image_large_crop_lock_tour', 'true')) ? 'true' : 'false';
+      $thumbValues['minWidth'] = variable_get('aicapp_tour_image_large_min_width', '364');
+      $thumbValues['minHeight'] = variable_get('aicapp_tour_image_large_min_height', '200');
     }
     // Original crops for large image.
     $split_ratio = explode(':', trim($aspectRatio));
@@ -573,8 +582,8 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
         'height' => intval($thumbHeight),
         'resizable' => $resizable,
         'aspectRatio' => !empty($aspectRatio) ? $aspectRatio : NULL,
-        'minWidth' => $imageType === 'large' ? 364 : 74,
-        'minHeight' => $imageType === 'large' ? 200 : 74,
+        'minWidth' => intval($thumbValues['minWidth']),
+        'minHeight' => intval($thumbValues['minHeight']),
         'x1' => intval($thumbValues['x1']),
         'x2' => intval($thumbValues['x2']),
         'y1' => intval($thumbValues['y1']),
