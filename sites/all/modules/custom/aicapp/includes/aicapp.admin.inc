@@ -101,7 +101,7 @@ function aicapp_admin() {
   );
   $form['aicapp_images']['aicapp_image_object']['aicapp_image_thumb_crop_lock'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Allow thumnail image aspect ratio to be resized'),
+    '#title' => t('Allow thumbnail image aspect ratio to be resized'),
     '#default_value' => (variable_get('aicapp_image_thumb_crop_lock', 1)) ? 1 : 0,
     '#description' => t('Whether or not to lock the crop dimensions to this aspect ratio.'),
   );
@@ -109,7 +109,7 @@ function aicapp_admin() {
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Thumnail Minimum Width'),
+    '#title' => t('Thumbnail Minimum Width'),
     '#default_value' => variable_get('aicapp_object_image_min_width', '50'),
     '#description' => t('The minimum width in pixels for the artwork object image.'),
   );
@@ -117,7 +117,7 @@ function aicapp_admin() {
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Thumnail Minimum Height'),
+    '#title' => t('Thumbnail Minimum Height'),
     '#default_value' => variable_get('aicapp_object_image_min_height', '50'),
     '#description' => t('The minimum height in pixels for the artwork object image.'),
   );
@@ -183,7 +183,7 @@ function aicapp_admin() {
   );
   $form['aicapp_images']['aicapp_image_tour']['aicapp_image_thumb_crop_lock_tour'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Allow thumnail image aspect ratio to be resized'),
+    '#title' => t('Allow thumbnail image aspect ratio to be resized'),
     '#default_value' => (variable_get('aicapp_image_thumb_crop_lock_tour', 1)) ? 1 : 0,
     '#description' => t('Whether or not to lock the crop dimensions to this aspect ratio.'),
   );
@@ -191,7 +191,7 @@ function aicapp_admin() {
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Thumnail Minimum Width'),
+    '#title' => t('Thumbnail Minimum Width'),
     '#default_value' => variable_get('aicapp_tour_image_min_width', '50'),
     '#description' => t('The minimum width in pixels for the tour image.'),
   );
@@ -199,7 +199,7 @@ function aicapp_admin() {
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Thumnail Minimum Width'),
+    '#title' => t('Thumbnail Minimum Width'),
     '#default_value' => variable_get('aicapp_tour_image_min_height', '50'),
     '#description' => t('The minimum height in pixels for the tour image.'),
   );
