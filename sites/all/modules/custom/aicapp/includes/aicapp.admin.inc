@@ -67,6 +67,22 @@ function aicapp_admin() {
     '#default_value' => (variable_get('aicapp_image_large_crop_lock', 0)) ? 1 : 0,
     '#description' => t('Whether or not to lock the crop dimensions to this aspect ratio.'),
   );
+  $form['aicapp_images']['aicapp_image_object']['aicapp_image_large_min_width'] = array(
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#maxlength' => 25,
+    '#title' => t('Full Image Minimum Width'),
+    '#default_value' => variable_get('aicapp_image_large_min_width', '364'),
+    '#description' => t('The minimum width in pixels for the artwork object image.'),
+  );
+  $form['aicapp_images']['aicapp_image_object']['aicapp_image_large_min_height'] = array(
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#maxlength' => 25,
+    '#title' => t('Full Image Minimum Height'),
+    '#default_value' => variable_get('aicapp_image_large_min_height', '200'),
+    '#description' => t('The minimum height in pixels for the artwork object image.'),
+  );
   $form['aicapp_images']['aicapp_image_object']['aicapp_image_thumb_crop'] = array(
     '#type' => 'textfield',
     '#size' => 25,
@@ -88,6 +104,22 @@ function aicapp_admin() {
     '#title' => t('Allow thumnail image aspect ratio to be resized'),
     '#default_value' => (variable_get('aicapp_image_thumb_crop_lock', 1)) ? 1 : 0,
     '#description' => t('Whether or not to lock the crop dimensions to this aspect ratio.'),
+  );
+  $form['aicapp_images']['aicapp_image_object']['aicapp_object_image_min_width'] = array(
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#maxlength' => 25,
+    '#title' => t('Thumnail Minimum Width'),
+    '#default_value' => variable_get('aicapp_object_image_min_width', '50'),
+    '#description' => t('The minimum width in pixels for the artwork object image.'),
+  );
+  $form['aicapp_images']['aicapp_image_object']['aicapp_object_image_min_height'] = array(
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#maxlength' => 25,
+    '#title' => t('Thumnail Minimum Height'),
+    '#default_value' => variable_get('aicapp_object_image_min_height', '50'),
+    '#description' => t('The minimum height in pixels for the artwork object image.'),
   );
   $form['aicapp_images']['aicapp_image_tour'] = array(
     '#type' => 'fieldset',
@@ -117,12 +149,28 @@ function aicapp_admin() {
     '#default_value' => (variable_get('aicapp_image_large_crop_lock_tour', 0)) ? 1 : 0,
     '#description' => t('Whether or not to lock the crop dimensions to this aspect ratio.'),
   );
+  $form['aicapp_images']['aicapp_image_tour']['aicapp_tour_image_large_min_width'] = array(
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#maxlength' => 25,
+    '#title' => t('Full Image Minimum Width'),
+    '#default_value' => variable_get('aicapp_tour_image_large_min_width', '364'),
+    '#description' => t('The minimum width in pixels for the tour image.'),
+  );
+  $form['aicapp_images']['aicapp_image_tour']['aicapp_tour_image_large_min_height'] = array(
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#maxlength' => 25,
+    '#title' => t('Full Image Minimum Height'),
+    '#default_value' => variable_get('aicapp_tour_image_large_min_height', '200'),
+    '#description' => t('The minimum height in pixels for the tour image.'),
+  );
   $form['aicapp_images']['aicapp_image_tour']['aicapp_image_thumb_crop_tour'] = array(
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
     '#title' => t('Thumbnail crop dimensions'),
-    '#default_value' => variable_get('aicapp_image_thumb_crop_tour', ' !112,112'),
+    '#default_value' => variable_get('aicapp_image_thumb_crop_tour', '!112,112'),
     '#description' => t('Dimensions of the image to use for previewing a crop.'),
   );
   $form['aicapp_images']['aicapp_image_tour']['aicapp_image_thumb_crop_aspect_tour'] = array(
@@ -138,6 +186,22 @@ function aicapp_admin() {
     '#title' => t('Allow thumnail image aspect ratio to be resized'),
     '#default_value' => (variable_get('aicapp_image_thumb_crop_lock_tour', 1)) ? 1 : 0,
     '#description' => t('Whether or not to lock the crop dimensions to this aspect ratio.'),
+  );
+  $form['aicapp_images']['aicapp_image_tour']['aicapp_tour_image_min_width'] = array(
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#maxlength' => 25,
+    '#title' => t('Thumnail Minimum Width'),
+    '#default_value' => variable_get('aicapp_tour_image_min_width', '50'),
+    '#description' => t('The minimum width in pixels for the tour image.'),
+  );
+  $form['aicapp_images']['aicapp_image_tour']['aicapp_tour_image_min_height'] = array(
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#maxlength' => 25,
+    '#title' => t('Thumnail Minimum Width'),
+    '#default_value' => variable_get('aicapp_tour_image_min_height', '50'),
+    '#description' => t('The minimum height in pixels for the tour image.'),
   );
   return system_settings_form($form);
 }
