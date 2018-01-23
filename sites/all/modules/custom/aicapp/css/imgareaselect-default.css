@@ -3,62 +3,54 @@
  */
 
 .imgareaselect-border1 {
-	background: url(border-v.gif) repeat-y left top;
+  background: url(border-v.gif) repeat-y left top;
 }
 
 .imgareaselect-border2 {
-    background: url(border-h.gif) repeat-x left top;
+  background: url(border-h.gif) repeat-x left top;
 }
 
 .imgareaselect-border3 {
-    background: url(border-v.gif) repeat-y right top;
+  background: url(border-v.gif) repeat-y right top;
 }
 
 .imgareaselect-border4 {
-    background: url(border-h.gif) repeat-x left bottom;
+  background: url(border-h.gif) repeat-x left bottom;
 }
 
 .imgareaselect-border1, .imgareaselect-border2,
 .imgareaselect-border3, .imgareaselect-border4 {
-    filter: alpha(opacity=50);
-	opacity: 0.5;
+  filter: alpha(opacity=50);
+  opacity: 0.5;
 }
 
 .imgareaselect-handle {
-    background-color: #fff;
-    border: solid 1px #000;
-    filter: alpha(opacity=50);
-    opacity: 0.5;
+  background-color: #fff;
+  border: solid 1px #000;
+  filter: alpha(opacity=50);
+  opacity: 0.5;
 }
 
 .imgareaselect-outer {
-    background-color: #000;
-    filter: alpha(opacity=50);
-    opacity: 0.5;
-}
-
-.imgareaselect-selection {  
+  background-color: #000;
+  filter: alpha(opacity=50);
+  opacity: 0.5;
 }
 
 /*AIC additions*/
-
-#field-large-image-crop-rect-add-more-wrapper thead th:nth-child(3), th:nth-child(4) {
-	display: none;
+#field-large-image-crop-add-more-wrapper thead th:nth-child(3), #field-large-image-crop-add-more-wrapper th:nth-child(4) {
+  display: none;
 }
-
-#field-large-image-crop-rect-add-more-wrapper tbody td:nth-child(3), td:nth-child(4) {
-	display: none;
+#field-large-image-crop-add-more-wrapper tbody td:nth-child(3), #field-large-image-crop-add-more-wrapper td:nth-child(4) {
+  display: none;
 }
-
-#field-thumbnail-crop-rect-add-more-wrapper thead th:nth-child(3), th:nth-child(4) {
-	display: none;
+#field-thumbnail-image-crop-add-more-wrapper thead th:nth-child(3), #field-thumbnail-image-crop-add-more-wrapper th:nth-child(4) {
+  display: none;
 }
-
-#field-thumbnail-crop-rect-add-more-wrapper tbody td:nth-child(3), td:nth-child(4) {
-	display: none;
+#field-thumbnail-image-crop-add-more-wrapper tbody td:nth-child(3), #field-thumbnail-image-crop-add-more-wrapper td:nth-child(4) {
+  display: none;
 }
-
-#field-large-image-crop-rect-add-more-wrapper input[readonly], #field-thumbnail-crop-rect-add-more-wrapper input[readonly] {
-	background-color: #e6e6e6;
-	
+#field-large-image-crop-add-more-wrapper input[readonly],
+#field-thumbnail-image-crop-add-more-wrapper input[readonly] {
+  background-color: #e6e6e6;
 }

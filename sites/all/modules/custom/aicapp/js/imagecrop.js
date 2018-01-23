@@ -8,15 +8,7 @@
   };
   Drupal.behaviors.aicapp_crop = {
     attach: function (context) {
-      var domObjects = {
-           '$form' : $('form.entityform'),
-           '$field_image' : $('.field-image', context),
-           '$field_thumb' : $('.field-thumb', context),
-           '$field_large' : $('.field-large', context),
-           '$uploaded_file' : $('#edit-field-image-und-0-remove-button')
-         },
-         iasObjects = Drupal.aicapp_crop.iasObjects || [],
-         uploadsPresent = Drupal.aicapp_crop.uploadsPresent,
+      var iasObjects = Drupal.aicapp_crop.iasObjects || [],
          aicSettings = Drupal.settings.aicapp_crop || false,
          aicImages = aicSettings.images || [],
          aicImageSmallWarning = '<p class="warning">' + Drupal.t("WARNING: THIS IMAGE IS SMALLER THAN THE RECOMMENDED MINIMUM AND WILL BE SCALED TO FIT IN THE APP.") + '</p>';
@@ -24,25 +16,7 @@
       // Update the crop selection objects if the context is a form.
       // This is usually after ajax has run after inital page load.
       if (iasObjects.length && context[0].tagName === 'FORM') {
-        // Check whether an upload exists.
-        if (domObjects.$uploaded_file.length) {
-          Drupal.aicapp_crop.uploadsPresent = 1;
-        }
-        else {
-          Drupal.aicapp_crop.uploadsPresent = 0;
-        }
-        // If a file has just been uploaded, or removed...
-        // if (Drupal.aicapp_crop.uploadsPresent === 1 && uploadsPresent === 0) {
-        //   console.log('uploaded added with ajax');
-        // }
-        // else if (Drupal.aicapp_crop.uploadsPresent === 0 && uploadsPresent === 1) {
-        //   // File removed.
-        //   console.log('uploaded removed with ajax');
-        // }
-        // else if (Drupal.aicapp_crop.uploadsPresent === uploadsPresent) {
-        //   // Either no upload found, or upload already exists.
-        // }
-        // Update each selection object.
+          // Update each selection object.
         iasObjects.forEach(function(element, index) {
           // This will update each imgAreaSelect objects.
           element.update();
@@ -53,8 +27,8 @@
         if (aicSettings && aicImages.length && context == '[object HTMLDocument]') {
           aicSettings.images.forEach(function(element, index) {
             var $cropInputs = $(element.crop_inputs_selector),
-               cropDescription = '#' + element.wrapperID + '-crop-rect-add-more-wrapper .fieldset-description',
-               cropWrapper = '#' + element.wrapperID + '-crop-rect-add-more-wrapper .fieldset-wrapper',
+               cropDescription = '#' + element.wrapperID + '-crop-add-more-wrapper .fieldset-description',
+               cropWrapper = '#' + element.wrapperID + '-crop-add-more-wrapper .fieldset-wrapper',
                imageType = element.type,
                imageHeight = element.height,
                imageWidth = element.width,
@@ -70,12 +44,12 @@
                  persistent: true,
                  handles: true,
                  onSelectEnd: function (img, selection) {
-                   $('input[name="' + element.id + '_crop_rect[und][0][field_x][und][0][value]"]').val(selection.x1);
-                   $('input[name="' + element.id + '_crop_rect[und][0][field_y][und][0][value]"]').val(selection.y1);
-                   $('input[name="' + element.id + '_crop_rect[und][0][field_x2][und][0][value]"]').val(selection.x2);
-                   $('input[name="' + element.id + '_crop_rect[und][0][field_y2][und][0][value]"]').val(selection.y2);
-                   $('input[name="' + element.id + '_crop_rect[und][0][field_width][und][0][value]"]').val(selection.width);
-                   $('input[name="' + element.id + '_crop_rect[und][0][field_height][und][0][value]"]').val(selection.height);
+                   $('input[name="' + element.id + '_crop[und][0][field_x][und][0][value]"]').val(selection.x1);
+                   $('input[name="' + element.id + '_crop[und][0][field_y][und][0][value]"]').val(selection.y1);
+                   $('input[name="' + element.id + '_crop[und][0][field_x2][und][0][value]"]').val(selection.x2);
+                   $('input[name="' + element.id + '_crop[und][0][field_y2][und][0][value]"]').val(selection.y2);
+                   $('input[name="' + element.id + '_crop[und][0][field_width][und][0][value]"]').val(selection.width);
+                   $('input[name="' + element.id + '_crop[und][0][field_height][und][0][value]"]').val(selection.height);
                  },
                  minWidth : element.minWidth,
                  minHeight : element.minHeight,

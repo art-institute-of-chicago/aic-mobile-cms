@@ -21,7 +21,7 @@ function aic_mobile_cms_content_types_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Audio',
-    'weight' => '6',
+    'weight' => '7',
     'children' => array(
       0 => 'field_audio_commentary',
     ),
@@ -49,7 +49,7 @@ function aic_mobile_cms_content_types_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Custom Object Info',
-    'weight' => '4',
+    'weight' => '5',
     'children' => array(
       0 => 'field_artist_name',
       1 => 'field_artist_origin',
@@ -81,11 +81,13 @@ function aic_mobile_cms_content_types_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Deprecated - App Version 1',
-    'weight' => '19',
+    'weight' => '17',
     'children' => array(
       0 => 'field_object_audio',
       1 => 'field_object_selector_number',
       2 => 'field_object_selector_numbers',
+      3 => 'field_thumbnail_crop_rect',
+      4 => 'field_large_image_crop_rect',
     ),
     'format_type' => 'fieldset',
     'format_settings' => array(
@@ -116,6 +118,8 @@ function aic_mobile_cms_content_types_field_group_info() {
     'children' => array(
       0 => 'field_stops2',
       1 => 'field_floor',
+      2 => 'field_thumbnail_crop_rect',
+      3 => 'field_large_image_crop_rect',
     ),
     'format_type' => 'fieldset',
     'format_settings' => array(
