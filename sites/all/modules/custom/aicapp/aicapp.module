@@ -1503,12 +1503,13 @@ function strip_drupal_from_node(&$node) {
       foreach ($items as $itemid) {
         $item = field_collection_field_get_entity($itemid);
         if ($item->field_x) {
-          $node->thumbnail_crop_rect = json_encode(array(
+          $node->thumbnail_crop_rect = array(
             'x' => !empty($item->field_x) ? $item->field_x[LANGUAGE_NONE][0]['value'] : NULL,
             'y' => !empty($item->field_y) ? $item->field_y[LANGUAGE_NONE][0]['value'] : NULL,
             'width' => !empty($item->field_width) ? $item->field_width[LANGUAGE_NONE][0]['value'] : NULL,
             'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
-          ));
+          );
+          json_encode($node->thumbnail_crop_rect);
         }
       }
     }
@@ -1521,12 +1522,13 @@ function strip_drupal_from_node(&$node) {
       foreach ($items as $itemid) {
         $item = field_collection_field_get_entity($itemid);
         if ($item->field_x) {
-          $node->thumbnail_crop_v2 = json_encode(array(
+          $node->thumbnail_crop_v2 = array(
             'x' => !empty($item->field_x) ? $item->field_x[LANGUAGE_NONE][0]['value'] : NULL,
             'y' => !empty($item->field_y) ? $item->field_y[LANGUAGE_NONE][0]['value'] : NULL,
             'width' => !empty($item->field_width) ? $item->field_width[LANGUAGE_NONE][0]['value'] : NULL,
             'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
-          ));
+          );
+          json_encode($node->thumbnail_crop_v2);
         }
       }
     }
@@ -1547,12 +1549,13 @@ function strip_drupal_from_node(&$node) {
       foreach ($items as $itemid) {
         $item = field_collection_field_get_entity($itemid);
         if ($item->field_x) {
-          $node->large_image_crop_rect = json_encode(array(
+          $node->large_image_crop_rect = array(
             'x' => !empty($item->field_x) ? $item->field_x[LANGUAGE_NONE][0]['value'] : NULL,
             'y' => !empty($item->field_y) ? $item->field_y[LANGUAGE_NONE][0]['value'] : NULL,
             'width' => !empty($item->field_width) ? $item->field_width[LANGUAGE_NONE][0]['value'] : NULL,
             'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
-          ));
+          );
+          json_encode($node->large_image_crop_rect);
         }
       }
     }
@@ -1565,12 +1568,13 @@ function strip_drupal_from_node(&$node) {
       foreach ($items as $itemid) {
         $item = field_collection_field_get_entity($itemid);
         if ($item->field_x) {
-          $node->large_image_crop_v2 = json_encode(array(
+          $node->large_image_crop_v2 = array(
             'x' => !empty($item->field_x) ? $item->field_x[LANGUAGE_NONE][0]['value'] : NULL,
             'y' => !empty($item->field_y) ? $item->field_y[LANGUAGE_NONE][0]['value'] : NULL,
             'width' => !empty($item->field_width) ? $item->field_width[LANGUAGE_NONE][0]['value'] : NULL,
             'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
-          ));
+          );
+          json_encode($node->large_image_crop_v2);
         }
       }
     }
