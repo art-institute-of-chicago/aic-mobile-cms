@@ -1595,26 +1595,84 @@ function strip_drupal_from_node(&$node) {
     }
   }
   // Fields that belong to only 1 content type.
-  // General Info node field items.
-  if (isset($node->field_museum_hours)) {
-    $node->museum_hours = '';
-    if (isset($node->field_museum_hours[$node->language][0]['safe_value'])) {
-      $node->museum_hours = $node->field_museum_hours[$node->language][0]['safe_value'];
-    }
-  }
-  // General Info translations.
-  if (!empty($node->museum_hours)) {
-    foreach ($translations as $lang_key => $details) {
-      if ($lang_key === 'en') {
-        continue;
+  if ($node->type === AICAPP_TYPE_PAGE) {
+    // General Info node field items.
+    if (isset($node->field_museum_hours)) {
+      $node->museum_hours = '';
+      if (isset($node->field_museum_hours[$node->language][0]['safe_value'])) {
+        $node->museum_hours = $node->field_museum_hours[$node->language][0]['safe_value'];
       }
-      $node->translations[] = array(
-        'language' => $lang_key,
-        'museum_hours' => isset($node->field_museum_hours[$lang_key][0]['safe_value']) ? $node->field_museum_hours[$lang_key][0]['safe_value'] : '',
-      );
+    }
+    // (field_home_member_prompt_text) home_member_prompt_text
+    if (isset($node->field_home_member_prompt_text)) {
+      $node->home_member_prompt_text = '';
+      if (isset($node->field_home_member_prompt_text[$node->language][0]['safe_value'])) {
+        $node->home_member_prompt_text = $node->field_home_member_prompt_text[$node->language][0]['safe_value'];
+      }
+    }
+    // (field_audio_title) audio_title
+    if (isset($node->field_audio_title)) {
+      $node->audio_title = '';
+      if (isset($node->field_audio_title[$node->language][0]['safe_value'])) {
+        $node->audio_title = $node->field_audio_title[$node->language][0]['safe_value'];
+      }
+    }
+    // (field_audio_subtitle) audio_subtitle
+    if (isset($node->field_audio_subtitle)) {
+      $node->audio_subtitle = '';
+      if (isset($node->field_audio_subtitle[$node->language][0]['safe_value'])) {
+        $node->audio_subtitle = $node->field_audio_subtitle[$node->language][0]['safe_value'];
+      }
+    }
+    // (field_map_title) map_title
+    if (isset($node->field_map_title)) {
+      $node->map_title = '';
+      if (isset($node->field_map_title[$node->language][0]['safe_value'])) {
+        $node->map_title = $node->field_map_title[$node->language][0]['safe_value'];
+      }
+    }
+    // (field_map_subtitle) map_subtitle
+    if (isset($node->field_map_subtitle)) {
+      $node->map_subtitle = '';
+      if (isset($node->field_map_subtitle[$node->language][0]['safe_value'])) {
+        $node->map_subtitle = $node->field_map_subtitle[$node->language][0]['safe_value'];
+      }
+    }
+    // (field_info_title) info_title
+    if (isset($node->field_info_title)) {
+      $node->info_title = '';
+      if (isset($node->field_info_title[$node->language][0]['safe_value'])) {
+        $node->info_title = $node->field_info_title[$node->language][0]['safe_value'];
+      }
+    }
+    // (field_info_subtitle) info_subtitle
+    if (isset($node->field_info_subtitle)) {
+      $node->info_subtitle = '';
+      if (isset($node->field_info_subtitle[$node->language][0]['safe_value'])) {
+        $node->info_subtitle = $node->field_info_subtitle[$node->language][0]['safe_value'];
+      }
+    }
+    // General Info translations.
+    if (!empty($node->museum_hours)) {
+      foreach ($translations as $lang_key => $details) {
+        if ($lang_key === 'en') {
+          continue;
+        }
+        $node->translations[] = array(
+          'language' => $lang_key,
+          'museum_hours' => isset($node->field_museum_hours[$lang_key][0]['safe_value']) ? $node->field_museum_hours[$lang_key][0]['safe_value'] : '',
+          'home_member_prompt_text' => isset($node->field_home_member_prompt_text[$lang_key][0]['safe_value']) ? $node->field_home_member_prompt_text[$lang_key][0]['safe_value'] : '',
+          'audio_title' => isset($node->field_audio_title[$lang_key][0]['safe_value']) ? $node->field_audio_title[$lang_key][0]['safe_value'] : '',
+          'audio_subtitle' => isset($node->field_audio_subtitle[$lang_key][0]['safe_value']) ? $node->field_audio_subtitle[$lang_key][0]['safe_value'] : '',
+          'map_title' => isset($node->field_map_title[$lang_key][0]['safe_value']) ? $node->field_map_title[$lang_key][0]['safe_value'] : '',
+          'map_subtitle' => isset($node->field_map_subtitle[$lang_key][0]['safe_value']) ? $node->field_map_subtitle[$lang_key][0]['safe_value'] : '',
+          'info_title' => isset($node->field_info_title[$lang_key][0]['safe_value']) ? $node->field_info_title[$lang_key][0]['safe_value'] : '',
+          'info_subtitle' => isset($node->field_info_subtitle[$lang_key][0]['safe_value']) ? $node->field_info_subtitle[$lang_key][0]['safe_value'] : '',
+        );
+      }
     }
   }
-  if ($node->type === AICAPP_TYPE_GALLERY) {
+  elseif ($node->type === AICAPP_TYPE_GALLERY) {
     // For v1 compliance
     $node->title_t = $node->title;
     if (isset($node->field_gallery_id[LANGUAGE_NONE][0]['safe_value'])) {
@@ -1822,6 +1880,13 @@ function strip_drupal_from_node(&$node) {
   }
   // Map Annotation field items.
   elseif ($node->type === AICAPP_TYPE_MAP_ANNOTATION) {
+    // Description (field_annotation_description)
+    if (isset($node->field_annotation_description)) {
+      $node->description = '';
+      if (isset($node->field_annotation_description[$node->language][0]['safe_value'])) {
+        $node->description = $node->field_annotation_description[$node->language][0]['safe_value'];
+      }
+    }
     // Label (field_annotation_label)
     if (isset($node->field_annotation_label)) {
       $node->label = '';
