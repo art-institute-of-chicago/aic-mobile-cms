@@ -90,6 +90,10 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
       drupal_add_js($js_to_add, $js_options);
     }
   }
+  // Make full url readonly on objects nodes.
+  if (isset($form['field_full_image']) && !empty($form['field_full_image'][LANGUAGE_NONE])) {
+    $form['field_full_image'][LANGUAGE_NONE][0]['value']['#attributes']['readonly'] = TRUE;
+  }
 
   // Tour stop and object audio commentary elements get altered here.
   $translation_fields = array(
@@ -471,7 +475,9 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
     $thumbUrl = $imageToCrop[LANGUAGE_NONE][0]['value'];
   }
   elseif (!empty($imageToCrop[LANGUAGE_NONE][0]['uri'])) {
-    $thumbUrl = $imageType === 'thumbnail' ? image_style_url('one_twelve_square', $imageToCrop[LANGUAGE_NONE][0]['uri']) : image_style_url('large_six_hundred', $imageToCrop[LANGUAGE_NONE][0]['uri']);
+    $thumbUrl = $imageType === 'thumbnail'
+          ? image_style_url('thumbnail_one_twelve', $imageToCrop[LANGUAGE_NONE][0]['uri'])
+          : image_style_url('large_six_hundred', $imageToCrop[LANGUAGE_NONE][0]['uri']);
   }
   if (empty($thumbUrl) || !filter_var($thumbUrl, FILTER_VALIDATE_URL)) {
     return;

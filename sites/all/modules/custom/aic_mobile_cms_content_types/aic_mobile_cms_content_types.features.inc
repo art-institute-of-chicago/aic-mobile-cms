@@ -33,7 +33,7 @@ function aic_mobile_cms_content_types_image_default_styles() {
   $styles['large_landscape'] = array(
     'label' => 'Large Landscape',
     'effects' => array(
-      6 => array(
+      0 => array(
         'name' => 'image_scale',
         'data' => array(
           'width' => 600,
@@ -49,7 +49,7 @@ function aic_mobile_cms_content_types_image_default_styles() {
   $styles['large_portrait'] = array(
     'label' => 'Large Portrait',
     'effects' => array(
-      5 => array(
+      0 => array(
         'name' => 'image_scale',
         'data' => array(
           'width' => '',
@@ -65,7 +65,7 @@ function aic_mobile_cms_content_types_image_default_styles() {
   $styles['large_six_hundred'] = array(
     'label' => 'Large',
     'effects' => array(
-      4 => array(
+      0 => array(
         'name' => 'canvasactions_aspect',
         'data' => array(
           'portrait' => 'large_portrait',
@@ -77,27 +77,50 @@ function aic_mobile_cms_content_types_image_default_styles() {
     ),
   );
 
-  // Exported image style: one_twelve_square.
-  $styles['one_twelve_square'] = array(
-    'label' => 'One Twelve Square',
+  // Exported image style: large_landscape.
+  $styles['thumbnail_landscape'] = array(
+    'label' => 'Thumbnail Landscape',
     'effects' => array(
-      2 => array(
+      0 => array(
+        'name' => 'image_scale',
+        'data' => array(
+          'width' => 112,
+          'height' => '',
+          'upscale' => 0,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: large_portrait.
+  $styles['thumbnail_portrait'] = array(
+    'label' => 'Thumbnail Portrait',
+    'effects' => array(
+      0 => array(
         'name' => 'image_scale',
         'data' => array(
           'width' => '',
           'height' => 112,
-          'upscale' => 1,
+          'upscale' => 0,
         ),
-        'weight' => 2,
+        'weight' => 1,
       ),
-      7 => array(
-        'name' => 'image_crop',
+    ),
+  );
+
+  // Exported image style: thumb_one_twelve.
+  $styles['thumbnail_one_twelve'] = array(
+    'label' => 'Thumbnail',
+    'effects' => array(
+      0 => array(
+        'name' => 'canvasactions_aspect',
         'data' => array(
-          'width' => 112,
-          'height' => 112,
-          'anchor' => 'center-center',
+          'portrait' => 'thumbnail_portrait',
+          'landscape' => 'thumbnail_landscape',
+          'ratio_adjustment' => 1,
         ),
-        'weight' => 2,
+        'weight' => 1,
       ),
     ),
   );

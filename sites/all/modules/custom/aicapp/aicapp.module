@@ -1647,6 +1647,13 @@ function strip_drupal_from_node(&$node) {
     if (isset($node->field_highlighted_object[LANGUAGE_NONE][0])) {
       $node->highlighted_object = $node->field_highlighted_object[LANGUAGE_NONE][0]['value'];
     }
+    // Path to full size image.
+    if (isset($node->field_full_image)) {
+      $node->full_image_full_path = '';
+      if (isset($node->field_full_image[LANGUAGE_NONE][0]['safe_value'])) {
+        $node->full_image_full_path = $node->field_full_image[LANGUAGE_NONE][0]['safe_value'];
+      }
+    }
     // App v1 property: audio.
     if (isset($node->field_object_audio[LANGUAGE_NONE][0]['nid'])) {
       foreach ($node->field_object_audio[LANGUAGE_NONE] as $audiofld) {
@@ -2485,7 +2492,7 @@ function _aicapp_update_image_fields(&$node) {
     $image_file = file_load($node->field_image[LANGUAGE_NONE][0]['fid']);
     // Choose which image style to use.
     if ($field === 'field_thumbnail_image') {
-      $url = image_style_url('one_twelve_square', $image_file->uri);
+      $url = image_style_url('thumbnail_one_twelve', $image_file->uri);
     }
     elseif ($field === 'field_large_image') {
       $url = image_style_url('large_six_hundred', $image_file->uri);
