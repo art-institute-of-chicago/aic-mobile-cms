@@ -555,7 +555,8 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
       if (empty($id) || !isset($by_object_id[$id])) {
         continue;
       }
-      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($by_object_id[$id], $item);
+      $object = $by_object_id[$id];
+      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($object, $item);
     }
   }
   foreach ($objects['#updated'] as $key => $object) {
@@ -692,7 +693,8 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
       if (empty($id) || !isset($by_object_id[$id])) {
         continue;
       }
-      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($by_object_id[$id], $item);
+      $object = $by_object_id[$id];
+      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($object, $item);
     }
   }
   foreach ($objects['#updated'] as $object) {
@@ -1080,7 +1082,8 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       if (empty($id) || !isset($by_object_id[$id])) {
         continue;
       }
-      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($by_object_id[$id], $item, $object_props_to_skip);
+      $object = $by_object_id[$id];
+      $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($object, $item, $object_props_to_skip);
     }
   }
 
