@@ -46,13 +46,6 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
     'type' => 'file',
     'data' => drupal_get_path('module', 'aicapp') . '/js/imagecrop.js',
   );
-  // Options for how javascript is added to page.
-  $js_options = array(
-    'type' => 'inline',
-    'scope' => 'footer',
-    'group' => JS_THEME,
-    'weight' => 5,
-  );
   $image_text_fields = array(
     'field_thumbnail_image',
     'field_large_image',
@@ -85,9 +78,13 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
         $js_to_add = '(function($) { $("div#field-large-image-crop-add-more-wrapper .fieldset-description").append("<p>&nbsp;</p><p class=\"warning\">Large image unavailable.</p>" );
             $("#field-large-image-crop-add-more-wrapper input").prop("readonly", "readonly");}(jQuery))';
       }
-
       // Add JS to the page.
-      drupal_add_js($js_to_add, $js_options);
+      drupal_add_js($js_to_add, array(
+        'type' => 'inline',
+        'scope' => 'footer',
+        'group' => JS_THEME,
+        'weight' => 5,
+      ));
     }
   }
   // Make full url readonly on objects nodes.
@@ -506,13 +503,13 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
   if ($imageType == 'thumbnail') {
     $field_name = 'field_thumbnail_image';
     $field_id = str_replace('_', '-', $field_name);
-    $field_crop_name = $field_name . '_image_crop';
+    $field_crop_name = $field_name . '_crop';
+    $field_crop_v1 = 'field_thumbnail_crop_rect';
     if ($form['#node']->type === AICAPP_TYPE_OBJECT) {
       $aspectRatio = variable_get('aicapp_image_thumb_crop_aspect', '1:1');
       $resizable = (variable_get('aicapp_image_thumb_crop_lock', 'false')) ? 'true' : 'false';
       $thumbValues['minWidth'] = variable_get('aicapp_object_image_min_width', '50');
       $thumbValues['minHeight'] = variable_get('aicapp_object_image_min_height', '50');
-
     }
     elseif ($form['#node']->type === AICAPP_TYPE_TOUR) {
       $aspectRatio = variable_get('aicapp_image_thumb_crop_aspect_tour', '1:1');
@@ -536,6 +533,7 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
     $field_name = 'field_large_image';
     $field_id = str_replace('_', '-', $field_name);
     $field_crop_name = $field_name . '_crop';
+    $field_crop_v1 = 'field_large_image_crop_rect';
     if ($form['#node']->type === AICAPP_TYPE_OBJECT) {
       $aspectRatio = variable_get('aicapp_image_large_crop_aspect', '1.82:1');
       $resizable = (variable_get('aicapp_image_large_crop_lock', 'true')) ? 'true' : 'false';
@@ -556,24 +554,38 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
     $thumbY1 = round(($thumbHeight / 2) - ($thumbCropHeight / 2));
     $thumbY2 = round($thumbY1 + $thumbCropHeight);
   }
+
   if (isset($imageToCrop[LANGUAGE_NONE][0])) {
-    if ($items = field_get_items('node', $form['#node'], $field_crop_name)) {
+    $items = field_get_items('node', $form['#node'], $field_crop_name);
+    // If there are no crop values set, check if the version 1 fields have values,
+    // and if so, use those as defaults for the v2 crop.
+    if (empty($items) && $v1_items = field_get_items('node', $form['#node'], $field_crop_v1)) {
+      $items = $v1_items;
+      // Copy v1 values to v2 form elements.
+      $copy_v1_to_v2 = TRUE;
+    }
+    if (count($items)) {
+      $first_item = current($items);
       // Get default crop values.
-      foreach ($items as $itemid) {
-        $item = field_collection_field_get_entity($itemid);
-      }
-      if (!empty($item->field_width) && !empty($item->field_width[LANGUAGE_NONE][0]['value'])) {
-        // if an field_width value exists, get all the values.
-        getDefaults($items, $thumbValues, $imageType);
+      $item = field_collection_field_get_entity($first_item);
+      if (!empty($item->field_width) && !empty($item->field_width[LANGUAGE_NONE][0]['value'])
+         && !empty($item->field_height) && !empty($item->field_height[LANGUAGE_NONE][0]['value'])) {
+        // If field_width and field_height values exist, get all the values.
+        getDefaults($item, $thumbValues);
       }
       else {
         // otherwise set default crop values.
-        setDefaults($form, $field_crop_name, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, $thumbValues);
+        setDefaults($thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbValues);
       }
+      // If v2 crop values are empty, and v1 are not, pre-fill v2 form elements.
+      if (!empty($copy_v1_to_v2)) {
+        _aicapp_set_default_crop_values($form, $field_crop_name, $thumbValues);
+      }
+
     }
     else {
       // set default crop values.
-      setDefaults($form, $field_crop_name, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, $thumbValues);
+      setDefaults($thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbValues);
     }
   }
   $js_settings = array(
@@ -594,10 +606,6 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
         'x2' => intval($thumbValues['x2']),
         'y1' => intval($thumbValues['y1']),
         'y2' => intval($thumbValues['y2']),
-        // 'x1' => (($thumbWidth > $thumbValues['x1']) ? intval($thumbValues['x1']) : 0) ,
-        // 'x2' => (($thumbWidth > ($thumbValues['x2'] + $thumbValues['x1'])) ? intval($thumbValues['x2']) : intval($thumbWidth - $thumbValues['x1'])),
-        // 'y1' => (($thumbHeight > $thumbValues['y1']) ? intval($thumbValues['y1']) : 0),
-        // 'y2' => (($thumbHeight > ($thumbValues['y2'] + $thumbValues['y1'])) ? intval($thumbValues['y2']) : intval($thumbHeight - $thumbValues['y1'])),
       ))
     ),
   );
@@ -619,26 +627,38 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
 /**
  * Helper function to get crop defaults.
  */
-function getDefaults($items, &$thumbValues, $imageType) {
-  foreach ($items as $itemid) {
-    $item = field_collection_field_get_entity($itemid);
-    $thumbValues['x1'] = !empty($item->field_x[LANGUAGE_NONE]) && !empty($item->field_x[LANGUAGE_NONE][0]['value']) ? $item->field_x[LANGUAGE_NONE][0]['value'] : 0;
-    $thumbValues['y1'] = !empty($item->field_y[LANGUAGE_NONE]) && !empty($item->field_y[LANGUAGE_NONE][0]['value']) ? $item->field_y[LANGUAGE_NONE][0]['value'] : 0;
-    $thumbValues['x2'] = !empty($item->field_x2[LANGUAGE_NONE]) && !empty($item->field_x2[LANGUAGE_NONE][0]['value']) ? $item->field_x2[LANGUAGE_NONE][0]['value'] : 0;
-    $thumbValues['y2'] = !empty($item->field_y2[LANGUAGE_NONE]) && !empty($item->field_y2[LANGUAGE_NONE][0]['value']) ? $item->field_y2[LANGUAGE_NONE][0]['value'] : 0;
-    $thumbValues['width'] = !empty($item->field_width[LANGUAGE_NONE]) && !empty($item->field_width[LANGUAGE_NONE][0]['value']) ? $item->field_width[LANGUAGE_NONE][0]['value'] : 0;
-    $thumbValues['height'] = !empty($item->field_height[LANGUAGE_NONE]) && !empty($item->field_height[LANGUAGE_NONE][0]['value']) ? $item->field_height[LANGUAGE_NONE][0]['value'] : 0;
-  }
+function getDefaults($item, &$thumbValues) {
+  $thumbValues['x1'] = !empty($item->field_x[LANGUAGE_NONE]) && !empty($item->field_x[LANGUAGE_NONE][0]['value']) ? $item->field_x[LANGUAGE_NONE][0]['value'] : 0;
+  $thumbValues['y1'] = !empty($item->field_y[LANGUAGE_NONE]) && !empty($item->field_y[LANGUAGE_NONE][0]['value']) ? $item->field_y[LANGUAGE_NONE][0]['value'] : 0;
+  $thumbValues['x2'] = !empty($item->field_x2[LANGUAGE_NONE]) && !empty($item->field_x2[LANGUAGE_NONE][0]['value']) ? $item->field_x2[LANGUAGE_NONE][0]['value'] : 0;
+  $thumbValues['y2'] = !empty($item->field_y2[LANGUAGE_NONE]) && !empty($item->field_y2[LANGUAGE_NONE][0]['value']) ? $item->field_y2[LANGUAGE_NONE][0]['value'] : 0;
+  $thumbValues['width'] = !empty($item->field_width[LANGUAGE_NONE]) && !empty($item->field_width[LANGUAGE_NONE][0]['value']) ? $item->field_width[LANGUAGE_NONE][0]['value'] : 0;
+  $thumbValues['height'] = !empty($item->field_height[LANGUAGE_NONE]) && !empty($item->field_height[LANGUAGE_NONE][0]['value']) ? $item->field_height[LANGUAGE_NONE][0]['value'] : 0;
 }
 
 /**
  * Helper function to set crop defaults.
  */
-function setDefaults(&$form, $formName, $imageType, $thumbX1, $thumbY1, $thumbX2, $thumbY2, $thumbWidth, $thumbHeight, &$thumbValues) {
+function setDefaults($thumbX1, $thumbY1, $thumbX2, $thumbY2, &$thumbValues) {
   $thumbValues['x1'] = $thumbX1;
   $thumbValues['y1'] = $thumbY1;
   $thumbValues['x2'] = $thumbX2;
   $thumbValues['y2'] = $thumbY2;
   $thumbValues['width'] = $thumbValues['x2'] - $thumbValues['x1'] >= 0 ? $thumbValues['x2'] - $thumbValues['x1'] : 0;
   $thumbValues['height'] = $thumbValues['y2'] - $thumbValues['y1'] >= 0 ? $thumbValues['y2'] - $thumbValues['y1'] : 0;
+}
+
+/**
+ * Helper function to set crop defaults from v1 to v2.
+ */
+function _aicapp_set_default_crop_values(&$form, $field, $values) {
+  if (empty($form[$field]) || empty($values)) {
+    return;
+  }
+  $form[$field][LANGUAGE_NONE][0]['field_x'][LANGUAGE_NONE][0]['value']['#default_value'] = $values['x1'];
+  $form[$field][LANGUAGE_NONE][0]['field_y'][LANGUAGE_NONE][0]['value']['#default_value'] = $values['y1'];
+  $form[$field][LANGUAGE_NONE][0]['field_x2'][LANGUAGE_NONE][0]['value']['#default_value'] = $values['x2'];
+  $form[$field][LANGUAGE_NONE][0]['field_y2'][LANGUAGE_NONE][0]['value']['#default_value'] = $values['y2'];
+  $form[$field][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#default_value'] = $values['width'];
+  $form[$field][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#default_value'] = $values['height'];
 }
