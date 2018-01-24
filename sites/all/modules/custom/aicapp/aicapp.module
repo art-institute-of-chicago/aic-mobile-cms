@@ -2641,6 +2641,9 @@ function aicapp_check_for_tour_problems($tour) {
   // Loop through stops to check for problems.
   foreach ($stops as $stop) {
     $node = node_load($stop['nid']);
+    if (!is_object($node)) {
+      continue;
+    }
     if (empty($node->field_location)) {
       $noLocs[] = array('nid' => $node->nid, 'title' => $node->title);
     }
