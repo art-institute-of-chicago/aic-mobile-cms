@@ -1510,13 +1510,15 @@ function strip_drupal_from_node(&$node) {
             'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
           );
           json_encode($node->thumbnail_crop_rect);
+          // Set v2 values by default to v1. They will be overwritten by
+          // v2 values below, if they exist.
+          $node->thumbnail_crop_v2 = $node->thumbnail_crop_rect;
         }
       }
     }
   }
   // Now v2 app fields for thumbnail crop rectangle.
   if (isset($node->field_thumbnail_image_crop)) {
-    $node->thumbnail_crop_v2 = array();
     if (isset($node->field_thumbnail_image_crop[LANGUAGE_NONE][0])) {
       $items = field_get_items('node', $node, 'field_thumbnail_image_crop');
       foreach ($items as $itemid) {
@@ -1556,13 +1558,15 @@ function strip_drupal_from_node(&$node) {
             'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
           );
           json_encode($node->large_image_crop_rect);
+          // Set v2 values by default to v1. They will be overwritten by
+          // v2 values below, if they exist.
+          $node->large_image_crop_v2 = $node->large_image_crop_rect;
         }
       }
     }
   }
   // Now v2 app fields for thumbnail crop rectangle.
   if (isset($node->field_large_image_crop)) {
-    $node->large_image_crop_v2 = array();
     if (isset($node->field_large_image_crop[LANGUAGE_NONE][0])) {
       $items = field_get_items('node', $node, 'field_large_image_crop');
       foreach ($items as $itemid) {
