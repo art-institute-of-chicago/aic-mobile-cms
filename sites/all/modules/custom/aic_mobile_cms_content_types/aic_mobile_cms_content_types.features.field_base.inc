@@ -95,6 +95,30 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'type' => 'list_text',
   );
 
+  // Exported field_base: 'field_annotation_description'.
+  $field_bases['field_annotation_description'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_annotation_description',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'text',
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+    ),
+    'translatable' => 1,
+    'type' => 'text_long',
+  );
+
   // Exported field_base: 'field_annotation_image'.
   $field_bases['field_annotation_image'] = array(
     'active' => 1,
@@ -383,6 +407,55 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     ),
     'translatable' => 0,
     'type' => 'list_boolean',
+  );
+
+  // Exported field_base: 'field_audio_subtitle'.
+  $field_bases['field_audio_subtitle'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_audio_subtitle',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'text',
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+    ),
+    'translatable' => 1,
+    'type' => 'text_long',
+  );
+
+  // Exported field_base: 'field_audio_title'.
+  $field_bases['field_audio_title'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_audio_title',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'text',
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'max_length' => 255,
+    ),
+    'translatable' => 1,
+    'type' => 'text',
   );
 
   // Exported field_base: 'field_audio_transcript'.
@@ -1091,6 +1164,30 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'type' => 'list_boolean',
   );
 
+  // Exported field_base: 'field_home_member_prompt_text'.
+  $field_bases['field_home_member_prompt_text'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_home_member_prompt_text',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'text',
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+    ),
+    'translatable' => 1,
+    'type' => 'text_long',
+  );
+
   // Exported field_base: 'field_image'.
   $field_bases['field_image'] = array(
     'active' => 1,
@@ -1195,6 +1292,55 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     ),
     'translatable' => 0,
     'type' => 'list_boolean',
+  );
+
+  // Exported field_base: 'field_info_subtitle'.
+  $field_bases['field_info_subtitle'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_info_subtitle',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'text',
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+    ),
+    'translatable' => 1,
+    'type' => 'text_long',
+  );
+
+  // Exported field_base: 'field_info_title'.
+  $field_bases['field_info_title'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_info_title',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'text',
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'max_length' => 255,
+    ),
+    'translatable' => 1,
+    'type' => 'text',
   );
 
   // Exported field_base: 'field_intro'.
@@ -1328,6 +1474,55 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
       'max_length' => 255,
     ),
     'translatable' => 0,
+    'type' => 'text',
+  );
+
+  // Exported field_base: 'field_map_subtitle'.
+  $field_bases['field_map_subtitle'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_map_subtitle',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'text',
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+    ),
+    'translatable' => 1,
+    'type' => 'text_long',
+  );
+
+  // Exported field_base: 'field_map_title'.
+  $field_bases['field_map_title'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_map_title',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'text',
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'max_length' => 255,
+    ),
+    'translatable' => 1,
     'type' => 'text',
   );
 
@@ -1695,7 +1890,7 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'type' => 'text',
   );
 
-  // Exported field_base: 'field_thumbnail_crop'.
+  // Exported field_base: 'field_thumbnail_image_crop'.
   $field_bases['field_thumbnail_image_crop'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -1880,44 +2075,6 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'type' => 'text',
   );
 
-  // Exported field_base: 'field_tour_stop_bumper'.
-  $field_bases['field_tour_stop_bumper'] = array(
-    'active' => 1,
-    'cardinality' => 1,
-    'deleted' => 0,
-    'entity_types' => array(),
-    'field_name' => 'field_tour_stop_bumper',
-    'field_permissions' => array(
-      'type' => 0,
-    ),
-    'indexes' => array(
-      'target_id' => array(
-        0 => 'target_id',
-      ),
-    ),
-    'locked' => 0,
-    'module' => 'entityreference',
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-      'handler' => 'views',
-      'handler_settings' => array(
-        'behaviors' => array(
-          'views-select-list' => array(
-            'status' => 0,
-          ),
-        ),
-        'view' => array(
-          'args' => array(),
-          'display_name' => 'entityreference_1',
-          'view_name' => 'audio_files',
-        ),
-      ),
-      'target_type' => 'node',
-    ),
-    'translatable' => 0,
-    'type' => 'entityreference',
-  );
-
   // Exported field_base: 'field_tour_stop_audio_commentary'.
   $field_bases['field_tour_stop_audio_commentary'] = array(
     'active' => 1,
@@ -1953,6 +2110,44 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
         ),
       ),
       'target_type' => 'field_collection_item',
+    ),
+    'translatable' => 0,
+    'type' => 'entityreference',
+  );
+
+  // Exported field_base: 'field_tour_stop_bumper'.
+  $field_bases['field_tour_stop_bumper'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_tour_stop_bumper',
+    'field_permissions' => array(
+      'type' => 0,
+    ),
+    'indexes' => array(
+      'target_id' => array(
+        0 => 'target_id',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'entityreference',
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'handler' => 'views',
+      'handler_settings' => array(
+        'behaviors' => array(
+          'views-select-list' => array(
+            'status' => 0,
+          ),
+        ),
+        'view' => array(
+          'args' => array(),
+          'display_name' => 'entityreference_1',
+          'view_name' => 'audio_files',
+        ),
+      ),
+      'target_type' => 'node',
     ),
     'translatable' => 0,
     'type' => 'entityreference',

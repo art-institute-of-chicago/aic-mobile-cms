@@ -362,7 +362,7 @@ function aic_mobile_cms_content_types_strongarm() {
     'extra_fields' => array(
       'form' => array(
         'path' => array(
-          'weight' => '8',
+          'weight' => '9',
         ),
         'language' => array(
           'weight' => '0',
@@ -405,7 +405,7 @@ function aic_mobile_cms_content_types_strongarm() {
           'weight' => '0',
         ),
         'path' => array(
-          'weight' => '14',
+          'weight' => '16',
         ),
         'language' => array(
           'weight' => '0',
@@ -425,7 +425,7 @@ function aic_mobile_cms_content_types_strongarm() {
     'extra_fields' => array(
       'form' => array(
         'path' => array(
-          'weight' => '3',
+          'weight' => '2',
         ),
         'language' => array(
           'weight' => '0',
