@@ -596,18 +596,13 @@ function aicapp_load_remote_form_submit() {
         $ewrapper->field_imported_object->set(json_encode($to_import));
 
         if ($type === AICAPP_TYPE_EXHIBITION) {
-          // Description.
-          $ewrapper->field_exhibit_description->set($to_import['description']);
-          // Is exhibition active.
-          $ewrapper->field_exhibit_is_active->set($to_import['is_active']);
           // Exhibition dates..
-          $ewrapper->field_exhibit_dates->set($to_import['dates']);
-          // $start = new DateTime($to_import['start_at']);
-          // $end = new DateTime($to_import['end_at']);
-          // $ewrapper->field_exhibition_dates->set(array(
-          //   'value' => $start->format('Y-m-d H:i:s'),
-          //   'value2' => $end->format('Y-m-d H:i:s'),
-          // ));
+          $start = new DateTime($to_import['start_at']);
+          $end = new DateTime($to_import['end_at']);
+          $ewrapper->field_exhibition_dates->set(array(
+            'value' => $start->format('Y-m-d H:i:s'),
+            'value2' => $end->format('Y-m-d H:i:s'),
+          ));
         }
         elseif ($type === AICAPP_TYPE_EVENT) {
           $start = new DateTime($to_import['start_at']);
