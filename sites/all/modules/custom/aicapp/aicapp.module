@@ -334,9 +334,6 @@ function aicapp_data_content() {
  */
 function aicapp_pub_content() {
   $output = '';
-  // Cron Test
-  $cron_form = drupal_get_form('aicapp_force_cron');
-  $output .= render($cron_form);
   $file_sync_form = drupal_get_form('aicapp_file_sync_form');
   $output .= render($file_sync_form);
   return $output;
@@ -483,26 +480,6 @@ function aicapp_ObjectGalleryStatus() {
     '#attributes' => array('class' => array('button')),
   );
   return $form;
-}
-
-/**
- * Cron test callback.
- */
-function aicapp_force_cron() {
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Test cron'),
-    '#description' => t('This will force all all cron function to run.'),
-    '#attributes' => array('class' => array('button')),
-  );
-  return $form;
-}
-
-/**
- * Force cron submit.
- */
-function aicapp_force_cron_submit() {
-  _aicapp_cron_runner(TRUE);
 }
 
 /**
@@ -717,7 +694,7 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
 
 /**
  * Helper function for aicapp_gendata_form_submit()
- * Compare 2 arrays of art objects. The first comes from current data hub & are marked as not in gallery.
+ * Compare 2 arrays of art objects. The first comes from data hub & are marked as not in gallery.
  * The 2nd is from the Drupal DB, and are marked as in gallery.
  * For any that are in both, they have recently been moved out of their gallery.
  * Shoot off email notice with a list - the admin may need to update tours.
@@ -968,9 +945,8 @@ function _update_object_galleries($recent_added, $locations) {
 }
 
 /**
- * hook_form_submit() implementation
- * take all the data in the Drupal DB, and the data from matching records in data hub, and
- * write them to JSON file.
+ * Take all the data in the Drupal DB, adding data from matching records in
+ * the data hub, and write them to JSON file.
  */
 function aicapp_gendata_form_submit($form, &$form_state) {
   global $base_path;
@@ -2402,10 +2378,6 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
  * Set up nightly cron job.
  */
 function aicapp_cron() {
-  _aicapp_cron_runner();
-}
-
-function _aicapp_cron_runner($bypass_limit = FALSE) {
   // Run the form submit functions.
   // At 10pm - assuming Cron is running every hour.
   if (date('G') == 22 || $bypass_limit) {

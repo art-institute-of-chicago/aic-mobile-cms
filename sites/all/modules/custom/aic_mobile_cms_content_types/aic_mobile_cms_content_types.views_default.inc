@@ -415,10 +415,11 @@ function aic_mobile_cms_content_types_views_default_views() {
     'multiple_to' => '',
     'show_remaining_days' => 0,
   );
-  /* Field: Content: Event ID */
+  /* Field: Content: Exhibition ID */
   $handler->display->display_options['fields']['field_imported_object_id']['id'] = 'field_imported_object_id';
   $handler->display->display_options['fields']['field_imported_object_id']['table'] = 'field_data_field_imported_object_id';
   $handler->display->display_options['fields']['field_imported_object_id']['field'] = 'field_imported_object_id';
+  $handler->display->display_options['fields']['field_imported_object_id']['label'] = 'Event ID';
   /* Field: Content: Event Description */
   $handler->display->display_options['fields']['field_event_description']['id'] = 'field_event_description';
   $handler->display->display_options['fields']['field_event_description']['table'] = 'field_data_field_event_description';
@@ -487,6 +488,60 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler = $view->new_display('page', 'Exhibitions Page', 'page_1');
   $handler->display->display_options['defaults']['title'] = FALSE;
   $handler->display->display_options['title'] = 'Exhibitions';
+  $handler->display->display_options['defaults']['style_plugin'] = FALSE;
+  $handler->display->display_options['style_plugin'] = 'table';
+  $handler->display->display_options['style_options']['columns'] = array(
+    'views_bulk_operations_1' => 'views_bulk_operations_1',
+    'promote' => 'promote',
+    'title' => 'title',
+    'field_imported_object_id' => 'field_imported_object_id',
+    'field_exhibition_dates' => 'field_exhibition_dates',
+    'edit_node' => 'edit_node',
+  );
+  $handler->display->display_options['style_options']['default'] = '-1';
+  $handler->display->display_options['style_options']['info'] = array(
+    'views_bulk_operations_1' => array(
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'promote' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 1,
+    ),
+    'title' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 1,
+    ),
+    'field_imported_object_id' => array(
+      'sortable' => 0,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'field_exhibition_dates' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'edit_node' => array(
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+  );
+  $handler->display->display_options['defaults']['style_options'] = FALSE;
+  $handler->display->display_options['defaults']['row_plugin'] = FALSE;
+  $handler->display->display_options['defaults']['row_options'] = FALSE;
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: Bulk operations: Content */
   $handler->display->display_options['fields']['views_bulk_operations_1']['id'] = 'views_bulk_operations_1';
@@ -528,27 +583,35 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['title']['field'] = 'title';
   $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
   $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
-  /* Field: Content: Dates */
-  $handler->display->display_options['fields']['field_exhibit_dates']['id'] = 'field_exhibit_dates';
-  $handler->display->display_options['fields']['field_exhibit_dates']['table'] = 'field_data_field_exhibit_dates';
-  $handler->display->display_options['fields']['field_exhibit_dates']['field'] = 'field_exhibit_dates';
-  $handler->display->display_options['fields']['field_exhibit_dates']['element_label_colon'] = FALSE;
-  /* Field: Content: Event ID */
+  /* Field: Content: Exhibition ID */
   $handler->display->display_options['fields']['field_imported_object_id']['id'] = 'field_imported_object_id';
   $handler->display->display_options['fields']['field_imported_object_id']['table'] = 'field_data_field_imported_object_id';
   $handler->display->display_options['fields']['field_imported_object_id']['field'] = 'field_imported_object_id';
-  $handler->display->display_options['fields']['field_imported_object_id']['label'] = 'Exhibition ID';
-  /* Field: Content: Description */
-  $handler->display->display_options['fields']['field_exhibit_description']['id'] = 'field_exhibit_description';
-  $handler->display->display_options['fields']['field_exhibit_description']['table'] = 'field_data_field_exhibit_description';
-  $handler->display->display_options['fields']['field_exhibit_description']['field'] = 'field_exhibit_description';
-  $handler->display->display_options['fields']['field_exhibit_description']['element_label_colon'] = FALSE;
+  /* Field: Content: Exhibition Dates */
+  $handler->display->display_options['fields']['field_exhibition_dates']['id'] = 'field_exhibition_dates';
+  $handler->display->display_options['fields']['field_exhibition_dates']['table'] = 'field_data_field_exhibition_dates';
+  $handler->display->display_options['fields']['field_exhibition_dates']['field'] = 'field_exhibition_dates';
+  $handler->display->display_options['fields']['field_exhibition_dates']['settings'] = array(
+    'format_type' => 'long',
+    'custom_date_format' => '',
+    'fromto' => 'both',
+    'multiple_number' => '',
+    'multiple_from' => '',
+    'multiple_to' => '',
+    'show_remaining_days' => 0,
+  );
   /* Field: Content: Edit link */
   $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
   $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
   $handler->display->display_options['fields']['edit_node']['field'] = 'edit_node';
   $handler->display->display_options['fields']['edit_node']['label'] = '';
   $handler->display->display_options['fields']['edit_node']['element_label_colon'] = FALSE;
+  $handler->display->display_options['defaults']['sorts'] = FALSE;
+  /* Sort criterion: Content: Post date */
+  $handler->display->display_options['sorts']['created']['id'] = 'created';
+  $handler->display->display_options['sorts']['created']['table'] = 'node';
+  $handler->display->display_options['sorts']['created']['field'] = 'created';
+  $handler->display->display_options['sorts']['created']['order'] = 'DESC';
   $handler->display->display_options['defaults']['filter_groups'] = FALSE;
   $handler->display->display_options['defaults']['filters'] = FALSE;
   /* Filter criterion: Content: Published */
@@ -638,11 +701,12 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['title']['field'] = 'title';
   $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
   $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
-  /* Field: Content: Dates */
+  /* Field: Broken/missing handler */
   $handler->display->display_options['fields']['field_exhibit_dates']['id'] = 'field_exhibit_dates';
   $handler->display->display_options['fields']['field_exhibit_dates']['table'] = 'field_data_field_exhibit_dates';
   $handler->display->display_options['fields']['field_exhibit_dates']['field'] = 'field_exhibit_dates';
-  /* Field: Content: Description */
+  $handler->display->display_options['fields']['field_exhibit_dates']['label'] = 'Dates';
+  /* Field: Broken/missing handler */
   $handler->display->display_options['fields']['field_exhibit_description']['id'] = 'field_exhibit_description';
   $handler->display->display_options['fields']['field_exhibit_description']['table'] = 'field_data_field_exhibit_description';
   $handler->display->display_options['fields']['field_exhibit_description']['field'] = 'field_exhibit_description';
@@ -713,8 +777,10 @@ function aic_mobile_cms_content_types_views_default_views() {
     t('Exhibitions Page'),
     t('Exhibitions'),
     t('Exhibition ID'),
+    t('Exhibition Dates'),
     t('Featured Events Block'),
     t('Exhibitions Block'),
+    t('Broken handler field_data_field_exhibit_description.field_exhibit_description'),
   );
   $export['events'] = $view;
 

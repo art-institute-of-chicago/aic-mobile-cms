@@ -2066,88 +2066,6 @@ Ex: ""Head of Buddha (Spanish)"""',
     ),
   );
 
-  // Exported field_instance: 'node-exhibition-field_exhibit_dates'.
-  $field_instances['node-exhibition-field_exhibit_dates'] = array(
-    'bundle' => 'exhibition',
-    'default_value' => NULL,
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'module' => 'text',
-        'settings' => array(),
-        'type' => 'text_default',
-        'weight' => 3,
-      ),
-      'teaser' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 0,
-      ),
-    ),
-    'entity_type' => 'node',
-    'field_name' => 'field_exhibit_dates',
-    'label' => 'Dates',
-    'required' => 0,
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-      'text_processing' => 0,
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'text',
-      'settings' => array(
-        'size' => 60,
-      ),
-      'type' => 'text_textfield',
-      'weight' => 2,
-    ),
-  );
-
-  // Exported field_instance: 'node-exhibition-field_exhibit_description'.
-  $field_instances['node-exhibition-field_exhibit_description'] = array(
-    'bundle' => 'exhibition',
-    'default_value' => NULL,
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'module' => 'text',
-        'settings' => array(),
-        'type' => 'text_default',
-        'weight' => 5,
-      ),
-      'teaser' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 0,
-      ),
-    ),
-    'entity_type' => 'node',
-    'field_name' => 'field_exhibit_description',
-    'label' => 'Description',
-    'required' => 0,
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-      'text_processing' => 0,
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'text',
-      'settings' => array(
-        'rows' => 5,
-      ),
-      'type' => 'text_textarea',
-      'weight' => 5,
-    ),
-  );
-
   // Exported field_instance: 'node-exhibition-field_exhibit_is_active'.
   $field_instances['node-exhibition-field_exhibit_is_active'] = array(
     'bundle' => 'exhibition',
@@ -5483,7 +5401,6 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Copyright Notice');
   t('Credit Line');
   t('Credits');
-  t('Dates');
   t('Deprecated - Tour Stops');
   t('Description');
   t('Enter artist first and last name, i.e. Irving Penn');
