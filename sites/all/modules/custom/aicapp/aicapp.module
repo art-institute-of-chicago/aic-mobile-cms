@@ -701,7 +701,7 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
  */
 function _email_art_removed($art_gone) {
   global $base_url;
-  global $site_name;
+  $site_name = variable_get('site_name');
 
   // Now collect all objects from our Drupal DB (field_in_gallery table) that are in gallery and are published
   $result = db_query("SELECT f.entity_id, f.field_in_gallery_value
@@ -759,7 +759,7 @@ function _email_art_removed($art_gone) {
     }
     $msg .= $object_list . '</ul><p>Do not reply to this email.</p>';
     $headers = "From: <" . $from . ">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
-    $subject = $site_name . ' -- Object Removal Notice';
+    $subject = $site_name . ': Object Removal Notice';
 
     if (mail($to, $subject, $msg, $headers)) {
       drupal_set_message('Email notice was sent regarding objects that have been removed:<ul>' . $object_list . '</ul>', 'status');
@@ -852,7 +852,7 @@ function _aicapp_get_tour_stops($tour) {
  */
 function _email_art_gallery($art_in_gallery, $locations, $objects) {
   global $base_url;
-  global $site_name;
+  $site_name = variable_get('site_name');
 
   // Now collect all objects from our Drupal DB (field_in_gallery table) that are NOT in gallery
   $not_displayed = array();
@@ -884,7 +884,7 @@ function _email_art_gallery($art_in_gallery, $locations, $objects) {
     $msg .= $object_list . '</ul><p>Do not reply to this email.</p>';
     $headers = "From: <" . $from . ">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
 
-    $subject = $site_name . 'Objects Now On Display Notice';
+    $subject = $site_name . ': Objects Now On Display Notice';
 
     if (mail($to, $subject, $msg, $headers)) {
       drupal_set_message('Email notice was sent regarding objects now ADDED into galleries:<ul>' . $object_list . '</ul>', 'status');
@@ -906,7 +906,7 @@ function _email_art_gallery($art_in_gallery, $locations, $objects) {
 function _email_object_gallery_change($changed) {
   if (!empty($changed)) {
     global $base_url;
-    global $site_name;
+    $site_name = variable_get('site_name');
 
     $from = 'admin@' . $base_url;
     $to = variable_get('site_mail', '');
@@ -918,7 +918,7 @@ function _email_object_gallery_change($changed) {
     }
     $msg .= $object_list . '</ul><p>Do not reply to this email.</p>';
     $headers = "From: <" . $from . ">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
-    $subject = $site_name . 'Object Changed Location Notice';
+    $subject = $site_name . ': Object Changed Location Notice';
 
     if (mail($to, $subject, $msg, $headers)) {
       drupal_set_message('Email notice was sent regarding objects that CHANGED galleries:<ul>' . $object_list . '</ul>', 'status');
@@ -997,7 +997,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   if (!empty($results)) {
     // @TODO a better way would be to only request the fields we want.
     $gallery_to_skip = array(
-      'id', 'lake_guid', 'category_ids','last_updated_fedora', 'latlon',
+      'id', 'lake_guid', 'category_ids', 'last_updated_fedora', 'latlon',
       'last_updated_source', 'last_updated', 'last_updated_citi',
     );
     foreach ($results as $item) {
@@ -2446,13 +2446,11 @@ function _aicapp_remote_object_properties(&$object, $item, $options = array()) {
     }
     elseif ($key === 'id') {
       $key = 'object_id';
+      // Also perserve original
+      $object->id = $val;
     }
     elseif ($key === 'is_on_view') {
       $key = 'in_gallery';
-    }
-    elseif ($key === 'lake_guid') {
-      $key = 'id';
-      unset($object->lake_guid);
     }
     if (!in_array($key, $object_props_to_skip)) {
       $object->{$key} = $val;
