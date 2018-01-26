@@ -32,6 +32,48 @@ function aicapp_admin() {
     '#maxlength' => 256,
     '#description' => t('The machine name of the vocabulary used to stored tour category terms.'),
   );
+  $form['aicapp_ops'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Operations'),
+    '#tree' => FALSE,
+  );
+  $form['aicapp_ops']['ops_galleries_sync'] = array(
+    '#type' => 'submit',
+    '#value' => t('Refresh Gallery List'),
+    '#prefix' => '<div>',
+    '#suffix' => t('Click this button to sync the list of galleries.') . '</div>',
+    '#submit' => array('aicapp_loadgalleries_form_submit'),
+  );
+  $form['aicapp_ops']['ops_json_generate'] = array(
+    '#type' => 'submit',
+    '#value' => t('Generate JSON (Submit for Publishing)'),
+    '#prefix' => '<div>',
+    '#suffix' => t('Click this button to generate and write JSON file.') . '</div>',
+    '#submit' => array('aicapp_gendata_form_submit'),
+  );
+  $form['aicapp_ops']['ops_publish_json'] = array(
+    '#type' => 'submit',
+    '#value' => t('Publish JSON'),
+    '#prefix' => '<div>',
+    '#suffix' => t('Click this button to create a text file that triggers a cron job to sync JSON files with external system..') . '</div>',
+    '#submit' => array('aicapp_file_sync_form_submit'),
+  );
+  $form['aicapp_ops']['ops_object_gallery_status'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send Gallery Status Emails'),
+    '#prefix' => '<div>',
+    '#suffix' => t('Click this button to send email notifications about objects that are no longer on display or have moved locations.') . '</div>',
+    '#submit' => array('aicapp_objectGalleryStatus_submit'),
+  );
+  $form['aicapp_ops']['aicapp_data_aggregator']['import_submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Import Events & Exhitions'),
+    '#prefix' => '<div>',
+    '#suffix' => t('Click this button to load remote events and exhitions.') . '</div>',
+    '#submit' => array('aicapp_load_remote_form_submit'),
+  );
   $form['aicapp_images'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -282,11 +324,6 @@ function aicapp_admin_api() {
     '#default_value' => variable_get('aicapp_data_endpoint_images', '/api/v2/images'),
     '#description' => t('Query for a image via this endpoint.'),
   );
-  $form['aicapp_data_aggregator']['import_submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Import Remote Data'),
-    '#suffix' => t('Click this button to load remote events and exhitions.'),
-  );
   $form['aicapp_deprecated'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -414,10 +451,10 @@ function aicapp_load_remote_form_submit() {
       if (!empty($json['data'])) {
         foreach ($json['data'] as $remote_record) {
           if ($type === AICAPP_TYPE_EXHIBITION) {
-            // Skip any that are not active
-            if (!$remote_record['is_active']) {
-              continue;
-            }
+            // Skip any that are closed?
+            // if ($remote_record['status'] === 'Closed') {
+            //   continue;
+            // }
           }
           else if ($type === AICAPP_TYPE_EVENT) {
             // Skip any that have end dates in the past.
@@ -440,10 +477,10 @@ function aicapp_load_remote_form_submit() {
             if (isset($decoded_loop['data'])) {
               foreach ($decoded_loop['data'] as $remote_record) {
                 if ($type === AICAPP_TYPE_EXHIBITION) {
-                  // Skip any that are not active
-                  if (!$remote_record['is_active']) {
-                    continue;
-                  }
+                  // Skip any that are closed?
+                  // if ($remote_record['status'] === 'Closed') {
+                  //   continue;
+                  // }
                 }
                 else if ($type === AICAPP_TYPE_EVENT) {
                   // Skip any that have end dates in the past.
@@ -496,28 +533,17 @@ function aicapp_load_remote_form_submit() {
         $ewrapper->field_imported_object_id->set($to_import['id']);
         // Object JSON
         $ewrapper->field_imported_object->set(json_encode($to_import));
-
+        // Exhibition only fields.
         if ($type === AICAPP_TYPE_EXHIBITION) {
-          // Description
-          $ewrapper->field_exhibit_description->set($to_import['description']);
-          // Is exhibition active
-          $current_state = $ewrapper->field_exhibit_is_active->value();
-          $ewrapper->field_exhibit_is_active->set($to_import['is_active']);
-          if ($current_state && !$to_import['is_active']) {
-            // Unpubish and demote this node.
-            $ewrapper->status->set(0);
-            $ewrapper->promote->set(0);
-          }
           // Exhibition dates.
-          $ewrapper->field_exhibit_dates->set($to_import['dates']);
-          // $start = new DateTime($to_import['start_at']);
-          // $end = new DateTime($to_import['end_at']);
-          // // Event start and end dates
-          // $ewrapper->field_exhibition_dates->set(array(
-          //   'value' => $start->format('Y-m-d H:i:s'),
-          //   'value2' => $end->format('Y-m-d H:i:s'),
-          // ));
+          $start = new DateTime($to_import['aic_start_at']);
+          $end = new DateTime($to_import['aic_end_at']);
+          $ewrapper->field_exhibition_dates->set(array(
+            'value' => $start->format('Y-m-d H:i:s'),
+            'value2' => $end->format('Y-m-d H:i:s'),
+          ));
         }
+        // Event only fields.
         elseif ($type === AICAPP_TYPE_EVENT) {
           $start = new DateTime($to_import['start_at']);
           $end = new DateTime($to_import['end_at']);
