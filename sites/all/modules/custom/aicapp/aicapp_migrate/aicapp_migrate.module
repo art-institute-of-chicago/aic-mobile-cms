@@ -152,12 +152,6 @@ function aicapp_migrate_admin_migrate() {
  * Admin setting validation callback.
  */
 function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
-  if ($form_state['clicked_button']['#value'] === 'Repeat Migration') {
-    variable_set('aicapp_migrate_v1_v2', FALSE);
-    variable_set('aicapp_migrate_v1_v2_language', FALSE);
-    variable_set('aicapp_migrate_v1_v2_fields', FALSE);
-    return;
-  }
   if ($form_state['clicked_button']['#value'] === 'Update Content Language') {
     global $language;
     // What node type(s) are to be updated.
@@ -170,8 +164,30 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
     $result = $query->execute();
     if (empty($result['node']) || empty($types)) {
       drupal_set_message('There were no items to migrate');
+      $form_state['values']['#results'] = array(
+        'node' => array()
+      );
       return;
     }
+    // Add results here for use in submit callback.
+    $form_state['values']['#results'] = $result;
+  }
+}
+
+/**
+ * Admin setting validation callback.
+ */
+function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
+  if ($form_state['clicked_button']['#value'] === 'Repeat Migration') {
+    variable_set('aicapp_migrate_v1_v2', FALSE);
+    variable_set('aicapp_migrate_v1_v2_language', FALSE);
+    variable_set('aicapp_migrate_v1_v2_fields', FALSE);
+    return;
+  }
+  if ($form_state['clicked_button']['#value'] === 'Update Content Language') {
+    global $language;
+    $results = $form_state['values']['#results'];
+
     foreach ($types as $type) {
       if (empty($type)) {
         continue;
@@ -228,9 +244,8 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
         $query->addTag('no_tour_stop');
       }
       $result = $query->execute();
-      $counts[$type] = !empty($result['node']) ? count($result['node']) : 0;
-      if ($counts[$type]) {
-        $i = 0;
+      if (!empty($result['node'])) {
+        $counts[$type] = $i = 0;
         $to_add = array();
         if ($batch_size !== 0 && is_numeric($batch_size)) {
           // Limit to the $batch_size amount.
@@ -244,7 +259,26 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
           $callback = 'aicapp_migrate_migrate_type_' . $type;
           call_user_func_array($callback, array($nid, &$counts, $i, &$to_add));
         }
-        $type_message = array('@type' => $type, '@size' => $batch_size, '@remain' => max($counts[$type] - $batch_size, 0));
+        // Run the original query again to get an accurate count.
+        $query = new EntityFieldQuery();
+        $query
+          ->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', $type, '=');
+        if ($type === AICAPP_TYPE_OBJECT) {
+          // Load all objects that have 0 audio commentary items.
+          $query->addTag('no_commentary_items');
+        }
+        elseif ($type === AICAPP_TYPE_TOUR) {
+          // Load all tours.
+          $query->addTag('no_tour_stop');
+        }
+        $result = $query->execute();
+        $remaining = !empty($result['node']) ? count($result['node']) : 0;
+        $type_message = array(
+          '@type' => $type,
+          '@size' => $counts[$type],
+          '@remain' => $remaining,
+        );
         drupal_set_message(t('@size @type items have been migrated to use the new field format. There are @remain @type items remaining to migrate.', $type_message));
       }
     }
@@ -337,6 +371,7 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array()) {
   }
   if ($changed === TRUE) {
     $entity_wrapper->save();
+    $counts[AICAPP_TYPE_TOUR]++;
   }
 }
 
@@ -456,5 +491,6 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
   }
   if ($changed === TRUE) {
     $entity_wrapper->save();
+    $counts[AICAPP_TYPE_OBJECT]++;
   }
 }

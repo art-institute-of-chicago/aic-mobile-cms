@@ -356,6 +356,90 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   );
 
   // Exported field_instance:
+  // 'field_collection_item-field_large_image_crop-field_image_height'.
+  $field_instances['field_collection_item-field_large_image_crop-field_image_height'] = array(
+    'bundle' => 'field_large_image_crop',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'number',
+        'settings' => array(
+          'decimal_separator' => '.',
+          'prefix_suffix' => TRUE,
+          'scale' => 0,
+          'thousand_separator' => '',
+        ),
+        'type' => 'number_integer',
+        'weight' => 7,
+      ),
+    ),
+    'entity_type' => 'field_collection_item',
+    'field_name' => 'field_image_height',
+    'label' => 'image height',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'max' => '',
+      'min' => '',
+      'prefix' => '',
+      'suffix' => '',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'number',
+      'settings' => array(),
+      'type' => 'number',
+      'weight' => 8,
+    ),
+  );
+
+  // Exported field_instance:
+  // 'field_collection_item-field_large_image_crop-field_image_width'.
+  $field_instances['field_collection_item-field_large_image_crop-field_image_width'] = array(
+    'bundle' => 'field_large_image_crop',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'number',
+        'settings' => array(
+          'decimal_separator' => '.',
+          'prefix_suffix' => TRUE,
+          'scale' => 0,
+          'thousand_separator' => '',
+        ),
+        'type' => 'number_integer',
+        'weight' => 6,
+      ),
+    ),
+    'entity_type' => 'field_collection_item',
+    'field_name' => 'field_image_width',
+    'label' => 'image width',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'max' => '',
+      'min' => '',
+      'prefix' => '',
+      'suffix' => '',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'number',
+      'settings' => array(),
+      'type' => 'number',
+      'weight' => 7,
+    ),
+  );
+
+  // Exported field_instance:
   // 'field_collection_item-field_large_image_crop-field_width'.
   $field_instances['field_collection_item-field_large_image_crop-field_width'] = array(
     'bundle' => 'field_large_image_crop',
@@ -1183,6 +1267,90 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
       'settings' => array(),
       'type' => 'number',
       'weight' => 12,
+    ),
+  );
+
+  // Exported field_instance:
+  // 'field_collection_item-field_thumbnail_image_crop-field_image_height'.
+  $field_instances['field_collection_item-field_thumbnail_image_crop-field_image_height'] = array(
+    'bundle' => 'field_thumbnail_image_crop',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'number',
+        'settings' => array(
+          'decimal_separator' => '.',
+          'prefix_suffix' => TRUE,
+          'scale' => 0,
+          'thousand_separator' => '',
+        ),
+        'type' => 'number_integer',
+        'weight' => 7,
+      ),
+    ),
+    'entity_type' => 'field_collection_item',
+    'field_name' => 'field_image_height',
+    'label' => 'image height',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'max' => '',
+      'min' => '',
+      'prefix' => '',
+      'suffix' => '',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'number',
+      'settings' => array(),
+      'type' => 'number',
+      'weight' => 16,
+    ),
+  );
+
+  // Exported field_instance:
+  // 'field_collection_item-field_thumbnail_image_crop-field_image_width'.
+  $field_instances['field_collection_item-field_thumbnail_image_crop-field_image_width'] = array(
+    'bundle' => 'field_thumbnail_image_crop',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'number',
+        'settings' => array(
+          'decimal_separator' => '.',
+          'prefix_suffix' => TRUE,
+          'scale' => 0,
+          'thousand_separator' => '',
+        ),
+        'type' => 'number_integer',
+        'weight' => 6,
+      ),
+    ),
+    'entity_type' => 'field_collection_item',
+    'field_name' => 'field_image_width',
+    'label' => 'image width',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'max' => '',
+      'min' => '',
+      'prefix' => '',
+      'suffix' => '',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'number',
+      'settings' => array(),
+      'type' => 'number',
+      'weight' => 14,
     ),
   );
 
@@ -5469,6 +5637,8 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Upload an image here if there is not a web image for the object coming in via SOLR.  ');
   t('Used in the app, to show the track name in the audio player. Ex: "Caba de Buddha"');
   t('height');
+  t('image height');
+  t('image width');
   t('latitude, longitude');
   t('width');
   t('x');
