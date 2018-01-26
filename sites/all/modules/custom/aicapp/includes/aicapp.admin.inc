@@ -48,16 +48,16 @@ function aicapp_admin() {
   );
   $form['aicapp_ops']['ops_json_generate'] = array(
     '#type' => 'submit',
-    '#value' => t('Generate JSON (Submit for Publishing)'),
+    '#value' => t('Generate JSON'),
     '#prefix' => '<div>',
-    '#suffix' => t('Click this button to generate and write JSON file.') . '</div>',
+    '#suffix' => t('Click this button to generate and create the JSON file.') . '</div>',
     '#submit' => array('aicapp_gendata_form_submit'),
   );
   $form['aicapp_ops']['ops_publish_json'] = array(
     '#type' => 'submit',
     '#value' => t('Publish JSON'),
     '#prefix' => '<div>',
-    '#suffix' => t('Click this button to create a text file that triggers a cron job to sync JSON files with external system..') . '</div>',
+    '#suffix' => t('Click this button to create a text file that triggers a cron job to sync JSON files with the front-end server.') . '</div>',
     '#submit' => array('aicapp_file_sync_form_submit'),
   );
   $form['aicapp_ops']['ops_object_gallery_status'] = array(
@@ -71,7 +71,7 @@ function aicapp_admin() {
     '#type' => 'submit',
     '#value' => t('Import Events & Exhitions'),
     '#prefix' => '<div>',
-    '#suffix' => t('Click this button to load remote events and exhitions.') . '</div>',
+    '#suffix' => t('Click this button to load events and exhitions from the data hub.') . '</div>',
     '#submit' => array('aicapp_load_remote_form_submit'),
   );
   $form['aicapp_images'] = array(

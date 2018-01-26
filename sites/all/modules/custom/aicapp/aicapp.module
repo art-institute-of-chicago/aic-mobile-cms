@@ -546,14 +546,14 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
     else {
       // Keep it simple for array comparison later.
       $art_in_gallery[] = $object->nid;
-      if (!empty($object->gallery_location)) {
-        $locations[$object->nid] = $object->gallery_location;
+      if (!empty($object->gallery_title)) {
+        $locations[$object->nid] = $object->gallery_title;
       }
     }
 
     // Make sure any objects that have changed galleries get updated.
-    if (isset($object->gallery_location)) {
-      $loc = $object->gallery_location;
+    if (isset($object->gallery_title)) {
+      $loc = $object->gallery_title;
       if (empty($object->in_gallery)) {
         $in_gallery = 0;
       }
@@ -600,7 +600,7 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
       $changed[] = array(
         'object_id' => $object->id,
         'title' => $object->title,
-        'location' => $object->gallery_location,
+        'location' => $object->gallery_title,
         'old_location' => $oldloc,
       );
     }
@@ -676,11 +676,11 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
   }
   foreach ($objects['#updated'] as $object) {
     $match = FALSE;
-    if (isset($object->gallery_location)) {
-      $match = array_search($object->gallery_location, $gals);
+    if (isset($object->gallery_title)) {
+      $match = array_search($object->gallery_title, $gals);
     }
-    if (($match === FALSE) && isset($object->gallery_location) && $object->gallery_location != 'Currently not on display') {
-      $bad_obj_galleries .= '<li>Object ID: ' . $object->object_id . ' -- ' . $object->gallery_location . '</li>';
+    if (($match === FALSE) && isset($object->gallery_title) && $object->gallery_title != 'Currently not on display') {
+      $bad_obj_galleries .= '<li>Object ID: ' . $object->object_id . ' -- ' . $object->gallery_title . '</li>';
     }
   }
   // now notify
@@ -878,10 +878,12 @@ function _email_art_gallery($art_in_gallery, $locations, $objects) {
     $recent_full_objects = array();
     foreach ($recent_added as $nid) {
       $recent_full_objects[$nid] = $objects[$nid];
-      $object_list .= '<li>object_id - ' . $objects[$nid]->id . ' - ' . $objects[$nid]->title . ' - ' . $objects[$nid]->gallery_location . '</li>';
+      $object_list .= '<li>object_id - ' . $objects[$nid]->id . ' - ';
+      $object_list .= $objects[$nid]->title . ' - ' . $objects[$nid]->gallery_title . '</li>';
     }
     $msg .= $object_list . '</ul><p>Do not reply to this email.</p>';
     $headers = "From: <" . $from . ">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
+
     $subject = $site_name . 'Objects Now On Display Notice';
 
     if (mail($to, $subject, $msg, $headers)) {
@@ -1283,7 +1285,7 @@ function _aicapp_update_local_artwork_data(&$object, $entity = NULL) {
   // If there is no object id, then we have a custom object.
   // Reference values entered for object data.
   $object->in_gallery = $entity->field_in_gallery->value();
-  $object->gallery_location = $entity->field_gallery_location->value();
+  $object->gallery_title = $entity->field_gallery_location->value();
   $object->credit_line = $entity->field_credit_line->value();
   $object->copyright_notice = $entity->field_copyright_notice->value();
   if ($entity->field_artist_origin->value()) {
@@ -1661,8 +1663,10 @@ function strip_drupal_from_node(&$node) {
     $node->title_t = $node->title;
 
     // What is this object's gallery location?
-    if (isset($node->gallery)) {
-      $node->gallery_location = $node->gallery;
+    if (isset($node->gallery_title)) {
+      // Keep property name of gallery location despite the underlying
+      // property name change.
+      $node->gallery_location = $node->gallery_title;
     }
     // Is this object in a gallery?
     if (isset($node->is_on_view) && !isset($node->in_gallery)) {
