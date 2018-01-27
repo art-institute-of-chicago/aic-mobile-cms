@@ -124,19 +124,27 @@ function aicapp_migrate_admin_migrate() {
       );
     }
     else {
+      if ($counts[AICAPP_TYPE_OBJECT] > 0) {
+        unset($types[AICAPP_TYPE_TOUR]);
+        $default = AICAPP_TYPE_OBJECT;
+      }
+      elseif ($counts[AICAPP_TYPE_OBJECT] > 0) {
+        unset($types[AICAPP_TYPE_OBJECT]);
+        $default = AICAPP_TYPE_OBJECT;
+      }
       // Only allow tour after all objects have been updated.
       $form['aicapp_data']['migration_fields_types'] = array(
         '#type' => 'checkboxes',
         '#title' => t('Select content type(s) with fields to updated:'),
         '#options' => $types,
-        '#default_value' => array(),
+        '#default_value' => array($default),
         '#description' => t('Every node of the chosen type(s) fields will be updated. Before updating tours, make sure that all objects have been updated.'),
       );
       $form['aicapp_data']['migration_fields_batch'] = array(
         '#type' => 'textfield',
         '#size' => 10,
         '#length' => 10,
-        '#default_value' => 50,
+        '#default_value' => 25,
         '#title' => t('Number of content items to update per batch.')
       );
       $form['aicapp_data']['migration_fields_submit'] = array(
@@ -152,12 +160,6 @@ function aicapp_migrate_admin_migrate() {
  * Admin setting validation callback.
  */
 function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
-  if ($form_state['clicked_button']['#value'] === 'Repeat Migration') {
-    variable_set('aicapp_migrate_v1_v2', FALSE);
-    variable_set('aicapp_migrate_v1_v2_language', FALSE);
-    variable_set('aicapp_migrate_v1_v2_fields', FALSE);
-    return;
-  }
   if ($form_state['clicked_button']['#value'] === 'Update Content Language') {
     global $language;
     // What node type(s) are to be updated.
@@ -170,8 +172,30 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
     $result = $query->execute();
     if (empty($result['node']) || empty($types)) {
       drupal_set_message('There were no items to migrate');
+      $form_state['values']['#results'] = array(
+        'node' => array()
+      );
       return;
     }
+    // Add results here for use in submit callback.
+    $form_state['values']['#results'] = $result;
+  }
+}
+
+/**
+ * Admin setting validation callback.
+ */
+function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
+  if ($form_state['clicked_button']['#value'] === 'Repeat Migration') {
+    variable_set('aicapp_migrate_v1_v2', FALSE);
+    variable_set('aicapp_migrate_v1_v2_language', FALSE);
+    variable_set('aicapp_migrate_v1_v2_fields', FALSE);
+    return;
+  }
+  if ($form_state['clicked_button']['#value'] === 'Update Content Language') {
+    global $language;
+    $results = $form_state['values']['#results'];
+
     foreach ($types as $type) {
       if (empty($type)) {
         continue;
@@ -228,23 +252,52 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
         $query->addTag('no_tour_stop');
       }
       $result = $query->execute();
-      $counts[$type] = !empty($result['node']) ? count($result['node']) : 0;
-      if ($counts[$type]) {
-        $i = 0;
+      if (!empty($result['node'])) {
+        $counts[$type] = $i = 0;
         $to_add = array();
         if ($batch_size !== 0 && is_numeric($batch_size)) {
           // Limit to the $batch_size amount.
-          $result['node'] = array_slice($result['node'], 0, $batch_size, TRUE);
+          $chunks = array_chunk($result['node'], $batch_size, TRUE);
         }
-        foreach ($result['node'] as $nid => $obj) {
-          if (empty($obj->type) || $obj->type !== $type) {
-            continue;
+        else {
+          $chunks = array($result['node']);
+        }
+        // Loop though until we get up to batch size.
+        for ($j = 0; $counts[$type] < $batch_size; $result['node'] = array_shift($chunks), $j++) {
+          $counts[$type] = 100;
+          if ($j > 4) {
+            // After 4 loops, stop.
+            break;
           }
-          $i++;
-          $callback = 'aicapp_migrate_migrate_type_' . $type;
-          call_user_func_array($callback, array($nid, &$counts, $i, &$to_add));
+          foreach ($result['node'] as $nid => $obj) {
+            if (empty($obj->type) || $obj->type !== $type) {
+              continue;
+            }
+            $i++;
+            $callback = 'aicapp_migrate_migrate_type_' . $type;
+            call_user_func_array($callback, array($nid, &$counts, $i, &$to_add));
+          }
         }
-        $type_message = array('@type' => $type, '@size' => $batch_size, '@remain' => max($counts[$type] - $batch_size, 0));
+        // Run the original query again to get an accurate count.
+        $query = new EntityFieldQuery();
+        $query
+          ->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', $type, '=');
+        if ($type === AICAPP_TYPE_OBJECT) {
+          // Load all objects that have 0 audio commentary items.
+          $query->addTag('no_commentary_items');
+        }
+        elseif ($type === AICAPP_TYPE_TOUR) {
+          // Load all tours.
+          $query->addTag('no_tour_stop');
+        }
+        $result = $query->execute();
+        $remaining = !empty($result['node']) ? count($result['node']) : 0;
+        $type_message = array(
+          '@type' => $type,
+          '@size' => $counts[$type],
+          '@remain' => $remaining,
+        );
         drupal_set_message(t('@size @type items have been migrated to use the new field format. There are @remain @type items remaining to migrate.', $type_message));
       }
     }
@@ -337,6 +390,7 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array()) {
   }
   if ($changed === TRUE) {
     $entity_wrapper->save();
+    $counts[AICAPP_TYPE_TOUR]++;
   }
 }
 
@@ -427,7 +481,6 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
       }
     }
   }
-
   // Add the new audio commentary
   if (!empty($to_add[$i]) && !empty($to_add[$i]['audio'])) {
     foreach ($to_add[$i]['audio'] as $k => $audio_id) {
@@ -456,5 +509,6 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
   }
   if ($changed === TRUE) {
     $entity_wrapper->save();
+    $counts[AICAPP_TYPE_OBJECT]++;
   }
 }
