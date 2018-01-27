@@ -40,7 +40,7 @@ function aicapp_init() {
   define('AICAPP_DATA_API_ENDPOINT_EVENT', variable_get('aicapp_data_endpoint_events', '/api/v1/events'));
   define('AICAPP_DATA_API_ENDPOINT_EXHIBITION', variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'));
   define('AICAPP_DATA_API_ENDPOINT_ARTWORKS', variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'));
-  define('AICAPP_DATA_API_ENDPOINT_GALLERIES', variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'));
+  define('AICAPP_DATA_API_ENDPOINT_PLACES', variable_get('aicapp_data_endpoint_places', '/api/v1/places'));
   define('AICAPP_DATA_API_ENDPOINT_IMAGES', variable_get('aicapp_data_endpoint_images', '/api/v1/images'));
   define('AICAPP_JSON_FILENAME', variable_get('aicapp_json_filename', 'appData'));
   define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
@@ -990,11 +990,11 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     $gallery_ids[] = $gallery->gallery_id;
     $by_gallery_id[$gallery->gallery_id] = $gallery;
   }
+  $galleries['#updated'] = array();
   // Query the data aggregrator for recent data using the gallery ids.
   $options = array('ids' => $gallery_ids, 'limit' => count($gallery_ids));
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_PLACES;
   $results = _aicapp_fetch_data($url, $options);
-  $galleries['#updated'] = array();
   if (!empty($results)) {
     // @TODO a better way would be to only request the fields we want.
     $gallery_to_skip = array(
@@ -1934,7 +1934,7 @@ function strip_drupal_from_node(&$node) {
 function aicapp_gallery_count() {
   $count = t('None found');
   $options = array('limit' => 1);
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_PLACES;
   // Query the data aggregrator.
   $results = _aicapp_fetch_data($url, $options, TRUE);
   if (!empty($results['pagination'])) {
@@ -1951,7 +1951,7 @@ function aicapp_gallery_count() {
  */
 function aicapp_loadgalleries_form_submit($form, &$form_state) {
   $options = array('limit' => 1000);
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_PLACES;
   // Query the data aggregrator.
   $results = _aicapp_fetch_data($url, $options);
   if (empty($results)) {
@@ -2180,7 +2180,7 @@ function aicapp_node_view($node, $view_mode, $langcode) {
         'limit' => 1,
         'ids' => array($gallery_id),
       );
-      $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+      $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_PLACES;
       // Query the data aggregrator.
       $results = _aicapp_fetch_data($url, $options);
       if (!empty($result[0])) {

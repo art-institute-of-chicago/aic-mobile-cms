@@ -24,12 +24,17 @@ function aicapp_admin() {
     '#maxlength' => 256,
     '#description' => t("Go to https:// developers.google.com/maps/documentation/javascript/get-api-key to get an API key"),
   );
+  $vocabularies = array();
+  foreach (taxonomy_get_vocabularies() as $item) {
+    $key = $item->machine_name;
+    $value = $item->name;
+    $vocabularies[$key] = $value;
+  }
   $form['aicapp_tour_vocabular_name'] = array(
-    '#type' => 'textfield',
+    '#type' => 'select',
+    '#options' => $vocabularies,
     '#title' => t('Tour category vocabulary name'),
-    '#default_value' => variable_get('aicapp_tour_vocabular_name', 'categories'),
-    '#size' => 200,
-    '#maxlength' => 256,
+    '#default_value' => variable_get('aicapp_tour_vocabular_name', array('categories')),
     '#description' => t('The machine name of the vocabulary used to stored tour category terms.'),
   );
   $form['aicapp_env_fqdm'] = array(
@@ -40,11 +45,10 @@ function aicapp_admin() {
     '#maxlength' => 256,
     '#description' => t('Enter a URL for the current server environment. This will preceed any local URLs. Some examples are http://aicweb10.artic.edu, http://aicweb14.artic.edu, http://de-mobile-dev.artic.edu, etc.'),
   );
-
   $form['aicapp_ops'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+    '#collapsed' => FALSE,
     '#title' => t('Operations'),
     '#tree' => FALSE,
   );
@@ -83,6 +87,75 @@ function aicapp_admin() {
     '#suffix' => t('Click this button to load events and exhitions from the data hub.') . '</div>',
     '#submit' => array('aicapp_load_remote_form_submit'),
   );
+  $form['aicapp_ops']['version_compare'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#title' => t('Version Compare'),
+  );
+  $compare_options = array(
+    'prod__v1' => 'Production v1',
+    'prod__v2' => 'Production v2',
+    'stage__v1' => 'Staging v1',
+    'stage__v2' => 'Staging v2',
+    'test__v1' => 'Testing v1',
+    'test__v2' => 'Testing v2',
+    'local__v1' => 'Local v1',
+    'local__v2' => 'Local v2',
+  );
+  $json_nodes = drupal_map_assoc(array(
+    'dashboard',
+    'general_info',
+    'galleries',
+    'objects',
+    'audio_files',
+    'tours',
+    'annontations',
+    'map_floors',
+    'tour_categories',
+  ));
+  $form['aicapp_ops']['version_compare']['aicapp_json_compare_base'] = array(
+    '#type' => 'select',
+    '#title' => t('Base JSON'),
+    '#default_value' => variable_get('aicapp_json_compare_base', array('prod__v1')),
+    '#options' => $compare_options,
+    '#description' => t('Select a JSON file to compare another to.'),
+  );
+  $form['aicapp_ops']['version_compare']['aicapp_json_compare_head'] = array(
+    '#type' => 'select',
+    '#title' => t('Comparison JSON'),
+    '#default_value' => variable_get('aicapp_json_compare_head', array('test__v1')),
+    '#options' => $compare_options,
+    '#description' => t('Select a JSON file.'),
+  );
+  $form['aicapp_ops']['version_compare']['aicapp_json_compare_node'] = array(
+    '#type' => 'select',
+    '#title' => t('JSON node/element to compare'),
+    '#default_value' => variable_get('aicapp_json_compare_node', array('tours')),
+    '#options' => $json_nodes,
+    '#description' => t('Select a JSON node to compare.'),
+  );
+  $form['aicapp_ops']['version_compare']['aicapp_json_compare_keys_only'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Only compare key values'),
+    '#default_value' => variable_get('aicapp_json_compare_keys_only', 1),
+    '#description' => t('If checked, only keys/properties (not values) will be compared. If unchecked, then the values will also be compared to determine difference.'),
+  );
+  $form['aicapp_ops']['version_compare']['aicapp_json_compare_key_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Compare only this key/node.'),
+    '#default_value' => variable_get('aicapp_json_compare_key_name', ''),
+    '#size' => 64,
+    '#maxlength' => 64,
+    '#description' => t('Enter a key, node/property name to compare. All keys will be compared if this is empty.'),
+  );
+  $form['aicapp_ops']['version_compare']['aicapp_json_compare'] = array(
+    '#type' => 'submit',
+    '#value' => t('Compare JSON'),
+    '#prefix' => '<div>',
+    '#suffix' => t('Click this button to compare 2 JSON files.') . '</div>',
+    '#submit' => array('aicapp_json_compare_form_submit'),
+  );
   $form['aicapp_images'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -105,7 +178,6 @@ function aicapp_admin() {
     '#default_value' => variable_get('aicapp_image_large_crop', '!800,800'),
     '#description' => t('Dimensions of the image to use for previewing a crop.'),
     '#prefix' => '<h4>' . t('Large Images') . '</h4>',
-
   );
   $form['aicapp_images']['aicapp_image_object']['aicapp_image_large_crop_aspect'] = array(
     '#type' => 'textfield',
@@ -297,13 +369,13 @@ function aicapp_admin_api() {
     '#maxlength' => 256,
     '#title' => t('Data API HOST URL'),
     '#default_value' => variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'),
-    '#description' => t('.'),
+    '#description' => t(''),
   );
   $form['aicapp_data_aggregator']['aicapp_data_endpoint_events'] = array(
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
-    '#title' => t('Events Endpoint.'),
+    '#title' => t('Events endpoint'),
     '#default_value' => variable_get('aicapp_data_endpoint_events', '/api/v1/events'),
     '#description' => t('Query for an event via this endpoint.'),
   );
@@ -311,7 +383,7 @@ function aicapp_admin_api() {
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
-    '#title' => t('Exhibitions Endpoint.'),
+    '#title' => t('Exhibitions endpoint'),
     '#default_value' => variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'),
     '#description' => t('Query for an exhibition via this endpoint.'),
   );
@@ -319,23 +391,23 @@ function aicapp_admin_api() {
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
-    '#title' => t('Artworks endpoint.'),
+    '#title' => t('Artworks endpoint'),
     '#default_value' => variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'),
     '#description' => t('Query for an artwork via this endpoint.'),
   );
-  $form['aicapp_data_aggregator']['aicapp_data_endpoint_galleries'] = array(
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_places'] = array(
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
-    '#title' => t('Galleries endpoint.'),
-    '#default_value' => variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'),
-    '#description' => t('Query for a gallery via this endpoint.'),
+    '#title' => t('Places endpoint'),
+    '#default_value' => variable_get('aicapp_data_endpoint_places', '/api/v1/places'),
+    '#description' => t('Query for a gallery via the places endpoint.'),
   );
   $form['aicapp_data_aggregator']['aicapp_data_endpoint_images'] = array(
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
-    '#title' => t('Images endpoint.'),
+    '#title' => t('Images endpoint'),
     '#default_value' => variable_get('aicapp_data_endpoint_images', '/api/v2/images'),
     '#description' => t('Query for a image via this endpoint.'),
   );
@@ -399,9 +471,72 @@ function aicapp_admin_validate($form, &$form_state) {
 /**
  * Admin setting validation callback.
  */
-function aicapp_admin_submit($form, &$form_state) {
-  if ($form_state['clicked_button']['#value'] === 'Import Remote Data') {
-    aicapp_load_remote_form_submit();
+function aicapp_json_compare_form_submit($form, &$form_state) {
+  $values = $form_state['values'];
+  // parse our the file details.
+  $types = array(
+    'base' => explode('__', $values['aicapp_json_compare_base']),
+    'head' => explode('__', $values['aicapp_json_compare_head']),
+  );
+  // JSON node to compare;
+  $json_node = $values['aicapp_json_compare_node'];
+  $arrays = array();
+  foreach ($types as $type => $options) {
+    if (empty($options[0]) || empty($options[1])) {
+      return;
+    }
+    $filename = 'http://aic-mobile-tours.artic.edu';
+    switch ($options[0]) {
+      default:
+        break;
+      case 'prod':
+        $filename .= '/sites/default/files';
+        break;
+
+      case 'stage':
+        $filename .= '/sites/default_' . $options[0] . '/files';
+        break;
+
+      case 'test':
+        $filename .= '/sites/default_' . $options[0] . '/files';
+        break;
+
+      case 'local':
+        $filename = variable_get('file_public_path', conf_path());
+        break;
+    }
+    switch ($options[1]) {
+      default:
+        break;
+      case 'v1':
+        $filename .= '/' . AICAPP_JSON_FILENAME . '.json';
+        break;
+
+      case 'v2':
+        $filename .= '/' . AICAPP_JSON_FILENAME . '-' . AICAPP_JSON_V2 . '.json';
+        break;
+    }
+    $json = file_get_contents($filename);
+    if (empty($json)) {
+      return;
+    }
+    $arrays[$type] = json_decode($json, TRUE);
+    if (!isset($arrays[$type][$json_node])) {
+      return;
+    }
+    $arrays[$type] = $arrays[$type][$json_node];
+  }
+  $keys_only = !empty($values['aicapp_json_compare_keys_only']) ?:FALSE;
+  $compare_key = !empty($values['aicapp_json_compare_key_name']) ? $values['aicapp_json_compare_key_name'] : NULL;
+  // Compare to JSON files.
+  $diff['in_head_not_base'] = aicapp_array_diff_assoc_recursive($arrays['head'], $arrays['base'], $keys_only, $compare_key);
+  // From the base first.
+  $diff['in_base_not_head'] = aicapp_array_diff_assoc_recursive($arrays['base'], $arrays['head'], $keys_only, $compare_key);
+  if (function_exists('dpm')) {
+    dpm($diff);
+  }
+  else {
+    drupal_set_message('Devel module must be enabled to see comparison results');
   }
 }
 
@@ -678,4 +813,45 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
       }
     }
   }
+}
+
+
+function aicapp_array_diff_assoc_recursive($array1, $array2, $keys_only = FALSE, $compare_key = NULL, $sort = 'ksort') {
+  $difference = array();
+  foreach ($array1 as $key => $value) {
+    if ($keys_only && array_key_exists($key, $array2)) {
+      // Do not count this as different.
+      continue;
+    }
+    elseif (is_array($value) || is_object($value)) {
+      if (!array_key_exists($key, $array2) || (!is_array($array2[$key] && !is_object($array2[$key])))) {
+        $difference[$key] = $value;
+        if ((is_array($value) || is_object($value)) && !empty($compare_key)) {
+          $difference[$key] = array_intersect_key((array) $value, array($compare_key => TRUE));
+        }
+      }
+      else {
+        $new_diff = aicapp_array_diff_assoc_recursive((array) $value, (array) $array2[$key], $keys_only, $compare_key, $sort);
+        if (!empty($new_diff)) {
+          if (!empty($sort) && function_exists($sort)) {
+            $sort($new_diff);
+          }
+          $difference[$key] = $new_diff;
+          if ((is_array($new_diff) || is_object($new_diff)) && !empty($compare_key)) {
+            $difference[$key] = array_intersect_key((array) $new_diff, array($compare_key => TRUE));
+          }
+        }
+      }
+    }
+    elseif (!array_key_exists($key, $array2) || $array2[$key] !== $value) {
+      $difference[$key] = $value;
+      if ((is_array($value) || is_object($value)) && !empty($compare_key)) {
+        $difference[$key] = array_intersect_key((array) $value, array($compare_key => TRUE));
+      }
+    }
+  }
+  if (!empty($sort) && function_exists($sort)) {
+    $sort($difference);
+  }
+  return $difference;
 }
