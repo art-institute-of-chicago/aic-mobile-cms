@@ -19,7 +19,7 @@
 function aicapp_init() {
   define('AICAPP_ARTWORK_QUERY', 'artwork');
   define('AICAPP_GALLERY_QUERY', 'gallery');
-  define('AICAPP_IMAGE_SERVER', rtrim(variable_get('aicapp_image_server_url', FALSE), '/'));
+  define('AICAPP_IMAGE_SERVER', rtrim(variable_get('aicapp_image_server_url', 'https://lakeimagesweb.artic.edu/iiif/2'), '/'));
   define('AICAPP_IMAGE_CROP_REGION', 'full');
   define('AICAPP_IMAGE_CROP_ROTATION', 0);
   define('AICAPP_IMAGE_CROP_QUALITY', 'default');
@@ -45,6 +45,7 @@ function aicapp_init() {
   define('AICAPP_JSON_FILENAME', variable_get('aicapp_json_filename', 'appData'));
   define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
   define('AICAPP_TOUR_VOCABULARY_NAME', variable_get('aicapp_tour_vocabular_name', 'categories'));
+  define('AICAPP_CURRENT_SERVER_FQDM', rtrim(variable_get('aicapp_env_fqdm', 'http://aicweb10.artic.edu'), '/'));
 }
 
 /**
@@ -1468,7 +1469,7 @@ function strip_drupal_from_node(&$node) {
     $node->image_height = '';
     if (isset($node->field_image[LANGUAGE_NONE][0]['uri'])) {
       $node->image_filename = $node->field_image[LANGUAGE_NONE][0]['filename'];
-      $node->image_url = file_create_url($node->field_image[LANGUAGE_NONE][0]['uri']);
+      $node->image_url = _aicapp_file_create_url($node->field_image[LANGUAGE_NONE][0]['uri']);
       $node->image_filemime = $node->field_image[LANGUAGE_NONE][0]['filemime'];
       $node->image_filesize = $node->field_image[LANGUAGE_NONE][0]['filesize'];
       $node->image_width = $node->field_image[LANGUAGE_NONE][0]['width'];
@@ -1815,7 +1816,7 @@ function strip_drupal_from_node(&$node) {
       $node->audio_filesize = '';
       if (isset($node->field_audio_file[$node->language][0]['uri'])) {
         $node->audio_filename = $node->field_audio_file[$node->language][0]['filename'];
-        $node->audio_file_url = file_create_url($node->field_audio_file[$node->language][0]['uri']);
+        $node->audio_file_url = _aicapp_file_create_url($node->field_audio_file[$node->language][0]['uri']);
         $node->audio_filemime = $node->field_audio_file[$node->language][0]['filemime'];
         $node->audio_filesize = $node->field_audio_file[$node->language][0]['filesize'];
       }
@@ -1851,7 +1852,7 @@ function strip_drupal_from_node(&$node) {
         'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : '',
         'track_title' => isset($node->field_track_title[$lang_key][0]['safe_value']) ? $node->field_track_title[$lang_key][0]['safe_value'] : '',
         'audio_filename' => isset($node->field_audio_file[$lang_key][0]['filename']) ? $node->field_audio_file[$lang_key][0]['filename'] : '',
-        'audio_file_url' => isset($node->field_audio_file[$lang_key][0]['uri']) ? file_create_url($node->field_audio_file[$lang_key][0]['uri']) : '',
+        'audio_file_url' => isset($node->field_audio_file[$lang_key][0]['uri']) ? _aicapp_file_create_url($node->field_audio_file[$lang_key][0]['uri']) : '',
         'audio_filemime' => isset($node->field_audio_file[$lang_key][0]['filemime']) ? $node->field_audio_file[$lang_key][0]['filemime'] : '',
         'audio_filesize' => isset($node->field_audio_file[$lang_key][0]['filesize']) ? $node->field_audio_file[$lang_key][0]['filesize'] : '',
         'audio_transcript' => isset($node->field_audio_transcript[$lang_key][0]['safe_value']) ? $node->field_audio_transcript[$lang_key][0]['safe_value'] : '',
@@ -1905,7 +1906,7 @@ function strip_drupal_from_node(&$node) {
       $i = 0;
       foreach ($fc_items as $fc_item) {
         $item = field_collection_field_get_entity($fc_item);
-        $floor_plan = !empty($item->field_floor_map_file) ? file_create_url($item->field_floor_map_file[LANGUAGE_NONE][0]['uri']) : NULL;
+        $floor_plan = !empty($item->field_floor_map_file) ? _aicapp_file_create_url($item->field_floor_map_file[LANGUAGE_NONE][0]['uri']) : NULL;
         $node->floors['map_floor' . $i] = array(
           'label' => !empty($item->field_floor_label) ? $item->field_floor_label[LANGUAGE_NONE][0]['value'] : NULL,
           'floor_plan' => $floor_plan,
@@ -1957,26 +1958,26 @@ function aicapp_loadgalleries_form_submit($form, &$form_state) {
     return;
   }
   // first delete any old galleries not in data hub anymore
-  $galleries = node_load_multiple(array(), array('type' => AICAPP_TYPE_GALLERY, 'status' => 1));
+  $node_galleries = node_load_multiple(array(), array('type' => AICAPP_TYPE_GALLERY, 'status' => 1));
   try {
     // Now loop through the $result JSON.
-    foreach ($results as $object) {
+    foreach ($results as $gallery) {
       // Create new or update existing gallery node.
-      aicappSaveNode($object, AICAPP_TYPE_GALLERY);
+      aicappSaveNode($gallery, AICAPP_TYPE_GALLERY);
     }
-    foreach ($galleries as $gallery) {
+    foreach ($node_galleries as $node) {
       // Look for the Drupal gallery node in the data hub gallery.
       $match = FALSE;
       foreach ($results as $item) {
-        if ($item['id'] == $gallery->field_gallery_id[LANGUAGE_NONE][0]['value']) {
+        if ($item['id'] == $node->field_gallery_id[LANGUAGE_NONE][0]['value']) {
           $match = TRUE;
         }
       }
       // this would work if we had php 5.5 installed on server.
-      // $key = array_search($gallery->field_gallery_id[LANGUAGE_NONE][0]['value'], array_column($result['response']['docs'], 'gallery_id'));
+      // $key = array_search($node->field_gallery_id[LANGUAGE_NONE][0]['value'], array_column($result['response']['docs'], 'gallery_id'));
       if (!$match) {
         // not found in data hub, delete the Drupal gallery
-        node_delete($gallery->nid);
+        node_delete($node->nid);
       }
     }
     drupal_set_message(t("Data has been loaded!"), 'status');
@@ -2033,16 +2034,19 @@ function aicappSaveNode($object, $type) {
     $node->field_object_id[$node->language][0]['value'] = $object['id'];
     $node->field_reference_num[$node->language][0]['value'] = $object['main_reference_number'];
     // The 'gallery_locaiton' property seems to have changed to just 'gallery'.
-    $node->field_gallery_location[$node->language][0]['value'] = $object['gallery'];
+    $node->field_gallery_location[$node->language][0]['value'] = $object['gallery_title'];
     // Image server URL begins like this for both thumbnail and full.
     $preferred_image_id = !empty($object['preferred_image_id']) ? $object['preferred_image_id'] : NULL;
     if (!empty($preferred_image_id)) {
       // Thumbnail.
       $thumbnail_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'thumbnail'));
       $node->field_thumbnail_image[$node->language][0]['value'] = $thumbnail_url;
-      // Full size image.
-      $full_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'large'));
-      $node->field_large_image[$node->language][0]['value'] = $full_url;
+      // Large size image.
+      $large_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'large'));
+      $node->field_large_image[$node->language][0]['value'] = $large_url;
+      // Full Size images
+      $full_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'full'));
+      $node->field_full_image[$node->language][0]['value'] = $full_url;
     }
 
     // Set node to unbpublished.
@@ -2520,7 +2524,6 @@ function _aicapp_update_image_fields(&$node) {
     && $node->field_image[LANGUAGE_NONE][0]['fid'] !== $original->field_image[LANGUAGE_NONE][0]['fid']) {
     $clear_crops = TRUE;
   }
-
   foreach ($image_fields as $field => $crop_field) {
     // Check whether to clear crops.
     if ($clear_crops && $crop_field) {
@@ -2541,13 +2544,13 @@ function _aicapp_update_image_fields(&$node) {
     $image_file = file_load($node->field_image[LANGUAGE_NONE][0]['fid']);
     // Choose which image style to use.
     if ($field === 'field_thumbnail_image') {
-      $url = image_style_url('thumbnail_one_twelve', $image_file->uri);
+      $url = _aicapp_file_create_url($image_file->uri, 'thumbnail_one_twelve');
     }
     elseif ($field === 'field_large_image') {
-      $url = image_style_url('large_six_hundred', $image_file->uri);
+      $url = _aicapp_file_create_url($image_file->uri,'large_six_hundred');
     }
     elseif ($field === 'field_full_image') {
-      $url = file_create_url($image_file->uri);
+      $url = _aicapp_file_create_url($image_file->uri);
     }
     // Path to cropped locally stored image goes here.
     $node->{$field}[LANGUAGE_NONE][0]['value'] = $url;
@@ -2578,6 +2581,99 @@ function _aicapp_get_preferred_image_id($object_node) {
 }
 
 /**
+ * Replacement for file_create_url.
+ */
+function _aicapp_file_create_url($uri, $preset = NULL) {
+  if ($preset) {
+    return _aicapp_image_url($preset, $uri);
+  }
+  // Allow the URI to be altered, e.g. to serve a file from a CDN or static
+  // file server.
+  drupal_alter('file_url', $uri);
+
+  $scheme = file_uri_scheme($uri);
+  if (!$scheme) {
+    // Allow for:
+    // - root-relative URIs (e.g. /foo.jpg in http://example.com/foo.jpg)
+    // - protocol-relative URIs (e.g. //bar.jpg, which is expanded to
+    //   http://example.com/bar.jpg by the browser when viewing a page over
+    //   HTTP and to https://example.com/bar.jpg when viewing a HTTPS page)
+    // Both types of relative URIs are characterized by a leading slash, hence
+    // we can use a single check.
+    if (drupal_substr($uri, 0, 1) == '/') {
+      return $uri;
+    }
+    else {
+      // If this is not a properly formatted stream, then it is a shipped file.
+      // Therefore, return the urlencoded URI with the base URL prepended.
+      return $GLOBALS['base_url'] . '/' . drupal_encode_path($uri);
+    }
+  }
+  elseif ($scheme == 'http' || $scheme == 'https') {
+    // Check for HTTP so that we don't have to implement getExternalUrl() for
+    // the HTTP wrapper.
+    return $uri;
+  }
+  else {
+    // Intercept the public stream and use a config value.
+    if ($scheme === 'public') {
+      $replace = AICAPP_CURRENT_SERVER_FQDM . '/';
+      $replace .= variable_get('file_public_path', conf_path() . '/files');
+      $uri = str_replace('public://', '', $uri);
+      $url = $replace . '/' . drupal_encode_path($uri);
+      return $url;
+    }
+    // Attempt to return an external URL using the appropriate wrapper.
+    elseif ($wrapper = file_stream_wrapper_get_instance_by_uri($uri)) {
+      return $wrapper->getExternalUrl();
+    }
+    else {
+      return FALSE;
+    }
+  }
+}
+
+/**
+ * Replacement for image_style_url.
+ */
+function _aicapp_image_url($style_name, $path) {
+  $uri = image_style_path($style_name, $path);
+
+  // The passed-in $path variable can be either a relative path or a full URI.
+  $original_uri = file_uri_scheme($path) ? file_stream_wrapper_uri_normalize($path) : file_build_uri($path);
+
+  // The token query is added even if the 'image_allow_insecure_derivatives'
+  // variable is TRUE, so that the emitted links remain valid if it is changed
+  // back to the default FALSE.
+  // However, sites which need to prevent the token query from being emitted at
+  // all can additionally set the 'image_suppress_itok_output' variable to TRUE
+  // to achieve that (if both are set, the security token will neither be
+  // emitted in the image derivative URL nor checked for in
+  // image_style_deliver()).
+  $token_query = array();
+  if (!variable_get('image_suppress_itok_output', FALSE)) {
+    $token_query = array(IMAGE_DERIVATIVE_TOKEN => image_style_path_token($style_name, $original_uri));
+  }
+
+  // If not using clean URLs, the image derivative callback is only available
+  // with the query string. If the file does not exist, use url() to ensure
+  // that it is included. Once the file exists it's fine to fall back to the
+  // actual file path, this avoids bootstrapping PHP once the files are built.
+  if (!variable_get('clean_url') && file_uri_scheme($uri) == 'public' && !file_exists($uri)) {
+    $directory_path = file_stream_wrapper_get_instance_by_uri($uri)->getDirectoryPath();
+    return url($directory_path . '/' . file_uri_target($uri), array('absolute' => TRUE, 'query' => $token_query));
+  }
+
+  $file_url = _aicapp_file_create_url($uri);
+  // Append the query string with the token, if necessary.
+  if ($token_query) {
+    $file_url .= (strpos($file_url, '?') !== FALSE ? '&' : '?') . drupal_http_build_query($token_query);
+  }
+
+  return $file_url;
+}
+
+/**
  * Prepare a URL to a cropped remote image.
  */
 function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
@@ -2604,6 +2700,10 @@ function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
         'y2' => 800,
         'h' => 800,
         'w' => 800,
+      ),
+      'full' => array(
+        'iiif_size' => 'full',
+        'region' => 'full',
       ),
     ),
     'region' => AICAPP_IMAGE_CROP_REGION,
