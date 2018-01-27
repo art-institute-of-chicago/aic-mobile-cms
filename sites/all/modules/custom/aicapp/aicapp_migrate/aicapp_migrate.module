@@ -124,19 +124,27 @@ function aicapp_migrate_admin_migrate() {
       );
     }
     else {
+      if ($counts[AICAPP_TYPE_OBJECT] > 0) {
+        unset($types[AICAPP_TYPE_TOUR]);
+        $default = AICAPP_TYPE_OBJECT;
+      }
+      elseif ($counts[AICAPP_TYPE_OBJECT] > 0) {
+        unset($types[AICAPP_TYPE_OBJECT]);
+        $default = AICAPP_TYPE_OBJECT;
+      }
       // Only allow tour after all objects have been updated.
       $form['aicapp_data']['migration_fields_types'] = array(
         '#type' => 'checkboxes',
         '#title' => t('Select content type(s) with fields to updated:'),
         '#options' => $types,
-        '#default_value' => array(),
+        '#default_value' => array($default),
         '#description' => t('Every node of the chosen type(s) fields will be updated. Before updating tours, make sure that all objects have been updated.'),
       );
       $form['aicapp_data']['migration_fields_batch'] = array(
         '#type' => 'textfield',
         '#size' => 10,
         '#length' => 10,
-        '#default_value' => 50,
+        '#default_value' => 25,
         '#title' => t('Number of content items to update per batch.')
       );
       $form['aicapp_data']['migration_fields_submit'] = array(
@@ -249,15 +257,26 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
         $to_add = array();
         if ($batch_size !== 0 && is_numeric($batch_size)) {
           // Limit to the $batch_size amount.
-          $result['node'] = array_slice($result['node'], 0, $batch_size, TRUE);
+          $chunks = array_chunk($result['node'], $batch_size, TRUE);
         }
-        foreach ($result['node'] as $nid => $obj) {
-          if (empty($obj->type) || $obj->type !== $type) {
-            continue;
+        else {
+          $chunks = array($result['node']);
+        }
+        // Loop though until we get up to batch size.
+        for ($j = 0; $counts[$type] < $batch_size; $result['node'] = array_shift($chunks), $j++) {
+          $counts[$type] = 100;
+          if ($j > 4) {
+            // After 4 loops, stop.
+            break;
           }
-          $i++;
-          $callback = 'aicapp_migrate_migrate_type_' . $type;
-          call_user_func_array($callback, array($nid, &$counts, $i, &$to_add));
+          foreach ($result['node'] as $nid => $obj) {
+            if (empty($obj->type) || $obj->type !== $type) {
+              continue;
+            }
+            $i++;
+            $callback = 'aicapp_migrate_migrate_type_' . $type;
+            call_user_func_array($callback, array($nid, &$counts, $i, &$to_add));
+          }
         }
         // Run the original query again to get an accurate count.
         $query = new EntityFieldQuery();
@@ -462,7 +481,7 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
       }
     }
   }
-
+  dsm($to_add);
   // Add the new audio commentary
   if (!empty($to_add[$i]) && !empty($to_add[$i]['audio'])) {
     foreach ($to_add[$i]['audio'] as $k => $audio_id) {
