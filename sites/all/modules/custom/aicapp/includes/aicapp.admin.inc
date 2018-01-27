@@ -32,6 +32,15 @@ function aicapp_admin() {
     '#maxlength' => 256,
     '#description' => t('The machine name of the vocabulary used to stored tour category terms.'),
   );
+  $form['aicapp_env_fqdm'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Domain name for the current environment.'),
+    '#default_value' => variable_get('aicapp_env_fqdm', 'http://aicweb10.artic.edu'),
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#description' => t('Enter a URL for the current server environment. This will preceed any local URLs. Some examples are http://aicweb10.artic.edu, http://aicweb14.artic.edu, http://de-mobile-dev.artic.edu, etc.'),
+  );
+
   $form['aicapp_ops'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
