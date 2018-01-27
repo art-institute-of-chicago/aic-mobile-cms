@@ -481,7 +481,6 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
       }
     }
   }
-  dsm($to_add);
   // Add the new audio commentary
   if (!empty($to_add[$i]) && !empty($to_add[$i]['audio'])) {
     foreach ($to_add[$i]['audio'] as $k => $audio_id) {

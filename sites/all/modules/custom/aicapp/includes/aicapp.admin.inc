@@ -626,15 +626,6 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
         html_entity_decode($to_import['title'], ENT_QUOTES, 'UTF-8'),
         ENT_QUOTES
       );
-
-      // if ($type === AICAPP_TYPE_EVENT) {
-      // dsm($to_import['title']);
-      // dsm(htmlspecialchars_decode($to_import['title'], ENT_QUOTES);
-      // dsm(html_entity_decode($to_import['title'], ENT_QUOTES, 'UTF-8'));
-      // dsm($title);
-      //
-      // }
-
       $ewrapper->title->set($title);
       // Object ID.
       $ewrapper->field_imported_object_id->set($to_import['id']);
