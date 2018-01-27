@@ -181,6 +181,8 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
   if ($form_state['clicked_button']['#value'] === 'Update Content Language') {
     global $language;
     $result = $form_state['values']['#result'];
+    $types = $form_state['values']['aicapp_data']['migration_language_types'];
+
     foreach ($types as $type) {
       if (empty($type) || empty($result['node'])) {
         continue;
