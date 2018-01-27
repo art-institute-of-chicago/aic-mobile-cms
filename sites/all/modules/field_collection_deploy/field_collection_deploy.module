@@ -1,0 +1,233 @@
+<?php
+
+/**
+ * Implements hook_node_export_alter().
+ */
+function field_collection_deploy_node_export_alter(&$nodes, $format) {
+
+  $bundles = field_collection_deploy_bundle_fields();
+
+  foreach ($nodes as $node) {
+
+     // Check if node has Field Collection field.
+     if (isset($bundles[$node->type])) {
+       $node->field_collection_deploy = field_collection_deploy_entity($node, $bundles[$node->type]);
+     }
+  }
+
+}
+
+/**
+ * Get the field collection entities of a node.
+ */
+function field_collection_deploy_entity(&$node, $field_collections) {
+  $export = array();
+
+  foreach ($field_collections as $field_collection => $fields) {
+    $entity_ids = array();
+    $field_collection_values = field_view_field('node', $node, $field_collection);
+
+    // Get entity IDs
+    foreach ($field_collection_values['#items'] as $delta => $entity_id) {
+      $entity_ids[] = $entity_id['value'];
+    }
+
+    if (!empty($entity_ids)) {
+
+      $items = entity_load("field_collection_item", $entity_ids);
+
+      foreach($items as $item){
+        $item_export = $item->export();
+        // At some point field collection stopped returning valid JSON here.
+        $prefix = "entity_import('" . $item->entityType() . "', '";
+        if (substr($item_export, 0, strlen($prefix)) === $prefix) {
+          // Re-construct it back into valid JSON.
+          $item_export = substr($item_export, strlen($prefix));
+          $item_export = substr($item_export, 0, -1 * strlen("')"));
+          // This almost certainly doesn't work in the general case
+          // because field_collection passed a 2nd param to addcslashes().
+          $item_export = stripcslashes($item_export);
+        }
+        $item_export = drupal_json_decode($item_export);
+        $export[$field_collection][] = $item_export;
+      }
+    }
+  }
+
+  return $export;
+}
+
+/**
+ * Manipulate node array before import.
+ *
+ * The purpose of this is to allow a module to check nodes in the array for
+ * two or more nodes that must retain a relationship, and to add/remove other
+ * data to the array to assist with maintaining dependencies, relationships,
+ * references, and additional data required by the nodes.
+ *
+ * @param &$nodes
+ *   The array of nodes to alter.
+ * @param $format
+ *   The format of node code being used.
+ * @param $save
+ *   Whether the nodes will be saved by node_export_import().
+ */
+function field_collection_deploy_node_export_import_alter(&$nodes, $used_format, $save) {
+
+  foreach ($nodes as $key => $node) {
+    if (isset($node->field_collection_deploy)) {
+      field_collection_deploy_unset_fields($nodes, $key, $node, $node->field_collection_deploy);
+    }
+  }
+}
+
+/**
+ * Unset fields of type field collection, so they can be re-set with correct values later.
+ */
+function field_collection_deploy_unset_fields(&$nodes, $key, $node, $field_collections) {
+
+  foreach ($field_collections as $field_name => $field) {
+    $node->$field_name = array();
+    $nodes[$key] = $node;
+  }
+}
+
+/**
+ * Manipulate node array after import.
+ *
+ * The purpose of this is to allow a module to check nodes in the array for
+ * two or more nodes that must retain a relationship, and to add/remove other
+ * data to the array to assist with maintaining dependencies, relationships,
+ * references, and additional data required by the nodes.
+ *
+ * @param &$nodes
+ *   The array of nodes to alter - IMPORTANT: keyed by node id.
+ * @param $format
+ *   The format of node code being used.
+ * @param $save
+ *   Whether the nodes were saved by node_export_import().
+ */
+function field_collection_deploy_node_export_after_import_alter(&$nodes, $format, $save) {
+
+  foreach ($nodes as $key => $node) {
+    if (isset($node->field_collection_deploy)) {
+      field_collection_deploy_import_field_collection($node, $node->field_collection_deploy);
+    }
+  }
+}
+
+/**
+ *  Get list of bundles that have a Field Collection field.
+ *
+ *  Return array [bundle][field collection][fields in field collection].
+ */
+function field_collection_deploy_bundle_fields() {
+  $field_collections = field_info_instances('field_collection_item');
+
+  foreach ($field_collections as $field_name => $info) {
+    $field_info = field_info_field($field_name);
+
+    foreach ($field_info['bundles']['node'] as $bundle) {
+      $bundles[$bundle][$field_name] = $info;
+    }
+  }
+
+  return $bundles;
+}
+
+
+/**
+ * @param $node
+ * @param $field_collections
+ * @return array|null
+ */
+function field_collection_deploy_add_field_collection_content(&$node, $field_collections) {
+  $field_collection_export = NULL;
+  $node_wrapper = entity_metadata_wrapper('node', $node);
+
+  foreach ($field_collections as $field_collection_name => $field_collection_fields) {
+    $entity = $node_wrapper->$field_collection_name->value();
+
+    if (isset($entity[0])) {
+      $field_collection_export[] = (array) $entity[0];
+    }
+  }
+
+  return $field_collection_export;
+}
+
+
+/**
+ * @param $node
+ * @param $field_collection_deploy
+ */
+function field_collection_deploy_import_field_collection($node, $field_collection_deploy) {
+
+  foreach ($field_collection_deploy as $bundle => $field_collection) {
+
+    $field_values = array();
+
+    foreach ($field_collection as $item) {
+      // For entity reference field: adjust reference to point to new node.
+      field_collection_deploy_update_entity_reference($bundle, $item);
+
+      $entity_controller = new EntityAPIController("field_collection_item");
+      $item['item_id'] = NULL;
+      $item['original'] = TRUE;
+      $item_encoded = drupal_json_encode($item);
+
+      $entity = $entity_controller->import($item_encoded);
+      $saved = $entity_controller->save($entity);
+
+      // Can't find a way to get the entity's item_id via the API.
+      // This is a hack!
+      $item_id = db_query_range('SELECT item_id FROM {field_collection_item} WHERE field_name = :field_name ORDER BY item_id DESC', 0, 1, array(':field_name' => $bundle))->fetchField();
+      $rev_id = db_query_range('SELECT revision_id FROM {field_collection_item} WHERE field_name = :field_name ORDER BY item_id DESC', 0, 1, array(':field_name' => $bundle))->fetchField();
+      // $language = ($node->language == '') ? LANGUAGE_NONE: $node->language;
+      // Quick fix for issue https://www.drupal.org/node/2289413
+      $language = LANGUAGE_NONE;
+
+      $field_values[$language][] = array(
+        'value' => $item_id,
+        'revision_id' => $rev_id);
+    }
+
+    $node->$bundle = $field_values;
+  }
+  node_save($node);
+}
+
+
+function field_collection_deploy_update_entity_reference($bundle_name, &$entity_field) {
+
+  // Get list of fields contained in this entity field.
+  $field_instance = field_info_instances('field_collection_item', $bundle_name);
+
+  foreach ($field_instance as $field_name => $field_info) {
+    $field_definition = field_info_field($field_name);
+
+    // Check if field is an entity reference.
+    if ($field_definition['type'] == 'entityreference' && !empty($entity_field[$field_name])) {
+
+      // Get just the values of a field and it's language.
+      $field_data = $entity_field[$field_name];
+      // Get data.
+      $field_values = reset($field_data);
+      $language = key($field_data);
+
+      foreach ($field_values as $key => $entity_field_value) {
+        // Get nid from uuid
+        $uuid = $entity_field_value['entity']['uuid'];
+        $nids = entity_get_id_by_uuid('node', array($uuid));
+
+        // Update old nid to new nid.
+        if (!empty($nids)) {
+          $entity_field[$field_name][$language][$key]['target_id'] = $nids[$uuid];
+        }
+
+      }
+    }
+  }
+
+  return;
+}
