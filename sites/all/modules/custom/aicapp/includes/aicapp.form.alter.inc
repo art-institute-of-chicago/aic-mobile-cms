@@ -498,7 +498,10 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
     'y2' => 0,
     'width' => 0,
     'height' => 0,
+    'image_width' => $thumbWidth,
+    'image_height' => $thumbHeight,
   );
+
   // If cropping a thumbnail image.
   if ($imageType == 'thumbnail') {
     $field_name = 'field_thumbnail_image';
@@ -509,13 +512,25 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
       $aspectRatio = variable_get('aicapp_image_thumb_crop_aspect', '1:1');
       $resizable = (variable_get('aicapp_image_thumb_crop_lock', 'false')) ? 'true' : 'false';
       $thumbValues['minWidth'] = variable_get('aicapp_object_image_min_width', '50');
+      if ((int)$thumbValues['minWidth'] === -1) {
+        $thumbValues['minWidth'] = $thumbWidth;
+      }
       $thumbValues['minHeight'] = variable_get('aicapp_object_image_min_height', '50');
+      if ((int)$thumbValues['minHeight'] === -1) {
+        $thumbValues['minHeight'] = $thumbHeight;
+      }
     }
     elseif ($form['#node']->type === AICAPP_TYPE_TOUR) {
       $aspectRatio = variable_get('aicapp_image_thumb_crop_aspect_tour', '1:1');
       $resizable = (variable_get('aicapp_image_thumb_crop_lock_tour', 'false')) ? 'true' : 'false';
       $thumbValues['minWidth'] = variable_get('aicapp_tour_image_min_width', '50');
+      if ($thumbValues['minWidth'] === -1) {
+        $thumbValues['minWidth'] = $thumbWidth;
+      }
       $thumbValues['minHeight'] = variable_get('aicapp_tour_image_min_height', '50');
+      if ($thumbValues['minHeight'] === -1) {
+        $thumbValues['minHeight'] = $thumbHeight;
+      }
     }
     // original crops for thumbnail image.
     if ($thumbWidth > $thumbHeight) {
@@ -554,7 +569,13 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
     $thumbY1 = round(($thumbHeight / 2) - ($thumbCropHeight / 2));
     $thumbY2 = round($thumbY1 + $thumbCropHeight);
   }
-
+  // make sure the preview image values are set, if empty.
+  if (empty($form[$field_crop_name][LANGUAGE_NONE][0]['field_image_width'][LANGUAGE_NONE][0]['value']['#default_value'])) {
+    $form[$field_crop_name][LANGUAGE_NONE][0]['field_image_width'][LANGUAGE_NONE][0]['value']['#default_value'] = $thumbValues['image_width'];
+  }
+  if (empty($form[$field_crop_name][LANGUAGE_NONE][0]['field_image_height'][LANGUAGE_NONE][0]['value']['#default_value'])) {
+    $form[$field_crop_name][LANGUAGE_NONE][0]['field_image_height'][LANGUAGE_NONE][0]['value']['#default_value'] = $thumbValues['image_height'];
+  }
   if (isset($imageToCrop[LANGUAGE_NONE][0])) {
     $items = field_get_items('node', $form['#node'], $field_crop_name);
     // If there are no crop values set, check if the version 1 fields have values,
@@ -571,7 +592,7 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
       if (!empty($item->field_width) && !empty($item->field_width[LANGUAGE_NONE][0]['value'])
          && !empty($item->field_height) && !empty($item->field_height[LANGUAGE_NONE][0]['value'])) {
         // If field_width and field_height values exist, get all the values.
-        getDefaults($item, $thumbValues);
+        getDefaults($form, $field_crop_name, $item, $thumbValues);
       }
       else {
         // otherwise set default crop values.
@@ -581,7 +602,6 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
       if (!empty($copy_v1_to_v2)) {
         _aicapp_set_default_crop_values($form, $field_crop_name, $thumbValues);
       }
-
     }
     else {
       // set default crop values.
@@ -627,13 +647,26 @@ function cropImage(&$form, $imageToCrop, $imageType = 'thumbnail') {
 /**
  * Helper function to get crop defaults.
  */
-function getDefaults($item, &$thumbValues) {
+function getDefaults(&$form, $field, $item, &$thumbValues) {
   $thumbValues['x1'] = !empty($item->field_x[LANGUAGE_NONE]) && !empty($item->field_x[LANGUAGE_NONE][0]['value']) ? $item->field_x[LANGUAGE_NONE][0]['value'] : 0;
   $thumbValues['y1'] = !empty($item->field_y[LANGUAGE_NONE]) && !empty($item->field_y[LANGUAGE_NONE][0]['value']) ? $item->field_y[LANGUAGE_NONE][0]['value'] : 0;
   $thumbValues['x2'] = !empty($item->field_x2[LANGUAGE_NONE]) && !empty($item->field_x2[LANGUAGE_NONE][0]['value']) ? $item->field_x2[LANGUAGE_NONE][0]['value'] : 0;
   $thumbValues['y2'] = !empty($item->field_y2[LANGUAGE_NONE]) && !empty($item->field_y2[LANGUAGE_NONE][0]['value']) ? $item->field_y2[LANGUAGE_NONE][0]['value'] : 0;
   $thumbValues['width'] = !empty($item->field_width[LANGUAGE_NONE]) && !empty($item->field_width[LANGUAGE_NONE][0]['value']) ? $item->field_width[LANGUAGE_NONE][0]['value'] : 0;
   $thumbValues['height'] = !empty($item->field_height[LANGUAGE_NONE]) && !empty($item->field_height[LANGUAGE_NONE][0]['value']) ? $item->field_height[LANGUAGE_NONE][0]['value'] : 0;
+  // Protect against when a crop would expend beyond the preview image size.
+  if ($thumbValues['width'] > $thumbValues['image_width']) {
+    $thumbValues['width'] = $thumbValues['image_width'] - $thumbValues['x1'];
+    $thumbValues['x2'] = $thumbValues['width'] + $thumbValues['x1'];
+    $form[$field][LANGUAGE_NONE][0]['field_x2'][LANGUAGE_NONE][0]['value']['#default_value'] = $thumbValues['x2'];
+    $form[$field][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#default_value'] = $thumbValues['width'];
+  }
+  if ($thumbValues['height'] > $thumbValues['image_height']) {
+    $thumbValues['height'] = $thumbValues['image_height'] - $thumbValues['y1'];
+    $thumbValues['y2'] = $thumbValues['height'] + $thumbValues['y1'];
+    $form[$field][LANGUAGE_NONE][0]['field_y2'][LANGUAGE_NONE][0]['value']['#default_value'] = $thumbValues['y2'];
+    $form[$field][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#default_value'] = $thumbValues['height'];
+  }
 }
 
 /**
@@ -661,4 +694,6 @@ function _aicapp_set_default_crop_values(&$form, $field, $values) {
   $form[$field][LANGUAGE_NONE][0]['field_y2'][LANGUAGE_NONE][0]['value']['#default_value'] = $values['y2'];
   $form[$field][LANGUAGE_NONE][0]['field_width'][LANGUAGE_NONE][0]['value']['#default_value'] = $values['width'];
   $form[$field][LANGUAGE_NONE][0]['field_height'][LANGUAGE_NONE][0]['value']['#default_value'] = $values['height'];
+  $form[$field][LANGUAGE_NONE][0]['field_image_width'][LANGUAGE_NONE][0]['value']['#default_value'] = $values['image_width'];
+  $form[$field][LANGUAGE_NONE][0]['field_image_height'][LANGUAGE_NONE][0]['value']['#default_value'] = $values['image_height'];
 }

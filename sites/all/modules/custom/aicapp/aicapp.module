@@ -1510,6 +1510,8 @@ function strip_drupal_from_node(&$node) {
             'y' => !empty($item->field_y) ? $item->field_y[LANGUAGE_NONE][0]['value'] : NULL,
             'width' => !empty($item->field_width) ? $item->field_width[LANGUAGE_NONE][0]['value'] : NULL,
             'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
+            'image_width' => !empty($item->field_image_width) ? $item->field_image_width[LANGUAGE_NONE][0]['value'] : NULL,
+            'image_height' => !empty($item->field_image_height) ? $item->field_image_height[LANGUAGE_NONE][0]['value'] : NULL,
           );
           json_encode($node->thumbnail_crop_v2);
         }
@@ -2468,9 +2470,8 @@ function _aicapp_remote_object_properties(&$object, $item, $options = array()) {
 function aicapp_node_presave($node) {
   // A general flag to indicate there are changes to be published.
   variable_set('aicapp_pending', 1);
-
   if ($node->type == AICAPP_TYPE_TOUR) {
-    aicapp_check_for_tour_problems($node);
+    _aicapp_check_for_tour_problems($node);
     _aicapp_update_image_fields($node);
   }
   elseif ($node->type == AICAPP_TYPE_OBJECT) {
@@ -2593,7 +2594,7 @@ function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
         'w' => 112,
       ),
       'large' => array(
-        'iiif_size' => variable_get('aicapp_image_full_crop', '!800,800'),
+        'iiif_size' => variable_get('aicapp_image_large_crop', '!800,800'),
         'region' => 'full',
         'x' => 0,
         'x1' => 800,
@@ -2670,7 +2671,7 @@ function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
 /**
  * Check for problems with the object.
  */
-function aicapp_check_for_tour_problems($tour) {
+function _aicapp_check_for_tour_problems($tour) {
   $noLocs = array();
   $unpubs = array();
   $noaudio = array();
@@ -2762,7 +2763,7 @@ function aicapp_check_for_tour_problems($tour) {
 
 /**
  * Cycle through every published CMS object and pull it up in data hub.
- * Show it here if no "large_image_full_path" is found AND,
+ * Show it here if no "large_image_large_path" is found AND,
  * if no image has been added in the node.
  */
 function aicapp_object_noimg() {

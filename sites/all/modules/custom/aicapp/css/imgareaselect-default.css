@@ -38,18 +38,32 @@
 }
 
 /*AIC additions*/
-#field-large-image-crop-add-more-wrapper thead th:nth-child(3), #field-large-image-crop-add-more-wrapper th:nth-child(4) {
+#field-large-image-crop-add-more-wrapper thead th:nth-child(3),
+#field-large-image-crop-add-more-wrapper thead th:nth-child(4),
+#field-large-image-crop-add-more-wrapper thead th:nth-child(7),
+#field-large-image-crop-add-more-wrapper thead th:nth-child(8) {
   display: none;
 }
-#field-large-image-crop-add-more-wrapper tbody td:nth-child(3), #field-large-image-crop-add-more-wrapper td:nth-child(4) {
+#field-large-image-crop-add-more-wrapper tbody td:nth-child(3),
+#field-large-image-crop-add-more-wrapper tbody td:nth-child(4),
+#field-large-image-crop-add-more-wrapper tbody td:nth-child(7),
+#field-large-image-crop-add-more-wrapper tbody td:nth-child(8) {
   display: none;
 }
-#field-thumbnail-image-crop-add-more-wrapper thead th:nth-child(3), #field-thumbnail-image-crop-add-more-wrapper th:nth-child(4) {
+
+#field-thumbnail-image-crop-add-more-wrapper thead th:nth-child(3),
+#field-thumbnail-image-crop-add-more-wrapper thead th:nth-child(4),
+#field-thumbnail-image-crop-add-more-wrapper thead th:nth-child(7),
+#field-thumbnail-image-crop-add-more-wrapper thead th:nth-child(8) {
   display: none;
 }
-#field-thumbnail-image-crop-add-more-wrapper tbody td:nth-child(3), #field-thumbnail-image-crop-add-more-wrapper td:nth-child(4) {
+#field-thumbnail-image-crop-add-more-wrapper tbody td:nth-child(3),
+#field-thumbnail-image-crop-add-more-wrapper tbody td:nth-child(4),
+#field-thumbnail-image-crop-add-more-wrapper tbody td:nth-child(7),
+#field-thumbnail-image-crop-add-more-wrapper tbody td:nth-child(8) {
   display: none;
 }
+
 #field-large-image-crop-add-more-wrapper input[readonly],
 #field-thumbnail-image-crop-add-more-wrapper input[readonly] {
   background-color: #e6e6e6;
