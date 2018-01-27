@@ -18,26 +18,9 @@ function aicapp_migrate_menu() {
 }
 
 /**
- * Implements hook_query_TAG_alter().This is used for data migration queries.
- */
-function aicapp_migrate_query_no_commentary_items_alter(QueryAlterableInterface $query) {
-  $query->leftJoin('field_data_field_audio_commentary', 'o', 'node.nid = o.entity_id');
-  $query->isNull('o.field_audio_commentary_value');
-}
-
-/**
- * Implements hook_query_TAG_alter(). This is used for data migration queries.
- */
-function aicapp_migrate_query_no_tour_stops_items_alter(QueryAlterableInterface $query) {
-  $query->leftJoin('field_data_field_tour_stops', 'o', 'node.nid = o.entity_id');
-  $query->isNull('o.field_tour_stops_value');
-}
-
-/**
  * Form callback.
  */
-function aicapp_migrate_admin_migrate() {
-  $form = array();
+function aicapp_migrate_admin_migrate($form, &$form_state) {
   $all_migrations_complete = variable_get('aicapp_migrate_v1_v2', FALSE);
   // Data migration between v1 and v2.
   if (variable_get('aicapp_migrate_v1_v2_language', FALSE) && variable_get('aicapp_migrate_v1_v2_fields', FALSE)) {
@@ -107,13 +90,19 @@ function aicapp_migrate_admin_migrate() {
         ->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', $type, '=');
       if ($type === AICAPP_TYPE_OBJECT) {
-        $query->addTag('no_commentary_items');
+        $query->fieldCondition('field_audio_commentary', 'value', 'NULL', '=');
+        $query->fieldCondition('field_object_audio', 'nid', 'NULL', '!=');
       }
       elseif ($type === AICAPP_TYPE_TOUR) {
-        $query->addTag('no_tour_stop');
+        $query->fieldCondition('field_tour_stops', 'value', 'NULL', '=');
+        $query->fieldCondition('field_stops2', 'value', 'NULL', '!=');
       }
       $result = $query->execute();
       if (!empty($result['node'])) {
+        // Add results here for use in submit callback.
+        $form_state['build_info']['args'] = array(
+          0 => $result,
+        );
         $counts[$type] = count($result['node']);
       }
     }
@@ -143,7 +132,7 @@ function aicapp_migrate_admin_migrate() {
         '#size' => 10,
         '#length' => 10,
         '#default_value' => 25,
-        '#title' => t('Number of content items to update per batch.')
+        '#title' => t('Number of content items to update per batch.'),
       );
       $form['aicapp_data']['migration_fields_submit'] = array(
         '#type' => 'submit',
@@ -171,12 +160,11 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
     if (empty($result['node']) || empty($types)) {
       drupal_set_message('There were no items to migrate');
       $form_state['values']['#results'] = array(
-        'node' => array()
+        'node' => array(),
       );
       return;
     }
-    // Add results here for use in submit callback.
-    $form_state['values']['#results'] = $result;
+    $form_state['values']['#result'] = $result;
   }
 }
 
@@ -192,10 +180,9 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
   }
   if ($form_state['clicked_button']['#value'] === 'Update Content Language') {
     global $language;
-    $results = $form_state['values']['#results'];
-
+    $result = $form_state['values']['#result'];
     foreach ($types as $type) {
-      if (empty($type)) {
+      if (empty($type) || empty($result['node'])) {
         continue;
       }
       foreach ($result['node'] as $nid => $obj) {
@@ -229,28 +216,15 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
       drupal_set_message($message);
     }
   }
-  if ($form_state['clicked_button']['#value'] === 'Update Content Fields') {
+  elseif ($form_state['clicked_button']['#value'] === 'Update Content Fields') {
     $counts = array();
     $batch_size = !empty($form_state['values']['aicapp_data']['migration_fields_batch']) ? $form_state['values']['aicapp_data']['migration_fields_batch'] : 50;
     $types = $form_state['values']['aicapp_data']['migration_fields_types'];
     foreach ($types as $type) {
-      if (empty($type)) {
+      if (empty($type) || empty($form_state['build_info']['args'])) {
         continue;
       }
-      $query = new EntityFieldQuery();
-      $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', $type, '=');
-      if ($type === AICAPP_TYPE_OBJECT) {
-        // Load all objects that have 0 audio commentary items.
-        $query->addTag('no_commentary_items');
-      }
-      elseif ($type === AICAPP_TYPE_TOUR) {
-        // Load all tours.
-        $query->addTag('no_tour_stop');
-      }
-      $result = $query->execute();
-      if (!empty($result['node'])) {
+      if ($result = array_shift($form_state['build_info']['args'])) {
         $counts[$type] = $i = 0;
         $to_add = array();
         if ($batch_size !== 0 && is_numeric($batch_size)) {
@@ -260,43 +234,26 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
         else {
           $chunks = array($result['node']);
         }
-        // Loop though until we get up to batch size.
-        for ($j = 0; $counts[$type] < $batch_size; $result['node'] = array_shift($chunks), $j++) {
-          $counts[$type] = 100;
-          if ($j > 4) {
-            // After 4 loops, stop.
-            break;
+        $result['node'] = array_shift($chunks);
+        foreach ($result['node'] as $nid => $obj) {
+          if (empty($obj->type) || $obj->type !== $type) {
+            continue;
           }
-          foreach ($result['node'] as $nid => $obj) {
-            if (empty($obj->type) || $obj->type !== $type) {
-              continue;
-            }
-            $i++;
-            $callback = 'aicapp_migrate_migrate_type_' . $type;
-            call_user_func_array($callback, array($nid, &$counts, $i, &$to_add));
-          }
+          $i++;
+          $callback = 'aicapp_migrate_migrate_type_' . $type;
+          call_user_func_array($callback, array($nid, &$counts, $i, &$to_add));
         }
-        // Run the original query again to get an accurate count.
-        $query = new EntityFieldQuery();
-        $query
-          ->entityCondition('entity_type', 'node')
-          ->entityCondition('bundle', $type, '=');
-        if ($type === AICAPP_TYPE_OBJECT) {
-          // Load all objects that have 0 audio commentary items.
-          $query->addTag('no_commentary_items');
-        }
-        elseif ($type === AICAPP_TYPE_TOUR) {
-          // Load all tours.
-          $query->addTag('no_tour_stop');
-        }
-        $result = $query->execute();
         $remaining = !empty($result['node']) ? count($result['node']) : 0;
         $type_message = array(
           '@type' => $type,
           '@size' => $counts[$type],
-          '@remain' => $remaining,
+          '@remain' => max(($remaining - $counts[$type]), 0),
         );
-        drupal_set_message(t('@size @type items have been migrated to use the new field format. There are @remain @type items remaining to migrate.', $type_message));
+        $message = '@size @type items have been migrated to use the new field format. There are @remain @type items remaining to migrate.';
+        drupal_set_message(t(
+          $message,
+          $type_message
+        ));
       }
     }
   }
@@ -343,7 +300,7 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array()) {
   elseif ($count_object < $count_audio) {
 
   }
-  //Check if there are currently audio commentary items.
+  // Check if there are currently audio commentary items.
   if (!empty($node->field_tour_stops[LANGUAGE_NONE])) {
     foreach ($node->field_tour_stops[LANGUAGE_NONE] as $key => $value) {
       $field_collection_item_values[] = $value['value'];
@@ -382,7 +339,6 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array()) {
       foreach ($item_values as $key => $values) {
         $collection_wrapper->{$key}->set($values['value']);
       }
-      $collection_wrapper->save();
     }
     $changed = TRUE;
   }
@@ -396,8 +352,8 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array()) {
  * Helper function to migrate object fields.
  */
 function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$to_add = array()) {
-  $changed = FALSE;
   $node = node_load($nid);
+  $node->_is_changed = FALSE;
   $entity_wrapper = entity_metadata_wrapper('node', $node);
   $found = array(
     'field_object_selector_numbers' => NULL,
@@ -493,7 +449,6 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
           'value' => $to_add[$i]['selector'][$k],
         );
       }
-
       // Create the collection entity and set it's "host".
       $collection = entity_create('field_collection_item', array('field_name' => 'field_audio_commentary'));
       $collection->setHostEntity('node', $node);
@@ -501,11 +456,11 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
       foreach ($item_values as $key => $values) {
         $collection_wrapper->{$key}->set($values['value']);
       }
-      $collection_wrapper->save();
     }
-    $changed = TRUE;
+    $node->_is_changed = TRUE;
   }
-  if ($changed === TRUE) {
+  if ($node->_is_changed) {
+    unset($node->_is_changed);
     $entity_wrapper->save();
     $counts[AICAPP_TYPE_OBJECT]++;
   }
