@@ -1,0 +1,77 @@
+<?php
+
+/**
+ * Tests for legacy field replacement.
+ */
+class TitleAdminSettingsTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Admin settings',
+      'description' => 'Test the administration settings.',
+      'group' => 'Title',
+    );
+  }
+
+  /**
+   * Use the barebones "testing" installation profile.
+   */
+  protected $profile = 'testing';
+
+  /**
+   * {@inheritdoc}
+   */
+  function setUp(array $modules = array()) {
+    // Core.
+    $modules[] = 'field_test';
+    $modules[] = 'taxonomy';
+    // This module.
+    $modules[] = 'title';
+    $modules[] = 'title_test';
+    parent::setUp($modules);
+
+    /**
+     * Reset the permissions cache prior to calling drupalCreateUser.
+     * @see https://api.drupal.org/comment/28739#comment-28739
+     */
+    $this->checkPermissions(array(), TRUE);
+    $admin_user = $this->drupalCreateUser(array('administer site configuration', 'administer taxonomy', 'administer fields'));
+    $this->drupalLogin($admin_user);
+  }
+
+  /**
+   * Check for automated title_field attachment.
+   */
+  public function testAutomatedFieldAttachment() {
+    $this->doTestAutomatedFieldAttachment(TRUE);
+    $this->doTestAutomatedFieldAttachment(FALSE);
+  }
+
+  /**
+   * Check that the fields are replaced or skipped depending on the given value.
+   *
+   * @param bool $enabled
+   *   Whether replacement is enabled or not.
+   */
+  public function doTestAutomatedFieldAttachment($enabled) {
+    $edit = array(
+      'title_taxonomy_term[auto_attach][name]' => $enabled,
+      'title_taxonomy_term[auto_attach][description]' => $enabled,
+    );
+    $this->drupalPost('admin/config/content/title', $edit, t('Save configuration'));
+
+    $edit = array(
+      'name' => $this->randomName(),
+      'machine_name' => drupal_strtolower($this->randomName()),
+      'description' => $this->randomString(16),
+    );
+    $this->drupalPost('admin/structure/taxonomy/add', $edit, t('Save'));
+
+    $entity_type = 'taxonomy_term';
+    $bundle = $edit['machine_name'];
+    field_info_cache_clear();
+    $this->assertTrue(title_field_replacement_enabled($entity_type, $bundle, 'name') == $enabled, 'Name field correctly processed.');
+    $this->assertTrue(title_field_replacement_enabled($entity_type, $bundle, 'description') == $enabled, 'Description field correctly processed.');
+  }
+
+}
