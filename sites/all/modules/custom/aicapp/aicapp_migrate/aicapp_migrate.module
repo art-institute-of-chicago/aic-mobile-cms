@@ -101,7 +101,7 @@ function aicapp_migrate_admin_migrate($form, &$form_state) {
       if (!empty($result['node'])) {
         // Add results here for use in submit callback.
         $form_state['build_info']['args'] = array(
-          0 => $result
+          0 => $result,
         );
         $counts[$type] = count($result['node']);
       }
@@ -132,7 +132,7 @@ function aicapp_migrate_admin_migrate($form, &$form_state) {
         '#size' => 10,
         '#length' => 10,
         '#default_value' => 25,
-        '#title' => t('Number of content items to update per batch.')
+        '#title' => t('Number of content items to update per batch.'),
       );
       $form['aicapp_data']['migration_fields_submit'] = array(
         '#type' => 'submit',
@@ -224,18 +224,6 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
       if (empty($type) || empty($form_state['build_info']['args'])) {
         continue;
       }
-      // $query = new EntityFieldQuery();
-      // $query
-      //   ->entityCondition('entity_type', 'node')
-      //   ->entityCondition('bundle', $type, '=');
-      // if ($type === AICAPP_TYPE_OBJECT) {
-      //   // Load all objects that have 0 audio commentary items.
-      //   $query->addTag('no_commentary_items');
-      // }
-      // elseif ($type === AICAPP_TYPE_TOUR) {
-      //   // Load all tours.
-      //   $query->addTag('no_tour_stop');
-      // }
       if ($result = array_shift($form_state['build_info']['args'])) {
         $counts[$type] = $i = 0;
         $to_add = array();
