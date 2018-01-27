@@ -1308,7 +1308,6 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
   );
   // Merge in default values.
   $options += $defaults;
-
   // Format a couple fields if they were used.
   if (!empty($options['fields'])) {
     $options['fields'] = is_array($options['fields']) ? implode(',', $options['fields']) : $options['fields'];
@@ -2470,12 +2469,15 @@ function _aicapp_remote_object_properties(&$object, $item, $options = array()) {
 function aicapp_node_presave($node) {
   // A general flag to indicate there are changes to be published.
   variable_set('aicapp_pending', 1);
-  if ($node->type == AICAPP_TYPE_TOUR) {
+  if ($node->type === AICAPP_TYPE_TOUR) {
     _aicapp_check_for_tour_problems($node);
     _aicapp_update_image_fields($node);
   }
-  elseif ($node->type == AICAPP_TYPE_OBJECT) {
+  elseif ($node->type === AICAPP_TYPE_OBJECT) {
     _aicapp_update_image_fields($node);
+    if (!empty($node->skip_hooks_presave)) {
+      return;
+    }
     // Check if the object has a full size image in data hub.
     if (isset($node->field_object_id[LANGUAGE_NONE][0]['value'])) {
       $object_id = $node->field_object_id[LANGUAGE_NONE][0]['value'];
