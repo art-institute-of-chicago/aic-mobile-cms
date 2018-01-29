@@ -2535,15 +2535,46 @@ function _aicapp_update_image_fields(&$node) {
     elseif (empty($node->field_image[LANGUAGE_NONE])) {
       // No image has uploaded to this node. If the host node is an artwork
       // object and this field has no value, attempt to fill the field with
-      // a remote artwork image.
-      // @TODO
-      continue;
+      // an image from the data hub.
+      if ($image_id = _aicapp_get_preferred_image_ids($node)) {
+        $type = 'thumbnail';
+        if ($field === 'field_large_image') {
+          $type = 'large';
+        }
+        elseif ($field === 'field_full_image') {
+          $type = 'full';
+        }
+        $url = _aicapp_get_image_crop($image_id, array('default' => $type));
+      }
+      else {
+        continue;
+      }
     }
     // An uploaded image is present, this will fill a field with a URL that
     // points to a styled/cropped version of the image.
     $image_file = file_load($node->field_image[LANGUAGE_NONE][0]['fid']);
+    // If the uploaded image is a placeholder, use an image from the data hub.
+    $placholder_image = variable_get('aciapp_placeholder_filename', 'AIC_ImagePlaceholder.png');
+    if ($placholder_image === $image_file->filename) {
+      // No image has uploaded to this node. If the host node is an artwork
+      // object and this field has no value, attempt to fill the field with
+      // an image from the data hub.
+      if ($image_id = _aicapp_get_preferred_image_ids($node)) {
+        $type = 'thumbnail';
+        if ($field === 'field_large_image') {
+          $type = 'large';
+        }
+        elseif ($field === 'field_full_image') {
+          $type = 'full';
+        }
+        $url = _aicapp_get_image_crop($image_id, array('default' => $type));
+      }
+      else {
+        continue;
+      }
+    }
     // Choose which image style to use.
-    if ($field === 'field_thumbnail_image') {
+    elseif ($field === 'field_thumbnail_image') {
       $url = _aicapp_file_create_url($image_file->uri, 'thumbnail_one_twelve');
     }
     elseif ($field === 'field_large_image') {
@@ -2560,24 +2591,38 @@ function _aicapp_update_image_fields(&$node) {
 /**
  * Return a object id from the data hub, given a object node.
  */
-function _aicapp_get_preferred_image_id($object_node) {
-  if (empty($object_node->nid)) {
+function _aicapp_get_preferred_image_ids($object) {
+  $image_ids = &drupal_static(__FUNCTION__);
+  if (is_object($object) && !empty($object->nid)) {
+    $entity = entity_metadata_wrapper('node', $object);
+    $object_id = $entity->field_object_id->value();
+    $image_ids = array($object_id => '');
+  }
+  if (empty($object_id)) {
     return;
   }
-  $entity = entity_metadata_wrapper('node', $object_node);
-  $object_id = $entity->field_object_id->value();
-  if (!empty($object_id)) {
-    $options = array(
-      'ids' => array($object_id),
-      'limit' => 1,
-    );
-    $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
-    // Query the data aggregrator.
-    $results = _aicapp_fetch_data($url, $options);
-    if (!empty($results[0])) {
-      return !empty($results[0]['preferred_image_id']) ? $results[0]['preferred_image_id'] : NULL;
+  elseif (!empty($image_ids[$object_id])) {
+    if ($update) {
+      // @TODO
+    }
+    return $image_ids[$object_id];
+  }
+  $options = array(
+    'fields' => 'id,preferred_image_iiif_url,preferred_image_id',
+    'ids' => implode(',', array_keys($image_ids)),
+  );
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  // Query the data aggregrator.
+  $results = _aicapp_fetch_data($url, $options);
+  if (empty($results)) {
+    return;
+  }
+  foreach ($results as $key => $values) {
+    if (!empty($values['preferred_image_id'])) {
+      $image_ids[$values['id']] = $values['preferred_image_id'];
     }
   }
+  return isset($image_ids[$object_id]) ? $image_ids[$object_id] : NULL;
 }
 
 /**
