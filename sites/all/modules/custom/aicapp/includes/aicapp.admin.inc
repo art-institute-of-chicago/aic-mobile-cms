@@ -697,6 +697,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
         $page_start++;
       }
     }
+
     // Fetch all locally saved objects using the key of remote ids.
     $remote['local'] = array();
     $remote['to_import'] = array_keys($remote['remote']);
@@ -786,6 +787,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
         'promote' => 0,
       );
       $entity = entity_create('node', $values);
+
       // The entity is now created, but we have not yet simplified use of it.
       // Now create an entity_metadata_wrapper around the new node entity
       // to make getting and setting values easier.
