@@ -2544,11 +2544,9 @@ function _aicapp_update_image_fields(&$node) {
         elseif ($field === 'field_full_image') {
           $type = 'full';
         }
-        $url = _aicapp_get_image_crop($image_id, array('default' => $type));
+        $node->{$field}[LANGUAGE_NONE][0]['value'] = _aicapp_get_image_crop($image_id, array('default' => $type));
       }
-      else {
-        continue;
-      }
+      continue;
     }
     // An uploaded image is present, this will fill a field with a URL that
     // points to a styled/cropped version of the image.
