@@ -697,7 +697,6 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
         $page_start++;
       }
     }
-
     // Fetch all locally saved objects using the key of remote ids.
     $remote['local'] = array();
     $remote['to_import'] = array_keys($remote['remote']);
@@ -732,8 +731,6 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
         html_entity_decode($to_import['title'], ENT_QUOTES, 'UTF-8'),
         ENT_QUOTES
       );
-$title = "The Artist's Studio";
-
       $ewrapper->title->set($title);
       // Object ID
       $ewrapper->field_imported_object_id->set($to_import['id']);
@@ -789,7 +786,6 @@ $title = "The Artist's Studio";
         'promote' => 0,
       );
       $entity = entity_create('node', $values);
-
       // The entity is now created, but we have not yet simplified use of it.
       // Now create an entity_metadata_wrapper around the new node entity
       // to make getting and setting values easier.
@@ -799,8 +795,6 @@ $title = "The Artist's Studio";
         html_entity_decode($to_import['title'], ENT_QUOTES, 'UTF-8'),
         ENT_QUOTES
       );
-$title = "The Artist's Studio";
-
       $ewrapper->title->set($title);
       // Object ID.
       $ewrapper->field_imported_object_id->set($to_import['id']);
