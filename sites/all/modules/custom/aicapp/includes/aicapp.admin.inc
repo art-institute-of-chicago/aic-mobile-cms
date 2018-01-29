@@ -91,7 +91,7 @@ function aicapp_admin() {
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
-    '#title' => t('Version Compare'),
+    '#title' => t('JSON Version Compare'),
   );
   $compare_options = array(
     'prod__v1' => 'Production v1',
@@ -160,14 +160,24 @@ function aicapp_admin() {
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#title' => t('Image Cropping'),
+    '#title' => t('Images'),
     '#tree' => FALSE,
+  );
+  $form['aicapp_images']['aciapp_placeholder_filename'] = array(
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#maxlength' => 25,
+    '#title' => t('Placeholder Filename'),
+    '#default_value' => variable_get('aciapp_placeholder_filename', 'AIC_ImagePlaceholder.png'),
+    '#description' => t('Some images cointain a placeholder image. By entering a filename used a placeholder, any artworks that use a placceholder image will use a preferred image from the data hub in JSON instead of the placeholder image.'),
+    '#prefix' => '<h4>' . t('Large Images') . '</h4>',
   );
   $form['aicapp_images']['aicapp_image_object'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('Object Node Cropping Defaults'),
+    '#prefix' => '<h4>' . t('Cropping Defaults') . '</h4>',
     '#tree' => FALSE,
   );
   $form['aicapp_images']['aicapp_image_object']['aicapp_image_large_crop'] = array(
@@ -524,19 +534,30 @@ function aicapp_json_compare_form_submit($form, &$form_state) {
     if (!isset($arrays[$type][$json_node])) {
       return;
     }
+    $arrays[$type . '_info'] = array(
+      'url' => $filename,
+    );
     $arrays[$type] = $arrays[$type][$json_node];
   }
   $keys_only = !empty($values['aicapp_json_compare_keys_only']) ?:FALSE;
   $compare_key = !empty($values['aicapp_json_compare_key_name']) ? $values['aicapp_json_compare_key_name'] : NULL;
   // Compare to JSON files.
-  $diff['in_head_not_base'] = aicapp_array_diff_assoc_recursive($arrays['head'], $arrays['base'], $keys_only, $compare_key);
+  $diff['Missing in base version'] = aicapp_array_diff_assoc_recursive($arrays['head'], $arrays['base'], $keys_only, $compare_key);
   // From the base first.
-  $diff['in_base_not_head'] = aicapp_array_diff_assoc_recursive($arrays['base'], $arrays['head'], $keys_only, $compare_key);
+  $diff['Missing in comparison version'] = aicapp_array_diff_assoc_recursive($arrays['base'], $arrays['head'], $keys_only, $compare_key);
   if (function_exists('dpm')) {
+    drupal_set_message(t('Comparing the JSON from: %base to %head', array(
+      '%base' => $arrays['base_info']['url'],
+      '%head' => $arrays['head_info']['url'],
+    )));
     dpm($diff);
   }
   else {
-    drupal_set_message('Devel module must be enabled to see comparison results');
+    drupal_set_message(t('Comparing the JSON from: %base to %head', array(
+      '%base' => $arrays['head_info']['url'],
+      '%head' => $arrays['base_info']['url'],
+    )));
+    drupal_set_message('The Devel module must be enabled to see comparison results.');
   }
 }
 
@@ -676,7 +697,6 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
         $page_start++;
       }
     }
-
     // Fetch all locally saved objects using the key of remote ids.
     $remote['local'] = array();
     $remote['to_import'] = array_keys($remote['remote']);
@@ -766,7 +786,6 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
         'promote' => 0,
       );
       $entity = entity_create('node', $values);
-
       // The entity is now created, but we have not yet simplified use of it.
       // Now create an entity_metadata_wrapper around the new node entity
       // to make getting and setting values easier.
