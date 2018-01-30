@@ -1,0 +1,1060 @@
+<?php
+
+/**
+ * @file
+ * Tests for Entity translation module.
+ */
+
+/**
+ * Base class for entity translation module tests.
+ */
+class EntityTranslationTestCase extends DrupalWebTestCase {
+
+  protected $current_user;
+  protected $admin_user;
+  protected $translator_user;
+
+  /**
+   * {@inheritdoc}
+   */
+  function setUp() {
+    $args = func_get_args();
+    call_user_func_array(array('parent', 'setUp'), $args);
+
+    // Reset user fields to make test object reusable.
+    unset($this->current_user);
+    unset($this->admin_user);
+    unset($this->translator_user);
+  }
+
+  /**
+   * Retrieves a Drupal path or an absolute path with language.
+   *
+   * @param $language
+   *   Language code or language object.
+   */
+  function get($language, $path = '', array $options = array(), array $headers = array()) {
+    $options['language'] = $this->getLanguage($language);
+    return $this->drupalGet($path, $options, $headers);
+  }
+
+  /**
+   * Posts to a Drupal path with language.
+   */
+  function post($language, $path, $edit, $submit, array $options = array(), array $headers = array(), $form_html_id = NULL, $extra_post = NULL) {
+    $options['language'] = $this->getLanguage($language);
+    $this->drupalPost($path, $edit, $submit, $options, $headers, $form_html_id, $extra_post);
+  }
+
+  /**
+   * Login the given user only if she has not changed.
+   */
+  function login($user) {
+    if (!isset($this->current_user) || $this->current_user->uid != $user->uid) {
+      $this->current_user = $user;
+      $this->drupalLogin($user);
+    }
+  }
+
+  /**
+   * Returns a user with administration rights.
+   *
+   * @param $permissions
+   *   Additional permissions for administrative user.
+   */
+  function getAdminUser(array $permissions = array()) {
+    if (!isset($this->admin_user)) {
+      $this->admin_user = $this->drupalCreateUser(array_merge(array(
+        'bypass node access',
+        'administer nodes',
+        'administer fields',
+        'administer languages',
+        'administer content types',
+        'administer blocks',
+        'access administration pages',
+        'administer site configuration',
+      ), $permissions));
+    }
+    return $this->admin_user;
+  }
+
+  /**
+   * Returns a user with minimal translation rights.
+   *
+   * @param $permissions
+   *   Additional permissions for administrative user.
+   */
+  function getTranslatorUser(array $permissions = array()) {
+    if (!isset($this->translator_user)) {
+      $this->translator_user = $this->drupalCreateUser(array_merge(array(
+        'create page content',
+        'edit own page content',
+        'delete own page content',
+        'translate any entity',
+      ), $permissions));
+    }
+    return $this->translator_user;
+  }
+
+  /**
+   * Make sure the clean urls are enabled.
+   */
+  function enableCleanUrls() {
+    $this->drupalGet('admin/config/search/clean-urls');
+    $edit = array();
+    $edit['clean_url'] = TRUE;
+    $this->drupalPost(NULL, $edit, t('Save configuration'));
+  }
+
+  /**
+   * Enable URL language detection.
+   */
+  function enableUrlLanguageDetection() {
+    // Enable URL language detection and selection.
+    $edit = array(
+      'language[enabled][locale-url]' => TRUE,
+      'language_content[enabled][locale-interface]' => TRUE
+    );
+    $this->drupalPost('admin/config/regional/language/configure', $edit, t('Save settings'));
+    $this->assertRaw(t('Language negotiation configuration saved.'), t('URL language detection enabled.'));
+    $this->drupalGet('admin/config/regional/language/configure');
+    // Reset caches.
+    drupal_static_reset('locale_url_outbound_alter');
+    drupal_static_reset('language_list');
+  }
+
+  /**
+   * Get a language object from a language code.
+   */
+  public function getLanguage($langcode) {
+    if (is_object($langcode)) {
+      return $langcode;
+    }
+    else {
+      $language_list = language_list();
+      return $language_list[$langcode];
+    }
+  }
+
+  /**
+   * Disable a language which is in the language list.
+   *
+   * @param string $langcode
+   *   The code of the language to disable, which must exist.
+   */
+  function disableLanguage($langcode) {
+    $edit = array(
+      'enabled[' . $langcode . ']' => FALSE,
+    );
+    $this->drupalPost('admin/config/regional/language', $edit, 'Save configuration');
+  }
+
+  /**
+   * Install a specified language if it has not been already, otherwise make sure that the language is enabled.
+   *
+   * @param $langcode
+   *   The language code to check.
+   */
+  function addLanguage($langcode) {
+    // Check to make sure that language has not already been installed.
+    $this->drupalGet('admin/config/regional/language');
+
+    if (strpos($this->drupalGetContent(), 'enabled[' . $langcode . ']') === FALSE) {
+      // Doesn't have language installed so add it.
+      $edit = array();
+      $edit['langcode'] = $langcode;
+      $this->drupalPost('admin/config/regional/language/add', $edit, t('Add language'));
+
+      // Make sure we are not using a stale list.
+      drupal_static_reset('language_list');
+      $languages = language_list('language');
+      $this->assertTrue(array_key_exists($langcode, $languages), t('Language was installed successfully.'));
+
+      if (array_key_exists($langcode, $languages)) {
+        $this->assertRaw(t('The language %language has been created and can now be used. More information is available on the <a href="@locale-help">help screen</a>.', array('%language' => $languages[$langcode]->name, '@locale-help' => url('admin/help/locale'))), t('Language has been created.'));
+      }
+    }
+    elseif ($this->xpath('//input[@type="checkbox" and @name=:name and @checked="checked"]', array(':name' => 'enabled[' . $langcode . ']'))) {
+      // It is installed and enabled. No need to do anything.
+      $this->assertTrue(TRUE, 'Language [' . $langcode . '] already installed and enabled.');
+    }
+    else {
+      // It is installed but not enabled. Enable it.
+      $this->assertTrue(TRUE, 'Language [' . $langcode . '] already installed.');
+      $this->drupalPost(NULL, array('enabled[' . $langcode . ']' => TRUE), t('Save configuration'));
+      $this->assertRaw(t('Configuration saved.'), t('Language successfully enabled.'));
+    }
+  }
+
+  /**
+   * Configure the "Basic page" content type for entity translation tests.
+   */
+  function configureContentType() {
+    // Configure the "Basic page" content type to use multilingual support with
+    // translation.
+    $edit = array();
+    $edit['language_content_type'] = ENTITY_TRANSLATION_ENABLED;
+    $this->drupalPost('admin/structure/types/manage/page', $edit, t('Save content type'));
+    $this->assertRaw(t('The content type %type has been updated.', array('%type' => 'Basic page')), t('Basic page content type has been updated.'));
+
+    // Set body field's cardinality to unlimited and toggle translatability.
+    $edit = array();
+    $edit['field[cardinality]'] = FIELD_CARDINALITY_UNLIMITED;
+    $edit['field[translatable]'] = 1;
+    $this->drupalPost('admin/structure/types/manage/page/fields/body', $edit, t('Save settings'));
+    $this->assertRaw(t('Saved %field configuration.', array('%field' => 'Body')), t('Body field settings have been updated.'));
+
+    // Check if the setting works.
+    $this->drupalGet('node/add/page');
+    $this->assertFieldById('edit-body-en-add-more', t('Add another item'), t('Add another item button found.'));
+  }
+
+  /**
+   * Create a "Basic page" in the specified language.
+   *
+   * @param $title
+   *   Title of the basic page in the specified language.
+   * @param $body
+   *   Body of the basic page in the specified language.
+   * @param $langcode
+   *   The language code to be assigned to the specified values.
+   */
+  function createPage($title, $body, $langcode) {
+    $edit = array();
+    $edit["title"] = $title;
+    $edit["body[$langcode][0][value]"] = $body;
+    $edit['language'] = $langcode;
+    $this->drupalPost('node/add/page', $edit, t('Save'));
+    $this->assertRaw(t('Basic page %title has been created.', array('%title' => $title)), t('Basic page created.'));
+
+    // Check to make sure the node was created.
+    $node = $this->drupalGetNodeByTitle($title);
+    $this->assertTrue($node, t('Node found in database.'));
+
+    return $node;
+  }
+
+  /**
+   * Create a translation.
+   *
+   * @param $node
+   *   Node of the basic page to create translation for.
+   * @param $title
+   *   Title of the basic page in the specified language.
+   * @param $body
+   *   Body of the basic page in the specified language.
+   * @param $langcode
+   *   The language code to be assigned to the specified values.
+   */
+  function createTranslation($node, $title, $body, $langcode, $source_langcode = 'en') {
+    $this->drupalGet('node/' . $node->nid . '/edit/add/' . $source_langcode . '/' . $langcode);
+
+    $body_key = "body[$langcode][0][value]";
+    $this->assertFieldByXPath("//textarea[@name='$body_key']", $node->body[$source_langcode][0]['value'], 'Original body value correctly populated.');
+    $this->assertFieldById('edit-body-' . $langcode . '-add-more', t('Add another item'), t('Add another item button found.'));
+
+    $edit = array();
+    $edit[$body_key] = $body;
+
+    $this->drupalPost(NULL, $edit, t('Save'));
+    $this->drupalGet('node/' . $node->nid . '/translate');
+    $this->assertLinkByHref('node/' . $node->nid . '/edit/' . $langcode, 0, t('Translation edit link found. Translation created.'));
+
+    return $node;
+  }
+}
+
+/**
+ * Basic tests for the translation creation/editing workflow.
+ */
+class EntityTranslationTranslationTestCase extends EntityTranslationTestCase {
+
+  /**
+   * Return the test information.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Entity translation workflow',
+      'description' => 'Basic tests for the translation creation/editing workflow.',
+      'group' => 'Entity translation',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale', 'entity_translation');
+    $this->login($this->getAdminUser());
+    $this->addLanguage('en');
+    $this->addLanguage('es');
+    $this->addLanguage('fr');
+    $this->disableLanguage('fr');
+    $this->configureContentType();
+    $this->login($this->getTranslatorUser());
+  }
+
+  /**
+   * Test disabled languages.
+   *
+   * Make sure disabled languages are not accessible in the language list when
+   * the option entity_translation_languages_enabled is enabled.
+   */
+  function testDisabledLanguages() {
+    $this->drupalGet('node/add/page');
+    $this->assertRaw('value="fr"', 'French is available even if the language is disabled');
+
+    variable_set('entity_translation_languages_enabled', TRUE);
+    $this->drupalGet('node/add/page');
+    $this->assertNoRaw('value="fr"', 'French is not available when the language is disabled and the option entity_translation_languages_enabled is enabled.');
+  }
+
+  /**
+   * Test if field based translation works.
+   *
+   * Enable field based translation for basic pages. Add a field with a
+   * cardinality higher than 1, to test if field_default_extract_form_values()
+   * is invoked. Create a basic page and translate it.
+   */
+  function testFieldTranslation() {
+    // Create Basic page in English.
+    $node_title = $this->randomName();
+    $node_body = $this->randomName();
+    $node = $this->createPage($node_title, $node_body, 'en');
+
+    // Submit translation in Spanish.
+    $node_translation_title = $this->randomName();
+    $node_translation_body = $this->randomName();
+    $node_translation = $this->createTranslation($node, $node_translation_title, $node_translation_body, 'es');
+  }
+}
+
+/**
+ * Basic tests for comment related things.
+ *
+ * @todo Add tests for comment translation workflow.
+ */
+class EntityTranslationCommentTestCase extends EntityTranslationTestCase {
+
+  protected $comment_user;
+
+  /**
+   * Return the test information.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Comment translation',
+      'description' => 'Basic tests for comment translation/filtering.',
+      'group' => 'Entity translation',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale', 'entity_translation', 'comment');
+    $this->login($this->getAdminUser());
+    $this->addLanguage('en');
+    $this->addLanguage('es');
+    $this->enableUrlLanguageDetection();
+    $this->configureContentType();
+    $this->configureComments(FALSE);
+    $this->login($this->getTranslatorUser());
+  }
+
+  function tearDown() {
+    unset($this->comment_user);
+    parent::tearDown();
+  }
+
+  function getCommentUser() {
+    if (empty($this->comment_user)) {
+      $this->comment_user = $this->drupalCreateUser(array(
+        'access comments',
+        'post comments',
+        'edit own comments',
+      ));
+    }
+    return $this->comment_user;
+  }
+
+  /**
+   * Enable comments and comment filtering by language.
+   */
+  function configureComments($filter_by_language = TRUE) {
+    $edit = array();
+    $edit['comment'] = COMMENT_NODE_OPEN;
+    $edit['entity_translation_comment_filter'] = $filter_by_language;
+    $this->drupalPost('admin/structure/types/manage/page', $edit, t('Save content type'));
+    $this->assertRaw(t('The content type %type has been updated.', array('%type' => 'Basic page')));
+
+    $this->drupalGet('admin/structure/types/manage/page');
+    if ($filter_by_language) {
+      $this->assertFieldChecked('edit-entity-translation-comment-filter', 'Comment filtering is enabled.');
+    }
+    else {
+      $this->assertNoFieldChecked('edit-entity-translation-comment-filter', 'Comment filtering is disabled.');
+    }
+  }
+
+  /**
+   * Add a comment for the given node.
+   *
+   * @param $node
+   *   The node for which to add the comment.
+   * @param $comment_body
+   *   The comment body text.
+   * @param $language
+   *   The comment language.
+   */
+  function postComment($node, $comment_body, $language) {
+    $edit = array();
+    $edit['comment_body[' . LANGUAGE_NONE . '][0][value]'] = $comment_body;
+    $this->post($language, 'comment/reply/' . $node->nid, $edit, t('Save'));
+  }
+
+  /**
+   * Test comment filtering by language.
+   */
+  function testCommentLanguageFiltering() {
+    $node = $this->createPage($this->randomName(), $this->randomName(), 'en');
+    $this->login($this->getCommentUser());
+
+    // Create comments in different languages.
+    $comment_en = $this->randomName();
+    $this->postComment($node, $comment_en, 'en');
+    $comment_es = $this->randomName();
+    $this->postComment($node, $comment_es, 'es');
+
+    // Check that ALL comments are being displayed when comment language filter
+    // is disabled (default behavior).
+    $this->get('en', 'node/' . $node->nid);
+    $this->assertText($comment_en, 'English comment found.');
+    $this->assertText($comment_es, 'Spanish comment found.');
+
+    // Enable comment filtering by language.
+    $this->login($this->getAdminUser());
+    $this->configureComments(TRUE);
+    $this->login($this->getCommentUser());
+
+    // Load page in different languages. Check that only comments matching
+    // current language are being displayed.
+    $this->get('en', 'node/' . $node->nid);
+    $this->assertText($comment_en, 'English comment found.');
+    $this->assertNoText($comment_es, 'Spanish comment not found.');
+
+    $this->get('es', 'node/' . $node->nid);
+    $this->assertNoText($comment_en, 'English comment not found.');
+    $this->assertText($comment_es, 'Spanish comment found.');
+  }
+}
+
+/**
+ * Test CRUD hook invocation.
+ */
+class EntityTranslationHookTestCase extends EntityTranslationTestCase {
+
+  /**
+   * Return the test information.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Entity translation hooks',
+      'description' => 'Test that entity translation hooks are properly fired.',
+      'group' => 'Entity translation',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale', 'entity_translation', 'entity_translation_test');
+    $this->login($this->getAdminUser());
+    $this->addLanguage('it');
+    $this->addLanguage('es');
+    $this->configureContentType();
+    $this->login($this->getTranslatorUser());
+  }
+
+  /**
+   * Test whether hooks are properly fired in the regular form workflow.
+   */
+  function testFormWorkflow() {
+    // Create Basic page in English.
+    $node_title = $this->randomName();
+    $node_body = $this->randomName();
+    $node = $this->createPage($node_title, $node_body, 'en');
+
+    // Submit translation in Italian.
+    $node_translation_body = $this->randomName();
+    $this->createTranslation($node, NULL, $node_translation_body, 'it');
+    $info = $this->getHookInfo();
+    $this->assertTrue(!empty($info['insert']), t('Insert hook has been properly fired.'));
+
+    // Edit translation in Italian.
+    $edit = array("body[it][0][value]" => $this->randomName());
+    $this->drupalPost('node/' . $node->nid . '/edit/it', $edit, t('Save'));
+    $info = $this->getHookInfo();
+    $this->assertTrue(!empty($info['update']), t('Update hook has been properly fired.'));
+
+    // Delete the Basic page.
+    $edit = array();
+    $this->drupalPost('node/' . $node->nid . '/delete', $edit, t('Delete'));
+    $info = $this->getHookInfo('delete');
+    $this->assertTrue(count($info) == 2 && !empty($info['en']) && !empty($info['it']), t('Delete hook has been properly fired.'));
+  }
+
+  /**
+   * Test whether hooks are properly fired when using the API.
+   */
+  function testAPI() {
+    // Create Basic page in English.
+    $node = $this->createPage($this->randomName(), $this->randomName(), 'en');
+    $handler = entity_translation_get_handler('node', $node);
+
+    // Create a translation in Italian.
+    $translation = array('source' => 'en', 'language' => 'it');
+    $handler->setTranslation($translation);
+    $handler->saveTranslations();
+    $node = node_load($node->nid, NULL, TRUE);
+    $handler = entity_translation_get_handler('node', $node);
+    $translations = $handler->getTranslations();
+    $this->assertTrue(!empty($translations->data['it']), t('An Italian translation has been created'));
+    $info = $this->getHookInfo();
+    $this->assertTrue(!empty($info['insert']), t('Insert hook has been properly fired.'));
+
+    // Check that the update hook is properly fired.
+    $translation['status'] = 1;
+    $handler->setTranslation($translation);
+    $handler->saveTranslations();
+    $info = $this->getHookInfo();
+    $this->assertTrue(!empty($info['update']), t('Update hook has been properly fired.'));
+
+    // Create a Spanish translation and update it before saving it.
+    $translation = array('source' => 'it', 'language' => 'es');
+    $handler->setTranslation($translation);
+    $translation['status'] = 1;
+    $handler->setTranslation($translation);
+    $handler->saveTranslations();
+    $node = node_load($node->nid, NULL, TRUE);
+    $handler = entity_translation_get_handler('node', $node);
+    $translations = $handler->getTranslations();
+    $this->assertTrue(!empty($translations->data['es']), t('A Spanish translation has been created'));
+    $info = $this->getHookInfo();
+    $this->assertTrue(!empty($info['insert']), t('Insert hook has been properly fired.'));
+
+    // Delete a translation after updating it without saving.
+    $translation['status'] = 0;
+    $handler->setTranslation($translation);
+    $handler->removeTranslation('es');
+    $handler->saveTranslations();
+    $info = $this->getHookInfo();
+    $this->assertTrue(empty($info['update']), t('Update hook has not been fired.'));
+    $info = $this->getHookInfo('delete');
+    $this->assertTrue(!empty($info['es']), t('Delete hook has been properly fired.'));
+  }
+
+  /**
+   * Retrieve the information stored by hook implementations.
+   */
+  protected function getHookInfo($op = 'save') {
+    $name = 'entity_translation_test_' . $op;
+    $info = variable_get($name);
+    variable_del($name);
+    return $info;
+  }
+}
+
+/**
+ * Tests that entity translation handler hierarchy works properly.
+ */
+class EntityTranslationHierarchyTestCase extends EntityTranslationTestCase {
+
+  /**
+   * Return the test information.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Entity translation hierarchy',
+      'description' => 'Tests that entity translation handler hierarchy works properly.',
+      'group' => 'Entity translation',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  function setUp() {
+    parent::setUp('locale', 'entity_translation');
+  }
+
+  /**
+   * Tests the handler hierarchy.
+   */
+  public function testHierarchy() {
+    $entity_type = 'node';
+    $node = $this->drupalCreateNode();
+    $factory = EntityTranslationHandlerFactory::getInstance();
+    $handler = $factory->getHandler($entity_type, $node);
+
+    $children = array();
+    foreach (range(0, 4) as $index) {
+      $children[$index] = $this->drupalCreateNode();
+      $handler->addChild($entity_type, $children[$index]);
+    }
+
+    $langcode = 'it';
+    $handler->setActiveLanguage($langcode);
+    foreach ($children as $child) {
+      $child_handler = $factory->getHandler($entity_type, $child);
+      $this->assertEqual($child_handler->getActiveLanguage(), $langcode);
+    }
+
+    $rm_index = mt_rand(0, count($children) - 1);
+    $handler->removeChild($entity_type, $children[$rm_index]);
+
+    $langcode = 'fr';
+    $handler->setActiveLanguage($langcode);
+    foreach ($children as $index => $child) {
+      $child_handler = $factory->getHandler($entity_type, $child);
+      $this->assertEqual($child_handler->getActiveLanguage() == $langcode, $index != $rm_index);
+    }
+
+    // @todo Test the other properties.
+  }
+
+}
+
+/**
+ * Basic tests for nodes using both content and entity translation.
+ */
+class EntityTranslationContentTranslationTestCase extends EntityTranslationTestCase {
+
+  /**
+   * Return the test information.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Content and entity translation',
+      'description' => 'Basic tests for nodes using both content and entity translatio.',
+      'group' => 'Entity translation',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    // Activate modules and unset users.
+    parent::setUp('locale', 'translation', 'translation_test', 'entity_translation');
+    // Create admin and translator users with one extra permission,
+    // namely the 'translate content' permission.
+    // These getters works also as setters.
+    $this->getAdminUser(array(
+      'translate content',
+    ));
+    $this->getTranslatorUser(array(
+      'translate content',
+    ));
+    $this->login($this->getAdminUser());
+    $this->addLanguage('en');
+    $this->addLanguage('es');
+    $this->enableUrlLanguageDetection();
+    $this->configureContentType();
+    $this->login($this->getTranslatorUser());
+  }
+
+  /**
+   * Configure the "Basic page" content type for entity translation tests.
+   */
+  public function configureContentType() {
+    // Configure the "Basic page" content type to use multilingual support with
+    // content translation.
+    $edit = array();
+    $edit['language_content_type'] = TRANSLATION_ENABLED;
+    $this->drupalPost('admin/structure/types/manage/page', $edit, t('Save content type'));
+    $this->assertRaw(t('The content type %type has been updated.', array('%type' => 'Basic page')), t('Basic page content type has been updated.'));
+
+    // Toggle body field's translatability.
+    $edit = array();
+    $edit['field[translatable]'] = 1;
+    $this->drupalPost('admin/structure/types/manage/page/fields/body', $edit, t('Save settings'));
+    $this->assertRaw(t('Saved %field configuration.', array('%field' => 'Body')), t('Body field settings have been updated.'));
+  }
+
+  /**
+   * @see TranslationTestCase::createPage()
+   */
+  function createPage($title, $body, $language = NULL) {
+    $edit = array();
+    $langcode = LANGUAGE_NONE;
+    $edit["title"] = $title;
+    $edit["body[$langcode][0][value]"] = $body;
+    if (!empty($language)) {
+      $edit['language'] = $language;
+    }
+    $this->drupalPost('node/add/page', $edit, t('Save'));
+    $this->assertRaw(t('Basic page %title has been created.', array('%title' => $title)), 'Basic page created.');
+
+    // Check to make sure the node was created.
+    $node = $this->drupalGetNodeByTitle($title);
+    $this->assertTrue($node, 'Node found in database.');
+
+    return $node;
+  }
+
+  /**
+   * Tests copying of source node's body value in the add translation form page.
+   */
+  public function testCopyFieldsUsingContentTranslation() {
+    // Create Basic page in English.
+    $node_title = $this->randomName();
+    $node_body = $this->randomName();
+    $node = $this->createPage($node_title, $node_body, 'en');
+
+    // Check that the edit form correctly copies over the field's values from
+    // the source node.
+    $target_language = 'es';
+    $this->drupalGet('node/add/page', array('query' => array('translation' => $node->nid, 'target' => $target_language)));
+    $body_key = "body[${target_language}][0][value]";
+    $this->assertFieldByXPath("//textarea[@name='$body_key']", $node_body, "Body field correctly instantiated with the value of the source language.");
+  }
+
+}
+
+/**
+ * Tests for integration of Entity Translation with other modules.
+ */
+class EntityTranslationIntegrationTestCase extends EntityTranslationTestCase {
+
+  /**
+   * Return the test information.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Integration with other modules',
+      'description' => 'Tests for integration of Entity Translation with other modules.',
+      'group' => 'Entity translation',
+      // We need to add this to the test_dependencies[] as well.
+      'dependencies' => array('pathauto'),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    // Activate modules.
+    parent::setUp('locale', 'entity_translation');
+    // Create admin and translator users with one extra permission,
+    // namely the 'administer content' permission for the admin, to
+    // allow enabling the pathauto module during testing. The
+    // Translator user needs to be able to create url aliases.
+    $this->getAdminUser(array(
+      'administer modules',
+    ));
+    $this->getTranslatorUser(array(
+      'create url aliases',
+    ));
+    $this->login($this->getAdminUser());
+    $this->addLanguage('en');
+    $this->addLanguage('es');
+    $this->enableUrlLanguageDetection();
+    $this->configureContentType();
+    $this->login($this->getTranslatorUser());
+  }
+
+  /**
+   * Returns the role id of an $account object.
+   */
+  protected function getUserRole($account) {
+    return reset($account->roles);
+  }
+
+  /**
+   * Tests Pathauto integration.
+   */
+  public function testPathautoIntegration() {
+    $languages = language_list();
+
+    // Enable the path module to add aliases manually.
+    $this->login($this->getAdminUser());
+    if (!module_exists('path')) {
+      module_enable(array('path'));
+    }
+    $this->login($this->getTranslatorUser());
+
+    // Create Basic page in English.
+    $node_title = $this->randomName();
+    $node_body = $this->randomName();
+    $node = $this->createPage($node_title, $node_body, 'en');
+    $node_alias = $this->randomName();
+    $edit = array(
+      'path[alias]' => $node_alias,
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+
+    // Submit translation in Spanish.
+    $node_translation_body = $this->randomName();
+    $this->createTranslation($node, $node_title, $node_translation_body, 'es');
+    $node_translation_alias = $this->randomName();
+    $edit = array(
+      'path[alias]' => $node_translation_alias,
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'), array('language' => $languages['es']));
+
+    // Enable the pathauto module.
+    $this->login($this->getAdminUser());
+    if (!module_exists('pathauto')) {
+      module_enable(array('pathauto'));
+    }
+    $admin_rid = $this->getUserRole($this->getAdminUser());
+    user_role_grant_permissions($admin_rid, array('administer url aliases', 'administer pathauto'));
+    $translator_rid = $this->getUserRole($this->getTranslatorUser());
+    user_role_grant_permissions($translator_rid, array('create url aliases'));
+    $this->login($this->getTranslatorUser());
+
+    // Create pathauto alias for source node.
+    $edit = array(
+      'path[pathauto]' => TRUE,
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+    // Clear the static caches in case they interfere.
+    drupal_lookup_path('wipe');
+    $node_pathauto_alias = pathauto_node_update_alias($node, 'return');
+    $node_translation_pathauto_alias = pathauto_node_update_alias($node, 'return', array('language' => 'es'));
+
+    // Check that the new alias for the translation matches the
+    // pathauto's logic.
+    $this->assertEqual($this->getUrl(), url(drupal_get_path_alias($node_pathauto_alias), array('absolute' => TRUE)));
+
+    // Check that a pathauto alias was created for the source and
+    // matches the pathauto's logic.
+    $this->drupalGet('node/' . $node->nid, array('language' => $languages['es']));
+    $this->assertEqual($this->getUrl(), url(drupal_get_path_alias($node_translation_pathauto_alias), array('absolute' => TRUE, 'language' => $languages['es'])));
+
+    // Delete the two aliases.
+    path_delete(array('source' => 'node/' . $node->nid));
+
+    // Create pathauto alias for the translation of the node.
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'), array('language' => $languages['es']));
+    // Clear the static caches in case they interfere.
+    drupal_lookup_path('wipe');
+    $node_pathauto_alias = pathauto_node_update_alias($node, 'return');
+    $node_translation_pathauto_alias = pathauto_node_update_alias($node, 'return', array('language' => 'es'));
+
+    // Check that the new alias for the translation matches the
+    // pathauto's logic.
+    $this->assertEqual($this->getUrl(), url(drupal_get_path_alias($node_translation_pathauto_alias), array('absolute' => TRUE, 'language' => $languages['es'])));
+
+    // Check that a pathauto alias was created for the source and
+    // matches the pathauto's logic.
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertEqual($this->getUrl(), url(drupal_get_path_alias($node_pathauto_alias), array('absolute' => TRUE)));
+  }
+
+}
+
+/**
+ * Tests for enabling fields to use Entity Translation or disabling them.
+ */
+class EntityTranslationToggleFieldsTranslatabilityTestCase extends EntityTranslationTestCase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Fields translatability toggling',
+      'description' => 'Tests for enabling fields to use Entity Translation or disabling them.',
+      'group' => 'Entity translation',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    // Activate modules.
+    parent::setUp('locale', 'taxonomy', 'entity_translation', 'entity_translation_test');
+    $this->login($this->getAdminUser(array(
+      'administer taxonomy',
+      'toggle field translatability',
+    )));
+    $this->login($this->getTranslatorUser(array(
+      'administer taxonomy',
+    )));
+  }
+
+  /**
+   * Configure the "Basic page" content type for entity translation tests.
+   */
+  protected function configureContentTypeForRevisions() {
+    // Configure the "Basic page" content type to use revisions.
+    $edit = array(
+      'node_options[revision]' => 1,
+    );
+    $this->drupalPost('admin/structure/types/manage/page', $edit, t('Save content type'));
+    $this->assertRaw(t('The content type %type has been updated.', array('%type' => 'Basic page')), t('Basic page content type has been updated.'));
+  }
+
+  /**
+   * Create a "Basic page" in the specified language.
+   *
+   * @param $title
+   *   Title of the basic page in the specified language.
+   * @param $body
+   *   Body of the basic page in the specified language.
+   */
+  protected function createUntranslatedPage($title, $body) {
+    $edit = array(
+      'title' => $title,
+      'body[und][0][value]' => $body,
+    );
+    $this->drupalPost('node/add/page', $edit, t('Save'));
+    $this->assertRaw(t('Basic page %title has been created.', array('%title' => $title)), t('Basic page created.'));
+
+    // Check to make sure the node was created.
+    $node = $this->drupalGetNodeByTitle($title);
+    $this->assertTrue($node, t('Node found in database.'));
+
+    return $node;
+  }
+
+  /**
+   * Create a "Tags" term in the specified language.
+   *
+   * @param $name
+   *   Name of the term.
+   * @param $description
+   *   Description of the term.
+   * @param $text
+   *   Content for the field_simple_text field.
+   */
+  protected function createUntranslatedTag($name, $description, $text) {
+    $edit = array(
+      'name' => $name,
+      'description[value]' => $description,
+      "field_simple_text[und][0][value]" => $text,
+    );
+    $this->drupalPost('admin/structure/taxonomy/tags/add', $edit, t('Save'));
+
+    // Check to make sure the term was created.
+    $term = current(entity_load('taxonomy_term', FALSE, array('name' => $name), TRUE));
+    $this->assertTrue($term, t('Term found in database.'));
+
+    return $term;
+  }
+
+  /**
+   * Tests toggling translatability on fields with data (non-revisionable).
+   */
+  public function testTogglingFieldsWithDataNonRevisionable() {
+    // Create an untranslated Basic page.
+    $node_title = $this->randomName();
+    $node_body = $this->randomName();
+    $node = $this->createUntranslatedPage($node_title, $node_body);
+    $this->assert(isset($node->body[LANGUAGE_NONE]), t('Found body field data in LANGUAGE_NONE as expected.'));
+    $this->assertEqual($node->body[LANGUAGE_NONE][0]['value'], $node_body);
+
+    // Create an untranslated Tags term.
+    $term_name = $this->randomName();
+    $term_description = $this->randomName();
+    $term_simple_text = $this->randomName();
+    $term = $this->createUntranslatedTag($term_name, $term_description, $term_simple_text);
+    $this->assert(isset($term->field_simple_text[LANGUAGE_NONE]), t('Found field data in LANGUAGE_NONE as expected.'));
+    $this->assertEqual($term->field_simple_text[LANGUAGE_NONE][0]['value'], $term_simple_text);
+
+    // Enable translation for field body and check field migration.
+    $this->login($this->getAdminUser());
+    $this->drupalGet('admin/structure/types/manage/page/fields/body');
+    $this->clickLink('Enable translation');
+    $this->drupalPost(NULL, array(), t('Confirm'));
+    $node = current(entity_load('node', FALSE, array('title' => $node_title), TRUE));
+    $this->assert(isset($node->body['en']), t('Found field data in English as expected.'));
+    $this->assertEqual($node->body['en'][0]['value'], $node_body);
+    $this->assert(!isset($node->body[LANGUAGE_NONE]), t('No field data in LANGUAGE_NONE found.'));
+
+    // Disable translation for body field and check field reverse migration.
+    $this->drupalGet('admin/structure/types/manage/page/fields/body');
+    $this->clickLink('Disable translation');
+    $this->drupalPost(NULL, array(), t('Confirm'));
+    $node = current(entity_load('node', FALSE, array('title' => $node_title), TRUE));
+    $this->assert(isset($node->body[LANGUAGE_NONE]), t('Found field data in LANGUAGE_NONE as expected.'));
+    $this->assertEqual($node->body[LANGUAGE_NONE][0]['value'], $node_body);
+    $this->assert(!isset($node->body['en']), t('No field data in English found.'));
+
+    // Enable translation for field_simple_text and check field migration.
+    $this->drupalGet('admin/structure/taxonomy/tags/fields/field_simple_text');
+    $this->clickLink('Enable translation');
+    $this->drupalPost(NULL, array(), t('Confirm'));
+    // Clear the field cache in order to load current field data.
+    field_info_cache_clear();
+    // Load the term and check that the fields data are under 'en'.
+    $term = current(entity_load('taxonomy_term', FALSE, array('name' => $term_name), TRUE));
+    $this->assert(isset($term->field_simple_text['en']), t('Found field data in English as expected.'));
+    $this->assertEqual($term->field_simple_text['en'][0]['value'], $term_simple_text);
+    $this->assert(!isset($term->field_simple_text[LANGUAGE_NONE]), t('No field data in LANGUAGE_NONE found.'));
+
+    // Disable translation for field_simple_text.
+    $this->drupalGet('admin/structure/taxonomy/tags/fields/field_simple_text');
+    $this->clickLink('Disable translation');
+    $this->drupalPost(NULL, array(), t('Confirm'));
+
+    // Load the term and check that the fields data are under LANGUAGE_NONE.
+    $term = current(entity_load('taxonomy_term', FALSE, array('name' => $term_name), TRUE));
+    $this->assert(isset($term->field_simple_text[LANGUAGE_NONE]), t('Found field data in LANGUAGE_NONE as expected.'));
+    $this->assertEqual($term->field_simple_text[LANGUAGE_NONE][0]['value'], $term_simple_text);
+    $this->assert(!isset($term->field_simple_text['en']), t('No field data in English found.'));
+  }
+
+  /**
+   * Tests toggling translatability on fields with data (revisionable).
+   */
+  public function testTogglingFieldsWithDataRevisionable() {
+    // Enable revisions for Basic pages.
+    $this->login($this->getAdminUser());
+    $this->configureContentTypeForRevisions();
+
+    // Create an untranslated Basic page.
+    $this->login($this->getTranslatorUser());
+    $node_title = $this->randomName();
+    $node_body = $this->randomName();
+    $node = $this->createUntranslatedPage($node_title, $node_body);
+    $this->assert(isset($node->body[LANGUAGE_NONE]), t('Found field data in LANGUAGE_NONE as expected.'));
+    $this->assertEqual($node->body[LANGUAGE_NONE][0]['value'], $node_body);
+
+    // Create a new revision for the page.
+    $edit_revision = array(
+      'title' => $this->randomName(),
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit_revision, t('Save'));
+    $node = node_load($node->nid, NULL, TRUE);
+    $this->assert($node->vid == $node->nid + 1, t('Correct vid attached to the node object.'));
+
+    // Enable translation for field body and check field migration on all
+    // revisions.
+    $this->login($this->getAdminUser());
+    $this->drupalGet('admin/structure/types/manage/page/fields/body');
+    $this->clickLink('Enable translation');
+    $this->drupalPost(NULL, array(), t('Confirm'));
+    $node_current_revision = current(entity_load('node', FALSE, array('vid' => $node->vid), TRUE));
+    $this->assert(isset($node_current_revision->body['en']), t('Found field data in English as expected.'));
+    $this->assertEqual($node_current_revision->body['en'][0]['value'], $node_body);
+    $this->assert(!isset($node_current_revision->body[LANGUAGE_NONE]), t('No field data in LANGUAGE_NONE found.'));
+    $node_previous_revision = current(entity_load('node', FALSE, array('vid' => ($node->vid - 1)), TRUE));
+    $this->assert(isset($node_previous_revision->body['en']), t('Found field data in English as expected.'));
+    $this->assertEqual($node_previous_revision->body['en'][0]['value'], $node_body);
+    $this->assert(!isset($node_previous_revision->body[LANGUAGE_NONE]), t('No field data in LANGUAGE_NONE found.'));
+
+    // Disable translation for field_body.
+    $this->drupalGet('admin/structure/types/manage/page/fields/body');
+    $this->clickLink('Disable translation');
+    $this->drupalPost(NULL, array(), t('Confirm'));
+
+    // Disable translation for field body and check field reverse migration on
+    // all revisions.
+    $node_current_revision = current(entity_load('node', FALSE, array('vid' => $node->vid), TRUE));
+    $this->assert(isset($node_current_revision->body[LANGUAGE_NONE]), t('Found field data in LANGUAGE_NONE as expected.'));
+    $this->assertEqual($node_current_revision->body[LANGUAGE_NONE][0]['value'], $node_body);
+    $this->assert(!isset($node_current_revision->body['en']), t('No field data in English found.'));
+    $node_previous_revision = current(entity_load('node', FALSE, array('vid' => ($node->vid - 1)), TRUE));
+    $this->assert(isset($node_previous_revision->body[LANGUAGE_NONE]), t('Found field data in LANGUAGE_NONE as expected.'));
+    $this->assertEqual($node_previous_revision->body[LANGUAGE_NONE][0]['value'], $node_body);
+    $this->assert(!isset($node_previous_revision->body['en']), t('No field data in English found.'));
+  }
+
+}
