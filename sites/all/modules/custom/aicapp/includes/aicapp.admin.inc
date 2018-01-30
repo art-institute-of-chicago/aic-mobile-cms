@@ -693,7 +693,6 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
           )
         )
       ));
-      dsm($options['query']);
     }
     // Query the data aggregrator.
     $results = _aicapp_fetch_data($url, $options, TRUE);
