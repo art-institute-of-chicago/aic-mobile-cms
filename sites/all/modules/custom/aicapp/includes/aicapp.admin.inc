@@ -819,6 +819,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
         html_entity_decode($to_import['title'], ENT_QUOTES, 'UTF-8'),
         ENT_QUOTES
       );
+      $title = html_entity_decode($to_import['title'], ENT_QUOTES, 'UTF-8');
       $ewrapper->title->set($title);
       // Object ID.
       $ewrapper->field_imported_object_id->set($to_import['id']);

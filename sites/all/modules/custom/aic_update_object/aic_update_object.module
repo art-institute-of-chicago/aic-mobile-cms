@@ -9,7 +9,7 @@
  * Implements hook_cron() function.
  */
 function aic_update_object_cron() {
-  module_load_include('inc', 'aicapp', 'aicapp.admin');
+  module_load_include('inc', 'aicapp', 'includes/aicapp.admin');
   // Update object image data.
   aicapp_update_object_image_data();
 }
