@@ -1980,7 +1980,15 @@ Ex: ""Head of Buddha (Spanish)"""',
       'default' => array(
         'label' => 'above',
         'module' => 'date',
-        'type' => 'date_plain',
+        'settings' => array(
+          'format_type' => 'aicapp_date_type',
+          'fromto' => 'both',
+          'multiple_from' => '',
+          'multiple_number' => '',
+          'multiple_to' => '',
+          'show_remaining_days' => FALSE,
+        ),
+        'type' => 'date_default',
         'weight' => 1,
       ),
       'teaser' => array(
@@ -2279,7 +2287,15 @@ Ex: ""Head of Buddha (Spanish)"""',
       'default' => array(
         'label' => 'above',
         'module' => 'date',
-        'type' => 'date_plain',
+        'settings' => array(
+          'format_type' => 'aicapp_date_type',
+          'fromto' => 'both',
+          'multiple_from' => '',
+          'multiple_number' => '',
+          'multiple_to' => '',
+          'show_remaining_days' => FALSE,
+        ),
+        'type' => 'date_default',
         'weight' => 7,
       ),
       'teaser' => array(

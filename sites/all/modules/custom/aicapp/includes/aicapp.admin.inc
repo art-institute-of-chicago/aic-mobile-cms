@@ -622,7 +622,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
       'remote' => array(),
     ),
     AICAPP_TYPE_EXHIBITION => array(
-      'endpoint' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION,
+      'endpoint' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION . '/search',
       'remote' => array(),
     ),
   );
@@ -632,11 +632,11 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
     $options = array(
       'size' => $limit_count,
       'from' => $start,
+      'http' => 'POST',
     );
     $page_start = 2;
     $url = $remote['endpoint'];
     if ($type === AICAPP_TYPE_EVENT) {
-      $options['http'] = 'POST';
       $options['query'] = json_encode(array(
         '_source' => true,
         'sort' => array(
@@ -649,13 +649,42 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
               array(
                 'range' => array(
                   'start_at' => array(
-                    'lte' => 'now+2w',
+                    'lte' => 'now+8w',
                   )
                 ),
               ),
               array(
                 'range' => array(
                   'end_at' => array(
+                    'gte' => 'now',
+                  )
+                ),
+              ),
+            ),
+          )
+        )
+      ));
+    }
+    elseif ($type ===  AICAPP_TYPE_EXHIBITION) {
+      $options['query'] = json_encode(array(
+        '_source' => true,
+        'sort' => array(
+          'aic_start_at',
+          'aic_end_at'
+        ),
+        'query' => array(
+          'bool' => array(
+            'must' => array(
+              array(
+                'range' => array(
+                  'aic_start_at' => array(
+                    'lte' => 'now+8w',
+                  )
+                ),
+              ),
+              array(
+                'range' => array(
+                  'aic_end_at' => array(
                     'gte' => 'now',
                   )
                 ),
@@ -674,9 +703,10 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
     foreach ($results['data'] as $remote_record) {
       if ($type === AICAPP_TYPE_EXHIBITION) {
         // Skip any that are closed?
-        // if ($remote_record['status'] === 'Closed') {
-        //   continue;
-        // }
+        if ($now > new DateTime($remote_record['aic_end_at'])) {
+          # Now is greater than Event end time, i.e. in the past.
+          continue;
+        }
       }
       elseif ($type === AICAPP_TYPE_EVENT) {
         // Skip any that have end dates in the past.
@@ -699,12 +729,12 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
           if (isset($decoded_loop['data'])) {
             foreach ($decoded_loop['data'] as $remote_record) {
               if ($type === AICAPP_TYPE_EXHIBITION) {
-                // Skip any that are closed?
-                // if ($remote_record['status'] === 'Closed') {
-                //   continue;
-                // }
+                if ($now > new DateTime($remote_record['aic_end_at'])) {
+                  # Now is greater than Event end time, i.e. in the past.
+                  continue;
+                }
               }
-              else if ($type === AICAPP_TYPE_EVENT) {
+              elseif ($type === AICAPP_TYPE_EVENT) {
                 // Skip any that have end dates in the past.
                 if ($now > new DateTime($remote_record['end_at'])) {
                   # Now is greater than Event end time, i.e. in the past.
@@ -798,13 +828,23 @@ function _aicapp_save_remote_event(&$to_import, $type, $entity_wrapper = NULL) {
   // Object JSON.
   $entity_wrapper->field_imported_object->set(json_encode($to_import));
   // Start and end dates.
-  $start = new DateTime($to_import['start_at']);
-  $end = new DateTime($to_import['end_at']);
+  if ($type === AICAPP_TYPE_EVENT) {
+    $start = new DateTime($to_import['start_at']);
+    $end = new DateTime($to_import['end_at']);
+  }
+  elseif ($type === AICAPP_TYPE_EXHIBITION) {
+    $start = new DateTime($to_import['aic_start_at']);
+    $end = new DateTime($to_import['aic_end_at']);
+  }
   $tz = $start->getTimezone();
-  $date_values['value'] = $start->format('Y-m-d H:i:s');
-  $date_values['value2'] = $end->format('Y-m-d H:i:s');
+  $date_values['value'] = $start->getTimestamp();
+  $date_values['value2'] = $end->getTimestamp();
   $date_values['offset'] = $tz->getName();
   $date_values['offset2'] = $tz->getName();
+  // Make sure all date value are not negative.
+  if ($date_values['value'] <= 0 || $date_values['value2'] <= 0 || $date_values['value'] >= 2147483648 || $date_values['value2'] >= 2147483648) {
+    return;
+  }
   if ($type === AICAPP_TYPE_EXHIBITION) {
     // Set Exhibition dates..
     $entity_wrapper->field_exhibition_dates->set($date_values);

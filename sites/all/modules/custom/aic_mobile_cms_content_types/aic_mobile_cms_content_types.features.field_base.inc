@@ -594,7 +594,7 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'module' => 'date',
     'settings' => array(
       'cache_count' => 4,
-      'cache_enabled' => 1,
+      'cache_enabled' => 0,
       'entity_translation_sync' => FALSE,
       'granularity' => array(
         'day' => 'day',
@@ -605,11 +605,11 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
         'year' => 'year',
       ),
       'timezone_db' => 'UTC',
-      'todate' => 'required',
+      'todate' => 'optional',
       'tz_handling' => 'site',
     ),
     'translatable' => 0,
-    'type' => 'date',
+    'type' => 'datestamp',
   );
 
   // Exported field_base: 'field_event_description'.
@@ -704,7 +704,7 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'module' => 'date',
     'settings' => array(
       'cache_count' => 4,
-      'cache_enabled' => 1,
+      'cache_enabled' => 0,
       'entity_translation_sync' => FALSE,
       'granularity' => array(
         'day' => 'day',
@@ -719,7 +719,7 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
       'tz_handling' => 'site',
     ),
     'translatable' => 0,
-    'type' => 'datetime',
+    'type' => 'datestamp',
   );
 
   // Exported field_base: 'field_floor'.
