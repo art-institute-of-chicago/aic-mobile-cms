@@ -82,9 +82,9 @@ function aicapp_admin() {
   );
   $form['aicapp_ops']['aicapp_data_aggregator']['import_submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Import Events & Exhitions'),
+    '#value' => t('Import Events & Exhibitions'),
     '#prefix' => '<div>',
-    '#suffix' => t('Click this button to load events and exhitions from the data hub.') . '</div>',
+    '#suffix' => t('Click this button to load events and exhibitions from the data hub.') . '</div>',
     '#submit' => array('aicapp_load_remote_form_submit'),
   );
   $suffix_message = t('Click this button to update all Object image URLs from the data hub.');
@@ -693,6 +693,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
           )
         )
       ));
+      dsm($options['query']);
     }
     // Query the data aggregrator.
     $results = _aicapp_fetch_data($url, $options, TRUE);
