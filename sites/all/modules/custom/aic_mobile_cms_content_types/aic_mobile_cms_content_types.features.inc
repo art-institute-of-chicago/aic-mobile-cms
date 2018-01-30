@@ -11,6 +11,9 @@ function aic_mobile_cms_content_types_ctools_plugin_api($module = NULL, $api = N
   if ($module == "field_group" && $api == "field_group") {
     return array("version" => "1");
   }
+  if ($module == "strongarm" && $api == "strongarm") {
+    return array("version" => "1");
+  }
 }
 
 /**
@@ -18,6 +21,111 @@ function aic_mobile_cms_content_types_ctools_plugin_api($module = NULL, $api = N
  */
 function aic_mobile_cms_content_types_views_api($module = NULL, $api = NULL) {
   return array("api" => "3.0");
+}
+
+/**
+ * Implements hook_image_default_styles().
+ */
+function aic_mobile_cms_content_types_image_default_styles() {
+  $styles = array();
+
+  // Exported image style: large_landscape.
+  $styles['large_landscape'] = array(
+    'label' => 'Large Landscape',
+    'effects' => array(
+      0 => array(
+        'name' => 'image_scale',
+        'data' => array(
+          'width' => 600,
+          'height' => '',
+          'upscale' => 0,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: large_portrait.
+  $styles['large_portrait'] = array(
+    'label' => 'Large Portrait',
+    'effects' => array(
+      0 => array(
+        'name' => 'image_scale',
+        'data' => array(
+          'width' => '',
+          'height' => 600,
+          'upscale' => 0,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: large_six_hundred.
+  $styles['large_six_hundred'] = array(
+    'label' => 'Large',
+    'effects' => array(
+      0 => array(
+        'name' => 'canvasactions_aspect',
+        'data' => array(
+          'portrait' => 'large_portrait',
+          'landscape' => 'large_landscape',
+          'ratio_adjustment' => 1,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: large_landscape.
+  $styles['thumbnail_landscape'] = array(
+    'label' => 'Thumbnail Landscape',
+    'effects' => array(
+      0 => array(
+        'name' => 'image_scale',
+        'data' => array(
+          'width' => 112,
+          'height' => '',
+          'upscale' => 0,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: large_portrait.
+  $styles['thumbnail_portrait'] = array(
+    'label' => 'Thumbnail Portrait',
+    'effects' => array(
+      0 => array(
+        'name' => 'image_scale',
+        'data' => array(
+          'width' => '',
+          'height' => 112,
+          'upscale' => 0,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: thumb_one_twelve.
+  $styles['thumbnail_one_twelve'] = array(
+    'label' => 'Thumbnail',
+    'effects' => array(
+      0 => array(
+        'name' => 'canvasactions_aspect',
+        'data' => array(
+          'portrait' => 'thumbnail_portrait',
+          'landscape' => 'thumbnail_landscape',
+          'ratio_adjustment' => 1,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  return $styles;
 }
 
 /**
@@ -41,10 +149,42 @@ function aic_mobile_cms_content_types_node_info() {
       'title_label' => t('Title'),
       'help' => '',
     ),
+    'event' => array(
+      'name' => t('Event'),
+      'base' => 'node_content',
+      'description' => '',
+      'has_title' => '1',
+      'title_label' => t('Event Title'),
+      'help' => '',
+    ),
+    'exhibition' => array(
+      'name' => t('Exhibition'),
+      'base' => 'node_content',
+      'description' => '',
+      'has_title' => '1',
+      'title_label' => t('Exhibition Title'),
+      'help' => '',
+    ),
     'gallery' => array(
       'name' => t('Gallery'),
       'base' => 'node_content',
       'description' => t('The node type to hold gallery content'),
+      'has_title' => '1',
+      'title_label' => t('Title'),
+      'help' => '',
+    ),
+    'map_annotation' => array(
+      'name' => t('Map Annotation'),
+      'base' => 'node_content',
+      'description' => t('Options such as Restroom, Gift Shop, etc.'),
+      'has_title' => '1',
+      'title_label' => t('Title'),
+      'help' => '',
+    ),
+    'map_floor' => array(
+      'name' => t('Map Floor'),
+      'base' => 'node_content',
+      'description' => t('This is used to store a pdf map of the interior walls of each floor of the museum.'),
       'has_title' => '1',
       'title_label' => t('Title'),
       'help' => '',

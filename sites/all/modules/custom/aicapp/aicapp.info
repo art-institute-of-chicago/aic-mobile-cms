@@ -1,6 +1,6 @@
 name = AIC App
-description = Custom module for loading and generating data to the AIC museum mobile app. 
-package = WC Custom Modules
+description = Custom module for loading and generating data to the AIC museum mobile app.
+package = AIC Custom Modules
 version = VERSION
 core = 7.x
 files[] = aicapp.module

@@ -10,6 +10,12 @@
 function aic_mobile_cms_content_types_user_default_roles() {
   $roles = array();
 
+  // Exported role: admin.
+  $roles['admin'] = array(
+    'name' => 'admin',
+    'weight' => 4,
+  );
+
   // Exported role: editor.
   $roles['editor'] = array(
     'name' => 'editor',
