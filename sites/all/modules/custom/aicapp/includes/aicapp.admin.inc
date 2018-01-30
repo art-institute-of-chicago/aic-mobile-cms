@@ -43,7 +43,7 @@ function aicapp_admin() {
     '#default_value' => variable_get('aicapp_env_fqdm', 'http://aic-mobile-tours.artic.edu'),
     '#size' => 200,
     '#maxlength' => 256,
-    '#description' => t('Enter a URL for the current server environment. This will preceed any local URLs. Some examples are http://aicweb10.artic.edu, http://aicweb14.artic.edu, http://de-mobile-dev.artic.edu, etc.'),
+    '#description' => t('Enter a URL for the current server environment. This will preceed any local URLs. Some examples are http://aic-mobile-tours.artic.edu, http://aicweb14.artic.edu, http://de-mobile-dev.artic.edu, etc.'),
   );
   $form['aicapp_ops'] = array(
     '#type' => 'fieldset',
@@ -94,7 +94,8 @@ function aicapp_admin() {
       // Load all objects, including unpublished, because we compare if objects
       // previously not in a gallery (and unpublished) are now displayed.
       $artwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
-      variable_set('aic_update_object_nids', array_keys($artwork_objects));
+      $object_nids += array_keys($artwork_objects);
+      variable_set('aic_update_object_nids', $object_nids);
     }
     else {
       $suffix_message .= ' ' . format_plural(count($object_nids),
