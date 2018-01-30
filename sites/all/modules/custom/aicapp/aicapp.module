@@ -46,6 +46,8 @@ function aicapp_init() {
   define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
   define('AICAPP_TOUR_VOCABULARY_NAME', variable_get('aicapp_tour_vocabular_name', 'categories'));
   define('AICAPP_CURRENT_SERVER_FQDM', rtrim(variable_get('aicapp_env_fqdm', 'http://aicweb10.artic.edu'), '/'));
+  define('AICAPP_DATE_TYPE', 'aicapp_date_type');
+  define('AICAPP_DATE_FORMAT', 'M j Y - g:ia');
 }
 
 /**
@@ -3037,4 +3039,26 @@ function aicapp_object_limit_js($form, $form_state) {
     );
   }
   return $form_return_element;
+}
+
+/**
+ * Implements hook_date_formats().
+ */
+function aicapp_date_formats() {
+  $formats = array();
+  $formats[] = array(
+    'type' => AICAPP_DATE_TYPE,
+    'format' => AICAPP_DATE_FORMAT,
+    'locales' => array(),
+  );
+  return $formats;
+}
+
+/**
+ * Implements hook_date_format_types().
+ */
+function aicapp_date_format_types() {
+  $types = array();
+  $types[AICAPP_DATE_TYPE] = t('Short Date, 12 Hour Time');
+  return $types;
 }
