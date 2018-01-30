@@ -258,7 +258,7 @@ function _aicapp_form_afterbuild(&$form, &$form_state) {
     && empty($form['title_field'][LANGUAGE_NONE][0]['#default_value'])
     && !empty($form['title']['#default_value'])) {
     // Add the default title.
-    $form['title_field'][LANGUAGE_NONE][0]['value']['#value'] = check_plain($form['title']['#default_value']);
+    $form['title_field'][LANGUAGE_NONE][0]['value']['#value'] = $form['title']['#default_value'];
   }
   // Fix to set language to AICAPP_DEFAULT_LANG, which 'en' by default.
   if (!empty($form['language']) && !empty($form['language']['#default_value'])
