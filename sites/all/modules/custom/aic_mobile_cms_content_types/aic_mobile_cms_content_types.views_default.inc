@@ -407,7 +407,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['field_event_dates']['label'] = 'Dates';
   $handler->display->display_options['fields']['field_event_dates']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['field_event_dates']['settings'] = array(
-    'format_type' => 'long',
+    'format_type' => 'html5_tools_iso8601',
     'custom_date_format' => '',
     'fromto' => 'both',
     'multiple_number' => '',
@@ -592,7 +592,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['field_exhibition_dates']['table'] = 'field_data_field_exhibition_dates';
   $handler->display->display_options['fields']['field_exhibition_dates']['field'] = 'field_exhibition_dates';
   $handler->display->display_options['fields']['field_exhibition_dates']['settings'] = array(
-    'format_type' => 'long',
+    'format_type' => 'html5_tools_iso8601',
     'custom_date_format' => '',
     'fromto' => 'both',
     'multiple_number' => '',

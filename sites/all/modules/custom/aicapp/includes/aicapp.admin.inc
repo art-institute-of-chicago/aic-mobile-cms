@@ -727,20 +727,16 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', $type, '=');
-    if (!empty($remote['to_import'])) {
-      $query->fieldCondition('field_imported_object_id', 'value', $remote['to_import'], 'IN');
-    }
     $result = $query->execute();
     if (isset($result['node'])) {
       $nids = array_keys($result['node']);
       $remote['local'] = entity_load('node', $nids);
     }
-    // Loop through cached objects and save updated values from API.
+    // Loop through objects and save updated values from API.
     foreach ($remote['local'] as $local_node) {
       // Load an entity.
       $ewrapper = entity_metadata_wrapper('node', $local_node);
       $remote_id = $ewrapper->field_imported_object_id->value();
-
       if (empty($remote['remote'][$remote_id])) {
         continue;
       }
@@ -749,43 +745,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
       // Update all local objects that have local update date previous to last
       // updated remote object dates.
       $to_import = $remote['remote'][$remote_id];
-      // Title
-      $title = htmlspecialchars_decode(
-        html_entity_decode($to_import['title'], ENT_QUOTES, 'UTF-8'),
-        ENT_QUOTES
-      );
-      $ewrapper->title->set($title);
-      // Object ID
-      $ewrapper->field_imported_object_id->set($to_import['id']);
-      // Object JSON
-      $ewrapper->field_imported_object->set(json_encode($to_import));
-      // Exhibition only fields.
-      if ($type === AICAPP_TYPE_EXHIBITION) {
-        // Exhibition dates.
-        $start = new DateTime($to_import['aic_start_at']);
-        $end = new DateTime($to_import['aic_end_at']);
-        $ewrapper->field_exhibition_dates->set(array(
-          'value' => $start->format('Y-m-d H:i:s'),
-          'value2' => $end->format('Y-m-d H:i:s'),
-        ));
-      }
-      // Event only fields.
-      elseif ($type === AICAPP_TYPE_EVENT) {
-        $start = new DateTime($to_import['start_at']);
-        $end = new DateTime($to_import['end_at']);
-        // Event start and end dates
-        $ewrapper->field_event_dates->set(array(
-          'value' => $start->format('Y-m-d H:i:s'),
-          'value2' => $end->format('Y-m-d H:i:s'),
-        ));
-        if (strtotime($to_import['end_at']) < strtotime('now')) {
-          // Unpubish and demote this node.
-          $ewrapper->status->set(0);
-          $ewrapper->promote->set(0);
-        }
-      }
-      // Now just save the wrapper and the entity
-      $ewrapper->save();
+      _aicapp_save_remote_event($to_import, $type, $ewrapper, $local_node);
       // Get the key value for this remote id.
       $remote_key = array_search($remote_id, $remote['to_import']);
       // Unset this item from the import stack.
@@ -800,62 +760,74 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
       }
       // Update node fields with values from remote enities, but only if
       // remote updated date is more recent than local date.
-      $to_import = $remote['remote'][$remote_id];
-      // Creating a new object $node and setting its 'type' and uid property.
-      $values = array(
-        'type' => $type,
-        'uid' => 1,
-        'status' => 1,
-        'promote' => 0,
-      );
-      $entity = entity_create('node', $values);
-
-      // The entity is now created, but we have not yet simplified use of it.
-      // Now create an entity_metadata_wrapper around the new node entity
-      // to make getting and setting values easier.
-      $ewrapper = entity_metadata_wrapper('node', $entity);
-      // Title
-      $title = htmlspecialchars_decode(
-        html_entity_decode($to_import['title'], ENT_QUOTES, 'UTF-8'),
-        ENT_QUOTES
-      );
-      $title = html_entity_decode($to_import['title'], ENT_QUOTES, 'UTF-8');
-      $ewrapper->title->set($title);
-      // Object ID.
-      $ewrapper->field_imported_object_id->set($to_import['id']);
-      // Object JSON.
-      $ewrapper->field_imported_object->set(json_encode($to_import));
-
-      if ($type === AICAPP_TYPE_EXHIBITION) {
-        // Exhibition dates..
-        $start = new DateTime($to_import['start_at']);
-        $end = new DateTime($to_import['end_at']);
-        $ewrapper->field_exhibition_dates->set(array(
-          'value' => $start->format('Y-m-d H:i:s'),
-          'value2' => $end->format('Y-m-d H:i:s'),
-        ));
-      }
-      elseif ($type === AICAPP_TYPE_EVENT) {
-        $start = new DateTime($to_import['start_at']);
-        $end = new DateTime($to_import['end_at']);
-        // Event start and end dates.
-        $ewrapper->field_event_dates->set(array(
-          'value' => $start->format('Y-m-d H:i:s'),
-          'value2' => $end->format('Y-m-d H:i:s'),
-        ));
-        // Description.
-        $ewrapper->field_event_description->set($to_import['description']);
-        // Short Description.
-        $ewrapper->field_event_short_description->set($to_import['short_description']);
-      }
-      try {
-        // Now just save the wrapper and the entity.
-        $ewrapper->save();
-      }
-      catch (Exception $e) {
-        drupal_set_message(t("An error occurred when importing events: @e", array('@e' => $e)), 'error');
-      }
+      _aicapp_save_remote_event($remote['remote'][$remote_id], $type);
     }
+  }
+}
+
+/**
+ * Helper function to update event or exhibiton nodes.
+ */
+function _aicapp_save_remote_event(&$to_import, $type, $entity_wrapper = NULL) {
+  $timezone = variable_get('date_default_timezone', 'America/Chicago');
+  $date_values = array(
+    'value' => '',
+    'value2' => '',
+    'offset' => '',
+    'offset2' => '',
+    'timezone' => $timezone,
+  );
+  if (empty($entity_wrapper)) {
+    // Creating a new object $node and setting its 'type' and uid property.
+    $entity = entity_create('node', array(
+      'type' => $type,
+      'uid' => 1,
+      'status' => 1,
+      'promote' => 0,
+    ));
+    // The entity is now created, but we have not yet simplified use of it.
+    // Now create an entity_metadata_wrapper around the new node entity
+    // to make getting and setting values easier.
+    $entity_wrapper = entity_metadata_wrapper('node', $entity);
+  }
+  // Title
+  $title = html_entity_decode($to_import['title'], ENT_QUOTES, 'UTF-8');
+  $entity_wrapper->title->set($title);
+  // Object ID.
+  $entity_wrapper->field_imported_object_id->set($to_import['id']);
+  // Object JSON.
+  $entity_wrapper->field_imported_object->set(json_encode($to_import));
+  // Start and end dates.
+  $start = new DateTime($to_import['start_at']);
+  $end = new DateTime($to_import['end_at']);
+  $tz = $start->getTimezone();
+  $date_values['value'] = $start->format('Y-m-d H:i:s');
+  $date_values['value2'] = $end->format('Y-m-d H:i:s');
+  $date_values['offset'] = $tz->getName();
+  $date_values['offset2'] = $tz->getName();
+  if ($type === AICAPP_TYPE_EXHIBITION) {
+    // Set Exhibition dates..
+    $entity_wrapper->field_exhibition_dates->set($date_values);
+  }
+  elseif ($type === AICAPP_TYPE_EVENT) {
+    // Event start and end dates.
+    $entity_wrapper->field_event_dates->set($date_values);
+    // Description.
+    $entity_wrapper->field_event_description->set($to_import['description']);
+    // Short Description.
+    $entity_wrapper->field_event_short_description->set($to_import['short_description']);
+  }
+  if ($end < new DateTime()) {
+    // Unpubish and demote this node.
+    $entity_wrapper->status->set(0);
+    $entity_wrapper->promote->set(0);
+  }
+  try {
+    // Now just save the wrapper and the entity.
+    $entity_wrapper->save();
+  }
+  catch (Exception $e) {
+    drupal_set_message(t("An error occurred when importing an #type: @e", array('#type' => $type, '@e' => $e)), 'error');
   }
 }
 
