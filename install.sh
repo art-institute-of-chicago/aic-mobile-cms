@@ -170,7 +170,11 @@ echo "${W}Drush takes over from here...${W}"
 		   date \
 		   date_api \
 		   date_popup \
-		   appadmin >> install.log 2>&1
+      locale \
+      entity_translation \
+      title \
+      strongarm \
+      appadmin >> install.log 2>&1
 
 ./vendor/bin/drush --root=$DIR_ROOT cache-clear all >> install.log 2>&1
 

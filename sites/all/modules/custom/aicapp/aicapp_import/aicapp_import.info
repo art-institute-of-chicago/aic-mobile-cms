@@ -1,0 +1,6 @@
+name = AIC Batch import
+description = Custom module doing the batch import for the content
+package = AIC Custom Modules
+version = VERSION
+core = 7.x
+files[] = aicapp_import.module
