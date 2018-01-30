@@ -3,4 +3,5 @@ description = This module obtains image data from the Art Institute’s instance
 package = AIC Custom Modules
 version = VERSION
 core = 7.x
+dependencies[] = aicapp
 files[] = aic_update_object.module

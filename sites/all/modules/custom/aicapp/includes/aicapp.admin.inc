@@ -40,7 +40,7 @@ function aicapp_admin() {
   $form['aicapp_env_fqdm'] = array(
     '#type' => 'textfield',
     '#title' => t('Domain name for the current environment.'),
-    '#default_value' => variable_get('aicapp_env_fqdm', 'http://aicweb10.artic.edu'),
+    '#default_value' => variable_get('aicapp_env_fqdm', 'http://aic-mobile-tours.artic.edu'),
     '#size' => 200,
     '#maxlength' => 256,
     '#description' => t('Enter a URL for the current server environment. This will preceed any local URLs. Some examples are http://aicweb10.artic.edu, http://aicweb14.artic.edu, http://de-mobile-dev.artic.edu, etc.'),
@@ -87,6 +87,29 @@ function aicapp_admin() {
     '#suffix' => t('Click this button to load events and exhitions from the data hub.') . '</div>',
     '#submit' => array('aicapp_load_remote_form_submit'),
   );
+  $suffix_message = t('Click this button to update all Object image URLs from the data hub.');
+  if (module_exists('aic_update_object')) {
+    $object_nids = variable_get('aic_update_object_nids', array());
+    if (empty($object_nids) || count($object_nids) < 100) {
+      // Load all objects, including unpublished, because we compare if objects
+      // previously not in a gallery (and unpublished) are now displayed.
+      $artwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
+      variable_set('aic_update_object_nids', array_keys($artwork_objects));
+    }
+    else {
+      $suffix_message .= ' ' . format_plural(count($object_nids),
+        '1 Object needs to be updated.',
+        '@count Objects remaining.'
+      );
+    }
+    $form['aicapp_ops']['aicapp_data_aggregator']['update_object_images'] = array(
+      '#type' => 'submit',
+      '#value' => t('Update Object Images'),
+      '#prefix' => '<div>',
+      '#suffix' => $suffix_message . '</div>',
+      '#submit' => array('aicapp_update_object_images'),
+    );
+  }
   $form['aicapp_ops']['version_compare'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -162,15 +185,6 @@ function aicapp_admin() {
     '#collapsed' => TRUE,
     '#title' => t('Images'),
     '#tree' => FALSE,
-  );
-  $form['aicapp_images']['aciapp_placeholder_filename'] = array(
-    '#type' => 'textfield',
-    '#size' => 25,
-    '#maxlength' => 25,
-    '#title' => t('Placeholder Filename'),
-    '#default_value' => variable_get('aciapp_placeholder_filename', 'AIC_ImagePlaceholder.png'),
-    '#description' => t('Some images cointain a placeholder image. By entering a filename used a placeholder, any artworks that use a placceholder image will use a preferred image from the data hub in JSON instead of the placeholder image.'),
-    '#prefix' => '<h4>' . t('Large Images') . '</h4>',
   );
   $form['aicapp_images']['aicapp_image_object'] = array(
     '#type' => 'fieldset',
@@ -588,6 +602,13 @@ function aicapp_admin_api_validate($form, &$form_state) {
 /**
  * Save remote objects to nodes.
  */
+function aicapp_update_object_images($form, &$form_state) {
+  aicapp_update_object_image_data();
+}
+
+/**
+ * Save remote objects to nodes.
+ */
 function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_count = 50) {
   $now = new DateTime();
   $remote_objects = array();
@@ -836,6 +857,105 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
   }
 }
 
+/**
+ * Helper function to update object image data.
+ */
+function aicapp_update_object_image_data($hard_limit = 100) {
+  $by_object_id =  array();
+  $node_ids = variable_get('aic_update_object_nids', array());
+
+  $sliced_node_ids = array_slice($node_ids, 0, $hard_limit);
+  if (empty($sliced_node_ids)) {
+    // Load all objects, including unpublished, because we compare if objects
+    // previously not in a gallery (and unpublished) are now displayed.
+    $arwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
+  }
+  else {
+    $arwork_objects = node_load_multiple($sliced_node_ids, array('type' => AICAPP_TYPE_OBJECT));
+  }
+  $object_node_ids = array();
+  foreach ($arwork_objects as $object) {
+    if (!is_object($object)) {
+      continue;
+    }
+    $object_entity = entity_metadata_wrapper('node', $object);
+    $object_id = $object_entity->field_object_id->value();
+    if (!empty($object_id)) {
+      $by_object_id[$object_id] = array(
+        '#node' => $object,
+        '#entity' => $object_entity,
+      );
+    }
+    elseif (($key = array_search($object->nid, $node_ids)) !== FALSE) {
+      unset($node_ids[$key]);
+    }
+  }
+  // Query the data aggregrator for recent data using the object ids.
+  $options = array(
+    'ids' => array_keys($by_object_id),
+    'limit' => count($by_object_id),
+    'fields' => 'id,preferred_image_iiif_url,preferred_image_id',
+  );
+
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  $results = _aicapp_fetch_data($url, $options);
+  if (empty($results)) {
+    $message = 'No results were found when searching for artwork objects.';
+    watchdog('aic_update_object', $message);
+    // Set the remaining objects that need to be updated.
+    variable_set('aic_update_object_nids', $node_ids);
+    return;
+  }
+  $count = 0;
+  foreach ($results as $item) {
+    $id = isset($item['id']) ? $item['id'] : NULL;
+    // If the results were missing an id or that node object was not found.
+    if (empty($id) || !isset($by_object_id[$id]) || empty($item['preferred_image_id'])) {
+      if (empty($item['preferred_image_id'])) {
+        $message = 'Object record ' . $object->nid . ' does not have a preferred image id.';
+        watchdog('aic_update_object', $message);
+        drupal_set_message($message);
+      }
+      continue;
+    }
+    // Grab the node object, and update its fields.
+    $object = $by_object_id[$id]['#node'];
+    // Update image fields.
+    _aicapp_update_image_fields($object, $item['preferred_image_id']);
+    try {
+      // Set a special property to skip presave hook.
+      $object->skip_hooks_presave = TRUE;
+      node_save($object);
+      $count++;
+      if (($key = array_search($object->nid, $node_ids)) !== FALSE) {
+        unset($node_ids[$key]);
+      }
+    }
+    catch (Exception $e) {
+      $replacements = array(
+        '%id' => $object->nid,
+        '%e' => !empty($e->errorInfo[2]) ? $e->errorInfo[2] : '',
+      );
+      $message = t('There was a problem updating an object record: %id. %e', $replacements);
+      watchdog('aic_update_object', $message, array(), WATCHDOG_ERROR);
+      drupal_set_message($message);
+      continue;
+    }
+  }
+  if ($count) {
+    // Set the remaining objects that need to be updated.
+    variable_set('aic_update_object_nids', $node_ids);
+    $message = format_plural($count,
+      '1 Object record has been updated.',
+      '@count Object records have been updated.'
+    );
+    watchdog('aic_update_object', $message);
+    drupal_set_message($message);
+    // Clear drupal cache.
+    drupal_flush_all_caches();
+
+  }
+}
 
 function aicapp_array_diff_assoc_recursive($array1, $array2, $keys_only = FALSE, $compare_key = NULL, $sort = 'ksort') {
   $difference = array();

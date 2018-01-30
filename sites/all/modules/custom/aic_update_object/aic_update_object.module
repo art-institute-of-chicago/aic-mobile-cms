@@ -2,125 +2,16 @@
 
 /**
  * @file
- * A module that updates object records with Solr image data on cron.
+ * A module that updates object records with data hub image data on cron.
  */
 
 /**
  * Implements hook_cron() function.
  */
 function aic_update_object_cron() {
+  module_load_include('inc', 'aicapp', 'aicapp.admin');
   // Update object image data.
-  aic_update_object_image_data();
-}
-
-/**
- * Helper function to update object image data.
- */
-function aic_update_object_image_data($hard_limit = 50) {
-  $object_ids = array();
-  $by_object_id = array();
-  // Load all objects, including unpublished, because we compare if objects
-  // previously not in a gallery (and unpublished) are now displayed.
-  $arwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
-  foreach ($arwork_objects as $object) {
-    if (!is_object($object)) {
-      continue;
-    }
-    $object_entity = entity_metadata_wrapper('node', $object);
-    $object_id = $object_entity->field_object_id->value();
-    if (!empty($object_id)) {
-      $object_ids[] = $object_id;
-      $by_object_id[$object_id] = array(
-        '#node' => $object,
-        '#entity' => $object_entity,
-      );
-    }
-  }
-  // Query the data aggregrator for recent data using the object ids.
-  $options = array('ids' => $object_ids, 'limit' => count($object_ids));
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
-  $results = _aicapp_fetch_data($url, $options);
-  if (empty($results)) {
-    return;
-  }
-  $count = 0;
-  foreach ($results as $item) {
-    $id = isset($item['id']) ? $item['id'] : NULL;
-    if (empty($id) || !isset($by_object_id[$id])) {
-      continue;
-    }
-    $object = $by_object_id[$id]['#node'];
-    // If object has an uploaded image, no need to update with remote data.
-    if (!empty($object->field_image[LANGUAGE_NONE])) {
-      // $message = 'Object record ' . $object->nid . ' has an uploaded image.';
-      // watchdog('aic_update_object', $message);
-      // drupal_set_message($message);
-      continue;
-    }
-    // Add remotely stored properties.
-    _aicapp_remote_object_properties($object, $item);
-    // Get preferred image id.
-    $preferred_image_id = !empty($object->preferred_image_id) ? $object->preferred_image_id : NULL;
-
-    if (empty($preferred_image_id)) {
-      $message = 'Object record ' . $object->nid . ' does not have a preferred image id.';
-      watchdog('aic_update_object', $message);
-      drupal_set_message($message);
-      continue;
-    }
-    // Grab the entity metadata wrapper;
-    $entity = $by_object_id[$id]['#entity'];
-    // Thumbnail.
-    $thumnail_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'thumbnail'));
-    if (!empty($object->field_thumbnail_image[LANGUAGE_NONE][0]['value']) && $object->field_thumbnail_image[LANGUAGE_NONE][0]['value'] !== $thumnail_url) {
-      // Update database with image data
-      $entity->field_thumbnail_image->set($thumnail_url);
-      $object->_has_changed = TRUE;
-    }
-    // Full size image.
-    $full_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'large'));
-    // If images do not match.
-    if (!empty($object->field_large_image[LANGUAGE_NONE][0]['value']) && $object->field_large_image[LANGUAGE_NONE][0]['value'] !== $full_url) {
-      $entity->field_large_image->set($full_url);
-      // Flag that this entity should be saved;
-      $object->_has_changed = TRUE;
-    }
-    if (!empty($object->_has_changed)) {
-      // Add a hard limit here of how many updates can happen at once.
-      // This will reduce the possibility of failure due to too many requests.
-      if ($count >= $hard_limit) {
-        $message = $hard_limit . ' Object records have been updated. If running this manually, you may need to run again to process all objects.';
-        drupal_set_message($message);
-        // Clear drupal cache.
-        drupal_flush_all_caches();
-        return;
-      }
-      try {
-        $entity->save();
-        $count++;
-      }
-      catch(Exception $e) {
-        $replacements = array(
-          '%id' => $object->nid,
-          '%e' => !empty($e->errorInfo[2]) ? $e->errorInfo[2] : '',
-        );
-        $message = t('There was a problem updating an object record: %id. %e', $replacements);
-        watchdog('aic_update_object', $message, array(), WATCHDOG_ERROR);
-        drupal_set_message($message);
-        continue;
-      }
-    }
-  }
-  if ($count) {
-    $message = format_plural($count,
-      '1 Object record has been updated.',
-      '@count Object records have been updated.'
-    );
-    watchdog('aic_update_object', $message);
-    drupal_set_message($message);
-    // Clear drupal cache.
-    drupal_flush_all_caches();
-  }
+  aicapp_update_object_image_data();
 }
 
 /**

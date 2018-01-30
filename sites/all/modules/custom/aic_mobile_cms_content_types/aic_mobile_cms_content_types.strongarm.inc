@@ -13,6 +13,265 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_artwork_query';
+  $strongarm->value = 'https://lakesolridxweb.artic.edu/solr/lpm_prod/select?rows={{rows}}&start={{start}}&fq=document_type:artwork-webcoll&q={{term}}:{{value}}&wt=json&fl=title_t,id,gallery_location,object_id,main_reference_number,dimensions,artist_culture_place,artist_culture_place_delim,credit_line,artist_sort_name,date_display,in_gallery,thumbnail_full_path,large_image_full_path,date_range,copyright_notice';
+  $export['aicapp_artwork_query'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_data_api_host';
+  $strongarm->value = 'http://aggregator-data-test.artic.edu';
+  $export['aicapp_data_api_host'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_data_endpoint_artworks';
+  $strongarm->value = '/api/v1/artworks';
+  $export['aicapp_data_endpoint_artworks'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_data_endpoint_events';
+  $strongarm->value = '/api/v1/events';
+  $export['aicapp_data_endpoint_events'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_data_endpoint_exhibitions';
+  $strongarm->value = '/api/v1/exhibitions';
+  $export['aicapp_data_endpoint_exhibitions'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_data_endpoint_images';
+  $strongarm->value = '/api/v2/images';
+  $export['aicapp_data_endpoint_images'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_data_endpoint_places';
+  $strongarm->value = '/api/v1/places';
+  $export['aicapp_data_endpoint_places'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_env_fqdm';
+  $strongarm->value = 'http://aic-mobile-tours.artic.edu';
+  $export['aicapp_env_fqdm'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_gallery_query';
+  $strongarm->value = 'https://lakesolridxweb.artic.edu/solr/lpm_prod/select?rows={{rows}}&start={{start}}&fq=document_type:gallery&fl=title_t,gallery_id,gallery_number,floor,latitude,longitude,closed&q={{term}}:{{value}}&wt=json';
+  $export['aicapp_gallery_query'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_gmap_key';
+  $strongarm->value = 'AIzaSyBHH7xFzC4ZxJznLOZKXk8RYP7KG_SOLR4';
+  $export['aicapp_gmap_key'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_large_crop';
+  $strongarm->value = '!800,800';
+  $export['aicapp_image_large_crop'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_large_crop_aspect';
+  $strongarm->value = '1.82:1';
+  $export['aicapp_image_large_crop_aspect'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_large_crop_aspect_tour';
+  $strongarm->value = '1.82:1';
+  $export['aicapp_image_large_crop_aspect_tour'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_large_crop_lock';
+  $strongarm->value = FALSE;
+  $export['aicapp_image_large_crop_lock'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_large_crop_lock_tour';
+  $strongarm->value = 0;
+  $export['aicapp_image_large_crop_lock_tour'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_large_crop_tour';
+  $strongarm->value = '!800,800';
+  $export['aicapp_image_large_crop_tour'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_large_min_height';
+  $strongarm->value = '200';
+  $export['aicapp_image_large_min_height'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_large_min_width';
+  $strongarm->value = '364';
+  $export['aicapp_image_large_min_width'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_server_url';
+  $strongarm->value = 'https://lakeimagesweb.artic.edu/iiif/2';
+  $export['aicapp_image_server_url'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_thumb_crop';
+  $strongarm->value = '!112,112';
+  $export['aicapp_image_thumb_crop'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_thumb_crop_aspect';
+  $strongarm->value = '1:1';
+  $export['aicapp_image_thumb_crop_aspect'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_thumb_crop_aspect_tour';
+  $strongarm->value = '1:1';
+  $export['aicapp_image_thumb_crop_aspect_tour'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_thumb_crop_lock';
+  $strongarm->value = 'true';
+  $export['aicapp_image_thumb_crop_lock'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_thumb_crop_lock_tour';
+  $strongarm->value = 1;
+  $export['aicapp_image_thumb_crop_lock_tour'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_thumb_crop_tour';
+  $strongarm->value = '!112,112';
+  $export['aicapp_image_thumb_crop_tour'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_json_compare_base';
+  $strongarm->value = 'prod__v1';
+  $export['aicapp_json_compare_base'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_json_compare_head';
+  $strongarm->value = 'test__v1';
+  $export['aicapp_json_compare_head'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_json_compare_keys_only';
+  $strongarm->value = 1;
+  $export['aicapp_json_compare_keys_only'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_json_compare_key_name';
+  $strongarm->value = '';
+  $export['aicapp_json_compare_key_name'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_json_compare_node';
+  $strongarm->value = 'tours';
+  $export['aicapp_json_compare_node'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_object_image_min_height';
+  $strongarm->value = '-1';
+  $export['aicapp_object_image_min_height'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_object_image_min_width';
+  $strongarm->value = '-1';
+  $export['aicapp_object_image_min_width'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_tour_image_large_min_height';
+  $strongarm->value = '200';
+  $export['aicapp_tour_image_large_min_height'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_tour_image_large_min_width';
+  $strongarm->value = '364';
+  $export['aicapp_tour_image_large_min_width'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_tour_image_min_height';
+  $strongarm->value = '-1';
+  $export['aicapp_tour_image_min_height'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_tour_image_min_width';
+  $strongarm->value = '-1';
+  $export['aicapp_tour_image_min_width'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_tour_vocabular_name';
+  $strongarm->value = 'categories';
+  $export['aicapp_tour_vocabular_name'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
   $strongarm->name = 'comment_page';
   $strongarm->value = 0;
   $export['comment_page'] = $strongarm;
