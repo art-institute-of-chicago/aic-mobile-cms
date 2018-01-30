@@ -2478,10 +2478,10 @@ function aicapp_node_presave($node) {
     _aicapp_update_image_fields($node);
   }
   elseif ($node->type === AICAPP_TYPE_OBJECT) {
-    _aicapp_update_image_fields($node);
     if (!empty($node->skip_hooks_presave)) {
       return;
     }
+    _aicapp_update_image_fields($node);
     // Check if the object has a full size image in data hub.
     if (isset($node->field_object_id[LANGUAGE_NONE][0]['value'])) {
       $object_id = $node->field_object_id[LANGUAGE_NONE][0]['value'];
@@ -2551,25 +2551,8 @@ function _aicapp_update_image_fields(&$node) {
     // An uploaded image is present, this will fill a field with a URL that
     // points to a styled/cropped version of the image.
     $image_file = file_load($node->field_image[LANGUAGE_NONE][0]['fid']);
-    // If the uploaded image is a placeholder, use an image from the data hub.
-    $placholder_image = variable_get('aciapp_placeholder_filename', 'AIC_ImagePlaceholder.png');
-    if ($placholder_image === $image_file->filename) {
-      // No image has uploaded to this node. If the host node is an artwork
-      // object and this field has no value, attempt to fill the field with
-      // an image from the data hub.
-      if ($image_id = _aicapp_get_preferred_image_ids($node)) {
-        $type = 'thumbnail';
-        if ($field === 'field_large_image') {
-          $type = 'large';
-        }
-        elseif ($field === 'field_full_image') {
-          $type = 'full';
-        }
-        $url = _aicapp_get_image_crop($image_id, array('default' => $type));
-      }
-      else {
-        continue;
-      }
+    if (!$image_file) {
+      continue;
     }
     // Choose which image style to use.
     elseif ($field === 'field_thumbnail_image') {

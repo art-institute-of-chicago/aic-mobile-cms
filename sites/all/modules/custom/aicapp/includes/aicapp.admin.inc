@@ -40,7 +40,7 @@ function aicapp_admin() {
   $form['aicapp_env_fqdm'] = array(
     '#type' => 'textfield',
     '#title' => t('Domain name for the current environment.'),
-    '#default_value' => variable_get('aicapp_env_fqdm', 'http://aicweb10.artic.edu'),
+    '#default_value' => variable_get('aicapp_env_fqdm', 'http://aic-mobile-tours.artic.edu'),
     '#size' => 200,
     '#maxlength' => 256,
     '#description' => t('Enter a URL for the current server environment. This will preceed any local URLs. Some examples are http://aicweb10.artic.edu, http://aicweb14.artic.edu, http://de-mobile-dev.artic.edu, etc.'),
@@ -87,6 +87,15 @@ function aicapp_admin() {
     '#suffix' => t('Click this button to load events and exhitions from the data hub.') . '</div>',
     '#submit' => array('aicapp_load_remote_form_submit'),
   );
+  if (module_exists('aic_update_object')) {
+    $form['aicapp_ops']['aicapp_data_aggregator']['update_object_images'] = array(
+      '#type' => 'submit',
+      '#value' => t('Update Object Images'),
+      '#prefix' => '<div>',
+      '#suffix' => t('Click this button to update all Object image URLs from the data hub.') . '</div>',
+      '#submit' => array('aicapp_update_object_images'),
+    );
+  }
   $form['aicapp_ops']['version_compare'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -162,15 +171,6 @@ function aicapp_admin() {
     '#collapsed' => TRUE,
     '#title' => t('Images'),
     '#tree' => FALSE,
-  );
-  $form['aicapp_images']['aciapp_placeholder_filename'] = array(
-    '#type' => 'textfield',
-    '#size' => 25,
-    '#maxlength' => 25,
-    '#title' => t('Placeholder Filename'),
-    '#default_value' => variable_get('aciapp_placeholder_filename', 'AIC_ImagePlaceholder.png'),
-    '#description' => t('Some images cointain a placeholder image. By entering a filename used a placeholder, any artworks that use a placceholder image will use a preferred image from the data hub in JSON instead of the placeholder image.'),
-    '#prefix' => '<h4>' . t('Large Images') . '</h4>',
   );
   $form['aicapp_images']['aicapp_image_object'] = array(
     '#type' => 'fieldset',
