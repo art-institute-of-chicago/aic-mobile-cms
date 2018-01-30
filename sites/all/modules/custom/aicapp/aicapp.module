@@ -508,8 +508,8 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
   $objects['#updated'] = array();
   // Load all objects, including unpublished, because we compare if objects
   // previously not in a gallery (and unpublished) are now displayed.
-  $arwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
-  foreach ($arwork_objects as $object) {
+  $artwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
+  foreach ($artwork_objects as $object) {
     if (!is_object($object)) {
       continue;
     }
@@ -2510,7 +2510,7 @@ function aicapp_node_presave($node) {
 /**
  * Update image fields if a local has been uploaded.
  */
-function _aicapp_update_image_fields(&$node) {
+function _aicapp_update_image_fields(&$node, $preferred_image_id = NULL) {
   $image_fields = array(
     'field_thumbnail_image' => 'field_thumbnail_image_crop',
     'field_large_image' => 'field_large_image_crop',
@@ -2536,7 +2536,10 @@ function _aicapp_update_image_fields(&$node) {
       // No image has uploaded to this node. If the host node is an artwork
       // object and this field has no value, attempt to fill the field with
       // an image from the data hub.
-      if ($image_id = _aicapp_get_preferred_image_ids($node)) {
+      if (empty($preferred_image_id)) {
+        $preferred_image_id = _aicapp_get_preferred_image_ids($node);
+      }
+      if (!empty($preferred_image_id)) {
         $type = 'thumbnail';
         if ($field === 'field_large_image') {
           $type = 'large';
@@ -2544,7 +2547,7 @@ function _aicapp_update_image_fields(&$node) {
         elseif ($field === 'field_full_image') {
           $type = 'full';
         }
-        $node->{$field}[LANGUAGE_NONE][0]['value'] = _aicapp_get_image_crop($image_id, array('default' => $type));
+        $node->{$field}[LANGUAGE_NONE][0]['value'] = _aicapp_get_image_crop($preferred_image_id, array('default' => $type));
       }
       continue;
     }
