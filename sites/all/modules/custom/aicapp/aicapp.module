@@ -2389,25 +2389,25 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
 function aicapp_cron() {
   // Run the form submit functions.
   // At 10pm - assuming Cron is running every hour.
-  if (date('G') == 22 || $bypass_limit) {
+  if (date('G') == 22) {
     $fm = array();
     $fm2 = array();
     aicapp_loadgalleries_form_submit($fm, $fm2);
   }
   // At 11pm - assuming Cron is running every hour.
-  if (date('G') == 23 || $bypass_limit) {
+  if (date('G') == 23) {
     $fm = array();
     $fm2 = array();
     aicapp_objectGalleryStatus_submit($fm, $fm2);
   }
   // At 12pm - assuming Cron is running every hour.
-  if (date('G') == 24 || $bypass_limit) {
+  if (date('G') == 24) {
     $fm = array();
     $fm2 = array();
     aicapp_gendata_form_submit($fm, $fm2);
   }
   // At 1am - assuming Cron is running every hour.
-  if ((date('G') == 2 || $bypass_limit) && !variable_get('aicapp_remote_entities_imported', 0)) {
+  if (date('G') == 2 && !variable_get('aicapp_remote_entities_imported', 0)) {
     module_load_include('inc', 'aicapp', 'includes/aicapp.admin');
     $fm = array();
     $fm2 = array();
