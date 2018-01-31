@@ -80,12 +80,19 @@ function aicapp_admin() {
     '#suffix' => t('Click this button to send email notifications about objects that are no longer on display or have moved locations.') . '</div>',
     '#submit' => array('aicapp_objectGalleryStatus_submit'),
   );
-  $form['aicapp_ops']['aicapp_data_aggregator']['import_submit'] = array(
+  $form['aicapp_ops']['aicapp_data_aggregator']['import_events_submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Import Events & Exhibitions'),
+    '#value' => t('Import Events'),
+    '#prefix' => '<h5>' . t('Events & Exhibitions') . '</h5><div>',
+    '#suffix' => t('Click this button to load or update events from the data hub.') . '</div>',
+    '#submit' => array('aicapp_load_remote_events_form_submit'),
+  );
+  $form['aicapp_ops']['aicapp_data_aggregator']['import_exhibitions_submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Import Exhibitions'),
     '#prefix' => '<div>',
-    '#suffix' => t('Click this button to load events and exhibitions from the data hub.') . '</div>',
-    '#submit' => array('aicapp_load_remote_form_submit'),
+    '#suffix' => t('Click this button to load or update exhibitions from the data hub.') . '</div>',
+    '#submit' => array('aicapp_load_remote_exhibitions_form_submit'),
   );
   $suffix_message = t('Click this button to update all Object image URLs from the data hub.');
   if (module_exists('aic_update_object')) {
@@ -106,7 +113,7 @@ function aicapp_admin() {
     $form['aicapp_ops']['aicapp_data_aggregator']['update_object_images'] = array(
       '#type' => 'submit',
       '#value' => t('Update Object Images'),
-      '#prefix' => '<div>',
+      '#prefix' => '<h5>' . t('Artwork Objects') . '</h5><div>',
       '#suffix' => $suffix_message . '</div>',
       '#submit' => array('aicapp_update_object_images'),
     );
@@ -610,7 +617,21 @@ function aicapp_update_object_images($form, &$form_state) {
 /**
  * Save remote objects to nodes.
  */
-function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_count = 50) {
+function aicapp_load_remote_events_form_submit($form, &$form_state, $start = 0, $limit_count = 50) {
+  aicapp_load_remote_form_submit($form, $form_state, AICAPP_TYPE_EVENT, $start, $limit_count);
+}
+
+/**
+ * Save remote objects to nodes.
+ */
+function aicapp_load_remote_exhibitions_form_submit($form, &$form_state, $start = 0, $limit_count = 50) {
+  aicapp_load_remote_form_submit($form, $form_state, AICAPP_TYPE_EXHIBITION, $start, $limit_count);
+}
+
+/**
+ * Save remote objects to nodes.
+ */
+function aicapp_load_remote_form_submit($form, &$form_state, $remote_type, $start = 0, $limit_count = 50) {
   $now = new DateTime();
   $remote_objects = array();
   $max_page = 10;
@@ -628,6 +649,9 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
   );
   // Fetch all recent remote objects.
   foreach ($defaults as $type => &$remote) {
+    if ($type !== $remote_type) {
+      continue;
+    }
     // An object ID was passed and is not empty, query based on object ID.
     $options = array(
       'size' => $limit_count,
@@ -649,7 +673,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
               array(
                 'range' => array(
                   'start_at' => array(
-                    'lte' => 'now+8w',
+                    'lte' => 'now+2w',
                   )
                 ),
               ),
@@ -678,7 +702,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
               array(
                 'range' => array(
                   'aic_start_at' => array(
-                    'lte' => 'now+8w',
+                    'lte' => 'now+2w',
                   )
                 ),
               ),
@@ -762,6 +786,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
       $nids = array_keys($result['node']);
       $remote['local'] = entity_load('node', $nids);
     }
+    $count = 0;
     // Loop through objects and save updated values from API.
     foreach ($remote['local'] as $local_node) {
       // Load an entity.
@@ -782,6 +807,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
       if (!empty($remote['to_import'][$remote_key])) {
         unset($remote['to_import'][$remote_key]);
       }
+      $count++;
     }
     // Add any new remote objects that do not exist locally.
     foreach ($remote['to_import'] as $remote_id) {
@@ -791,7 +817,18 @@ function aicapp_load_remote_form_submit($form, &$form_state, $start = 0, $limit_
       // Update node fields with values from remote enities, but only if
       // remote updated date is more recent than local date.
       _aicapp_save_remote_event($remote['remote'][$remote_id], $type);
+      $count++;
     }
+  }
+  if ($count) {
+    $message = format_plural($count,
+      '1 record has been updated.',
+      '@count records have been updated.'
+    );
+    watchdog('aic_import_remote', $message);
+    drupal_set_message($message);
+    // Clear drupal cache.
+    drupal_flush_all_caches();
   }
 }
 
@@ -964,10 +1001,9 @@ function aicapp_update_object_image_data($hard_limit = 100) {
       '@count Object records have been updated.'
     );
     watchdog('aic_update_object', $message);
-    drupal_set_message($message);
     // Clear drupal cache.
     drupal_flush_all_caches();
-
+    drupal_set_message($message);
   }
 }
 
