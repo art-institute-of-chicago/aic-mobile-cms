@@ -1729,7 +1729,6 @@ function strip_drupal_from_node(&$node) {
     // Artist display
     if (!empty($node->artist_culture_place_delim)) {
       $node->artist_culture_place_delim = str_replace("\n", "\r", $node->artist_culture_place_delim);
-      var_dump($node->artist_culture_place_delim);die();
     }
   }
   elseif ($node->type === AICAPP_TYPE_TOUR) {
