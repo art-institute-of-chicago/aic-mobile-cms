@@ -2050,7 +2050,6 @@ function aicappSaveNode($object, $type) {
       $full_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'full'));
       $node->field_full_image[$node->language][0]['value'] = $full_url;
     }
-
     // Set node to unbpublished.
     $node->status = 0;
     // Set whether the object is in a gallery, or not.
@@ -2458,6 +2457,9 @@ function _aicapp_remote_object_properties(&$object, $item, $options = array()) {
     }
     elseif ($key === 'is_on_view') {
       $key = 'in_gallery';
+    }
+    elseif ($key === 'artist_display') {
+      $key = 'artist_culture_place_delim';
     }
     if (!in_array($key, $object_props_to_skip)) {
       $object->{$key} = $val;
