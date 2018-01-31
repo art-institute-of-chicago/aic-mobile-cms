@@ -1665,7 +1665,6 @@ function strip_drupal_from_node(&$node) {
   elseif ($node->type === AICAPP_TYPE_OBJECT) {
     // For v1 compliance
     $node->title_t = $node->title;
-
     // What is this object's gallery location?
     if (isset($node->gallery_title)) {
       // Keep property name of gallery location despite the underlying
@@ -1724,6 +1723,11 @@ function strip_drupal_from_node(&$node) {
       foreach ($node->field_object_selector_numbers[LANGUAGE_NONE] as $objselector) {
         $node->object_selector_numbers[] = $objselector['value'];
       }
+    }
+    // If the object selctor numbers array is empty, but an integer selector
+    // number exists, fill the first element of the array with the integer value.
+    if (!empty($node->object_selector_number) && empty($node->object_selector_numbers)) {
+      $node->object_selector_numbers[] = $node->object_selector_number;
     }
   }
   elseif ($node->type === AICAPP_TYPE_TOUR) {
