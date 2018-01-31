@@ -164,17 +164,6 @@ function aic_mobile_cms_content_types_user_default_permissions() {
     'module' => 'node',
   );
 
-  // Exported permission: 'create event content'.
-  $permissions['create event content'] = array(
-    'name' => 'create event content',
-    'roles' => array(
-      'admin' => 'admin',
-      'editor' => 'editor',
-      'publisher' => 'publisher',
-    ),
-    'module' => 'node',
-  );
-
   // Exported permission: 'create exhibition content'.
   $permissions['create exhibition content'] = array(
     'name' => 'create exhibition content',
@@ -272,16 +261,6 @@ function aic_mobile_cms_content_types_user_default_permissions() {
     'module' => 'node',
   );
 
-  // Exported permission: 'delete any event content'.
-  $permissions['delete any event content'] = array(
-    'name' => 'delete any event content',
-    'roles' => array(
-      'admin' => 'admin',
-      'editor' => 'editor',
-      'publisher' => 'publisher',
-    ),
-    'module' => 'node',
-  );
 
   // Exported permission: 'delete any exhibition content'.
   $permissions['delete any exhibition content'] = array(
@@ -372,17 +351,6 @@ function aic_mobile_cms_content_types_user_default_permissions() {
   // Exported permission: 'delete own basic_page content'.
   $permissions['delete own basic_page content'] = array(
     'name' => 'delete own basic_page content',
-    'roles' => array(
-      'admin' => 'admin',
-      'editor' => 'editor',
-      'publisher' => 'publisher',
-    ),
-    'module' => 'node',
-  );
-
-  // Exported permission: 'delete own event content'.
-  $permissions['delete own event content'] = array(
-    'name' => 'delete own event content',
     'roles' => array(
       'admin' => 'admin',
       'editor' => 'editor',
@@ -510,17 +478,6 @@ function aic_mobile_cms_content_types_user_default_permissions() {
     'module' => 'node',
   );
 
-  // Exported permission: 'edit any event content'.
-  $permissions['edit any event content'] = array(
-    'name' => 'edit any event content',
-    'roles' => array(
-      'admin' => 'admin',
-      'editor' => 'editor',
-      'publisher' => 'publisher',
-    ),
-    'module' => 'node',
-  );
-
   // Exported permission: 'edit any exhibition content'.
   $permissions['edit any exhibition content'] = array(
     'name' => 'edit any exhibition content',
@@ -614,17 +571,6 @@ function aic_mobile_cms_content_types_user_default_permissions() {
     'name' => 'edit own basic_page content',
     'roles' => array(
       'admin' => 'admin',
-    ),
-    'module' => 'node',
-  );
-
-  // Exported permission: 'edit own event content'.
-  $permissions['edit own event content'] = array(
-    'name' => 'edit own event content',
-    'roles' => array(
-      'admin' => 'admin',
-      'editor' => 'editor',
-      'publisher' => 'publisher',
     ),
     'module' => 'node',
   );

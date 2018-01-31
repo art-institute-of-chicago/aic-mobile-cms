@@ -27,23 +27,6 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
     'weight' => -49,
     'customized' => 1,
   );
-  // Exported menu link: main-menu_events:events.
-  $menu_links['main-menu_events:events'] = array(
-    'menu_name' => 'main-menu',
-    'link_path' => 'events',
-    'router_path' => 'events',
-    'link_title' => 'Events',
-    'options' => array(
-      'identifier' => 'main-menu_events:events',
-    ),
-    'module' => 'system',
-    'hidden' => 0,
-    'external' => 0,
-    'has_children' => 0,
-    'expanded' => 0,
-    'weight' => 6,
-    'customized' => 0,
-  );
   // Exported menu link: main-menu_exhibitions:exhibitions.
   $menu_links['main-menu_exhibitions:exhibitions'] = array(
     'menu_name' => 'main-menu',

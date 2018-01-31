@@ -31,13 +31,11 @@ function aicapp_init() {
   define('AICAPP_TYPE_GALLERY', 'gallery');
   define('AICAPP_TYPE_PAGE', 'page');
   define('AICAPP_TYPE_TOUR', 'tour');
-  define('AICAPP_TYPE_EVENT', 'event');
   define('AICAPP_TYPE_EXHIBITION', 'exhibition');
   define('AICAPP_TYPE_MAP_ANNOTATION', 'map_annotation');
   define('AICAPP_TYPE_MAP_FLOOR', 'map_floor');
   define('AICAPP_DATA_AGGREGATOR', 'aic_data_aggregrator');
   define('AICAPP_DATA_API_HOST', rtrim(variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'), '/'));
-  define('AICAPP_DATA_API_ENDPOINT_EVENT', variable_get('aicapp_data_endpoint_events', '/api/v1/events'));
   define('AICAPP_DATA_API_ENDPOINT_EXHIBITION', variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'));
   define('AICAPP_DATA_API_ENDPOINT_ARTWORKS', variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'));
   define('AICAPP_DATA_API_ENDPOINT_GALLERIES', variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'));
@@ -977,7 +975,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $query = new EntityFieldQuery();
   $results = $query
     ->entityCondition('entity_type', 'node')
-    ->propertyCondition('type', array(AICAPP_TYPE_EVENT, AICAPP_TYPE_EXHIBITION), 'IN')
+    ->propertyCondition('type', array(AICAPP_TYPE_EXHIBITION), 'IN')
     ->propertyCondition('status', 1, '=')
     ->propertyCondition('promote', 1, '=')
     ->execute();
@@ -1150,7 +1148,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     // There should only be 1 map floor node.
     $map_floor = $floor->floors;
   }
-  // Format featured events, tours and exhibitions.
+  // Format featured tours and exhibitions.
   $featured_sorted = array();
   if (!empty($featured)) {
     foreach ($featured as $feature) {
@@ -1163,7 +1161,6 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'dashboard' => array(
       'featured_tours' => isset($featured_sorted[AICAPP_TYPE_TOUR]) ? $featured_sorted[AICAPP_TYPE_TOUR] : array(),
       'featured_exhibitions' => isset($featured_sorted[AICAPP_TYPE_EXHIBITION]) ? $featured_sorted[AICAPP_TYPE_EXHIBITION] : array(),
-      'featured_events' => isset($featured_sorted[AICAPP_TYPE_EVENT]) ? $featured_sorted[AICAPP_TYPE_EVENT] : array(),
     ),
     'general_info' => $node_gen,
     'galleries' => $galleries,
@@ -2412,7 +2409,7 @@ function aicapp_cron() {
     aicapp_gendata_form_submit($fm, $fm2);
   }
   // At 1am - assuming Cron is running every hour.
-  if (date('G') == 2 && !variable_get('aicapp_remote_entities_imported', 0)) {
+  if (date('G') == 2) {
     module_load_include('inc', 'aicapp', 'includes/aicapp.admin');
     $fm = array();
     $fm2 = array();
