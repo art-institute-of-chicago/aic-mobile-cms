@@ -80,17 +80,10 @@ function aicapp_admin() {
     '#suffix' => t('Click this button to send email notifications about objects that are no longer on display or have moved locations.') . '</div>',
     '#submit' => array('aicapp_objectGalleryStatus_submit'),
   );
-  $form['aicapp_ops']['aicapp_data_aggregator']['import_events_submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Import Events'),
-    '#prefix' => '<h5>' . t('Events & Exhibitions') . '</h5><div>',
-    '#suffix' => t('Click this button to load or update events from the data hub.') . '</div>',
-    '#submit' => array('aicapp_load_remote_events_form_submit'),
-  );
   $form['aicapp_ops']['aicapp_data_aggregator']['import_exhibitions_submit'] = array(
     '#type' => 'submit',
     '#value' => t('Import Exhibitions'),
-    '#prefix' => '<div>',
+    '#prefix' => '<h5>' . t('Exhibitions') . '</h5><div>',
     '#suffix' => t('Click this button to load or update exhibitions from the data hub.') . '</div>',
     '#submit' => array('aicapp_load_remote_exhibitions_form_submit'),
   );
@@ -403,14 +396,6 @@ function aicapp_admin_api() {
     '#default_value' => variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'),
     '#description' => t(''),
   );
-  $form['aicapp_data_aggregator']['aicapp_data_endpoint_events'] = array(
-    '#type' => 'textfield',
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#title' => t('Events endpoint'),
-    '#default_value' => variable_get('aicapp_data_endpoint_events', '/api/v1/events'),
-    '#description' => t('Query for an event via this endpoint.'),
-  );
   $form['aicapp_data_aggregator']['aicapp_data_endpoint_exhibitions'] = array(
     '#type' => 'textfield',
     '#size' => 200,
@@ -617,13 +602,6 @@ function aicapp_update_object_images($form, &$form_state) {
 /**
  * Save remote objects to nodes.
  */
-function aicapp_load_remote_events_form_submit($form, &$form_state, $start = 0, $limit_count = 50) {
-  aicapp_load_remote_form_submit($form, $form_state, AICAPP_TYPE_EVENT, $start, $limit_count);
-}
-
-/**
- * Save remote objects to nodes.
- */
 function aicapp_load_remote_exhibitions_form_submit($form, &$form_state, $start = 0, $limit_count = 50) {
   aicapp_load_remote_form_submit($form, $form_state, AICAPP_TYPE_EXHIBITION, $start, $limit_count);
 }
@@ -638,10 +616,6 @@ function aicapp_load_remote_form_submit($form, &$form_state, $remote_type, $star
   $page = 'page=';
   // Define what we're going to import.
   $defaults = array(
-    AICAPP_TYPE_EVENT => array(
-      'endpoint' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EVENT . '/search',
-      'remote' => array(),
-    ),
     AICAPP_TYPE_EXHIBITION => array(
       'endpoint' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION . '/search',
       'remote' => array(),
@@ -660,36 +634,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $remote_type, $star
     );
     $page_start = 2;
     $url = $remote['endpoint'];
-    if ($type === AICAPP_TYPE_EVENT) {
-      $options['query'] = json_encode(array(
-        '_source' => true,
-        'sort' => array(
-          'start_at',
-          'end_at'
-        ),
-        'query' => array(
-          'bool' => array(
-            'must' => array(
-              array(
-                'range' => array(
-                  'start_at' => array(
-                    'lte' => 'now+2w',
-                  )
-                ),
-              ),
-              array(
-                'range' => array(
-                  'end_at' => array(
-                    'gte' => 'now',
-                  )
-                ),
-              ),
-            ),
-          )
-        )
-      ));
-    }
-    elseif ($type ===  AICAPP_TYPE_EXHIBITION) {
+    if ($type ===  AICAPP_TYPE_EXHIBITION) {
       $options['query'] = json_encode(array(
         '_source' => true,
         'sort' => array(
@@ -728,14 +673,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $remote_type, $star
       if ($type === AICAPP_TYPE_EXHIBITION) {
         // Skip any that are closed?
         if ($now > new DateTime($remote_record['aic_end_at'])) {
-          # Now is greater than Event end time, i.e. in the past.
-          continue;
-        }
-      }
-      elseif ($type === AICAPP_TYPE_EVENT) {
-        // Skip any that have end dates in the past.
-        if ($now > new DateTime($remote_record['end_at'])) {
-          # Now is greater than Event end time, i.e. in the past.
+          # Now is greater than end time, i.e. in the past.
           continue;
         }
       }
@@ -754,14 +692,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $remote_type, $star
             foreach ($decoded_loop['data'] as $remote_record) {
               if ($type === AICAPP_TYPE_EXHIBITION) {
                 if ($now > new DateTime($remote_record['aic_end_at'])) {
-                  # Now is greater than Event end time, i.e. in the past.
-                  continue;
-                }
-              }
-              elseif ($type === AICAPP_TYPE_EVENT) {
-                // Skip any that have end dates in the past.
-                if ($now > new DateTime($remote_record['end_at'])) {
-                  # Now is greater than Event end time, i.e. in the past.
+                  # Now is greater than end time, i.e. in the past.
                   continue;
                 }
               }
@@ -800,7 +731,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $remote_type, $star
       // Update all local objects that have local update date previous to last
       // updated remote object dates.
       $to_import = $remote['remote'][$remote_id];
-      _aicapp_save_remote_event($to_import, $type, $ewrapper, $local_node);
+      _aicapp_save_remote_entity($to_import, $type, $ewrapper, $local_node);
       // Get the key value for this remote id.
       $remote_key = array_search($remote_id, $remote['to_import']);
       // Unset this item from the import stack.
@@ -816,7 +747,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $remote_type, $star
       }
       // Update node fields with values from remote enities, but only if
       // remote updated date is more recent than local date.
-      _aicapp_save_remote_event($remote['remote'][$remote_id], $type);
+      _aicapp_save_remote_entity($remote['remote'][$remote_id], $type);
       $count++;
     }
   }
@@ -833,9 +764,9 @@ function aicapp_load_remote_form_submit($form, &$form_state, $remote_type, $star
 }
 
 /**
- * Helper function to update event or exhibiton nodes.
+ * Helper function to update exhibiton nodes.
  */
-function _aicapp_save_remote_event(&$to_import, $type, $entity_wrapper = NULL) {
+function _aicapp_save_remote_entity(&$to_import, $type, $entity_wrapper = NULL) {
   $timezone = variable_get('date_default_timezone', 'America/Chicago');
   $date_values = array(
     'value' => '',
@@ -865,11 +796,7 @@ function _aicapp_save_remote_event(&$to_import, $type, $entity_wrapper = NULL) {
   // Object JSON.
   $entity_wrapper->field_imported_object->set(json_encode($to_import));
   // Start and end dates.
-  if ($type === AICAPP_TYPE_EVENT) {
-    $start = new DateTime($to_import['start_at']);
-    $end = new DateTime($to_import['end_at']);
-  }
-  elseif ($type === AICAPP_TYPE_EXHIBITION) {
+  if ($type === AICAPP_TYPE_EXHIBITION) {
     $start = new DateTime($to_import['aic_start_at']);
     $end = new DateTime($to_import['aic_end_at']);
   }
@@ -885,14 +812,6 @@ function _aicapp_save_remote_event(&$to_import, $type, $entity_wrapper = NULL) {
   if ($type === AICAPP_TYPE_EXHIBITION) {
     // Set Exhibition dates..
     $entity_wrapper->field_exhibition_dates->set($date_values);
-  }
-  elseif ($type === AICAPP_TYPE_EVENT) {
-    // Event start and end dates.
-    $entity_wrapper->field_event_dates->set($date_values);
-    // Description.
-    $entity_wrapper->field_event_description->set($to_import['description']);
-    // Short Description.
-    $entity_wrapper->field_event_short_description->set($to_import['short_description']);
   }
   if ($end < new DateTime()) {
     // Unpubish and demote this node.

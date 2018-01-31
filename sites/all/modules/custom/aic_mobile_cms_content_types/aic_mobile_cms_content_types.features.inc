@@ -149,14 +149,6 @@ function aic_mobile_cms_content_types_node_info() {
       'title_label' => t('Title'),
       'help' => '',
     ),
-    'event' => array(
-      'name' => t('Event'),
-      'base' => 'node_content',
-      'description' => '',
-      'has_title' => '1',
-      'title_label' => t('Event Title'),
-      'help' => '',
-    ),
     'exhibition' => array(
       'name' => t('Exhibition'),
       'base' => 'node_content',
