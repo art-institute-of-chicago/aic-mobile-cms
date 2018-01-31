@@ -427,13 +427,13 @@ function aicapp_admin_api() {
     '#default_value' => variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'),
     '#description' => t('Query for an artwork via this endpoint.'),
   );
-  $form['aicapp_data_aggregator']['aicapp_data_endpoint_places'] = array(
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_galleries'] = array(
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
     '#title' => t('Places endpoint'),
-    '#default_value' => variable_get('aicapp_data_endpoint_places', '/api/v1/places'),
-    '#description' => t('Query for a gallery via the places endpoint.'),
+    '#default_value' => variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'),
+    '#description' => t('Query for a gallery via the galleries endpoint.'),
   );
   $form['aicapp_data_aggregator']['aicapp_data_endpoint_images'] = array(
     '#type' => 'textfield',
