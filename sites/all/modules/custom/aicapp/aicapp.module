@@ -1726,6 +1726,11 @@ function strip_drupal_from_node(&$node) {
     if (!empty($node->object_selector_number) && empty($node->object_selector_numbers)) {
       $node->object_selector_numbers[] = $node->object_selector_number;
     }
+    // Artist display
+    if (!empty($node->artist_culture_place_delim)) {
+      $node->artist_culture_place_delim = str_replace("\n", "\r", $node->artist_culture_place_delim);
+      var_dump($node->artist_culture_place_delim);die();
+    }
   }
   elseif ($node->type === AICAPP_TYPE_TOUR) {
     // Tour node items, beginning with tour banner.
