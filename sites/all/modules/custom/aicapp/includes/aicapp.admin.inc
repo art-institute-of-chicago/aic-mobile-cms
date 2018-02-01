@@ -87,30 +87,80 @@ function aicapp_admin() {
     '#suffix' => t('Click this button to load or update exhibitions from the data hub.') . '</div>',
     '#submit' => array('aicapp_load_remote_exhibitions_form_submit'),
   );
-  $suffix_message = t('Click this button to update all Object image URLs from the data hub.');
-  if (module_exists('aic_update_object')) {
-    $object_nids = variable_get('aic_update_object_nids', array());
-    if (empty($object_nids) || count($object_nids) < 100) {
-      // Load all objects, including unpublished, because we compare if objects
-      // previously not in a gallery (and unpublished) are now displayed.
-      $artwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
-      $object_nids += array_keys($artwork_objects);
-      variable_set('aic_update_object_nids', $object_nids);
-    }
-    else {
-      $suffix_message .= ' ' . format_plural(count($object_nids),
-        '1 Object needs to be updated.',
-        '@count Objects remaining.'
-      );
-    }
-    $form['aicapp_ops']['aicapp_data_aggregator']['update_object_images'] = array(
-      '#type' => 'submit',
-      '#value' => t('Update Object Images'),
-      '#prefix' => '<h5>' . t('Artwork Objects') . '</h5><div>',
-      '#suffix' => $suffix_message . '</div>',
-      '#submit' => array('aicapp_update_object_images'),
+  $suffix_message = t('Click this button to update all Object.');
+  $object_nids = variable_get('aic_update_object_nids', array());
+  if (empty($object_nids) || count($object_nids) < 50) {
+    // Load all objects, including unpublished, because we compare if objects
+    // previously not in a gallery (and unpublished) are now displayed.
+    $artwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
+    $object_nids += array_keys($artwork_objects);
+    variable_set('aic_update_object_nids', $object_nids);
+  }
+  else {
+    $suffix_message .= ' ' . format_plural(count($object_nids),
+      '1 Object needs to be updated.',
+      '@count Objects remaining.'
     );
   }
+  $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_all_objects'] = array(
+    '#type' => 'checkbox',
+    '#prefix' => '<h5>' . t('Artwork Objects') . '</h5><div>',
+    '#title' => t('Update All Objects'),
+    '#default_value' => (variable_get('aicapp_data_update_all_objects', 1)) ?: 0,
+    '#description' => t('Whether or not to update all objects. Uncheck this if you would like to update only specific objects.'),
+  );
+  $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_ids'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Object IDs To Update'),
+    '#default_value' => variable_get('aicapp_data_update_ids', ''),
+    '#size' => 64,
+    '#maxlength' => 64,
+    '#description' => t('Enter 1 or more Object IDs to update.'),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="aicapp_data_update_all_objects"]' => array(
+          array('checked' => FALSE),
+        ),
+      ),
+    ),
+  );
+  $object_update_options = array(
+    'image' => t('Image Fields Only'),
+    // @TODO Allow for a list of specific fields to update.
+    //'all' => t('All Fields'),
+    //'custom' => t('Enter a list of fields')
+  );
+  $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_objects_types'] = array(
+    '#type' => 'hidden',
+    '#value' => 'image',
+    // '#title' => t('Values To Update'),
+    // '#default_value' => variable_get('aicapp_data_update_objects_types', 'image'),
+    // '#description' => t('Select which fields to update.'),
+    // '#options' => $object_update_options,
+  );
+  // @TODO Allow for a list of specific fields to update.
+  // $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_objects_fields'] = array(
+  //   '#type' => 'textfield',
+  //   '#title' => t('Object Fields To Update'),
+  //   '#default_value' => variable_get('aicapp_data_update_objects_fields', ''),
+  //   '#size' => 64,
+  //   '#maxlength' => 64,
+  //   '#description' => t('Enter 1 or more Object field names to update.'),
+  //   '#states' => array(
+  //     'visible' => array(
+  //       ':input[name="aicapp_data_update_objects_types"]' => array(
+  //         array('value' => 'custom'),
+  //       ),
+  //     ),
+  //   ),
+  // );
+  $form['aicapp_ops']['aicapp_data_aggregator']['update_object_images'] = array(
+    '#type' => 'submit',
+    '#value' => t('Update Objects'),
+    '#suffix' => $suffix_message . '</div>',
+    '#validate' => array('aicapp_update_object_validate'),
+    '#submit' => array('aicapp_update_object_submit'),
+  );
   $form['aicapp_ops']['version_compare'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -593,10 +643,51 @@ function aicapp_admin_api_validate($form, &$form_state) {
 }
 
 /**
+ * Validation for object updates.
+ */
+function aicapp_update_object_validate($form, &$form_state) {
+  if (empty($form_state['values']['aicapp_data_update_all_objects']) && empty($form_state['values']['aicapp_data_update_ids'])) {
+    form_set_error('aicapp_data_update_ids', t('You must enter at least 1 Object ID.'));
+  }
+  elseif (empty($form_state['values']['aicapp_data_update_all_objects'])) {
+    // First replace any spaces with commas.
+    $object_ids = explode(',', str_replace(' ', ',', trim($form_state['values']['aicapp_data_update_ids'])));
+    if (count($object_ids)) {
+      $object_ids = array_filter(array_unique($object_ids));
+      // Make sure all values are numeric.
+      foreach ($object_ids as $id) {
+        if (!is_numeric($id)) {
+          form_set_error('aicapp_data_update_ids', 'Object ID(s) should be a numeric value.');
+        }
+      }
+      $form_state['values']['aicapp_data_update_ids'] = $object_ids;
+    }
+    else {
+      form_set_error('aicapp_data_update_ids', 'Object ID(s) should be a numeric value. If providing more than one ID, add a comma between IDs. Make sure there is no comma at the end.');
+    }
+  }
+}
+
+/**
  * Save remote objects to nodes.
  */
-function aicapp_update_object_images($form, &$form_state) {
-  aicapp_update_object_image_data();
+function aicapp_update_object_submit($form, &$form_state) {
+  // Look for specific objects to update.
+  $to_update = array();
+  if (is_array(($form_state['values']['aicapp_data_update_ids'])) && count($form_state['values']['aicapp_data_update_ids'])) {
+    // We have a specific list of objects to objects.
+    $to_update = $form_state['values']['aicapp_data_update_ids'];
+    // Convert the object ids to node ids.
+    $to_update = aicapp_get_nids_from_object_ids($to_update);
+  }
+  // Check wether to update all data, or only image fields.
+  switch ($form_state['values']['aicapp_data_update_objects_types']) {
+    default:
+    case 'image':
+      // Only update image fields.
+      aicapp_update_object_image_data($to_update);
+      break;
+  }
 }
 
 /**
@@ -830,20 +921,17 @@ function _aicapp_save_remote_entity(&$to_import, $type, $entity_wrapper = NULL) 
 /**
  * Helper function to update object image data.
  */
-function aicapp_update_object_image_data($hard_limit = 100) {
+function aicapp_update_object_image_data($to_update = array(), $hard_limit = 100) {
   $by_object_id =  array();
+  $object_node_ids = array();
   $node_ids = variable_get('aic_update_object_nids', array());
-
-  $sliced_node_ids = array_slice($node_ids, 0, $hard_limit);
-  if (empty($sliced_node_ids)) {
-    // Load all objects, including unpublished, because we compare if objects
-    // previously not in a gallery (and unpublished) are now displayed.
-    $arwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
+  if (!empty($to_update)) {
+    $sliced_node_ids = array_slice($to_update, 0, $hard_limit);
   }
   else {
-    $arwork_objects = node_load_multiple($sliced_node_ids, array('type' => AICAPP_TYPE_OBJECT));
+    $sliced_node_ids = count($node_ids) <= 175 ? $node_ids : array_slice($node_ids, 0, $hard_limit);
   }
-  $object_node_ids = array();
+  $arwork_objects = node_load_multiple($sliced_node_ids, array('type' => AICAPP_TYPE_OBJECT));
   foreach ($arwork_objects as $object) {
     if (!is_object($object)) {
       continue;
@@ -872,8 +960,10 @@ function aicapp_update_object_image_data($hard_limit = 100) {
   if (empty($results)) {
     $message = 'No results were found when searching for artwork objects.';
     watchdog('aic_update_object', $message);
-    // Set the remaining objects that need to be updated.
-    variable_set('aic_update_object_nids', $node_ids);
+    if (empty($to_update)) {
+      // Set the remaining objects that need to be updated.
+      variable_set('aic_update_object_nids', $node_ids);
+    }
     return;
   }
   $count = 0;
@@ -913,8 +1003,6 @@ function aicapp_update_object_image_data($hard_limit = 100) {
     }
   }
   if ($count) {
-    // Set the remaining objects that need to be updated.
-    variable_set('aic_update_object_nids', $node_ids);
     $message = format_plural($count,
       '1 Object record has been updated.',
       '@count Object records have been updated.'
@@ -923,9 +1011,32 @@ function aicapp_update_object_image_data($hard_limit = 100) {
     // Clear drupal cache.
     drupal_flush_all_caches();
     drupal_set_message($message);
+    if (empty($to_update)) {
+      // Set the remaining objects that need to be updated.
+      variable_set('aic_update_object_nids', $node_ids);
+    }
   }
 }
 
+/**
+ * Helper function to get a list of nids from a given set of object IDs.
+ */
+function aicapp_get_nids_from_object_ids($object_ids) {
+  $nids = array();
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+       ->entityCondition('bundle', AICAPP_TYPE_OBJECT, '=')
+       ->fieldCondition('field_object_id', 'value', $object_ids, 'IN');
+  $results = $query->execute();
+  if (!empty($results['node'])) {
+    $nids = array_keys($results['node']);
+  }
+  return $nids;
+}
+
+/**
+ * Helper function to find the difference between to arrays.
+ */
 function aicapp_array_diff_assoc_recursive($array1, $array2, $keys_only = FALSE, $compare_key = NULL, $sort = 'ksort') {
   $difference = array();
   foreach ($array1 as $key => $value) {
