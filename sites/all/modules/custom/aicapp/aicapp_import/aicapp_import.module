@@ -268,7 +268,6 @@ function aicapp_import_parse_csv($path) {
   try {
     require_once($csv_parser);
     if (!class_exists('parseCSV')) {
-      dsm('in here');
       return NULL;
     }
     if ($csv = new parseCSV($path)) {
@@ -291,7 +290,8 @@ function aicapp_import_items($items, $audio_file_path) {
   );
   $counts = array(
     'audio' => array(
-      'imported' => 0,
+      'created' => 0,
+      'updated' => 0,
       'associated' => 0,
       'ids' => array(),
       'duplicated' => array(),
@@ -306,17 +306,6 @@ function aicapp_import_items($items, $audio_file_path) {
         $audio_node = node_load($values['Node ID']);
       }
       if (!empty($values['Title']) && !empty($values['Track Title Eng']) && !empty($values['filename_eng.mp3'])) {
-        // $nid = _aicapp_import_title_exists($values['Title']);
-        // $fid = _aicapp_import_filename_exists($values['filename_eng.mp3']);
-        // if ($nid || $fid) {
-        //   $counts['audio']['duplicated'][] = array(
-        //     'title' => $values['Title'],
-        //     'found_nid' => $nid,
-        //     'filename' => $values['filename_eng.mp3'],
-        //     'found_fid' => $fid,
-        //   );
-        //   continue;
-        // }
         if (!is_object($audio_node)) {
           // Create a audio node entity.
           $default_values = array(
@@ -329,12 +318,11 @@ function aicapp_import_items($items, $audio_file_path) {
           // Create the new audio node.
           $audio_node = entity_create('node', $default_values);
         }
-
         // Get the translation handler.
         $handler = entity_translation_get_handler('node', $audio_node);
         $entity = entity_metadata_wrapper('node', $audio_node);
         // Set the entity titlel and track title.
-        $entity->title = $values['Title'];
+        $entity->title_field->set($values['Title']);
         $entity->language('en')->field_track_title->set($values['Track Title Eng']);
         // Look for the English file for this item.
         if ($file_obj = _aicapp_import_file_uri_to_object('public://' . $audio_file_path . '/' . $values['filename_eng.mp3'])) {
@@ -347,7 +335,7 @@ function aicapp_import_items($items, $audio_file_path) {
         if (!in_array($values['Credits Eng'], $skip_text)) {
           $entity->language('en')->field_credits->set($values['Credits Eng']);
         }
-        // // Check which languages to translate to.
+        // Check which languages to translate to.
         $translate_to = array();
         if (!empty($values['filename_esp.mp3']) && !empty($values['Track Title Esp'])) {
           $translate_to['es'] = 'es';
@@ -365,18 +353,18 @@ function aicapp_import_items($items, $audio_file_path) {
           }
         }
         if (!empty($values['filename_chn.mp3']) && !empty($values['Track Title Chn'])) {
-          $translate_to['zh-hans'] = 'zh-hans';
-          $entity->language('zh-hans')->title_field->set($values['Title']);
-          $entity->language('zh-hans')->field_track_title->set($values['Track Title Chn']);
+          $translate_to['zh-hant'] = 'zh-hant';
+          $entity->language('zh-hant')->title_field->set($values['Title']);
+          $entity->language('zh-hant')->field_track_title->set($values['Track Title Chn']);
           if (!in_array($values['Transcripts Chn'], $skip_text)) {
-            $entity->language('zh-hans')->field_audio_transcript->set($values['Transcripts Chn']);
+            $entity->language('zh-hant')->field_audio_transcript->set($values['Transcripts Chn']);
           }
           if (!in_array($values['Credits Chn'], $skip_text)) {
-            $entity->language('zh-hans')->field_credits->set($values['Credits Chn']);
+            $entity->language('zh-hant')->field_credits->set($values['Credits Chn']);
           }
           // Chinese audio file
           if ($file_obj = _aicapp_import_file_uri_to_object('public://' . $audio_file_path . '/' . $values['filename_chn.mp3'])) {
-            $entity->language('zh-hans')->field_audio_file->file->set($file_obj);
+            $entity->language('zh-hant')->field_audio_file->file->set($file_obj);
           }
         }
         // For each translation to the English version of this node.
@@ -384,17 +372,24 @@ function aicapp_import_items($items, $audio_file_path) {
           $translation = array(
             'translate' => 0,
             'status' => 1,
-            // The language you're translating to
             'language' => $to_language,
-            // English is always the source language
             'source' => 'en',
           );
+          // Set and save translations
           $handler->setTranslation($translation, $entity->value());
+          //$handler->saveTranslations();
         }
+        // Save the audio node.
         $entity->save();
         $audio_id = $entity->nid->value();
         if ($audio_id) {
-          $counts['audio']['imported']++;
+          // If created doesnt exactly match changed, assume update.
+          if ($audio_node->created !== $audio_node->changed) {
+            $counts['audio']['updated']++;
+          }
+          else {
+            $counts['audio']['created']++;
+          }
           $counts['audio']['ids'][$audio_id] = array(
             'nid' => $audio_id,
           );
@@ -412,27 +407,46 @@ function aicapp_import_items($items, $audio_file_path) {
           $object_nodes = entity_load('node', $object_nids);
           if (count($object_nodes)) {
             $object_node = current($object_nodes);
-            $object_entity = entity_metadata_wrapper('node', $object_node);
-            $collection = entity_create('field_collection_item', array('field_name' => 'field_audio_commentary'));
-            $collection->setHostEntity('node', $object_node);
-            $collection_wrapper = entity_metadata_wrapper('field_collection_item', $collection);
-            $item_values = array(
-              'field_audio_commentary_audio' => array(
-                'value' => $audio_id,
-              ),
-            );
-            if (!empty($values['Object Selector #'])) {
-              $item_values['field_object_selector_number'] = array(
-                'value' => $values['Object Selector #'],
+            // Only add the assocaion if it doesn't already exist.
+            // @TODO
+            $current_items = array();
+            if ($current = field_get_items('node', $object_node, 'field_audio_commentary')) {
+              foreach ($current as $item) {
+                $current_items[] = field_collection_field_get_entity($item);
+              }
+            }
+            foreach ($current_items as $current_item) {
+              $audio_item = !empty($current_item->field_audio_commentary_audio[LANGUAGE_NONE])
+                        ? $current_item->field_audio_commentary_audio[LANGUAGE_NONE][0]['target_id'] : NULL;
+              if ($audio_item === $audio_id) {
+                // Audio node matches current, move to next audio item.
+                $audio_associated = TRUE;
+                break;
+              }
+            }
+            if (empty($audio_associated)) {
+              $object_entity = entity_metadata_wrapper('node', $object_node);
+              $collection = entity_create('field_collection_item', array('field_name' => 'field_audio_commentary'));
+              $collection->setHostEntity('node', $object_node);
+              $collection_wrapper = entity_metadata_wrapper('field_collection_item', $collection);
+              $item_values = array(
+                'field_audio_commentary_audio' => array(
+                  'value' => $audio_id,
+                ),
               );
+              if (!empty($values['Object Selector #'])) {
+                $item_values['field_object_selector_number'] = array(
+                  'value' => $values['Object Selector #'],
+                );
+              }
+              foreach ($item_values as $key => $values) {
+                $collection_wrapper->{$key}->set($values['value']);
+              }
+              $collection_wrapper->save();
+              $object_entity->save();
+              $counts['audio']['associated']++;
+              $counts['audio']['ids'][$audio_id]['object'] = $object_entity->nid->value();
             }
-            foreach ($item_values as $key => $values) {
-              $collection_wrapper->{$key}->set($values['value']);
-            }
-            $collection_wrapper->save();
-            $object_entity->save();
-            $counts['audio']['object_associations']++;
-            $counts['audio']['ids'][$audio_id]['object'] = $object_entity->nid->value();
           }
         }
       }
@@ -448,11 +462,14 @@ function aicapp_import_items($items, $audio_file_path) {
     }
     drupal_set_message(t('There was a problem: %e', array('%e' => $details)), 'error');
   }
-  if (!empty($counts['audio']['imported'])) {
-    drupal_set_message(format_plural($counts['audio']['imported'], '1 item has ', '@count items have ') . t('been imported. See the !link.', array('!link' => l('new content items', 'admin/content'))));
+  if (!empty($counts['audio']['created'])) {
+    drupal_set_message(format_plural($counts['audio']['created'], '1 new item has ', '@count new items have ') . t('been imported. See the !link.', array('!link' => l('New content items', 'admin/content'))));
+  }
+  if (!empty($counts['audio']['updated'])) {
+    drupal_set_message(format_plural($counts['audio']['updated'], '1 existing item has ', '@count existing items have ') . t('been updated. See the !link.', array('!link' => l('Updated content items', 'admin/content'))));
   }
   if (!empty($counts['audio']['duplicated'])) {
-    drupal_set_message(format_plural(count($counts['audio']['duplicated']), '1 duplicate item was ', '@count duplicate items were ') . t('found, and not imported.', array('!link' => l('new content items', 'admin/content'))));
+    drupal_set_message(format_plural(count($counts['audio']['duplicated']), '1 duplicate item was ', '@count duplicate items were ') . t('found, and not imported.', array('!link' => l('New content items', 'admin/content'))));
     foreach ($counts['audio']['duplicated'] as $duplicate) {
       if (!empty($duplicate['found_nid'])) {
         drupal_set_message(t('An audio node with the title !link already exists.', array('!link' => l($duplicate['title'], 'node/' . $duplicate['found_nid']))));
