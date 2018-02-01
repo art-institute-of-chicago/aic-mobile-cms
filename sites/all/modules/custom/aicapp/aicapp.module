@@ -1052,8 +1052,8 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     // @TODO a better way would be to only request the fields we want.
     $object_props_to_skip = array('#skip' => array(
       'description', 'medium', 'inscriptions', 'provenance_text', 'exhibition_history',
-      'object_type', 'object_type_id', 'publication_history','collection_status',
-      'publishing_verification_level', 'gallery_id','place_of_origin',
+      'object_type', 'object_type_id', 'publication_history', 'collection_status',
+      'publishing_verification_level', 'gallery_id', 'place_of_origin',
     ));
     foreach ($results as $item) {
       $id = isset($item['id']) ? $item['id'] : NULL;
@@ -1064,7 +1064,6 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       $objects['#updated'][$object->nid] = _aicapp_remote_object_properties($object, $item, $object_props_to_skip);
     }
   }
-
   // Only show objects that are in a gallery, and have lat/long values,
   // and that are published.
   foreach ($objects['#updated'] as $key => $object) {
@@ -1076,6 +1075,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       unset($objects['#updated'][$key]);
     }
   }
+
   // Overwrite the objects with the updated copy.
   $objects = $objects['#updated'];
   // Format audio node.
@@ -1668,7 +1668,6 @@ function strip_drupal_from_node(&$node) {
       $node->gallery_location = $node->gallery_title;
     }
     // Is this object in a gallery?
-    $node->in_gallery = NULL;
     if (isset($node->is_on_view) && !isset($node->in_gallery)) {
       $node->in_gallery = $node->is_on_view;
     }
