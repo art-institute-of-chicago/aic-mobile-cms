@@ -1078,7 +1078,6 @@ function aicapp_gendata_form_submit($form, &$form_state) {
 
   // Overwrite the objects with the updated copy.
   $objects = $objects['#updated'];
-  //dsm($objects);
   // Format audio node.
   foreach ($audio_files as $audio) {
     strip_drupal_from_node($audio);
@@ -2475,9 +2474,6 @@ function _aicapp_remote_object_properties(&$object, $item, $options = array()) {
       $key = 'artist_culture_place_delim';
     }
     if (!in_array($key, $object_props_to_skip)) {
-      if (  $key = 'in_gallery') {
-        dsm($object);
-      }
       $object->{$key} = $val;
     }
   }
