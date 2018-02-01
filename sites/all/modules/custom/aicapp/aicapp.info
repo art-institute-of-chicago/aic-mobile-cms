@@ -1,6 +1,9 @@
 name = AIC App
 description = Custom module for loading and generating data to the AIC museum mobile app.
 package = AIC Custom Modules
-version = VERSION
+version = 7.x.2.0
 core = 7.x
+files[] = aicapp.install
 files[] = aicapp.module
+files[] = includes/aicapp.admin.inc
+files[] = includes/aicapp.form.alter.inc
