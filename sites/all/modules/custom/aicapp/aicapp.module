@@ -2578,7 +2578,7 @@ function _aicapp_update_image_fields(&$node, $preferred_image_id = NULL) {
       $url = _aicapp_file_create_url($image_file->uri, 'thumbnail_one_twelve');
     }
     elseif ($field === 'field_large_image') {
-      $url = _aicapp_file_create_url($image_file->uri,'large_six_hundred');
+      $url = _aicapp_file_create_url($image_file->uri, 'large_six_hundred');
     }
     elseif ($field === 'field_full_image') {
       $url = _aicapp_file_create_url($image_file->uri);
@@ -2663,7 +2663,8 @@ function _aicapp_file_create_url($uri, $preset = NULL) {
     // Intercept the public stream and use a config value.
     if ($scheme === 'public') {
       $replace = AICAPP_CURRENT_SERVER_FQDM . '/';
-      $replace .= variable_get('file_public_path', conf_path() . '/files');
+      $file_path = variable_get('aicapp_file_public_path', conf_path() . '/files');
+      $replace .= $file_path;
       $uri = str_replace('public://', '', $uri);
       $url = $replace . '/' . drupal_encode_path($uri);
       return $url;
