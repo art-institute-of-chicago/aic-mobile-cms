@@ -2832,7 +2832,6 @@ function _aicapp_check_for_tour_problems(&$tour) {
     if ($fc_items = field_get_items('node', $tour, 'field_tour_stops')) {
       foreach ($fc_items as $fc_item) {
         $item = field_collection_field_get_entity($fc_item);
-        dsm($item);
         $stop_audio = !empty($item->field_tour_stop_audio_commentary) ? $item->field_tour_stop_audio_commentary[LANGUAGE_NONE] : NULL;
         $stop_bumper = !empty($item->field_tour_stop_bumper) ? $item->field_tour_stop_bumper[LANGUAGE_NONE] : NULL;
         $stop_object = !empty($item->field_tour_stop_object) ? $item->field_tour_stop_object[LANGUAGE_NONE] : NULL;
