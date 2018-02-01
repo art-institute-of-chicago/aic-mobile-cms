@@ -45,6 +45,14 @@ function aicapp_admin() {
     '#maxlength' => 256,
     '#description' => t('Enter a URL for the current server environment. This will preceed any local URLs. Some examples are http://aic-mobile-tours.artic.edu, http://aicweb14.artic.edu, http://de-mobile-dev.artic.edu, etc.'),
   );
+  $form['aicapp_file_public_path'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Public files path for the current environment.'),
+    '#default_value' => variable_get('aicapp_file_public_path', variable_get('file_public_path', conf_path() . '/files')),
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#description' => t('Enter a file path for the current environment, "sites/default/files", "sites/default_test/files", "sites/default_staging/files" etc.'),
+  );
   $form['aicapp_ops'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -944,8 +952,12 @@ function aicapp_update_object_image_data($to_update = array(), $hard_limit = 100
         '#entity' => $object_entity,
       );
     }
-    elseif (($key = array_search($object->nid, $node_ids)) !== FALSE) {
-      unset($node_ids[$key]);
+    else {
+      _aicapp_update_image_fields($object);
+      if (($key = array_search($object->nid, $node_ids)) !== FALSE) {
+        // This is likely a local artwork object.
+        unset($node_ids[$key]);
+      }
     }
   }
   // Query the data aggregrator for recent data using the object ids.
@@ -970,16 +982,15 @@ function aicapp_update_object_image_data($to_update = array(), $hard_limit = 100
   foreach ($results as $item) {
     $id = isset($item['id']) ? $item['id'] : NULL;
     // If the results were missing an id or that node object was not found.
-    if (empty($id) || !isset($by_object_id[$id]) || empty($item['preferred_image_id'])) {
-      if (empty($item['preferred_image_id'])) {
-        $message = 'Object record ' . $object->nid . ' does not have a preferred image id.';
-        watchdog('aic_update_object', $message);
-        drupal_set_message($message);
-      }
+    if (empty($id) || !isset($by_object_id[$id])) {
       continue;
     }
     // Grab the node object, and update its fields.
     $object = $by_object_id[$id]['#node'];
+    if (empty($item['preferred_image_id']) && empty($object->field_image[LANGUAGE_NONE])) {
+      // Found an object, but it has no preferred_image_id, nor an uploaded file.
+      continue;
+    }
     // Update image fields.
     _aicapp_update_image_fields($object, $item['preferred_image_id']);
     try {
