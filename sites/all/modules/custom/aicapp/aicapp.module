@@ -17,6 +17,8 @@
  * Implements  hook_init().
  */
 function aicapp_init() {
+  global $language;
+  define('AICAPP_DEFAULT_LANG', $language->language);
   define('AICAPP_ARTWORK_QUERY', 'artwork');
   define('AICAPP_GALLERY_QUERY', 'gallery');
   define('AICAPP_IMAGE_SERVER', rtrim(variable_get('aicapp_image_server_url', 'https://lakeimagesweb.artic.edu/iiif/2'), '/'));
@@ -24,8 +26,6 @@ function aicapp_init() {
   define('AICAPP_IMAGE_CROP_ROTATION', 0);
   define('AICAPP_IMAGE_CROP_QUALITY', 'default');
   define('AICAPP_IMAGE_CROP_FORMAT', 'jpg');
-  global $language;
-  define('AICAPP_DEFAULT_LANG', $language->language);
   define('AICAPP_TYPE_AUDIO', 'audio');
   define('AICAPP_TYPE_OBJECT', 'object');
   define('AICAPP_TYPE_GALLERY', 'gallery');
@@ -44,8 +44,6 @@ function aicapp_init() {
   define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
   define('AICAPP_TOUR_VOCABULARY_NAME', variable_get('aicapp_tour_vocabular_name', 'categories'));
   define('AICAPP_CURRENT_SERVER_FQDM', rtrim(variable_get('aicapp_env_fqdm', 'http://aicweb10.artic.edu'), '/'));
-  define('AICAPP_DATE_TYPE', 'aicapp_date_type');
-  define('AICAPP_DATE_FORMAT', 'M j Y - g:ia');
 }
 
 /**
@@ -3080,8 +3078,8 @@ function aicapp_object_limit_js($form, $form_state) {
 function aicapp_date_formats() {
   $formats = array();
   $formats[] = array(
-    'type' => AICAPP_DATE_TYPE,
-    'format' => AICAPP_DATE_FORMAT,
+    'type' => 'aicapp_date_type',
+    'format' => 'M j Y - g:ia',
     'locales' => array(),
   );
   return $formats;
