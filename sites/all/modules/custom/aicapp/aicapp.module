@@ -3090,6 +3090,6 @@ function aicapp_date_formats() {
  */
 function aicapp_date_format_types() {
   $types = array();
-  $types[AICAPP_DATE_TYPE] = t('Short Date, 12 Hour Time');
+  $types['aicapp_date_type'] = t('Short Date, 12 Hour Time');
   return $types;
 }
