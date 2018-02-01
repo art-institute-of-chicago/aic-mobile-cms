@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * Installation functions for the AICAPP module.
+ */
+
+/**
+ * Implements hook_update_N.
+ *
+ * Delete {system} records for modules that are no longer in the file system.
+ */
+function aicapp_update_7201() {
+  db_delete('system')
+    ->condition('name', 'wcreek', '=')
+    ->condition('type', 'module')
+    ->execute();
+  db_delete('system')
+    ->condition('name', 'aibatch', '=')
+    ->condition('type', 'module')
+    ->execute();
+}
