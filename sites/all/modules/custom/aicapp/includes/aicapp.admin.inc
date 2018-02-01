@@ -988,7 +988,6 @@ function aicapp_update_object_image_data($to_update = array(), $hard_limit = 100
     // Grab the node object, and update its fields.
     $object = $by_object_id[$id]['#node'];
     if (empty($item['preferred_image_id']) && empty($object->field_image[LANGUAGE_NONE])) {
-      dsm($item);
       // Found an object, but it has no preferred_image_id, nor an uploaded file.
       continue;
     }
