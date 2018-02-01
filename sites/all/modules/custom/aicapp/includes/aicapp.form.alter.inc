@@ -125,6 +125,14 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
         // Change the remove button text.
         foreach (element_children($form[$field['name']][$langcode]) as $delta) {
           $form[$field['name']][$langcode][$delta]['remove_button']['#value'] = $field['remove'];
+
+          // This is a hack to overcome an error that is triggered by the field_readonly module.
+          // if ($field['name'] === 'field_audio_commentary' && !empty($form[$field['name']][$langcode][$delta]['field_object_selector_number'])) {
+          //   $object_selector = $form[$field['name']][$langcode][$delta]['field_object_selector_number'][LANGUAGE_NONE][0]['value']['#default_value'];
+          //   if ($object_selector === '') {
+          //     $form[$field['name']][$langcode][$delta]['field_object_selector_number'][LANGUAGE_NONE][0]['value']['#default_value'] = 0;
+          //   }
+          // }
         }
       }
       // Show any available translations, as well as a link to create a new translation.
@@ -266,6 +274,19 @@ function _aicapp_form_afterbuild(&$form, &$form_state) {
     && $form_state['values']['language'] === LANGUAGE_NONE) {
     // Add EN as the default language.
     $form_state['values']['language'] = AICAPP_DEFAULT_LANG;
+  }
+  // This is a hack to overcome an error that is triggered by the field_readonly module.
+  $name = 'field_audio_commentary';
+  if (!empty($form[$name])) {
+    $langcode = $form[$name]['#language'];
+    foreach (element_children($form[$name][$langcode]) as $delta) {
+      if (!empty($form[$name][$langcode][$delta]['field_object_selector_number'])) {
+        $object_selector = $form[$name][$langcode][$delta]['field_object_selector_number'][LANGUAGE_NONE][0]['value']['#default_value'];
+        if ($object_selector === 0) {
+          $form[$name][$langcode][$delta]['field_object_selector_number'][LANGUAGE_NONE][0]['value']['#value'] = '';
+        }
+      }
+    }
   }
 }
 
@@ -417,7 +438,6 @@ function _aicapp_add_translations(&$form, $field) {
           }
           else {
             // No such translation in the set yet: help user to create it.
-
             if ($source != $langcode && $handler->getAccess('update') && $handler->getTranslationAccess($langcode)) {
               list(, , $bundle) = entity_extract_ids($entity_type, $entity);
               $translatable = FALSE;

@@ -59,6 +59,20 @@ function aicapp_import_batch($form, $form_state) {
     '#type' => 'submit',
     '#value' => 'Upload & Import',
   );
+  $form['aicapp_data']['aicapp_import_ops'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('CSV Template'),
+    '#tree' => FALSE,
+  );
+  $form['aicapp_data']['aicapp_import_ops']['dowload_template'] = array(
+    '#type' => 'submit',
+    '#value' => t('Download CSV'),
+    '#prefix' => '<div>',
+    '#suffix' => t('Click this button to download a CSV template with all audio nodes pre-filled.') . '</div>',
+    '#submit' => array('aicapp_import_download_submit'),
+  );
   return $form;
 }
 
@@ -79,6 +93,24 @@ function aicapp_import_batch_validate($form, &$form_state) {
       form_set_error('aicapp_import_files_directory', t('The files import directory was not readable.'));
       return;
     }
+  }
+}
+
+/**
+ * Download CSV template submit callback.
+ */
+function aicapp_import_download_submit($form, &$form_state) {
+  $csv = aicapp_import_generate_template();
+  if (!empty($csv['header']) && !empty($csv['rows'])) {
+    drupal_add_http_header('Content-Type', 'text/csv; utf-8');
+    drupal_add_http_header('Content-Disposition', 'attachment; filename=import-audio.csv');
+    $file = fopen('php://output', 'w');
+    fputcsv($file, $csv['header']);
+    foreach ($csv['rows'] as $row) {
+      fputcsv($file, $row);
+    }
+    fclose($file);
+    drupal_exit();
   }
 }
 
@@ -109,8 +141,7 @@ function aicapp_import_batch_submit($form, &$form_state) {
     return;
   }
   // Check that files are available and readable.
-  if ($content = file_get_contents($path, NULL, NULL, 0, 10000)) {
-    $items = aicapp_import_parse_csv($content);
+  if ($items = aicapp_import_parse_csv($path)) {
     aicapp_import_items($items, $values['aicapp_import_files_directory']);
   }
   else {
@@ -120,28 +151,131 @@ function aicapp_import_batch_submit($form, &$form_state) {
   variable_set('aicapp_import_files_directory', $values['aicapp_import_files_directory']);
 }
 
+function aicapp_import_generate_template() {
+  $csv = array(
+    'header' => array(
+      'Object Selector #',
+      'Object ID',
+      'Node ID',
+      'Title',
+      'Track Title Eng',
+      'filename_eng.mp3',
+      'Transcripts Eng',
+      'Credits Eng',
+      'Track Title Esp',
+      'filename_esp.mp3',
+      'Transcripts Esp',
+      'Credits Esp',
+      'Track Title Chn',
+      'filename_chn.mp3',
+      'Transcripts Chn',
+      'Credits Chn',
+    ),
+    'rows' => array(),
+  );
+  $audio_files = node_load_multiple(array(), array('type' => AICAPP_TYPE_AUDIO));
+  foreach ($audio_files as $nid => $node) {
+    $row = array(
+      NULL, NULL, $node->nid, $node->title,
+    );
+    // English Track Title
+    $track_title = NULL;
+    if (!empty($node->field_track_title[$node->language])) {
+      $track_title = $node->field_track_title[$node->language][0]['safe_value'];
+    }
+    $row[] = $track_title;
+    // filename_eng.mp3
+    $filename = NULL;
+    if (!empty($node->field_audio_file[$node->language])) {
+      $filename = $node->field_audio_file[$node->language][0]['filename'];
+    }
+    $row[] = $filename;
+    // Transcripts Eng
+    $transcripts = NULL;
+    if (!empty($node->field_track_title[$node->language])) {
+      $transcripts = $node->field_audio_transcript[$node->language][0]['safe_value'];
+    }
+    $row[] = $transcripts;
+    // Credits Eng
+    $credits = NULL;
+    if (!empty($node->field_credits[$node->language])) {
+      $credits = $node->field_credits[$node->language][0]['safe_value'];
+    }
+    $row[] = $credits;
+    // ES values.
+    $node->language = 'es';
+    // Track Title Esp
+    $track_title = NULL;
+    if (!empty($node->field_track_title[$node->language])) {
+      $track_title = $node->field_track_title[$node->language][0]['safe_value'];
+    }
+    $row[] = $track_title;
+    // filename_esp.mp3
+    $filename = NULL;
+    if (!empty($node->field_audio_file[$node->language])) {
+      $filename = $node->field_audio_file[$node->language][0]['filename'];
+    }
+    $row[] = $filename;
+    // Transcripts Esp
+    $transcripts = NULL;
+    if (!empty($node->field_track_title[$node->language])) {
+      $transcripts = $node->field_audio_transcript[$node->language][0]['safe_value'];
+    }
+    $row[] = $transcripts;
+    // Credits Esp
+    $credits = NULL;
+    if (!empty($node->field_credits[$node->language])) {
+      $credits = $node->field_credits[$node->language][0]['safe_value'];
+    }
+    $row[] = $credits;
+    // ZH / Chinese
+    $node->language = 'zh-hant';
+    // Track Title Chn
+    $track_title = NULL;
+    if (!empty($node->field_track_title[$node->language])) {
+      $track_title = $node->field_track_title[$node->language][0]['safe_value'];
+    }
+    $row[] = $track_title;
+    // filename_chn.mp3
+    $filename = NULL;
+    if (!empty($node->field_audio_file[$node->language])) {
+      $filename = $node->field_audio_file[$node->language][0]['filename'];
+    }
+    $row[] = $filename;
+    // Transcripts Chn
+    $transcripts = NULL;
+    if (!empty($node->field_track_title[$node->language])) {
+      $transcripts = $node->field_audio_transcript[$node->language][0]['safe_value'];
+    }
+    $row[] = $transcripts;
+    // Credits Chn
+    $credits = NULL;
+    if (!empty($node->field_credits[$node->language])) {
+      $credits = $node->field_credits[$node->language][0]['safe_value'];
+    }
+    $row[] = $credits;
+    $csv['rows'][] = $row;
+  }
+  return $csv;
+}
+
 /**
  * Parse a CSV file into an array.
  */
-function aicapp_import_parse_csv($content) {
-  if (mb_detect_encoding($content, 'UTF-8, ISO-8859-1', TRUE) == 'ISO-8859-1') {
-    $content = iconv('macintosh', 'UTF-8', $content);
-  }
-  else {
-    $content = mb_convert_encoding($content, 'UTF-8', mb_detect_encoding($content, 'UTF-8, ISO-8859-1', TRUE));
-  }
-  $lines = array_filter(explode(PHP_EOL, $content));
-  $headers = str_getcsv(array_shift($lines));
-  $data = array();
-  foreach ($lines as $line) {
-    $row = array();
-    foreach (str_getcsv($line) as $key => $field) {
-      $header = $headers[$key];
-      $row[$header] = $field;
+function aicapp_import_parse_csv($path) {
+  $lib_path = function_exists('libraries_get_path') ? libraries_get_path('parsecsv-for-php') : 'sites/all/libraries/parsecsv-for-php';
+  $csv_parser = $lib_path . '/parsecsv.lib.php';
+  try {
+    require_once($csv_parser);
+    if (!class_exists('parseCSV')) {
+      dsm('in here');
+      return NULL;
     }
-    $data[] = $row;
+    if ($csv = new parseCSV($path)) {
+      return $csv->data;
+    }
   }
-  return $data;
+  catch (Exception $e) {}
 }
 
 /**
@@ -167,34 +301,40 @@ function aicapp_import_items($items, $audio_file_path) {
     $row = 0;
     // Read file for number of records.
     foreach ($items as $values) {
+      $audio_node = NULL;
+      if (!empty($values['Node ID'])) {
+        $audio_node = node_load($values['Node ID']);
+      }
       if (!empty($values['Title']) && !empty($values['Track Title Eng']) && !empty($values['filename_eng.mp3'])) {
-        $nid = _aicapp_import_title_exists($values['Title']);
-        $fid = _aicapp_import_filename_exists($values['filename_eng.mp3']);
-        if ($nid || $fid) {
-          $counts['audio']['duplicated'][] = array(
-            'title' => $values['Title'],
-            'found_nid' => $nid,
-            'filename' => $values['filename_eng.mp3'],
-            'found_fid' => $fid,
+        // $nid = _aicapp_import_title_exists($values['Title']);
+        // $fid = _aicapp_import_filename_exists($values['filename_eng.mp3']);
+        // if ($nid || $fid) {
+        //   $counts['audio']['duplicated'][] = array(
+        //     'title' => $values['Title'],
+        //     'found_nid' => $nid,
+        //     'filename' => $values['filename_eng.mp3'],
+        //     'found_fid' => $fid,
+        //   );
+        //   continue;
+        // }
+        if (!is_object($audio_node)) {
+          // Create a audio node entity.
+          $default_values = array(
+            'type' => AICAPP_TYPE_AUDIO,
+            'uid' => 1,
+            'status' => 1,
+            'promote' => 0,
+            'language' => 'en',
           );
-          continue;
+          // Create the new audio node.
+          $audio_node = entity_create('node', $default_values);
         }
-        // Create a audio node entity.
-        $default_values = array(
-          'type' => AICAPP_TYPE_AUDIO,
-          'uid' => 1,
-          'status' => 1,
-          'promote' => 0,
-          'language' => 'en',
-        );
-        // Create the new audio node.
-        $audio_node = entity_create('node', $default_values);
+
         // Get the translation handler.
         $handler = entity_translation_get_handler('node', $audio_node);
         $entity = entity_metadata_wrapper('node', $audio_node);
         // Set the entity titlel and track title.
         $entity->title = $values['Title'];
-
         $entity->language('en')->field_track_title->set($values['Track Title Eng']);
         // Look for the English file for this item.
         if ($file_obj = _aicapp_import_file_uri_to_object('public://' . $audio_file_path . '/' . $values['filename_eng.mp3'])) {
