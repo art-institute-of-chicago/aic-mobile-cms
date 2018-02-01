@@ -297,6 +297,9 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
  * Helper function to migrate tour fields.
  */
 function aicapp_migrate_migrate_type_tour($nid, &$counts = array(), $mode = 'update') {
+  if (empty($counts)) {
+    $counts[AICAPP_TYPE_TOUR] = 0;
+  }
   $node = node_load($nid);
   $node->_is_changed = FALSE;
   $entity_wrapper = entity_metadata_wrapper('node', $node);
@@ -339,12 +342,31 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array(), $mode = 'upd
       $field_collection_item_values[] = $value['value'];
     }
   }
-  // Add the new audio commentary
+  // Add the new tour stop
   if (!empty($found['field_t_object'])) {
     if ($mode === 'validate') {
       return TRUE;
     }
+
+    // Before adding anything new, make sure these values are not already on
+    // the node.
+    $current_items = array();
+    if ($current = field_get_items('node', $node, 'field_tour_stops')) {
+      foreach ($current as $item) {
+        $current_items[] = field_collection_field_get_entity($item);
+      }
+    }
     foreach ($found['field_t_object'] as $k => $object_id) {
+      // If this object id exists in the current items, do not add it again.
+      foreach ($current_items as $current_item) {
+
+        $object_item = !empty($current_item->field_tour_stop_object[LANGUAGE_NONE])
+                  ? $current_item->field_tour_stop_object[LANGUAGE_NONE][0]['target_id'] : NULL;
+        if ($object_item === $object_id) {
+          // Object node matches current, move to next tour stop item.
+          continue 2;
+        }
+      }
       $item_values = array(
         'field_tour_stop_object' => array(
           'value' => $object_id,
@@ -411,6 +433,9 @@ function aicapp_migrate_validate_type_object($nid, &$counts = array(), $i = 0, &
  * Helper function to migrate object fields.
  */
 function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$to_add = array(), $mode = 'update') {
+  if (empty($counts)) {
+    $counts[AICAPP_TYPE_OBJECT] = 0;
+  }
   $node = node_load($nid);
   $node->_is_changed = FALSE;
   $node->skip_hooks_presave = TRUE;
@@ -438,7 +463,6 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
     // One of each, make sure they are the same.
     if ($found['field_object_selector_number'] &&
       $found['field_object_selector_number'][0]['value'] === $found['field_object_selector_numbers'][0]['value']) {
-
       // Numbers match, there is 1 matching selector being used.
       $to_add[$i]['selector'][] = $found['field_object_selector_number'][0]['value'];
       if ($count_audio) {
@@ -495,12 +519,34 @@ function aicapp_migrate_migrate_type_object($nid, &$counts = array(), $i = 0, &$
       }
     }
   }
+  elseif ($count_audio) {
+    foreach ($found['field_object_audio'] as $k => $v) {
+      $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
+    }
+  }
   // Add the new audio commentary
   if (!empty($to_add[$i]) && !empty($to_add[$i]['audio'])) {
     if ($mode === 'validate') {
       return TRUE;
     }
+    // Before adding anything new, make sure these values are not already on
+    // the node.
+    $current_items = array();
+    if ($current = field_get_items('node', $node, 'field_audio_commentary')) {
+      foreach ($current as $item) {
+        $current_items[] = field_collection_field_get_entity($item);
+      }
+    }
     foreach ($to_add[$i]['audio'] as $k => $audio_id) {
+      // If this audio id exists in the current items, do not add it again.
+      foreach ($current_items as $current_item) {
+        $audio_item = !empty($current_item->field_audio_commentary_audio[LANGUAGE_NONE])
+                  ? $current_item->field_audio_commentary_audio[LANGUAGE_NONE][0]['target_id'] : NULL;
+        if ($audio_item === $audio_id) {
+          // Audio node matches current, move to next audio item.
+          continue 2;
+        }
+      }
       // Setup the values in the structure expected by the field_collection entity.
       $item_values = array(
         'field_audio_commentary_audio' => array(

@@ -1052,9 +1052,8 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     // @TODO a better way would be to only request the fields we want.
     $object_props_to_skip = array('#skip' => array(
       'description', 'medium', 'inscriptions', 'provenance_text', 'exhibition_history',
-      'object_type', 'object_type_id', 'publication_history',
-      'publishing_verification_level', 'copyright_notice',
-      'place_of_origin', 'collection_status', 'gallery_id',
+      'object_type', 'object_type_id', 'publication_history','collection_status',
+      'publishing_verification_level', 'gallery_id','place_of_origin',
     ));
     foreach ($results as $item) {
       $id = isset($item['id']) ? $item['id'] : NULL;
@@ -1429,7 +1428,7 @@ function strip_drupal_from_node(&$node) {
   // Fields used in multiple content types, such as location and floor.
   // Location field.
   if (isset($node->field_location)) {
-    $node->location = '';
+    $node->location = NULL;
     if (isset($node->field_location[LANGUAGE_NONE][0]['safe_value'])) {
       $node->location = $node->field_location[LANGUAGE_NONE][0]['safe_value'];
     }
@@ -1442,14 +1441,14 @@ function strip_drupal_from_node(&$node) {
   }
   // Current Floor is used in Gallery, Map Annotation & Tour nodes. App V1.
   if (isset($node->field_floor)) {
-    $node->floor = '';
+    $node->floor = NULL;
     if (isset($node->field_floor[LANGUAGE_NONE][0]['safe_value'])) {
       $node->floor = $node->field_floor[LANGUAGE_NONE][0]['safe_value'];
     }
   }
   // If the floor reference field is set.
   if (isset($node->field_floor_reference)) {
-    $node->floor = '';
+    $node->floor = NULL;
     if (isset($node->field_floor_reference[LANGUAGE_NONE][0]['target_id'])) {
       $floor = entity_load('field_collection_item', array($node->field_floor_reference[LANGUAGE_NONE][0]['target_id']));
       if (count($floor)) {
@@ -1460,12 +1459,12 @@ function strip_drupal_from_node(&$node) {
   }
   // Image field is used in Object, Tour & Article nodes.
   if (isset($node->field_image)) {
-    $node->image_filename = '';
-    $node->image_url = '';
-    $node->image_filemime = '';
-    $node->image_filesize = '';
-    $node->image_width = '';
-    $node->image_height = '';
+    $node->image_filename = NULL;
+    $node->image_url = NULL;
+    $node->image_filemime = NULL;
+    $node->image_filesize = NULL;
+    $node->image_width = NULL;
+    $node->image_height = NULL;
     if (isset($node->field_image[LANGUAGE_NONE][0]['uri'])) {
       $node->image_filename = $node->field_image[LANGUAGE_NONE][0]['filename'];
       $node->image_url = _aicapp_file_create_url($node->field_image[LANGUAGE_NONE][0]['uri']);
@@ -1520,7 +1519,7 @@ function strip_drupal_from_node(&$node) {
 
   // Object & Tour thumbnail image url.
   if (isset($node->field_thumbnail_image)) {
-    $node->thumbnail_full_path = '';
+    $node->thumbnail_full_path = NULL;
     if (isset($node->field_thumbnail_image[LANGUAGE_NONE][0]['safe_value'])) {
       $node->thumbnail_full_path = $node->field_thumbnail_image[LANGUAGE_NONE][0]['safe_value'];
     }
@@ -1568,7 +1567,7 @@ function strip_drupal_from_node(&$node) {
 
   // Object & Tour full size image url.
   if (isset($node->field_large_image)) {
-    $node->large_image_full_path = '';
+    $node->large_image_full_path = NULL;
     if (isset($node->field_large_image[LANGUAGE_NONE][0]['safe_value'])) {
       $node->large_image_full_path = $node->field_large_image[LANGUAGE_NONE][0]['safe_value'];
     }
@@ -1577,56 +1576,56 @@ function strip_drupal_from_node(&$node) {
   if ($node->type === AICAPP_TYPE_PAGE) {
     // General Info node field items.
     if (isset($node->field_museum_hours)) {
-      $node->museum_hours = '';
+      $node->museum_hours = NULL;
       if (isset($node->field_museum_hours[$node->language][0]['safe_value'])) {
         $node->museum_hours = $node->field_museum_hours[$node->language][0]['safe_value'];
       }
     }
     // (field_home_member_prompt_text) home_member_prompt_text
     if (isset($node->field_home_member_prompt_text)) {
-      $node->home_member_prompt_text = '';
+      $node->home_member_prompt_text = NULL;
       if (isset($node->field_home_member_prompt_text[$node->language][0]['safe_value'])) {
         $node->home_member_prompt_text = $node->field_home_member_prompt_text[$node->language][0]['safe_value'];
       }
     }
     // (field_audio_title) audio_title
     if (isset($node->field_audio_title)) {
-      $node->audio_title = '';
+      $node->audio_title = NULL;
       if (isset($node->field_audio_title[$node->language][0]['safe_value'])) {
         $node->audio_title = $node->field_audio_title[$node->language][0]['safe_value'];
       }
     }
     // (field_audio_subtitle) audio_subtitle
     if (isset($node->field_audio_subtitle)) {
-      $node->audio_subtitle = '';
+      $node->audio_subtitle = NULL;
       if (isset($node->field_audio_subtitle[$node->language][0]['safe_value'])) {
         $node->audio_subtitle = $node->field_audio_subtitle[$node->language][0]['safe_value'];
       }
     }
     // (field_map_title) map_title
     if (isset($node->field_map_title)) {
-      $node->map_title = '';
+      $node->map_title = NULL;
       if (isset($node->field_map_title[$node->language][0]['safe_value'])) {
         $node->map_title = $node->field_map_title[$node->language][0]['safe_value'];
       }
     }
     // (field_map_subtitle) map_subtitle
     if (isset($node->field_map_subtitle)) {
-      $node->map_subtitle = '';
+      $node->map_subtitle = NULL;
       if (isset($node->field_map_subtitle[$node->language][0]['safe_value'])) {
         $node->map_subtitle = $node->field_map_subtitle[$node->language][0]['safe_value'];
       }
     }
     // (field_info_title) info_title
     if (isset($node->field_info_title)) {
-      $node->info_title = '';
+      $node->info_title = NULL;
       if (isset($node->field_info_title[$node->language][0]['safe_value'])) {
         $node->info_title = $node->field_info_title[$node->language][0]['safe_value'];
       }
     }
     // (field_info_subtitle) info_subtitle
     if (isset($node->field_info_subtitle)) {
-      $node->info_subtitle = '';
+      $node->info_subtitle = NULL;
       if (isset($node->field_info_subtitle[$node->language][0]['safe_value'])) {
         $node->info_subtitle = $node->field_info_subtitle[$node->language][0]['safe_value'];
       }
@@ -1669,6 +1668,7 @@ function strip_drupal_from_node(&$node) {
       $node->gallery_location = $node->gallery_title;
     }
     // Is this object in a gallery?
+    $node->in_gallery = NULL;
     if (isset($node->is_on_view) && !isset($node->in_gallery)) {
       $node->in_gallery = $node->is_on_view;
     }
@@ -1676,8 +1676,8 @@ function strip_drupal_from_node(&$node) {
       $node->reference_num = $node->main_reference_number;
     }
     // Audio Commentary field collection items.
+    $node->audio_commentary = array();
     if ($fc_items = field_get_items('node', $node, 'field_audio_commentary')) {
-      $node->audio_commentary = '';
       // Extract the field collection items.
       foreach ($fc_items as $fc_item) {
         $item = field_collection_field_get_entity($fc_item);
@@ -1688,37 +1688,45 @@ function strip_drupal_from_node(&$node) {
         );
       }
     }
+    $node->highlighted_object = NULL;
     // Is this a highlighed object?
     if (isset($node->field_highlighted_object[LANGUAGE_NONE][0])) {
       $node->highlighted_object = $node->field_highlighted_object[LANGUAGE_NONE][0]['value'];
     }
     // Path to full size image.
+    $node->full_image_full_path = NULL;
     if (isset($node->field_full_image)) {
-      $node->full_image_full_path = '';
       if (isset($node->field_full_image[LANGUAGE_NONE][0]['safe_value'])) {
         $node->full_image_full_path = $node->field_full_image[LANGUAGE_NONE][0]['safe_value'];
       }
     }
     // App v1 property: audio.
+    $node->audio = array();
     if (isset($node->field_object_audio[LANGUAGE_NONE][0]['nid'])) {
       foreach ($node->field_object_audio[LANGUAGE_NONE] as $audiofld) {
         $node->audio[] = $audiofld['nid'];
       }
     }
+    // For backward compliance, if audio is empty, but audio commentary items
+    // aren't we can fill audio with the values from audio commentary.
+    if (empty($node->audio) && !empty($node->audio_commentary)) {
+      $node->audio = $node->audio_commentary;
+    }
     // App v1 property: audio_transcript
+    $node->audio_transcript = NULL;
     if (isset($node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'])) {
       $node->audio_transcript = $node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'];
     }
     // App v1 property: Object selector number.
-    $node->object_selector_number = '';
+    $node->object_selector_number = NULL;
     if (isset($node->field_object_selector_number[LANGUAGE_NONE][0]['value'])) {
       $node->object_selector_number = $node->field_object_selector_number[LANGUAGE_NONE][0]['value'];
     }
     // App v1 property: Object selector number.
     $node->object_selector_numbers = array();
     if (isset($node->field_object_selector_numbers[LANGUAGE_NONE][0]['value'])) {
-      foreach ($node->field_object_selector_numbers[LANGUAGE_NONE] as $objselector) {
-        $node->object_selector_numbers[] = $objselector['value'];
+      foreach ($node->field_object_selector_numbers[LANGUAGE_NONE] as $object_selector) {
+        $node->object_selector_numbers[] = $object_selector['value'];
       }
     }
     // If the object selctor numbers array is empty, but an integer selector
@@ -1733,18 +1741,18 @@ function strip_drupal_from_node(&$node) {
   }
   elseif ($node->type === AICAPP_TYPE_TOUR) {
     // Tour node items, beginning with tour banner.
-    $node->tour_banner = '';
+    $node->tour_banner = NULL;
     if (isset($node->field_tour_banner[LANGUAGE_NONE][0]['value'])) {
       $node->tour_banner = $node->field_tour_banner[LANGUAGE_NONE][0]['value'];
     }
     // Tour selector field.
-    $node->selector_number = '';
+    $node->selector_number = NULL;
     if (isset($node->field_selector_number[LANGUAGE_NONE][0]['value'])) {
       $node->selector_number = $node->field_selector_number[LANGUAGE_NONE][0]['value'];
     }
     // Tour description field.
-    $node->description = '';
-    $node->description_html = '';
+    $node->description = NULL;
+    $node->description_html = NULL;
     if (isset($node->field_description[$node->language][0]['value'])) {
       $descriptions = field_get_items('node', $node, 'field_description');
       $a_description = array_shift($descriptions);
@@ -1758,8 +1766,8 @@ function strip_drupal_from_node(&$node) {
       $node->tour_dates = $node->field_tour_dates;
     }
     // Tour Intro.
-    $node->intro = '';
-    $node->intro_html = '';
+    $node->intro = NULL;
+    $node->intro_html = NULL;
     if (isset($node->field_intro[$node->language][0]['value'])) {
       $intros = field_get_items('node', $node, 'field_intro');
       $an_intro = array_shift($intros);
@@ -1770,17 +1778,17 @@ function strip_drupal_from_node(&$node) {
     // Tour stops.
     $node->tour_stop_items = _aicapp_get_tour_stops($node);
     // Tour Duration.
-    $node->tour_duration = '';
+    $node->tour_duration = NULL;
     if (isset($node->field_tour_duration[$node->language][0])) {
       $node->tour_duration = $node->field_tour_duration[$node->language][0]['safe_value'];
     }
     // Tour audio node id..
-    $node->tour_audio = '';
+    $node->tour_audio = NULL;
     if (isset($node->field_tour_audio[LANGUAGE_NONE][0])) {
       $node->tour_audio = $node->field_tour_audio[LANGUAGE_NONE][0]['nid'];
     }
     // Tour categories.
-    $node->category = '';
+    $node->category = NULL;
     $term = NULL;
     if (isset($node->field_tour_category[LANGUAGE_NONE][0])) {
       $term = taxonomy_term_load($node->field_tour_category[LANGUAGE_NONE][0]['tid']);
@@ -1817,10 +1825,10 @@ function strip_drupal_from_node(&$node) {
   elseif ($node->type === AICAPP_TYPE_AUDIO) {
     // This handles each separate audio file.
     if (isset($node->field_audio_file)) {
-      $node->audio_filename = '';
-      $node->audio_file_url = '';
-      $node->audio_filemime = '';
-      $node->audio_filesize = '';
+      $node->audio_filename = NULL;
+      $node->audio_file_url = NULL;
+      $node->audio_filemime = NULL;
+      $node->audio_filesize = NULL;
       if (isset($node->field_audio_file[$node->language][0]['uri'])) {
         $node->audio_filename = $node->field_audio_file[$node->language][0]['filename'];
         $node->audio_file_url = _aicapp_file_create_url($node->field_audio_file[$node->language][0]['uri']);
@@ -1830,21 +1838,21 @@ function strip_drupal_from_node(&$node) {
     }
     // Audio Transcript.
     if (isset($node->field_audio_transcript)) {
-      $node->audio_transcript = '';
+      $node->audio_transcript = NULL;
       if (isset($node->field_audio_transcript[$node->language][0]['safe_value'])) {
         $node->audio_transcript = $node->field_audio_transcript[$node->language][0]['safe_value'];
       }
     }
     // Audio Credits.
     if (isset($node->field_credits)) {
-      $node->credits = '';
+      $node->credits = NULL;
       if (isset($node->field_credits[$node->language][0]['safe_value'])) {
         $node->credits = $node->field_credits[$node->language][0]['safe_value'];
       }
     }
     // Audio Track title.
     if (isset($node->field_track_title)) {
-      $node->track_title = '';
+      $node->track_title = NULL;
       if (isset($node->field_track_title[$node->language][0]['safe_value'])) {
         $node->track_title = $node->field_track_title[$node->language][0]['safe_value'];
       }
@@ -1871,21 +1879,21 @@ function strip_drupal_from_node(&$node) {
   elseif ($node->type === AICAPP_TYPE_MAP_ANNOTATION) {
     // Description (field_annotation_description)
     if (isset($node->field_annotation_description)) {
-      $node->description = '';
+      $node->description = NULL;
       if (isset($node->field_annotation_description[$node->language][0]['safe_value'])) {
         $node->description = $node->field_annotation_description[$node->language][0]['safe_value'];
       }
     }
     // Label (field_annotation_label)
     if (isset($node->field_annotation_label)) {
-      $node->label = '';
+      $node->label = NULL;
       if (isset($node->field_annotation_label[$node->language][0]['safe_value'])) {
         $node->label = $node->field_annotation_label[$node->language][0]['safe_value'];
       }
     }
     // Map annontation_type (field_annotation_type)
     if (isset($node->field_annotation_type)) {
-      $node->annotation_type = '';
+      $node->annotation_type = NULL;
       if (isset($node->field_annotation_type[LANGUAGE_NONE][0]['value'])) {
         $type_field = field_info_field('field_annotation_type');
         $label = $type_field['settings']['allowed_values'][$node->field_annotation_type[LANGUAGE_NONE][0]['value']];
@@ -1999,7 +2007,7 @@ function aicapp_loadgalleries_form_submit($form, &$form_state) {
  * Either creates a new object node or updates the existing one.
  * expects an $object array from data hub lookup.
  */
-function aicappSaveNode($object, $type) {
+function aicappSaveNode($object, $type, $status = 0) {
   // Prepare for node_save().
   if ($type == AICAPP_TYPE_OBJECT) {
     // Check for nid by data hub object_id.
@@ -2056,7 +2064,7 @@ function aicappSaveNode($object, $type) {
       $node->field_full_image[$node->language][0]['value'] = $full_url;
     }
     // Set node to unbpublished.
-    $node->status = 0;
+    $node->status = $status;
     // Set whether the object is in a gallery, or not.
     if (!empty($object['is_on_view'])) {
       $node->field_in_gallery[$node->language][0]['value'] = $object['is_on_view'];
@@ -2811,25 +2819,43 @@ function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
 /**
  * Check for problems with the object.
  */
-function _aicapp_check_for_tour_problems($tour) {
+function _aicapp_check_for_tour_problems(&$tour) {
   $noLocs = array();
   $unpubs = array();
   $noaudio = array();
   $noImage = array();
   $inGallery = array();
   $stops = array();
-
+  $to_remove = array();
   // App V2 - field_tour_stops is a field collection of tour stop items..
   if (!empty($tour->field_tour_stops[LANGUAGE_NONE])) {
     if ($fc_items = field_get_items('node', $tour, 'field_tour_stops')) {
       foreach ($fc_items as $fc_item) {
         $item = field_collection_field_get_entity($fc_item);
-        if (!empty($item->field_tour_stop_object)) {
+        $stop_audio = !empty($item->field_tour_stop_audio_commentary) ? $item->field_tour_stop_audio_commentary[LANGUAGE_NONE] : NULL;
+        $stop_bumper = !empty($item->field_tour_stop_bumper) ? $item->field_tour_stop_bumper[LANGUAGE_NONE] : NULL;
+        $stop_object = !empty($item->field_tour_stop_object) ? $item->field_tour_stop_object[LANGUAGE_NONE] : NULL;
+        if (empty($stop_object) && empty($stop_audio) && empty($stop_bumper)) {
+          $to_remove[] = $item->item_id;
+          continue;
+        }
+        if (!empty($stop_object)) {
           $stops[] = array(
             'nid' => $item->field_tour_stop_object[LANGUAGE_NONE][0]['target_id'],
           );
         }
       }
+    }
+    // Remove any empty tour stops.
+    if (count($to_remove)) {
+      foreach ($to_remove as $remove_id) {
+        foreach ($tour->field_tour_stops[LANGUAGE_NONE] as $key => $values) {
+          if ((int)$values['value'] === $remove_id) {
+            unset($tour->field_tour_stops[LANGUAGE_NONE][$key]);
+          }
+        }
+      }
+      entity_delete_multiple('field_collection_item', $to_remove);
     }
   }
   // App V1 - To be deprecated. field_stops2 will no longer be used.
