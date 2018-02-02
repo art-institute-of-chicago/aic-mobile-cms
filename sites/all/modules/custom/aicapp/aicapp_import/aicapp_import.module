@@ -10,6 +10,8 @@
  * Email notices are also fired when objects are pulled out of galleries or added back into galleries.
  */
 
+use Coseva\CSV as CSV;
+
 /**
  * Implementation of hook_menu()
  */
@@ -263,15 +265,15 @@ function aicapp_import_generate_template() {
  * Parse a CSV file into an array.
  */
 function aicapp_import_parse_csv($path) {
-  $lib_path = function_exists('libraries_get_path') ? libraries_get_path('parsecsv-for-php') : 'sites/all/libraries/parsecsv-for-php';
-  $csv_parser = $lib_path . '/parsecsv.lib.php';
+  $lib_path = function_exists('libraries_get_path') ? libraries_get_path('coseva') : 'sites/all/libraries/coseva';
+  $csv_parser = $lib_path . '/CSV.php';
   try {
     require_once($csv_parser);
-    if (!class_exists('parseCSV')) {
+    if (!class_exists('Coseva\\CSV')) {
       return NULL;
     }
-    if ($csv = new parseCSV($path)) {
-      return $csv->data;
+    if ($csv = new CSV($path)) {
+      return $csv->parse();
     }
   }
   catch (Exception $e) {}
