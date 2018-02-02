@@ -303,6 +303,12 @@ function aicapp_import_items($items, $audio_file_path) {
     $row = 0;
     // Read file for number of records.
     foreach ($items as $values) {
+      $row++;
+      if ($row === 1) {
+        $header = $values;
+        continue;
+      }
+      $values = array_combine($header, $values);
       $audio_node = NULL;
       if (!empty($values['Node ID'])) {
         $audio_node = node_load($values['Node ID']);
@@ -480,6 +486,9 @@ function aicapp_import_items($items, $audio_file_path) {
         drupal_set_message(t('An file with the @filename already exists.', array('@filename' => $duplicate['filename'])));
       }
     }
+  }
+  if (empty($counts['audio']['duplicated']) && empty($counts['audio']['updated']) && empty($counts['audio']['created'])) {
+    drupal_set_message(t('There were no records found to import.', array()));
   }
 }
 
