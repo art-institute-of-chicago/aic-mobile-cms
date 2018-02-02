@@ -4,5 +4,4 @@ package = AIC Custom Modules
 version = 7.x.2.0
 core = 7.x
 dependencies[] = aicapp
-dependencies[] = feeds
 files[] = aicapp_import.module
