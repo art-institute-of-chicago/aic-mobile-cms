@@ -264,19 +264,22 @@ function aicapp_import_generate_template() {
 /**
  * Parse a CSV file into an array.
  */
-function aicapp_import_parse_csv($path) {
-  $lib_path = function_exists('libraries_get_path') ? libraries_get_path('coseva') : 'sites/all/libraries/coseva';
-  $csv_parser = $lib_path . '/CSV.php';
-  try {
-    require_once($csv_parser);
-    if (!class_exists('Coseva\\CSV')) {
-      return NULL;
+function aicapp_import_parse_csv($path, $delimiter = ',') {
+  $header = NULL;
+  $data = array();
+  ini_set('auto_detect_line_endings', TRUE);
+  if (($handle = fopen($path, 'r')) !== FALSE) {
+    while (($row = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
+      if (!$header) {
+        $header = $row;
+      }
+      else {
+        $data[] = array_combine($header, $row);
+      }
     }
-    if ($csv = new CSV($path)) {
-      return $csv->parse();
-    }
+    fclose($handle);
   }
-  catch (Exception $e) {}
+  return $data;
 }
 
 /**
@@ -300,15 +303,8 @@ function aicapp_import_items($items, $audio_file_path) {
     ),
   );
   try {
-    $row = 0;
     // Read file for number of records.
     foreach ($items as $values) {
-      $row++;
-      if ($row === 1) {
-        $header = $values;
-        continue;
-      }
-      $values = array_combine($header, $values);
       $audio_node = NULL;
       if (!empty($values['Node ID'])) {
         $audio_node = node_load($values['Node ID']);
