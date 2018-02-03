@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Installation functionality for Entity Translation testing module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function entity_translation_test_install() {
+  // Create a simple text field, attached to taxonomy_terms.
+  field_info_cache_clear();
+
+  $field = array(
+    'field_name' => 'field_simple_text',
+    'type' => 'text',
+    'cardinality' => 1,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'field_name' => $field['field_name'],
+    'label' => ucfirst(str_replace('_', ' ', $field['field_name'])),
+    'entity_type' => 'taxonomy_term',
+    'bundle' => 'tags',
+    'widget' => array(
+      'type' => 'text_textfield',
+    ),
+    'display' => array(
+      'default' => array(
+        'type' => 'text_default',
+      ),
+    ),
+  );
+  field_create_instance($instance);
+
+}
