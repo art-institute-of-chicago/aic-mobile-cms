@@ -102,16 +102,24 @@ function aicapp_import_batch_validate($form, &$form_state) {
  * Download CSV template submit callback.
  */
 function aicapp_import_download_submit($form, &$form_state) {
-  $csv = aicapp_import_generate_template();
-  if (!empty($csv['header']) && !empty($csv['rows'])) {
-    drupal_add_http_header('Content-Type', 'text/csv; utf-8');
-    drupal_add_http_header('Content-Disposition', 'attachment; filename=import-audio.csv');
+  if ($csv = aicapp_import_generate_template()) {
+    $delimiter = ',';
+    $enclosure = '"';
+    $eol = "\r\n";
+    $filename = 'import-audio';
+    // Open a file to write.
     $file = fopen('php://output', 'w');
-    fputcsv($file, $csv['header']);
-    foreach ($csv['rows'] as $row) {
-      fputcsv($file, $row);
+    // Register a filter that writes "/n/r" line endings.
+    stream_filter_register('crlf', 'CRLFilter');
+    // Attach filter to output file.
+    stream_filter_append($file, 'crlf');
+    foreach ($csv as $row) {
+      // Use putcsv to write to file.
+      fputcsv($file, $row, $delimiter, $enclosure);
     }
-    fclose($file);
+    // Add headers to trigger download and file name.
+    drupal_add_http_header('Content-Type', 'application/csv; charset=UTF-8');
+    drupal_add_http_header('Content-Disposition', 'attachment; filename=' . $filename . '.csv');
     drupal_exit();
   }
 }
@@ -153,27 +161,28 @@ function aicapp_import_batch_submit($form, &$form_state) {
   variable_set('aicapp_import_files_directory', $values['aicapp_import_files_directory']);
 }
 
+/**
+ * Export a template csv file.
+ */
 function aicapp_import_generate_template() {
-  $csv = array(
-    'header' => array(
-      'Object Selector #',
-      'Object ID',
-      'Node ID',
-      'Title',
-      'Track Title Eng',
-      'filename_eng.mp3',
-      'Transcripts Eng',
-      'Credits Eng',
-      'Track Title Esp',
-      'filename_esp.mp3',
-      'Transcripts Esp',
-      'Credits Esp',
-      'Track Title Chn',
-      'filename_chn.mp3',
-      'Transcripts Chn',
-      'Credits Chn',
-    ),
-    'rows' => array(),
+  $csv = array(array(
+    'Object Selector #',
+    'Object ID',
+    'Node ID',
+    'Title',
+    'Track Title Eng',
+    'filename_eng.mp3',
+    'Transcripts Eng',
+    'Credits Eng',
+    'Track Title Esp',
+    'filename_esp.mp3',
+    'Transcripts Esp',
+    'Credits Esp',
+    'Track Title Chn',
+    'filename_chn.mp3',
+    'Transcripts Chn',
+    'Credits Chn',
+    )
   );
   $audio_files = node_load_multiple(array(), array('type' => AICAPP_TYPE_AUDIO));
   foreach ($audio_files as $nid => $node) {
@@ -256,9 +265,9 @@ function aicapp_import_generate_template() {
       $credits = $node->field_credits[$node->language][0]['safe_value'];
     }
     $row[] = $credits;
-    $csv['rows'][] = $row;
+    $csv[] = $row;
   }
-  return $csv;
+  return count($csv) > 1 ? $csv : FALSE;
 }
 
 /**
@@ -266,6 +275,7 @@ function aicapp_import_generate_template() {
  */
 function aicapp_import_parse_csv($path, $delimiter = ',') {
   $header = NULL;
+  $path = drupal_realpath($path);
   $data = array();
   ini_set('auto_detect_line_endings', TRUE);
   if (($handle = fopen($path, 'r')) !== FALSE) {
@@ -563,4 +573,20 @@ function _aicapp_import_file_uri_to_object($uri, $use_existing = TRUE) {
   }
 
   return $file;
+}
+
+/**
+ * filter class that applies CRLF line endings.
+ */
+class CRLFilter extends php_user_filter {
+    function filter($in, $out, &$consumed, $closing)
+    {
+        while ($bucket = stream_bucket_make_writeable($in)) {
+            // make sure the line endings aren't already CRLF
+            $bucket->data = preg_replace("/(?<!\r)\n/", "\r\n", $bucket->data);
+            $consumed += $bucket->datalen;
+            stream_bucket_append($out, $bucket);
+        }
+        return PSFS_PASS_ON;
+    }
 }
