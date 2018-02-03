@@ -12,11 +12,9 @@
  */
 function aicapp_update_7201() {
   db_delete('system')
-    ->condition('name', 'wcreek', '=')
-    ->condition('type', 'module')
+    ->condition('name', 'wcreek')
     ->execute();
   db_delete('system')
-    ->condition('name', 'aibatch', '=')
-    ->condition('type', 'module')
+    ->condition('name', 'aibatch')
     ->execute();
 }

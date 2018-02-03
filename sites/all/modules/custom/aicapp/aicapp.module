@@ -1389,8 +1389,7 @@ function strip_drupal_from_node(&$node) {
     'id', 'in_gallery', 'gallery_location', 'credit_line', 'copyright_notice',
     'artist_culture_place_delim', 'object_id', 'main_reference_number',
     'title_t', 'artist_sort_name', 'artist_culture_place', 'dimensions',
-    'date_display', 'date_range', 'thumbnail_full_path', 'large_image_full_path',
-    'reference_num', 'artist_display',
+    'date_display', 'date_range', 'reference_num', 'artist_display',
   );
   // Node properties that we want to strip.
   $to_unset = array(
