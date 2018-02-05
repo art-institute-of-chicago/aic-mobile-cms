@@ -2605,7 +2605,7 @@ function _aicapp_get_image_id($object) {
     return $image_ids[$object_id];
   }
   $options = array(
-    'fields' => 'id,preferred_image_iiif_url,image_id',
+    'fields' => 'id,image_id',
     'ids' => implode(',', array_keys($image_ids)),
   );
   $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;

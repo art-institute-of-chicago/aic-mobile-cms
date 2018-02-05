@@ -964,7 +964,7 @@ function aicapp_update_object_image_data($to_update = array(), $hard_limit = 100
   $options = array(
     'ids' => array_keys($by_object_id),
     'limit' => count($by_object_id),
-    'fields' => 'id,preferred_image_iiif_url,image_id',
+    'fields' => 'id,image_id',
   );
 
   $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
