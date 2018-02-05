@@ -964,7 +964,7 @@ function aicapp_update_object_image_data($to_update = array(), $hard_limit = 100
   $options = array(
     'ids' => array_keys($by_object_id),
     'limit' => count($by_object_id),
-    'fields' => 'id,preferred_image_iiif_url,preferred_image_id',
+    'fields' => 'id,preferred_image_iiif_url,image_id',
   );
 
   $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
@@ -987,12 +987,12 @@ function aicapp_update_object_image_data($to_update = array(), $hard_limit = 100
     }
     // Grab the node object, and update its fields.
     $object = $by_object_id[$id]['#node'];
-    if (empty($item['preferred_image_id']) && empty($object->field_image[LANGUAGE_NONE])) {
-      // Found an object, but it has no preferred_image_id, nor an uploaded file.
+    if (empty($item['image_id']) && empty($object->field_image[LANGUAGE_NONE])) {
+      // Found an object, but it has no image_id, nor an uploaded file.
       continue;
     }
     // Update image fields.
-    _aicapp_update_image_fields($object, $item['preferred_image_id']);
+    _aicapp_update_image_fields($object, $item['image_id']);
     try {
       // Set a special property to skip presave hook.
       $object->skip_hooks_presave = TRUE;

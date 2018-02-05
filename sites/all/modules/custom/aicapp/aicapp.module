@@ -2047,16 +2047,16 @@ function aicappSaveNode($object, $type, $status = 0) {
     // The 'gallery_locaiton' property seems to have changed to just 'gallery'.
     $node->field_gallery_location[$node->language][0]['value'] = $object['gallery_title'];
     // Image server URL begins like this for both thumbnail and full.
-    $preferred_image_id = !empty($object['preferred_image_id']) ? $object['preferred_image_id'] : NULL;
-    if (!empty($preferred_image_id)) {
+    $image_id = !empty($object['image_id']) ? $object['image_id'] : NULL;
+    if (!empty($image_id)) {
       // Thumbnail.
-      $thumbnail_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'thumbnail'));
+      $thumbnail_url = _aicapp_get_image_crop($image_id, array('default' => 'thumbnail'));
       $node->field_thumbnail_image[$node->language][0]['value'] = $thumbnail_url;
       // Large size image.
-      $large_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'large'));
+      $large_url = _aicapp_get_image_crop($image_id, array('default' => 'large'));
       $node->field_large_image[$node->language][0]['value'] = $large_url;
       // Full Size images
-      $full_url = _aicapp_get_image_crop($preferred_image_id, array('default' => 'full'));
+      $full_url = _aicapp_get_image_crop($image_id, array('default' => 'full'));
       $node->field_full_image[$node->language][0]['value'] = $full_url;
     }
     // Set node to unbpublished.
@@ -2506,7 +2506,7 @@ function aicapp_node_presave($node) {
         );
         // Query the data aggregrator.
         $results = _aicapp_fetch_data(AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS, $options);
-        if (empty($results[0]) || empty($results[0]['preferred_image_id'])) {
+        if (empty($results[0]) || empty($results[0]['image_id'])) {
           drupal_set_message('The object ' . $node->title . ' does not have a preferred image id the data hub.', 'warning');
         }
       }
@@ -2523,7 +2523,7 @@ function aicapp_node_presave($node) {
 /**
  * Update image fields if a local has been uploaded.
  */
-function _aicapp_update_image_fields(&$node, $preferred_image_id = NULL) {
+function _aicapp_update_image_fields(&$node, $image_id = NULL) {
   $image_fields = array(
     'field_thumbnail_image' => 'field_thumbnail_image_crop',
     'field_large_image' => 'field_large_image_crop',
@@ -2549,10 +2549,10 @@ function _aicapp_update_image_fields(&$node, $preferred_image_id = NULL) {
       // No image has uploaded to this node. If the host node is an artwork
       // object and this field has no value, attempt to fill the field with
       // an image from the data hub.
-      if (empty($preferred_image_id)) {
-        $preferred_image_id = _aicapp_get_preferred_image_ids($node);
+      if (empty($image_id)) {
+        $image_id = _aicapp_get_image_id($node);
       }
-      if (!empty($preferred_image_id)) {
+      if (!empty($image_id)) {
         $type = 'thumbnail';
         if ($field === 'field_large_image') {
           $type = 'large';
@@ -2560,7 +2560,7 @@ function _aicapp_update_image_fields(&$node, $preferred_image_id = NULL) {
         elseif ($field === 'field_full_image') {
           $type = 'full';
         }
-        $node->{$field}[LANGUAGE_NONE][0]['value'] = _aicapp_get_image_crop($preferred_image_id, array('default' => $type));
+        $node->{$field}[LANGUAGE_NONE][0]['value'] = _aicapp_get_image_crop($image_id, array('default' => $type));
       }
       continue;
     }
@@ -2588,7 +2588,7 @@ function _aicapp_update_image_fields(&$node, $preferred_image_id = NULL) {
 /**
  * Return a object id from the data hub, given a object node.
  */
-function _aicapp_get_preferred_image_ids($object) {
+function _aicapp_get_image_id($object) {
   $image_ids = &drupal_static(__FUNCTION__);
   if (is_object($object) && !empty($object->nid)) {
     $entity = entity_metadata_wrapper('node', $object);
@@ -2605,7 +2605,7 @@ function _aicapp_get_preferred_image_ids($object) {
     return $image_ids[$object_id];
   }
   $options = array(
-    'fields' => 'id,preferred_image_iiif_url,preferred_image_id',
+    'fields' => 'id,preferred_image_iiif_url,image_id',
     'ids' => implode(',', array_keys($image_ids)),
   );
   $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
@@ -2615,8 +2615,8 @@ function _aicapp_get_preferred_image_ids($object) {
     return;
   }
   foreach ($results as $key => $values) {
-    if (!empty($values['preferred_image_id'])) {
-      $image_ids[$values['id']] = $values['preferred_image_id'];
+    if (!empty($values['image_id'])) {
+      $image_ids[$values['id']] = $values['image_id'];
     }
   }
   return isset($image_ids[$object_id]) ? $image_ids[$object_id] : NULL;
@@ -2719,7 +2719,7 @@ function _aicapp_image_url($style_name, $path) {
 /**
  * Prepare a URL to a cropped remote image.
  */
-function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
+function _aicapp_get_image_crop($image_id, $crop_values = array()) {
   $image_ids = &drupal_static(__FUNCTION__);
   $defaults = array(
     'default' => 'thumbnail',
@@ -2757,11 +2757,11 @@ function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
   );
   $crop_values += $defaults;
 
-  if (empty($preferred_image_id)) {
+  if (empty($image_id)) {
     return;
   }
-  elseif (!empty($crop_values['default']) && isset($image_ids[$preferred_image_id]) && !empty($image_ids[$preferred_image_id][$crop_values['default']])) {
-    return $image_ids[$preferred_image_id][$crop_values['default']];
+  elseif (!empty($crop_values['default']) && isset($image_ids[$image_id]) && !empty($image_ids[$image_id][$crop_values['default']])) {
+    return $image_ids[$image_id][$crop_values['default']];
   }
 
   $preset = !empty($crop_values['presets'][$crop_values['default']])
@@ -2784,7 +2784,7 @@ function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
   // the image ID using the following format:
   // {scheme}://{server}{/prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
   // Build a path to the thumbnail image.
-  $url = $crop_values['server'] . '/' . $preferred_image_id . '/';
+  $url = $crop_values['server'] . '/' . $image_id . '/';
   // Here the region and size of the crop are applied. Region options are:
   // full	The complete image is returned, without any cropping.
   // square	The region is defined as an area where the width and height are both equal to the length of the shorter dimension of the complete image. The region may be positioned anywhere in the longer dimension of the image content at the server’s discretion, and centered is often a reasonable default.
@@ -2809,8 +2809,8 @@ function _aicapp_get_image_crop($preferred_image_id, $crop_values = array()) {
   $url .= $crop_values['quality'] . '.';
   // Filename options: jpg tif	png	gif jp2 pdf webp
   $url .= $crop_values['filename'];
-  $image_ids[$preferred_image_id][$crop_values['default']] = $url;
-  return $image_ids[$preferred_image_id][$crop_values['default']];
+  $image_ids[$image_id][$crop_values['default']] = $url;
+  return $image_ids[$image_id][$crop_values['default']];
 }
 
 /**
@@ -2951,7 +2951,7 @@ function aicapp_object_noimg() {
     $results = _aicapp_fetch_data(AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS, $options);
     if (!empty($results[0])) {
       $item = $results[0];
-      if (empty($item['preferred_image_id'])) {
+      if (empty($item['image_id'])) {
         // There is no image in data hub,  Check Drupal.
         $node = node_load($record['entity_id']);
         if (empty($node->field_image[LANGUAGE_NONE][0]['uri'])) {
