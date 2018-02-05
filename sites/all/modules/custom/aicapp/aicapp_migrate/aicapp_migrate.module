@@ -80,12 +80,22 @@ function aicapp_migrate_admin_migrate($form, &$form_state) {
       );
     }
     else {
+      foreach ($result['node'] as $item) {
+        $type = $item->type;
+        if (isset($types[$type]) && !isset($to_convert[$type])) {
+          $to_convert[$type] = $types[$type];
+        }
+      }
+      $convert_types = '<p>' . t('The following types will be converted to @lang', array('@lang' => $language->name . ' (' . $language->language . ')')) . '</p><ul>';
+      foreach ($to_convert as $bundle => $type) {
+        $convert_types .= '<li>' . $type . '</li>';
+      }
       $form['aicapp_data']['migration_language_types'] = array(
-        '#type' => 'checkboxes',
-        '#title' => t('Select content type(s) to update to @lang:', array('@lang' => $language->language)),
-        '#options' => $types,
-        '#default_value' => array_keys($types),
-        '#description' => t('Every node of the chosen type(s) will be updated to English.'),
+        '#type' => 'hidden',
+        '#value' => array_keys($to_convert),
+      );
+      $form['aicapp_data']['migration_language_type_info'] = array(
+        '#markup' => $convert_types . '</ul><br>',
       );
       $form['aicapp_data']['migration_language_submit'] = array(
         '#type' => 'submit',
@@ -189,7 +199,7 @@ function aicapp_migrate_admin_migrate_validate($form, &$form_state) {
     global $language;
     // What node type(s) are to be updated.
     $types = $form_state['values']['aicapp_data']['migration_language_types'];
-    if (empty($form_state['values']['#result']) || empty($types)) {
+    if (empty($form_state['build_info']['args']) || empty($types)) {
       drupal_set_message('There were no items to migrate');
       return;
     }
