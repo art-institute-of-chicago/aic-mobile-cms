@@ -69,7 +69,7 @@ function aicapp_migrate_admin_migrate($form, &$form_state) {
     $query = new EntityFieldQuery();
     $query
       ->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', $types, 'IN')
+      ->entityCondition('bundle', array_keys($types), 'IN')
       ->propertyCondition('language', LANGUAGE_NONE, '=');
     $result = $query->execute();
     $form['aicapp_data']['migration_language_prefix']['#markup'] = '<p><strong>' . t('Content Language Migration') . '</strong></p>';
@@ -84,7 +84,7 @@ function aicapp_migrate_admin_migrate($form, &$form_state) {
         '#type' => 'checkboxes',
         '#title' => t('Select content type(s) to update to @lang:', array('@lang' => $language->language)),
         '#options' => $types,
-        '#default_value' => array(),
+        '#default_value' => array_keys($types),
         '#description' => t('Every node of the chosen type(s) will be updated to English.'),
       );
       $form['aicapp_data']['migration_language_submit'] = array(
