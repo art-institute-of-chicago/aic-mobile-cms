@@ -1340,40 +1340,57 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
       $options['ids'] = implode(',', $options['ids']);
     }
   }
-  try {
-    $data = NULL;
-    if (strtoupper($options['http']) === 'POST') {
-      // POST'ing a query.
-      $post_options = array(
-        'method' => 'POST',
-        'data' => $options['query'],
-        'headers' => array('Content-Type' => 'application/json'),
-      );
+  $data = NULL;
+  if (strtoupper($options['http']) === 'POST') {
+    // POST'ing a query.
+    $post_options = array(
+      'method' => 'POST',
+      'data' => $options['query'],
+      'headers' => array('Content-Type' => 'application/json'),
+    );
+    try {
       $result = drupal_http_request($endpoint, $post_options);
       if ($result->code === '200' && !empty($result->data)) {
         $data = $result->data;
       }
     }
-    else {
-      $url = $endpoint . '?' . http_build_query($options);
+    catch (Exception $e) {
+
+    }
+  }
+  else {
+    unset($options['https']);
+    $url = $endpoint . '?' . http_build_query($options);
+    try {
       $data = file_get_contents($url);
     }
-    // If connection not available.
-    if (!$data) {
-      return;
-    }
-    $json = json_decode($data, TRUE);
-    if ($full_response && !empty($json)) {
-      $results = $json;
-    }
-    elseif (isset($json['data'])) {
-      foreach ($json['data'] as $remote_record) {
-        $results[] = $remote_record;
+    catch (Exception $e) {
+      // Likely hitting 429, too many requests.
+      $replacements = array(
+        '%url' => $object->nid,
+        '%e' => !empty($e->errorInfo[2]) ? $e->errorInfo[2] : '',
+      );
+      drupal_set_message(t("An error (%e) occurred when fetching data from: %url", $replacements), 'error');
+      if (module_exists('devel')) {
+        $d = debug_backtrace();
+        $replacements['%debug'] = $d[1]['function'];
+        $message = t('There was a problem (%e) fetching data from: %url. The calling function was %debug', $replacements);
+        watchdog('aic_update_object', $message, array(), WATCHDOG_ERROR);
       }
     }
   }
-  catch (Exception $e) {
-
+  // If connection not available.
+  if (!$data) {
+    return;
+  }
+  $json = json_decode($data, TRUE);
+  if ($full_response && !empty($json)) {
+    $results = $json;
+  }
+  elseif (isset($json['data'])) {
+    foreach ($json['data'] as $remote_record) {
+      $results[] = $remote_record;
+    }
   }
   return $results;
 }
@@ -2154,6 +2171,12 @@ function aicapp_setup_afterbuild($form, &$form_state) {
  *  Just attach the data hub data to the $node object for viewing.
  */
 function aicapp_node_view($node, $view_mode, $langcode) {
+  // Only request data from data hub if viewing the full node. Otherwise, when
+  // this function is called for many objects/galleries over a short period of
+  // time, the data hub issues a "too many requests" error.
+  if ($view_mode !== 'full') {
+    return;
+  }
   if ($node->type == AICAPP_TYPE_OBJECT && $node->field_object_id) {
     $object_id = $node->field_object_id[LANGUAGE_NONE][0]['value'];
     if (!empty($object_id)) {
