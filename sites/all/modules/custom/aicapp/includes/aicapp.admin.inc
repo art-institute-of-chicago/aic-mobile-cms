@@ -422,7 +422,7 @@ function aicapp_admin() {
  * Admin api form callback.
  */
 function aicapp_admin_api() {
-  // Image API
+  // Image API form set.
   $form['aicapp_image_api'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -438,7 +438,7 @@ function aicapp_admin_api() {
     '#default_value' => variable_get('aicapp_image_server_url', 'https://lakeimagesweb.artic.edu/iiif/2'),
     '#description' => t('URL to the Image Server.'),
   );
-  // Data aggregrator API
+  // Data aggregrator API.
   $form['aicapp_data_aggregator'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -452,7 +452,7 @@ function aicapp_admin_api() {
     '#maxlength' => 256,
     '#title' => t('Data API HOST URL'),
     '#default_value' => variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'),
-    '#description' => t(''),
+    '#description' => t('Enter the URL to the Data Hub API'),
   );
   $form['aicapp_data_aggregator']['aicapp_data_endpoint_exhibitions'] = array(
     '#type' => 'textfield',
@@ -548,12 +548,12 @@ function aicapp_admin_validate($form, &$form_state) {
  */
 function aicapp_json_compare_form_submit($form, &$form_state) {
   $values = $form_state['values'];
-  // parse our the file details.
+  // Parse our the file details.
   $types = array(
     'base' => explode('__', $values['aicapp_json_compare_base']),
     'head' => explode('__', $values['aicapp_json_compare_head']),
   );
-  // JSON node to compare;
+  // JSON node to compare.
   $json_node = $values['aicapp_json_compare_node'];
   $arrays = array();
   foreach ($types as $type => $options) {
@@ -708,7 +708,7 @@ function aicapp_load_remote_exhibitions_form_submit($form, &$form_state, $start 
 /**
  * Save remote objects to nodes.
  */
-function aicapp_load_remote_form_submit($form, &$form_state, $remote_type, $start = 0, $limit_count = 50) {
+function aicapp_load_remote_form_submit($form, &$form_state, $remote_type = AICAPP_TYPE_EXHIBITION, $start = 0, $limit_count = 50) {
   $now = new DateTime();
   $remote_objects = array();
   $max_page = 10;
@@ -733,7 +733,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $remote_type, $star
     );
     $page_start = 2;
     $url = $remote['endpoint'];
-    if ($type ===  AICAPP_TYPE_EXHIBITION) {
+    if ($type === AICAPP_TYPE_EXHIBITION) {
       $options['query'] = json_encode(array(
         '_source' => true,
         'sort' => array(
