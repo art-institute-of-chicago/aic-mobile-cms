@@ -2397,32 +2397,35 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
  * Set up nightly cron job.
  */
 function aicapp_cron() {
+  $current = date('G');
   // Run the form submit functions.
   // At 10pm - assuming Cron is running every hour.
-  if (date('G') == 22) {
+  if ($current == 22) {
     $fm = array();
     $fm2 = array();
     aicapp_loadgalleries_form_submit($fm, $fm2);
   }
   // At 11pm - assuming Cron is running every hour.
-  if (date('G') == 23) {
+  if ($current == 23) {
     $fm = array();
     $fm2 = array();
     aicapp_objectGalleryStatus_submit($fm, $fm2);
   }
   // At 12pm - assuming Cron is running every hour.
-  if (date('G') == 24) {
+  if ($current == 24) {
     $fm = array();
     $fm2 = array();
     aicapp_gendata_form_submit($fm, $fm2);
   }
-  // At 1am - assuming Cron is running every hour.
-  if (date('G') == 2) {
+  $now = time();
+  $last = variable_get('aicapp_remote_entities_imported', 0);
+  // At 1am - assuming Cron is running every hour, but only 1 per 24 hours.
+  if ($now > ($last + 86400)) {
     module_load_include('inc', 'aicapp', 'includes/aicapp.admin');
     $fm = array();
     $fm2 = array();
     aicapp_load_remote_form_submit($fm, $fm2);
-    variable_set('aicapp_remote_entities_imported', 1);
+    variable_set('aicapp_remote_entities_imported', $now);
   }
 }
 
