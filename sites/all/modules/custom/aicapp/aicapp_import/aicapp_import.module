@@ -199,7 +199,7 @@ function aicapp_import_generate_template() {
     // English Track Title
     $track_title = NULL;
     if (!empty($node->field_track_title[$node->language])) {
-      $track_title = $node->field_track_title[$node->language][0]['safe_value'];
+      $track_title = $node->field_track_title[$node->language][0]['value'];
     }
     $row[] = $track_title;
     // filename_eng.mp3
@@ -211,13 +211,13 @@ function aicapp_import_generate_template() {
     // Transcripts Eng
     $transcripts = NULL;
     if (!empty($node->field_audio_transcript[$node->language])) {
-      $transcripts = $node->field_audio_transcript[$node->language][0]['safe_value'];
+      $transcripts = $node->field_audio_transcript[$node->language][0]['value'];
     }
     $row[] = $transcripts;
     // Credits Eng
     $credits = NULL;
     if (!empty($node->field_credits[$node->language])) {
-      $credits = $node->field_credits[$node->language][0]['safe_value'];
+      $credits = $node->field_credits[$node->language][0]['value'];
     }
     $row[] = $credits;
     // ES values.
@@ -225,7 +225,7 @@ function aicapp_import_generate_template() {
     // Track Title Esp
     $track_title = NULL;
     if (!empty($node->field_track_title[$node->language])) {
-      $track_title = $node->field_track_title[$node->language][0]['safe_value'];
+      $track_title = $node->field_track_title[$node->language][0]['value'];
     }
     $row[] = $track_title;
     // filename_esp.mp3
@@ -237,13 +237,13 @@ function aicapp_import_generate_template() {
     // Transcripts Esp
     $transcripts = NULL;
     if (!empty($node->field_audio_transcript[$node->language])) {
-      $transcripts = $node->field_audio_transcript[$node->language][0]['safe_value'];
+      $transcripts = $node->field_audio_transcript[$node->language][0]['value'];
     }
     $row[] = $transcripts;
     // Credits Esp
     $credits = NULL;
     if (!empty($node->field_credits[$node->language])) {
-      $credits = $node->field_credits[$node->language][0]['safe_value'];
+      $credits = $node->field_credits[$node->language][0]['value'];
     }
     $row[] = $credits;
     // ZH / Chinese
@@ -251,7 +251,7 @@ function aicapp_import_generate_template() {
     // Track Title Chn
     $track_title = NULL;
     if (!empty($node->field_track_title[$node->language])) {
-      $track_title = $node->field_track_title[$node->language][0]['safe_value'];
+      $track_title = $node->field_track_title[$node->language][0]['value'];
     }
     $row[] = $track_title;
     // filename_chn.mp3
@@ -263,13 +263,13 @@ function aicapp_import_generate_template() {
     // Transcripts Chn
     $transcripts = NULL;
     if (!empty($node->field_audio_transcript[$node->language])) {
-      $transcripts = $node->field_audio_transcript[$node->language][0]['safe_value'];
+      $transcripts = $node->field_audio_transcript[$node->language][0]['value'];
     }
     $row[] = $transcripts;
     // Credits Chn
     $credits = NULL;
     if (!empty($node->field_credits[$node->language])) {
-      $credits = $node->field_credits[$node->language][0]['safe_value'];
+      $credits = $node->field_credits[$node->language][0]['value'];
     }
     $row[] = $credits;
     // Add this row to the CSV array.
