@@ -287,12 +287,16 @@ function aicapp_import_parse_csv($path, $delimiter = ',') {
   $data = array();
   ini_set('auto_detect_line_endings', TRUE);
   if (($handle = fopen($path, 'r')) !== FALSE) {
-    while (($row = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
+    while (($row = fgetcsv($handle, 0, $delimiter)) !== FALSE) {
       if (!$header) {
         $header = $row;
+        $header_count = count($header);
+      }
+      elseif ($header_count === count($row)) {
+        $data[] = array_combine($header, $row);
       }
       else {
-        $data[] = array_combine($header, $row);
+        continue;
       }
     }
     fclose($handle);
@@ -403,6 +407,7 @@ function aicapp_import_items($items, $audio_file_path) {
         }
         // Save the audio node.
         $entity->save();
+
         $audio_id = $entity->nid->value();
         if ($audio_id) {
           // If created doesnt exactly match changed, assume update.
