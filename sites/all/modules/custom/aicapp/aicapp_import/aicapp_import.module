@@ -10,8 +10,6 @@
  * Email notices are also fired when objects are pulled out of galleries or added back into galleries.
  */
 
-use Coseva\CSV as CSV;
-
 /**
  * Implementation of hook_menu()
  */
@@ -105,10 +103,10 @@ function aicapp_import_download_submit($form, &$form_state) {
   if ($csv = aicapp_import_generate_template()) {
     $delimiter = ',';
     $enclosure = '"';
-    $eol = "\r\n";
-    $filename = 'import-audio';
-    // Open a file to write.
-    $file = fopen('php://output', 'w');
+    $filename = 'import-audio.csv';
+    // Open a file to write, and use a generated name.
+    $destination = drupal_tempnam('temp://', 'file');
+    $file = fopen($destination, 'w');
     // Register a filter that writes "/n/r" line endings.
     stream_filter_register('crlf', 'CRLFilter');
     // Attach filter to output file.
@@ -117,10 +115,17 @@ function aicapp_import_download_submit($form, &$form_state) {
       // Use putcsv to write to file.
       fputcsv($file, $row, $delimiter, $enclosure);
     }
-    // Add headers to trigger download and file name.
-    drupal_add_http_header('Content-Type', 'application/csv; charset=UTF-8');
-    drupal_add_http_header('Content-Disposition', 'attachment; filename=' . $filename . '.csv');
-    drupal_exit();
+    fclose($file);
+    if ($data = file_get_contents($destination)) {
+      $file = file_unmanaged_save_data($data, "public://" . $filename, FILE_EXISTS_REPLACE);
+      $headers = array(
+        'Content-Type' => 'application/octet-stream',
+        'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        'Content-Length' => filesize($file),
+      );
+      // Add headers to trigger download and file name.
+      file_transfer($file, $headers);
+    }
   }
 }
 
