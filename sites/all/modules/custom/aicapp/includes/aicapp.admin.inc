@@ -39,19 +39,19 @@ function aicapp_admin() {
   );
   $form['aicapp_env_fqdm'] = array(
     '#type' => 'textfield',
-    '#title' => t('Domain name for the current environment.'),
+    '#title' => t('Domain name for the current environment in JSON.'),
     '#default_value' => variable_get('aicapp_env_fqdm', 'http://aic-mobile-tours.artic.edu'),
     '#size' => 200,
     '#maxlength' => 256,
-    '#description' => t('Enter a URL for the current server environment. This will preceed any local URLs. Some examples are http://aic-mobile-tours.artic.edu, http://aicweb14.artic.edu, http://de-mobile-dev.artic.edu, etc.'),
+    '#description' => t('Enter a domain name for the current server environment. When generating JSON, the domain given here will be used to in place of the actual server domain for the current environment. Some examples are http://aic-mobile-tours.artic.edu, http://aicweb14.artic.edu, http://de-mobile-dev.artic.edu, etc.'),
   );
   $form['aicapp_file_public_path'] = array(
     '#type' => 'textfield',
-    '#title' => t('Public files path for the current environment.'),
+    '#title' => t('Public files path for the current environment in JSON.'),
     '#default_value' => variable_get('aicapp_file_public_path', variable_get('file_public_path', conf_path() . '/files')),
     '#size' => 200,
     '#maxlength' => 256,
-    '#description' => t('Enter a file path for the current environment, "sites/default/files", "sites/default_test/files", "sites/default_staging/files" etc.'),
+    '#description' => t('Enter a file path for the current environment. When generating JSON this value is used in place of the actual path to the public files, and some examples are "sites/default/files", "sites/default_test/files", "sites/default_staging/files" etc.'),
   );
   $form['aicapp_ops'] = array(
     '#type' => 'fieldset',
@@ -92,7 +92,7 @@ function aicapp_admin() {
     '#type' => 'submit',
     '#value' => t('Import Exhibitions'),
     '#prefix' => '<h5>' . t('Exhibitions') . '</h5><div>',
-    '#suffix' => t('Click this button to load or update exhibitions from the data hub.') . '</div>',
+    '#suffix' => t('Click this button to create or update exhibitions from the data aggregator.') . '</div>',
     '#submit' => array('aicapp_load_remote_exhibitions_form_submit'),
   );
   $suffix_message = t('Click this button to update all Object.');
@@ -112,7 +112,7 @@ function aicapp_admin() {
   }
   $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_all_objects'] = array(
     '#type' => 'checkbox',
-    '#prefix' => '<h5>' . t('Artwork Objects') . '</h5><div>',
+    '#prefix' => '<h5>' . t('Artwork Object Images') . '</h5><div>',
     '#title' => t('Update All Objects'),
     '#default_value' => (variable_get('aicapp_data_update_all_objects', 1)) ?: 0,
     '#description' => t('Whether or not to update all objects. Uncheck this if you would like to update only specific objects.'),
@@ -164,7 +164,7 @@ function aicapp_admin() {
   // );
   $form['aicapp_ops']['aicapp_data_aggregator']['update_object_images'] = array(
     '#type' => 'submit',
-    '#value' => t('Update Objects'),
+    '#value' => t('Update Object Images'),
     '#suffix' => $suffix_message . '</div>',
     '#validate' => array('aicapp_update_object_validate'),
     '#submit' => array('aicapp_update_object_submit'),
@@ -257,7 +257,7 @@ function aicapp_admin() {
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Large image crop dimensions'),
+    '#title' => t('Large Crop Dimensions'),
     '#default_value' => variable_get('aicapp_image_large_crop', '!800,800'),
     '#description' => t('Dimensions of the image to use for previewing a crop.'),
     '#prefix' => '<h4>' . t('Large Images') . '</h4>',
@@ -266,7 +266,7 @@ function aicapp_admin() {
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Large image crop aspect ratio'),
+    '#title' => t('Large Crop Aspect Ratio'),
     '#default_value' => variable_get('aicapp_image_large_crop_aspect', '1.82:1'),
     '#description' => t('Leave empty to allow for no fixed aspect ratio.'),
   );
@@ -280,23 +280,23 @@ function aicapp_admin() {
     '#type' => 'numberfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Large Image Minimum Width'),
+    '#title' => t('Large Minimum Width'),
     '#default_value' => variable_get('aicapp_image_large_min_width', '364'),
-    '#description' => t('The minimum width in pixels for the artwork object image.'),
+    '#description' => t('The minimum width in pixels for the artwork object image. A value of -1 will set the minimum to the size of the large preview image.'),
   );
   $form['aicapp_images']['aicapp_image_object']['aicapp_image_large_min_height'] = array(
     '#type' => 'numberfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Large Image Minimum Height'),
+    '#title' => t('Large Minimum Height'),
     '#default_value' => variable_get('aicapp_image_large_min_height', '200'),
-    '#description' => t('The minimum height in pixels for the artwork object image.'),
+    '#description' => t('The minimum height in pixels for the artwork object image.  A value of -1 will set the minimum to the size of the large preview image.'),
   );
   $form['aicapp_images']['aicapp_image_object']['aicapp_image_thumb_crop'] = array(
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Thumbnail crop dimensions'),
+    '#title' => t('Thumbnail Crop Dimensions'),
     '#default_value' => variable_get('aicapp_image_thumb_crop', ' !112,112'),
     '#description' => t('Dimensions of the image to use for previewing a crop.'),
     '#prefix' => '<h4>' . t('Thumbnails') . '</h4>',
@@ -305,7 +305,7 @@ function aicapp_admin() {
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Thumbnail crop aspect ratio'),
+    '#title' => t('Thumbnail Crop Aspect Ratio'),
     '#default_value' => variable_get('aicapp_image_thumb_crop_aspect', '1:1'),
     '#description' => t('The aspect ratio of the tool used to crop.'),
   );
@@ -321,7 +321,7 @@ function aicapp_admin() {
     '#maxlength' => 25,
     '#title' => t('Thumbnail Minimum Width'),
     '#default_value' => variable_get('aicapp_object_image_min_width', '-1'),
-    '#description' => t('The minimum width in pixels for the artwork object image.  A value of -1 will set the minimum to the size of the preview thumbnail image.'),
+    '#description' => t('The minimum width in pixels for the artwork object image. A value of -1 will set the minimum to the size of the thumbnail preview image.'),
   );
   $form['aicapp_images']['aicapp_image_object']['aicapp_object_image_min_height'] = array(
     '#type' => 'numberfield',
@@ -329,7 +329,7 @@ function aicapp_admin() {
     '#maxlength' => 25,
     '#title' => t('Thumbnail Minimum Height'),
     '#default_value' => variable_get('aicapp_object_image_min_height', '-1'),
-    '#description' => t('The minimum height in pixels for the artwork object image. A value of -1 will set the minimum to the size of the preview thumbnail image.'),
+    '#description' => t('The minimum height in pixels for the artwork object image. A value of -1 will set the minimum to the size of the thumbnail preview image.'),
   );
   $form['aicapp_images']['aicapp_image_tour'] = array(
     '#type' => 'fieldset',
@@ -342,7 +342,7 @@ function aicapp_admin() {
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Large image crop dimensions'),
+    '#title' => t('Large Crop Dimensions'),
     '#default_value' => variable_get('aicapp_image_large_crop_tour', '!800,800'),
     '#description' => t('Dimensions of the image to use for previewing a crop.'),
     '#prefix' => '<h4>' . t('Large Images') . '</h4>',
@@ -351,7 +351,7 @@ function aicapp_admin() {
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Large image crop aspect ratio'),
+    '#title' => t('Large Crop Aspect Ratio'),
     '#default_value' => variable_get('aicapp_image_large_crop_aspect_tour', '1.82:1'),
   );
   $form['aicapp_images']['aicapp_image_tour']['aicapp_image_large_crop_lock_tour'] = array(
@@ -364,23 +364,23 @@ function aicapp_admin() {
     '#type' => 'numberfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Large Image Minimum Width'),
+    '#title' => t('Large Minimum Width'),
     '#default_value' => variable_get('aicapp_tour_image_large_min_width', '364'),
-    '#description' => t('The minimum width in pixels for the tour image.'),
+    '#description' => t('The minimum width in pixels for the tour image. A value of -1 will set the minimum to the size of the large preview image.'),
   );
   $form['aicapp_images']['aicapp_image_tour']['aicapp_tour_image_large_min_height'] = array(
     '#type' => 'numberfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Large Image Minimum Height'),
+    '#title' => t('Large Minimum Height'),
     '#default_value' => variable_get('aicapp_tour_image_large_min_height', '200'),
-    '#description' => t('The minimum height in pixels for the tour image.'),
+    '#description' => t('The minimum height in pixels for the tour image. A value of -1 will set the minimum to the size of the large preview image.'),
   );
   $form['aicapp_images']['aicapp_image_tour']['aicapp_image_thumb_crop_tour'] = array(
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Thumbnail crop dimensions'),
+    '#title' => t('Thumbnail Crop Dimensions'),
     '#default_value' => variable_get('aicapp_image_thumb_crop_tour', '!112,112'),
     '#prefix' => '<h4>' . t('Thumbnails') . '</h4>',
     '#description' => t('Dimensions of the image to use for previewing a crop.'),
@@ -389,7 +389,7 @@ function aicapp_admin() {
     '#type' => 'textfield',
     '#size' => 25,
     '#maxlength' => 25,
-    '#title' => t('Thumbnail crop aspect ratio'),
+    '#title' => t('Thumbnail Crop Aspect Ratio'),
     '#default_value' => variable_get('aicapp_image_thumb_crop_aspect_tour', '1:1'),
     '#description' => t('The aspect ratio of the tool used to crop.'),
   );
@@ -405,7 +405,7 @@ function aicapp_admin() {
     '#maxlength' => 25,
     '#title' => t('Thumbnail Minimum Width'),
     '#default_value' => variable_get('aicapp_tour_image_min_width', '-1'),
-    '#description' => t('The minimum width in pixels for the tour image.  A value of -1 will set the minimum to the size of the preview thumbnail image.'),
+    '#description' => t('The minimum width in pixels for the tour image.  A value of -1 will set the minimum to the size of the thumbnail preview image.'),
   );
   $form['aicapp_images']['aicapp_image_tour']['aicapp_tour_image_min_height'] = array(
     '#type' => 'numberfield',
@@ -413,7 +413,7 @@ function aicapp_admin() {
     '#maxlength' => 25,
     '#title' => t('Thumbnail Minimum Width'),
     '#default_value' => variable_get('aicapp_tour_image_min_height', '-1'),
-    '#description' => t('The minimum height in pixels for the tour image.  A value of -1 will set the minimum to the size of the preview thumbnail image.'),
+    '#description' => t('The minimum height in pixels for the tour image.  A value of -1 will set the minimum to the size of the thumbnail preview image.'),
   );
   return system_settings_form($form);
 }
@@ -436,7 +436,7 @@ function aicapp_admin_api() {
     '#maxlength' => 256,
     '#title' => t('Image Server URL'),
     '#default_value' => variable_get('aicapp_image_server_url', 'https://lakeimagesweb.artic.edu/iiif/2'),
-    '#description' => t('URL to the Image Server.'),
+    '#description' => t('Full URL to the IIIF Image Server.'),
   );
   // Data aggregrator API.
   $form['aicapp_data_aggregator'] = array(
@@ -450,17 +450,9 @@ function aicapp_admin_api() {
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
-    '#title' => t('Data API HOST URL'),
+    '#title' => t('Data Aggregator URL'),
     '#default_value' => variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'),
-    '#description' => t('Enter the URL to the Data Hub API'),
-  );
-  $form['aicapp_data_aggregator']['aicapp_data_endpoint_exhibitions'] = array(
-    '#type' => 'textfield',
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#title' => t('Exhibitions endpoint'),
-    '#default_value' => variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'),
-    '#description' => t('Query for an exhibition via this endpoint.'),
+    '#description' => t('Enter the URL to the Data Aggregator API.'),
   );
   $form['aicapp_data_aggregator']['aicapp_data_endpoint_artworks'] = array(
     '#type' => 'textfield',
@@ -470,11 +462,19 @@ function aicapp_admin_api() {
     '#default_value' => variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'),
     '#description' => t('Query for an artwork via this endpoint.'),
   );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_exhibitions'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Exhibitions endpoint'),
+    '#default_value' => variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'),
+    '#description' => t('Query for an exhibition via this endpoint.'),
+  );
   $form['aicapp_data_aggregator']['aicapp_data_endpoint_galleries'] = array(
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
-    '#title' => t('Places endpoint'),
+    '#title' => t('Galleries endpoint'),
     '#default_value' => variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'),
     '#description' => t('Query for a gallery via the galleries endpoint.'),
   );
@@ -483,8 +483,31 @@ function aicapp_admin_api() {
     '#size' => 200,
     '#maxlength' => 256,
     '#title' => t('Images endpoint'),
-    '#default_value' => variable_get('aicapp_data_endpoint_images', '/api/v2/images'),
-    '#description' => t('Query for a image via this endpoint.'),
+    '#default_value' => variable_get('aicapp_data_endpoint_images', '/api/v1/images'),
+    '#description' => t('Query for images via the images endpoint.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_events'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Events endpoint'),
+    '#default_value' => variable_get('aicapp_data_endpoint_events', '/api/v1/events'),
+    '#description' => t('Query for events via the events endpoint.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_tours'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Tours endpoint'),
+    '#default_value' => variable_get('aicapp_data_endpoint_tours', '/api/v1/tours'),
+    '#description' => t('Query for tours via the tours endpoint.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_autocomplete'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Autocomplete endpoint'),
+    '#default_value' => variable_get('aicapp_data_endpoint_autocomplete', '/api/v1/autocomplete'),
   );
   $form['aicapp_deprecated'] = array(
     '#type' => 'fieldset',

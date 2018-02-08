@@ -33,7 +33,6 @@ function aicapp_import_menu() {
  */
 function aicapp_import_batch($form, $form_state) {
   $counts = array();
-  $import_file_path = variable_get('aicapp_import_file', FALSE);
   $form['aicapp_data'] = array(
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
@@ -84,7 +83,7 @@ function aicapp_import_batch_validate($form, &$form_state) {
   $values = $form_state['values'];
   $destination = file_prepare_directory($directory);
   if (!$destination) {
-    form_set_error('aicapp_import_filename', t('The public files directory could not be written to.'));
+    form_set_error('csv_file', t('The public files directory could not be written to.'));
     return;
   }
   $action = $form_state['clicked_button']['#value'];
@@ -148,7 +147,7 @@ function aicapp_import_batch_submit($form, &$form_state) {
   }
   $path = variable_get('aicapp_import_file', NULL);
   if (!file_exists($path)) {
-    form_set_error('aicapp_import_filename', t('The CSV file was not found.'));
+    form_set_error('csv_file', t('The CSV file was not found.'));
     return;
   }
   elseif (!file_get_contents($path, NULL, NULL, 0, 10000)) {
@@ -525,21 +524,6 @@ function _aicapp_import_title_exists($title) {
   if (!empty($result['node'])) {
     $nids = array_keys($result['node']);
     return current($nids);
-  }
-}
-
-/**
- * Helper function to check if a filename already exists.
- */
-function _aicapp_import_filename_exists($filename) {
-  // Check if a audio node with the given title exists.
-  $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'file')
-    ->propertyCondition('filename', $filename, '=');
-  $result = $query->execute();
-  if (!empty($result['file'])) {
-    $fids = array_keys($result['file']);
-    return current($fids);
   }
 }
 

@@ -34,6 +34,20 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_data_endpoint_autocomplete';
+  $strongarm->value = '/api/v1/autocomplete';
+  $export['aicapp_data_endpoint_autocomplete'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_data_endpoint_events';
+  $strongarm->value = '/api/v1/events';
+  $export['aicapp_data_endpoint_events'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
   $strongarm->name = 'aicapp_data_endpoint_exhibitions';
   $strongarm->value = '/api/v1/exhibitions';
   $export['aicapp_data_endpoint_exhibitions'] = $strongarm;
@@ -41,16 +55,23 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_data_endpoint_galleries';
+  $strongarm->value = '/api/v1/galleries';
+  $export['aicapp_data_endpoint_galleries'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
   $strongarm->name = 'aicapp_data_endpoint_images';
-  $strongarm->value = '/api/v2/images';
+  $strongarm->value = '/api/v1/images';
   $export['aicapp_data_endpoint_images'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
-  $strongarm->name = 'aicapp_data_endpoint_places';
-  $strongarm->value = '/api/v1/places';
-  $export['aicapp_data_endpoint_places'] = $strongarm;
+  $strongarm->name = 'aicapp_data_endpoint_tours';
+  $strongarm->value = '/api/v1/tours';
+  $export['aicapp_data_endpoint_tours'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
@@ -72,6 +93,29 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->name = 'aicapp_gmap_key';
   $strongarm->value = 'AIzaSyBHH7xFzC4ZxJznLOZKXk8RYP7KG_SOLR4';
   $export['aicapp_gmap_key'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_api';
+  $strongarm->value = array(
+    'aicapp_image_server_url' => 'https://lakeimagesweb.artic.edu/iiif/2/',
+  );
+  $export['aicapp_image_api'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_full_crop';
+  $strongarm->value = '!800,800';
+  $export['aicapp_image_full_crop'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_image_full_crop_tour';
+  $strongarm->value = '!800,800';
+  $export['aicapp_image_full_crop_tour'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
@@ -177,6 +221,13 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->name = 'aicapp_image_thumb_crop_tour';
   $strongarm->value = '!112,112';
   $export['aicapp_image_thumb_crop_tour'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_import_files_directory';
+  $strongarm->value = 'audio';
+  $export['aicapp_import_files_directory'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */

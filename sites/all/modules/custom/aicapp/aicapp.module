@@ -40,6 +40,9 @@ function aicapp_init() {
   define('AICAPP_DATA_API_ENDPOINT_ARTWORKS', variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'));
   define('AICAPP_DATA_API_ENDPOINT_GALLERIES', variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'));
   define('AICAPP_DATA_API_ENDPOINT_IMAGES', variable_get('aicapp_data_endpoint_images', '/api/v1/images'));
+  define('AICAPP_DATA_API_ENDPOINT_EVENTS', variable_get('aicapp_data_endpoint_events', '/api/v1/events'));
+  define('AICAPP_DATA_API_ENDPOINT_TOURS', variable_get('aicapp_data_endpoint_tours', '/api/v1/tours'));
+  define('AICAPP_DATA_API_ENDPOINT_AUTOCOMPLETE', variable_get('aicapp_data_endpoint_autocomplete', '/api/v1/autocomplete'));
   define('AICAPP_JSON_FILENAME', variable_get('aicapp_json_filename', 'appData'));
   define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
   define('AICAPP_TOUR_VOCABULARY_NAME', variable_get('aicapp_tour_vocabular_name', 'categories'));
@@ -1185,6 +1188,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'map_floors' => !empty($map_floor) ? $map_floor : array(),
     'tour_categories' => _aicapp_get_tour_categories(),
     'exhibitions' => $by_exhibition_id,
+    'data' => _aic_app_get_data_endpoints(),
   );
   // Writing version 2 file output.
   $v2_json_output = json_encode($v2_data);
@@ -3152,4 +3156,21 @@ function aicapp_date_format_types() {
   $types = array();
   $types['aicapp_date_type'] = t('Short Date, 12 Hour Time');
   return $types;
+}
+
+/**
+ * Return an array of data API endpoints.
+ */
+function _aic_app_get_data_endpoints() {
+  return array(
+    'image_server_url' => AICAPP_IMAGE_SERVER,
+    'data_api_url' => AICAPP_DATA_API_HOST,
+    'exhibitions_endpoint' => AICAPP_DATA_API_ENDPOINT_EXHIBITION,
+    'artworks_endpoint' => AICAPP_DATA_API_ENDPOINT_ARTWORKS,
+    'galleries_endpoint' => AICAPP_DATA_API_ENDPOINT_GALLERIES,
+    'images_endpoint' => AICAPP_DATA_API_ENDPOINT_IMAGES,
+    'events_endpoint' => AICAPP_DATA_API_ENDPOINT_EVENTS,
+    'autocomplete_endpoint' => AICAPP_DATA_API_ENDPOINT_AUTOCOMPLETE,
+    'tours_endpoint' => AICAPP_DATA_API_ENDPOINT_TOURS,
+  );
 }
