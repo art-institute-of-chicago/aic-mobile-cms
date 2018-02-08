@@ -486,7 +486,7 @@ function aicapp_admin_api() {
     '#default_value' => variable_get('aicapp_data_endpoint_images', '/api/v1/images'),
     '#description' => t('Query for images via the images endpoint.'),
   );
-  $form['aicapp_data_aggregator']['aicapp_data_endpoint_'] = array(
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_events'] = array(
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
