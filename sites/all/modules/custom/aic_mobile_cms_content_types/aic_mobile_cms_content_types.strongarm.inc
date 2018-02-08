@@ -41,16 +41,9 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
-  $strongarm->name = 'aicapp_data_endpoint_images';
-  $strongarm->value = '/api/v2/images';
-  $export['aicapp_data_endpoint_images'] = $strongarm;
-
-  $strongarm = new stdClass();
-  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
-  $strongarm->api_version = 1;
-  $strongarm->name = 'aicapp_data_endpoint_places';
-  $strongarm->value = '/api/v1/places';
-  $export['aicapp_data_endpoint_places'] = $strongarm;
+  $strongarm->name = 'aicapp_data_endpoint_galleries';
+  $strongarm->value = '/api/v1/galleries';
+  $export['aicapp_data_endpoint_galleries'] = $strongarm;
 
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */

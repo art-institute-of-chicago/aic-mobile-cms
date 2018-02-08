@@ -39,7 +39,6 @@ function aicapp_init() {
   define('AICAPP_DATA_API_ENDPOINT_EXHIBITION', variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'));
   define('AICAPP_DATA_API_ENDPOINT_ARTWORKS', variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'));
   define('AICAPP_DATA_API_ENDPOINT_GALLERIES', variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'));
-  define('AICAPP_DATA_API_ENDPOINT_IMAGES', variable_get('aicapp_data_endpoint_images', '/api/v1/images'));
   define('AICAPP_JSON_FILENAME', variable_get('aicapp_json_filename', 'appData'));
   define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
   define('AICAPP_TOUR_VOCABULARY_NAME', variable_get('aicapp_tour_vocabular_name', 'categories'));
