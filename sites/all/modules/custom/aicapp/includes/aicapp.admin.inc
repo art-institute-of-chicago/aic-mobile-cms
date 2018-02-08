@@ -454,14 +454,6 @@ function aicapp_admin_api() {
     '#default_value' => variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'),
     '#description' => t('Enter the URL to the Data Aggregator API.'),
   );
-  $form['aicapp_data_aggregator']['aicapp_data_endpoint_exhibitions'] = array(
-    '#type' => 'textfield',
-    '#size' => 200,
-    '#maxlength' => 256,
-    '#title' => t('Exhibitions endpoint'),
-    '#default_value' => variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'),
-    '#description' => t('Query for an exhibition via this endpoint.'),
-  );
   $form['aicapp_data_aggregator']['aicapp_data_endpoint_artworks'] = array(
     '#type' => 'textfield',
     '#size' => 200,
@@ -469,6 +461,14 @@ function aicapp_admin_api() {
     '#title' => t('Artworks endpoint'),
     '#default_value' => variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'),
     '#description' => t('Query for an artwork via this endpoint.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_exhibitions'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Exhibitions endpoint'),
+    '#default_value' => variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'),
+    '#description' => t('Query for an exhibition via this endpoint.'),
   );
   $form['aicapp_data_aggregator']['aicapp_data_endpoint_galleries'] = array(
     '#type' => 'textfield',
@@ -483,8 +483,31 @@ function aicapp_admin_api() {
     '#size' => 200,
     '#maxlength' => 256,
     '#title' => t('Images endpoint'),
-    '#default_value' => variable_get('aicapp_data_endpoint_images', '/api/v2/images'),
-    '#description' => t('Query for a image via this endpoint.'),
+    '#default_value' => variable_get('aicapp_data_endpoint_images', '/api/v1/images'),
+    '#description' => t('Query for images via the images endpoint.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Events endpoint'),
+    '#default_value' => variable_get('aicapp_data_endpoint_events', '/api/v1/events'),
+    '#description' => t('Query for events via the events endpoint.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_tours'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Tours endpoint'),
+    '#default_value' => variable_get('aicapp_data_endpoint_tours', '/api/v1/tours'),
+    '#description' => t('Query for tours via the tours endpoint.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_autocomplete'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Autocomplete endpoint'),
+    '#default_value' => variable_get('aicapp_data_endpoint_autocomplete', '/api/v1/autocomplete'),
   );
   $form['aicapp_deprecated'] = array(
     '#type' => 'fieldset',
