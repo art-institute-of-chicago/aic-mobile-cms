@@ -5240,7 +5240,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'summary_rows' => 5,
       ),
       'type' => 'text_textarea_with_summary',
-      'weight' => -5,
+      'weight' => 1,
     ),
   );
 

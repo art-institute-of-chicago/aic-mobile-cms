@@ -141,7 +141,8 @@ function aicapp_migrate_admin_migrate($form, &$form_state) {
           }
           $i++;
           $callback = 'aicapp_migrate_validate_type_' . $type;
-          $valid = call_user_func_array($callback, array($nid, &$counts, $i, &$to_add));
+          $params = array($nid, &$counts, $i, &$to_add);
+          $valid = call_user_func_array($callback, $params);
           if (empty($valid)) {
             unset($result['node'][$nid]);
           }
@@ -178,17 +179,25 @@ function aicapp_migrate_admin_migrate($form, &$form_state) {
         '#default_value' => array($default),
         '#description' => t('Every node of the chosen type(s) fields will be updated. Before updating tours, make sure that all objects have been updated.'),
       );
-      $form['aicapp_data']['migration_add_associations'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Add Missing Audio Commentary to Objects'),
-        '#default_value' => (variable_get('migration_add_associations', 0)) ?: 0,
-        '#description' => t('When migrating tour stops, if a tour stop audio item is not already associated with the object for that stop, create the association.'),
-      );
+      // Disable the tour type if objects remain
+      if ($counts[AICAPP_TYPE_OBJECT] > 0) {
+        $form['aicapp_data']['migration_fields_types'][AICAPP_TYPE_TOUR]['#disabled'] = TRUE;
+        $count = $counts[AICAPP_TYPE_OBJECT];
+      }
+      else {
+        $count = $counts[AICAPP_TYPE_TOUR];
+        $form['aicapp_data']['migration_add_associations'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Add Missing Audio Commentary to Objects'),
+          '#default_value' => (variable_get('migration_add_associations', 1)) ?: 0,
+          '#description' => t('When migrating tour stops, if a tour stop audio item is not already associated with the object for that stop, create the association.'),
+        );
+      }
       $form['aicapp_data']['migration_fields_batch'] = array(
         '#type' => 'numberfield',
         '#size' => 10,
         '#length' => 10,
-        '#default_value' => max($counts[AICAPP_TYPE_OBJECT], $counts[AICAPP_TYPE_TOUR]),
+        '#default_value' => $count,
         '#attributes' => array(
           'max' => max($counts[AICAPP_TYPE_OBJECT], $counts[AICAPP_TYPE_TOUR]),
         ),
@@ -310,6 +319,7 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
   elseif ($form_state['clicked_button']['#value'] === 'Update Content Fields') {
     $counts = array();
     $batch_size = !empty($form_state['values']['aicapp_data']['migration_fields_batch']) ? $form_state['values']['aicapp_data']['migration_fields_batch'] : 50;
+    $add_associations = !empty($form_state['values']['aicapp_data']['migration_add_associations']) ? $form_state['values']['aicapp_data']['migration_add_associations'] : 0;
     $types = $form_state['values']['aicapp_data']['migration_fields_types'];
     foreach (array_filter($types) as $type) {
       if (empty($type) || empty($form_state['build_info']['args']) || empty($form_state['build_info']['args'][$type])) {
@@ -334,7 +344,15 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
         }
         $i++;
         $callback = 'aicapp_migrate_migrate_type_' . $type;
-        call_user_func_array($callback, array($nid, &$counts, $i, &$to_add, 'update', $form_state['values']['aicapp_data']['migration_add_associations']));
+        $params = array(
+          $nid,
+          &$counts,
+          $i,
+          &$to_add,
+          'update',
+          $add_associations,
+        );
+        call_user_func_array($callback, $params);
       }
       $remaining = !empty($result['node']) ? count($result['node']) : 0;
       $type_message = array(
@@ -439,7 +457,7 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array(), $i = 0, &$to
           drupal_set_message(t(
             'There was a problem migrating tour stops for tour node ID: @tour. A stop contains an object node ID: @object, that does not exist.',
             $replacement
-          ));
+          ), 'warning');
           continue;
         }
         // Get all audio nids that are already associated with an object.
