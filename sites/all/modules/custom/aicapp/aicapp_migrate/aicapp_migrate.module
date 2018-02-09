@@ -457,7 +457,7 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array(), $i = 0, &$to
           drupal_set_message(t(
             'There was a problem migrating tour stops for tour node ID: @tour. A stop contains an object node ID: @object, that does not exist.',
             $replacement
-          ));
+          ), 'warning');
           continue;
         }
         // Get all audio nids that are already associated with an object.
