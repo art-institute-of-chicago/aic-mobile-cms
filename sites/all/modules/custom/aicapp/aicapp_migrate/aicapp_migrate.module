@@ -52,6 +52,12 @@ function aicapp_migrate_admin_migrate($form, &$form_state) {
     '#tree' => TRUE,
   );
   if ($all_migrations_complete) {
+    $form['aicapp_data']['migration_remove_existing'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Remove Version 2 Field Values'),
+      '#default_value' => (variable_get('migration_remove_existing', 0)) ?: 0,
+      '#description' => t('Whether or not to remove all existing field_tour_stops & field_audio_commentary items.'),
+    );
     $form['aicapp_data']['migration_repeat'] = array(
       '#prefix' => t('All data has been migrated.'),
       '#type' => 'submit',
@@ -172,6 +178,12 @@ function aicapp_migrate_admin_migrate($form, &$form_state) {
         '#default_value' => array($default),
         '#description' => t('Every node of the chosen type(s) fields will be updated. Before updating tours, make sure that all objects have been updated.'),
       );
+      $form['aicapp_data']['migration_add_associations'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Add Missing Audio Commentary to Objects'),
+        '#default_value' => (variable_get('migration_add_associations', 0)) ?: 0,
+        '#description' => t('When migrating tour stops, if a tour stop audio item is not already associated with the object for that stop, create the association.'),
+      );
       $form['aicapp_data']['migration_fields_batch'] = array(
         '#type' => 'numberfield',
         '#size' => 10,
@@ -214,9 +226,46 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
     variable_set('aicapp_migrate_v1_v2', FALSE);
     variable_set('aicapp_migrate_v1_v2_language', FALSE);
     variable_set('aicapp_migrate_v1_v2_fields', FALSE);
-    return;
+    if (empty($form_state['values']['aicapp_data']['migration_remove_existing'])) {
+      return;
+    }
+    // Remove all tour stop that were migrated allow for migration to happen again.
+    $query = new EntityFieldQuery();
+    $query
+      ->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', array(AICAPP_TYPE_TOUR, AICAPP_TYPE_OBJECT), 'IN');
+    $result = $query->execute();
+    if (empty($result['node'])) {
+      return;
+    }
+    // Remove all values entered into the new field format.
+    foreach ($result['node'] as $nid => $object) {
+      $node = node_load($object->nid);
+      if ($node->type === AICAPP_TYPE_OBJECT) {
+        $field = 'field_audio_commentary';
+        $node->skip_hooks_presave = TRUE;
+      }
+      elseif ($node->type === AICAPP_TYPE_TOUR) {
+        $field = 'field_tour_stops';
+      }
+      if (empty($node->{$field}[LANGUAGE_NONE])) {
+        continue;
+      }
+      $entity = entity_metadata_wrapper('node', $node);
+      // Remove the tour stops.
+      $field_collection_values = array();
+      foreach ($node->{$field}[LANGUAGE_NONE] as $key => $value) {
+        // Build array of field collection values.
+        $field_collection_values[] = $value['value'];
+        // Unset them.
+        unset($node->{$field}[LANGUAGE_NONE][$key]);
+      }
+      // Delete field collection items.
+      entity_delete_multiple('field_collection_item', $field_collection_values);
+      $entity->save();
+    }
   }
-  if ($form_state['clicked_button']['#value'] === 'Update Content Language') {
+  elseif ($form_state['clicked_button']['#value'] === 'Update Content Language') {
     global $language;
     $result = array_shift($form_state['build_info']['args']);
     $types = $form_state['values']['aicapp_data']['migration_language_types'];
@@ -285,7 +334,7 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
         }
         $i++;
         $callback = 'aicapp_migrate_migrate_type_' . $type;
-        call_user_func_array($callback, array($nid, &$counts, $i, &$to_add));
+        call_user_func_array($callback, array($nid, &$counts, $i, &$to_add, 'update', $form_state['values']['aicapp_data']['migration_add_associations']));
       }
       $remaining = !empty($result['node']) ? count($result['node']) : 0;
       $type_message = array(
@@ -293,12 +342,10 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
         '@size' => $counts[$type],
         '@remain' => max(($total - $counts[$type]), 0),
       );
-      $message = '@size @type items have been migrated to use the new field format. @remain @type item(s) remain to migrate.';
       drupal_set_message(t(
-        $message,
+        '@size @type items have been migrated to use the new field format. @remain @type item(s) remain to migrate.',
         $type_message
       ));
-
     }
   }
 }
@@ -306,7 +353,7 @@ function aicapp_migrate_admin_migrate_submit($form, &$form_state) {
 /**
  * Helper function to migrate tour fields.
  */
-function aicapp_migrate_migrate_type_tour($nid, &$counts = array(), $mode = 'update') {
+function aicapp_migrate_migrate_type_tour($nid, &$counts = array(), $i = 0, &$to_add = array(), $mode = 'update', $create_object_audio = FALSE) {
   if (empty($counts)) {
     $counts[AICAPP_TYPE_TOUR] = 0;
   }
@@ -340,12 +387,12 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array(), $mode = 'upd
   $count_object = count($found['field_t_object']);
   $count_audio = count($found['field_t_audio']);
   $count_bumper = count($found['field_t_audio_bumper']);
-  if ($count_object > $count_audio) {
-
-  }
-  elseif ($count_object < $count_audio) {
-
-  }
+  // if ($count_object > $count_audio) {
+  //
+  // }
+  // elseif ($count_object < $count_audio) {
+  //
+  // }
   // Check if there are currently audio commentary items.
   if (!empty($node->field_tour_stops[LANGUAGE_NONE])) {
     foreach ($node->field_tour_stops[LANGUAGE_NONE] as $key => $value) {
@@ -357,7 +404,6 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array(), $mode = 'upd
     if ($mode === 'validate') {
       return TRUE;
     }
-
     // Before adding anything new, make sure these values are not already on
     // the node.
     $current_items = array();
@@ -369,7 +415,6 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array(), $mode = 'upd
     foreach ($found['field_t_object'] as $k => $object_id) {
       // If this object id exists in the current items, do not add it again.
       foreach ($current_items as $current_item) {
-
         $object_item = !empty($current_item->field_tour_stop_object[LANGUAGE_NONE])
                   ? $current_item->field_tour_stop_object[LANGUAGE_NONE][0]['target_id'] : NULL;
         if ($object_item === $object_id) {
@@ -383,16 +428,50 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array(), $mode = 'upd
         ),
       );
       if (isset($found['field_t_audio'][$k])) {
+        $audio_nid = $found['field_t_audio'][$k];
         $object_node = node_load($object_id);
-        $field_items = $object_node ? field_get_items('node', $object_node, 'field_audio_commentary') : array();
-        if (!empty($field_items[0])) {
-          $field_collection_entity = field_collection_field_get_entity($field_items[0]);
-          $audio_items = field_get_items('field_collection_item', $field_collection_entity, 'field_audio_commentary_audio');
-          if (!empty($audio_items[0]) && !empty($audio_items[0]['target_id']) && $audio_items[0]['target_id'] === $found['field_t_audio'][$k]) {
+        if (!is_object($object_node)) {
+          // This object doesn't exist, continue to next stop object.
+          $replacement = array(
+            '@tour' => $node->nid,
+            '@object' => $object_id,
+          );
+          drupal_set_message(t(
+            'There was a problem migrating tour stops for tour node ID: @tour. A stop contains an object node ID: @object, that does not exist.',
+            $replacement
+          ));
+          continue;
+        }
+        // Get all audio nids that are already associated with an object.
+        $object_audio_nids = aicapp_migrate_get_object_audio_nids($object_node);
+        $object_audio_found = array_key_exists($audio_nid, $object_audio_nids);
+        // Check if the audio node was found in the object field_audio_commentary.
+        if (!$object_audio_found && $create_object_audio) {
+          $object_node->skip_hooks_presave = TRUE;
+          $object_entity_wrapper = entity_metadata_wrapper('node', $object_node);
+          // The audio node for this tour stop was not associated with the
+          // object for this stop, so add it now.
+          // Create the collection entity and set it's "host".
+          $collection = entity_create('field_collection_item', array('field_name' => 'field_audio_commentary'));
+          $collection->setHostEntity('node', $object_node);
+          $collection_wrapper = entity_metadata_wrapper('field_collection_item', $collection);
+          $collection_wrapper->field_audio_commentary_audio->set($audio_nid);
+          $object_entity_wrapper->save();
+          // Get the last item added.
+          $all_items = $object_entity_wrapper->field_audio_commentary->value();
+          $last = count($all_items) ? end($all_items) : NULL;
+          if (isset($last->item_id)) {
             $item_values['field_tour_stop_audio_commentary'] = array(
-              'value' => $field_collection_entity->item_id,
+              'value' => $last->item_id,
             );
           }
+        }
+        elseif ($object_audio_found) {
+          // Audio NID was found as a key. The value of this key is the
+          // field collection id, which is what we need to add to the $items_values.
+          $item_values['field_tour_stop_audio_commentary'] = array(
+            'value' => $object_audio_nids[$audio_nid],
+          );
         }
       }
       if (isset($found['field_t_audio_bumper'][$k])) {
@@ -419,15 +498,33 @@ function aicapp_migrate_migrate_type_tour($nid, &$counts = array(), $mode = 'upd
 }
 
 /**
- * Helper function to migrate object fields.
+ * Helper function to get all the audio nids associated with an object
+ * via field_audio_commentary.
  */
-function aicapp_migrate_validate_type_tour($nid, &$counts = array()) {
-  $validate = aicapp_migrate_migrate_type_tour($nid, $counts, 'validate');
+function aicapp_migrate_get_object_audio_nids($object_node) {
+  $item_values = array();
+  if ($object_node && $field_items = field_get_items('node', $object_node, 'field_audio_commentary')) {
+    foreach ($field_items as $audio_commentary_item) {
+      $field_collection_entity = field_collection_field_get_entity($audio_commentary_item);
+      $audio_items = field_get_items('field_collection_item', $field_collection_entity, 'field_audio_commentary_audio');
+      if (empty($audio_items) || empty($audio_items[0]['target_id'])) {
+        continue;
+      }
+      $item_values[$audio_items[0]['target_id']] = $field_collection_entity->item_id;
+    }
+  }
+  return $item_values;
+}
+
+/**
+ * Helper function to migrate tour fields.
+ */
+function aicapp_migrate_validate_type_tour($nid, &$counts = array(), $i = 0, &$to_add = array()) {
+  $validate = aicapp_migrate_migrate_type_tour($nid, $counts, $i, $to_add, 'validate');
   if ($validate) {
     return TRUE;
   }
 }
-
 
 /**
  * Helper function to migrate object fields.
