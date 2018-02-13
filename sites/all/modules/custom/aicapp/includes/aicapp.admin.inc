@@ -14,7 +14,7 @@ function aicapp_admin_redirect() {
 /**
  * Admin setting form callback.
  */
-function aicapp_admin() {
+function aicapp_admin($form, &$form_state) {
   $form = array();
   $form['aicapp_gmap_key'] = array(
     '#type' => 'textfield',
@@ -52,191 +52,6 @@ function aicapp_admin() {
     '#size' => 200,
     '#maxlength' => 256,
     '#description' => t('Enter a file path for the current environment. When generating JSON this value is used in place of the actual path to the public files, and some examples are "sites/default/files", "sites/default_test/files", "sites/default_staging/files" etc.'),
-  );
-  $form['aicapp_ops'] = array(
-    '#type' => 'fieldset',
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-    '#title' => t('Operations'),
-    '#tree' => FALSE,
-  );
-  $form['aicapp_ops']['ops_galleries_sync'] = array(
-    '#type' => 'submit',
-    '#value' => t('Refresh Gallery List'),
-    '#prefix' => '<div>',
-    '#suffix' => t('Click this button to sync the list of galleries.') . '</div>',
-    '#submit' => array('aicapp_loadgalleries_form_submit'),
-  );
-  $form['aicapp_ops']['ops_json_generate'] = array(
-    '#type' => 'submit',
-    '#value' => t('Generate JSON'),
-    '#prefix' => '<div>',
-    '#suffix' => t('Click this button to generate and create the JSON file.') . '</div>',
-    '#submit' => array('aicapp_gendata_form_submit'),
-  );
-  $form['aicapp_ops']['ops_publish_json'] = array(
-    '#type' => 'submit',
-    '#value' => t('Publish JSON'),
-    '#prefix' => '<div>',
-    '#suffix' => t('Click this button to create a text file that triggers a cron job to sync JSON files with the front-end server.') . '</div>',
-    '#submit' => array('aicapp_file_sync_form_submit'),
-  );
-  $form['aicapp_ops']['ops_object_gallery_status'] = array(
-    '#type' => 'submit',
-    '#value' => t('Send Gallery Status Emails'),
-    '#prefix' => '<div>',
-    '#suffix' => t('Click this button to send email notifications about objects that are no longer on display or have moved locations.') . '</div>',
-    '#submit' => array('aicapp_objectGalleryStatus_submit'),
-  );
-  $form['aicapp_ops']['aicapp_data_aggregator']['import_exhibitions_submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Import Exhibitions'),
-    '#prefix' => '<h5>' . t('Exhibitions') . '</h5><div>',
-    '#suffix' => t('Click this button to create or update exhibitions from the data aggregator.') . '</div>',
-    '#submit' => array('aicapp_load_remote_exhibitions_form_submit'),
-  );
-  $suffix_message = t('Click this button to update all Object.');
-  $object_nids = variable_get('aic_update_object_nids', array());
-  if (empty($object_nids) || count($object_nids) < 50) {
-    // Load all objects, including unpublished, because we compare if objects
-    // previously not in a gallery (and unpublished) are now displayed.
-    $artwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
-    $object_nids += array_keys($artwork_objects);
-    variable_set('aic_update_object_nids', $object_nids);
-  }
-  else {
-    $suffix_message .= ' ' . format_plural(count($object_nids),
-      '1 Object needs to be updated.',
-      '@count Objects remaining.'
-    );
-  }
-  $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_all_objects'] = array(
-    '#type' => 'checkbox',
-    '#prefix' => '<h5>' . t('Artwork Object Images') . '</h5><div>',
-    '#title' => t('Update All Objects'),
-    '#default_value' => (variable_get('aicapp_data_update_all_objects', 1)) ?: 0,
-    '#description' => t('Whether or not to update all objects. Uncheck this if you would like to update only specific objects.'),
-  );
-  $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_ids'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Object IDs To Update'),
-    '#default_value' => variable_get('aicapp_data_update_ids', ''),
-    '#size' => 64,
-    '#maxlength' => 64,
-    '#description' => t('Enter 1 or more Object IDs to update.'),
-    '#states' => array(
-      'visible' => array(
-        ':input[name="aicapp_data_update_all_objects"]' => array(
-          array('checked' => FALSE),
-        ),
-      ),
-    ),
-  );
-  $object_update_options = array(
-    'image' => t('Image Fields Only'),
-    // @TODO Allow for a list of specific fields to update.
-    //'all' => t('All Fields'),
-    //'custom' => t('Enter a list of fields')
-  );
-  $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_objects_types'] = array(
-    '#type' => 'hidden',
-    '#value' => 'image',
-    // '#title' => t('Values To Update'),
-    // '#default_value' => variable_get('aicapp_data_update_objects_types', 'image'),
-    // '#description' => t('Select which fields to update.'),
-    // '#options' => $object_update_options,
-  );
-  // @TODO Allow for a list of specific fields to update.
-  // $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_objects_fields'] = array(
-  //   '#type' => 'textfield',
-  //   '#title' => t('Object Fields To Update'),
-  //   '#default_value' => variable_get('aicapp_data_update_objects_fields', ''),
-  //   '#size' => 64,
-  //   '#maxlength' => 64,
-  //   '#description' => t('Enter 1 or more Object field names to update.'),
-  //   '#states' => array(
-  //     'visible' => array(
-  //       ':input[name="aicapp_data_update_objects_types"]' => array(
-  //         array('value' => 'custom'),
-  //       ),
-  //     ),
-  //   ),
-  // );
-  $form['aicapp_ops']['aicapp_data_aggregator']['update_object_images'] = array(
-    '#type' => 'submit',
-    '#value' => t('Update Object Images'),
-    '#suffix' => $suffix_message . '</div>',
-    '#validate' => array('aicapp_update_object_validate'),
-    '#submit' => array('aicapp_update_object_submit'),
-  );
-  $form['aicapp_ops']['version_compare'] = array(
-    '#type' => 'fieldset',
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-    '#title' => t('JSON Version Compare'),
-  );
-  $compare_options = array(
-    'prod__v1' => 'Production v1',
-    'prod__v2' => 'Production v2',
-    'stage__v1' => 'Staging v1',
-    'stage__v2' => 'Staging v2',
-    'test__v1' => 'Testing v1',
-    'test__v2' => 'Testing v2',
-    'local__v1' => 'Local v1',
-    'local__v2' => 'Local v2',
-  );
-  $json_nodes = drupal_map_assoc(array(
-    'dashboard',
-    'general_info',
-    'galleries',
-    'objects',
-    'audio_files',
-    'tours',
-    'annontations',
-    'map_floors',
-    'tour_categories',
-  ));
-  $form['aicapp_ops']['version_compare']['aicapp_json_compare_base'] = array(
-    '#type' => 'select',
-    '#title' => t('Base JSON'),
-    '#default_value' => variable_get('aicapp_json_compare_base', array('prod__v1')),
-    '#options' => $compare_options,
-    '#description' => t('Select a JSON file to compare another to.'),
-  );
-  $form['aicapp_ops']['version_compare']['aicapp_json_compare_head'] = array(
-    '#type' => 'select',
-    '#title' => t('Comparison JSON'),
-    '#default_value' => variable_get('aicapp_json_compare_head', array('test__v1')),
-    '#options' => $compare_options,
-    '#description' => t('Select a JSON file.'),
-  );
-  $form['aicapp_ops']['version_compare']['aicapp_json_compare_node'] = array(
-    '#type' => 'select',
-    '#title' => t('JSON node/element to compare'),
-    '#default_value' => variable_get('aicapp_json_compare_node', array('tours')),
-    '#options' => $json_nodes,
-    '#description' => t('Select a JSON node to compare.'),
-  );
-  $form['aicapp_ops']['version_compare']['aicapp_json_compare_keys_only'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Only compare key values'),
-    '#default_value' => variable_get('aicapp_json_compare_keys_only', 1),
-    '#description' => t('If checked, only keys/properties (not values) will be compared. If unchecked, then the values will also be compared to determine difference.'),
-  );
-  $form['aicapp_ops']['version_compare']['aicapp_json_compare_key_name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Compare only this key/node.'),
-    '#default_value' => variable_get('aicapp_json_compare_key_name', ''),
-    '#size' => 64,
-    '#maxlength' => 64,
-    '#description' => t('Enter a key, node/property name to compare. All keys will be compared if this is empty.'),
-  );
-  $form['aicapp_ops']['version_compare']['aicapp_json_compare'] = array(
-    '#type' => 'submit',
-    '#value' => t('Compare JSON'),
-    '#prefix' => '<div>',
-    '#suffix' => t('Click this button to compare 2 JSON files.') . '</div>',
-    '#submit' => array('aicapp_json_compare_form_submit'),
   );
   $form['aicapp_images'] = array(
     '#type' => 'fieldset',
@@ -421,7 +236,7 @@ function aicapp_admin() {
 /**
  * Admin api form callback.
  */
-function aicapp_admin_api() {
+function aicapp_admin_api($form, &$form_state) {
   // Image API form set.
   $form['aicapp_image_api'] = array(
     '#type' => 'fieldset',
@@ -533,6 +348,200 @@ function aicapp_admin_api() {
   );
   return system_settings_form($form);
 }
+
+/**
+ * Admin setting form callback.
+ */
+function aicapp_admin_operations($form, &$form_state) {
+  $form['aicapp_ops'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#title' => t('Operations'),
+    '#tree' => FALSE,
+  );
+  $form['aicapp_ops']['ops_galleries_sync'] = array(
+    '#type' => 'submit',
+    '#value' => t('Refresh Gallery List'),
+    '#prefix' => '<div>',
+    '#suffix' => t('Click this button to sync the list of galleries.') . '</div>',
+    '#submit' => array('aicapp_loadgalleries_form_submit'),
+  );
+  $form['aicapp_ops']['ops_json_generate'] = array(
+    '#type' => 'submit',
+    '#value' => t('Generate JSON'),
+    '#prefix' => '<div>',
+    '#suffix' => t('Click this button to generate and create the JSON file.') . '</div>',
+    '#submit' => array('aicapp_gendata_form_submit'),
+  );
+  $form['aicapp_ops']['ops_publish_json'] = array(
+    '#type' => 'submit',
+    '#value' => t('Publish JSON'),
+    '#prefix' => '<div>',
+    '#suffix' => t('Click this button to create a text file that triggers a cron job to sync JSON files with the front-end server.') . '</div>',
+    '#submit' => array('aicapp_file_sync_form_submit'),
+  );
+  $form['aicapp_ops']['ops_object_gallery_status'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send Gallery Status Emails'),
+    '#prefix' => '<div>',
+    '#suffix' => t('Click this button to send email notifications about objects that are no longer on display or have moved locations.') . '</div>',
+    '#submit' => array('aicapp_objectGalleryStatus_submit'),
+  );
+  $form['aicapp_ops']['aicapp_data_aggregator']['import_exhibitions_submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Import Exhibitions'),
+    '#prefix' => '<h5>' . t('Exhibitions') . '</h5><div>',
+    '#suffix' => t('Click this button to create or update exhibitions from the data aggregator.') . '</div>',
+    '#submit' => array('aicapp_load_remote_exhibitions_form_submit'),
+  );
+  $suffix_message = t('Click this button to update all Object.');
+  $object_nids = variable_get('aic_update_object_nids', array());
+  if (empty($object_nids) || count($object_nids) < 50) {
+    // Load all objects, including unpublished, because we compare if objects
+    // previously not in a gallery (and unpublished) are now displayed.
+    $artwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
+    $object_nids += array_keys($artwork_objects);
+    variable_set('aic_update_object_nids', $object_nids);
+  }
+  else {
+    $suffix_message .= ' ' . format_plural(count($object_nids),
+      '1 Object needs to be updated.',
+      '@count Objects remaining.'
+    );
+  }
+  $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_all_objects'] = array(
+    '#type' => 'checkbox',
+    '#prefix' => '<h5>' . t('Artwork Object Images') . '</h5><div>',
+    '#title' => t('Update All Objects'),
+    '#default_value' => (variable_get('aicapp_data_update_all_objects', 1)) ?: 0,
+    '#description' => t('Whether or not to update all objects. Uncheck this if you would like to update only specific objects.'),
+  );
+  $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_ids'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Object IDs To Update'),
+    '#default_value' => variable_get('aicapp_data_update_ids', ''),
+    '#size' => 64,
+    '#maxlength' => 64,
+    '#description' => t('Enter 1 or more Object IDs to update.'),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="aicapp_data_update_all_objects"]' => array(
+          array('checked' => FALSE),
+        ),
+      ),
+    ),
+  );
+  $object_update_options = array(
+    'image' => t('Image Fields Only'),
+    // @TODO Allow for a list of specific fields to update.
+    //'all' => t('All Fields'),
+    //'custom' => t('Enter a list of fields')
+  );
+  $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_objects_types'] = array(
+    '#type' => 'hidden',
+    '#value' => 'image',
+    // '#title' => t('Values To Update'),
+    // '#default_value' => variable_get('aicapp_data_update_objects_types', 'image'),
+    // '#description' => t('Select which fields to update.'),
+    // '#options' => $object_update_options,
+  );
+  // @TODO Allow for a list of specific fields to update.
+  // $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_objects_fields'] = array(
+  //   '#type' => 'textfield',
+  //   '#title' => t('Object Fields To Update'),
+  //   '#default_value' => variable_get('aicapp_data_update_objects_fields', ''),
+  //   '#size' => 64,
+  //   '#maxlength' => 64,
+  //   '#description' => t('Enter 1 or more Object field names to update.'),
+  //   '#states' => array(
+  //     'visible' => array(
+  //       ':input[name="aicapp_data_update_objects_types"]' => array(
+  //         array('value' => 'custom'),
+  //       ),
+  //     ),
+  //   ),
+  // );
+  $form['aicapp_ops']['aicapp_data_aggregator']['update_object_images'] = array(
+    '#type' => 'submit',
+    '#value' => t('Update Object Images'),
+    '#suffix' => $suffix_message . '</div>',
+    '#validate' => array('aicapp_update_object_validate'),
+    '#submit' => array('aicapp_update_object_submit'),
+  );
+  $form['version_compare'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('JSON Version Compare'),
+    '#weight' => 99,
+  );
+  $compare_options = array(
+    'prod__v1' => 'Production v1',
+    'prod__v2' => 'Production v2',
+    'stage__v1' => 'Staging v1',
+    'stage__v2' => 'Staging v2',
+    'test__v1' => 'Testing v1',
+    'test__v2' => 'Testing v2',
+    'local__v1' => 'Local v1',
+    'local__v2' => 'Local v2',
+  );
+  $json_nodes = drupal_map_assoc(array(
+    'dashboard',
+    'general_info',
+    'galleries',
+    'objects',
+    'audio_files',
+    'tours',
+    'annontations',
+    'map_floors',
+    'tour_categories',
+  ));
+  $form['version_compare']['aicapp_json_compare_base'] = array(
+    '#type' => 'select',
+    '#title' => t('Base JSON'),
+    '#default_value' => variable_get('aicapp_json_compare_base', array('prod__v1')),
+    '#options' => $compare_options,
+    '#description' => t('Select a JSON file to compare another to.'),
+  );
+  $form['version_compare']['aicapp_json_compare_head'] = array(
+    '#type' => 'select',
+    '#title' => t('Comparison JSON'),
+    '#default_value' => variable_get('aicapp_json_compare_head', array('test__v1')),
+    '#options' => $compare_options,
+    '#description' => t('Select a JSON file.'),
+  );
+  $form['version_compare']['aicapp_json_compare_node'] = array(
+    '#type' => 'select',
+    '#title' => t('JSON node/element to compare'),
+    '#default_value' => variable_get('aicapp_json_compare_node', array('tours')),
+    '#options' => $json_nodes,
+    '#description' => t('Select a JSON node to compare.'),
+  );
+  $form['version_compare']['aicapp_json_compare_keys_only'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Only compare key values'),
+    '#default_value' => variable_get('aicapp_json_compare_keys_only', 1),
+    '#description' => t('If checked, only keys/properties (not values) will be compared. If unchecked, then the values will also be compared to determine difference.'),
+  );
+  $form['version_compare']['aicapp_json_compare_key_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Compare only this key/node.'),
+    '#default_value' => variable_get('aicapp_json_compare_key_name', ''),
+    '#size' => 64,
+    '#maxlength' => 64,
+    '#description' => t('Enter a key, node/property name to compare. All keys will be compared if this is empty.'),
+  );
+  $form['version_compare']['aicapp_json_compare'] = array(
+    '#type' => 'submit',
+    '#value' => t('Compare JSON'),
+    '#prefix' => '<div>',
+    '#suffix' => t('Click this button to compare 2 JSON files.') . '</div>',
+    '#submit' => array('aicapp_json_compare_form_submit'),
+  );
+  return $form;
+}
+
 
 /**
  * Admin setting validation callback.
@@ -1109,4 +1118,33 @@ function aicapp_array_diff_assoc_recursive($array1, $array2, $keys_only = FALSE,
     $sort($difference);
   }
   return $difference;
+}
+
+
+/**
+ * Helper function to find duplciate objects.
+ */
+function aicapp_find_duplicate_objects() {
+  $query = new EntityFieldQuery();
+  $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', AICAPP_TYPE_OBJECT, '=');
+  $result = $query->execute();
+  $sorted = array();
+  $duplicates = array();
+  foreach ($result['node'] as $nid => $item) {
+    $node = node_load($nid);
+    $entity = entity_metadata_wrapper('node', $node);
+    $object_id = $entity->field_object_id->value();
+    if (empty($object_id)) {
+      continue;
+    }
+    if (isset($sorted[$object_id])) {
+      $found_id = $sorted[$object_id];
+      $duplicates[$object_id][$found_id] = $found_id;
+      $duplicates[$object_id][$nid] = $nid;
+    }
+    $sorted[$object_id] = $nid;
+  }
+  return $duplicates;
 }

@@ -354,7 +354,6 @@ features[user_permission][] = toggle field translatability
 features[user_permission][] = translate any entity
 features[user_permission][] = translate interface
 features[user_permission][] = translate node entities
-features[user_permission][] = use PHP to import nodes
 features[user_permission][] = view own unpublished content
 features[user_permission][] = view revisions
 features[user_role][] = admin

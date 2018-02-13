@@ -764,15 +764,6 @@ function aic_mobile_cms_content_types_user_default_permissions() {
     'module' => 'entity_translation',
   );
 
-  // Exported permission: 'use PHP to import nodes'.
-  $permissions['use PHP to import nodes'] = array(
-    'name' => 'use PHP to import nodes',
-    'roles' => array(
-      'admin' => 'admin',
-    ),
-    'module' => 'node_export',
-  );
-
   // Exported permission: 'view own unpublished content'.
   $permissions['view own unpublished content'] = array(
     'name' => 'view own unpublished content',
