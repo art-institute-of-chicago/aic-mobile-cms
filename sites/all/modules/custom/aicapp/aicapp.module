@@ -43,6 +43,7 @@ function aicapp_init() {
   define('AICAPP_DATA_API_ENDPOINT_EVENTS', variable_get('aicapp_data_endpoint_events', '/api/v1/events'));
   define('AICAPP_DATA_API_ENDPOINT_TOURS', variable_get('aicapp_data_endpoint_tours', '/api/v1/tours'));
   define('AICAPP_DATA_API_ENDPOINT_AUTOCOMPLETE', variable_get('aicapp_data_endpoint_autocomplete', '/api/v1/autocomplete'));
+  define('AICAPP_DATA_API_ENDPOINT_MEMBERS', variable_get('aicapp_data_endpoint_members', '/api/v1/members')););
   define('AICAPP_JSON_FILENAME', variable_get('aicapp_json_filename', 'appData'));
   define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
   define('AICAPP_TOUR_VOCABULARY_NAME', variable_get('aicapp_tour_vocabular_name', 'categories'));
@@ -3189,5 +3190,6 @@ function _aic_app_get_data_endpoints() {
     'events_endpoint' => AICAPP_DATA_API_ENDPOINT_EVENTS,
     'autocomplete_endpoint' => AICAPP_DATA_API_ENDPOINT_AUTOCOMPLETE,
     'tours_endpoint' => AICAPP_DATA_API_ENDPOINT_TOURS,
+    'members_endpoint' => AICAPP_DATA_API_ENDPOINT_MEMBERS,
   );
 }
