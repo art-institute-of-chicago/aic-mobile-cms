@@ -1664,6 +1664,24 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['relationships']['field_audio_commentary_audio_target_id']['id'] = 'field_audio_commentary_audio_target_id';
   $handler->display->display_options['relationships']['field_audio_commentary_audio_target_id']['table'] = 'field_data_field_audio_commentary_audio';
   $handler->display->display_options['relationships']['field_audio_commentary_audio_target_id']['field'] = 'field_audio_commentary_audio_target_id';
+  /* Field: Content: Nid */
+  $handler->display->display_options['fields']['nid_1']['id'] = 'nid_1';
+  $handler->display->display_options['fields']['nid_1']['table'] = 'node';
+  $handler->display->display_options['fields']['nid_1']['field'] = 'nid';
+  $handler->display->display_options['fields']['nid_1']['relationship'] = 'field_audio_commentary_audio_target_id';
+  $handler->display->display_options['fields']['nid_1']['label'] = 'Audio Nid';
+  $handler->display->display_options['fields']['nid_1']['exclude'] = TRUE;
+  /* Field: Entity translation: Title: translated */
+  $handler->display->display_options['fields']['title_field_et']['id'] = 'title_field_et';
+  $handler->display->display_options['fields']['title_field_et']['table'] = 'field_data_title_field';
+  $handler->display->display_options['fields']['title_field_et']['field'] = 'title_field_et';
+  $handler->display->display_options['fields']['title_field_et']['relationship'] = 'field_audio_commentary_audio_target_id';
+  $handler->display->display_options['fields']['title_field_et']['label'] = '';
+  $handler->display->display_options['fields']['title_field_et']['alter']['alter_text'] = TRUE;
+  $handler->display->display_options['fields']['title_field_et']['alter']['text'] = '[title_field_et] (nid:[nid_1])';
+  $handler->display->display_options['fields']['title_field_et']['element_type'] = '0';
+  $handler->display->display_options['fields']['title_field_et']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['title_field_et']['element_default_classes'] = FALSE;
   /* Field: Field collection item: Field collection item ID */
   $handler->display->display_options['fields']['item_id']['id'] = 'item_id';
   $handler->display->display_options['fields']['item_id']['table'] = 'field_collection_item';
@@ -1683,6 +1701,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['field_object_id']['field'] = 'field_object_id';
   $handler->display->display_options['fields']['field_object_id']['relationship'] = 'field_audio_commentary_node';
   $handler->display->display_options['fields']['field_object_id']['label'] = '';
+  $handler->display->display_options['fields']['field_object_id']['exclude'] = TRUE;
   $handler->display->display_options['fields']['field_object_id']['element_type'] = '0';
   $handler->display->display_options['fields']['field_object_id']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['field_object_id']['element_default_classes'] = FALSE;
@@ -1696,31 +1715,18 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['title']['field'] = 'title';
   $handler->display->display_options['fields']['title']['relationship'] = 'field_audio_commentary_node';
   $handler->display->display_options['fields']['title']['label'] = '';
+  $handler->display->display_options['fields']['title']['alter']['alter_text'] = TRUE;
+  $handler->display->display_options['fields']['title']['alter']['text'] = '[title]  (nid:[nid])';
   $handler->display->display_options['fields']['title']['element_type'] = '0';
   $handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['title']['element_default_classes'] = FALSE;
   $handler->display->display_options['fields']['title']['link_to_node'] = FALSE;
-  /* Field: Content: Nid */
-  $handler->display->display_options['fields']['nid_1']['id'] = 'nid_1';
-  $handler->display->display_options['fields']['nid_1']['table'] = 'node';
-  $handler->display->display_options['fields']['nid_1']['field'] = 'nid';
-  $handler->display->display_options['fields']['nid_1']['relationship'] = 'field_audio_commentary_audio_target_id';
-  $handler->display->display_options['fields']['nid_1']['exclude'] = TRUE;
   /* Field: Content: Type */
   $handler->display->display_options['fields']['type']['id'] = 'type';
   $handler->display->display_options['fields']['type']['table'] = 'node';
   $handler->display->display_options['fields']['type']['field'] = 'type';
   $handler->display->display_options['fields']['type']['relationship'] = 'field_audio_commentary_audio_target_id';
   $handler->display->display_options['fields']['type']['exclude'] = TRUE;
-  /* Field: Entity translation: Title: translated */
-  $handler->display->display_options['fields']['title_field_et']['id'] = 'title_field_et';
-  $handler->display->display_options['fields']['title_field_et']['table'] = 'field_data_title_field';
-  $handler->display->display_options['fields']['title_field_et']['field'] = 'title_field_et';
-  $handler->display->display_options['fields']['title_field_et']['relationship'] = 'field_audio_commentary_audio_target_id';
-  $handler->display->display_options['fields']['title_field_et']['label'] = '';
-  $handler->display->display_options['fields']['title_field_et']['element_type'] = '0';
-  $handler->display->display_options['fields']['title_field_et']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['title_field_et']['element_default_classes'] = FALSE;
   /* Field: Entity translation: Track Title: translated */
   $handler->display->display_options['fields']['field_track_title_et']['id'] = 'field_track_title_et';
   $handler->display->display_options['fields']['field_track_title_et']['table'] = 'field_data_field_track_title';
@@ -1862,10 +1868,12 @@ function aic_mobile_cms_content_types_views_default_views() {
     t('last »'),
     t('field_audio_commentary'),
     t('Content entity referenced from field_audio_commentary_audio'),
+    t('Audio Nid'),
+    t('[title_field_et] (nid:[nid_1])'),
     t('Field collection item ID'),
     t('.'),
     t(','),
-    t('Nid'),
+    t('[title]  (nid:[nid])'),
     t('Type'),
     t('All'),
     t('Entity Reference'),

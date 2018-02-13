@@ -136,16 +136,17 @@ function aicapp_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => -10,
   );
-  $items['admin/config/system/aic/migrations'] = array(
-    'title' => 'Content Migration',
-    'description' => 'Tools to migrate content types and from v1 format to v2 format.',
+  $items['admin/config/system/aic/operations'] = array(
+    'title' => 'AIC Operations',
+    'description' => 'Utilities to run common operations.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('aicapp_admin_migrate'),
+    'page arguments' => array('aicapp_admin_operations'),
     'access callback' => 'user_access',
     'access arguments' => array('administer aic api settings'),
     'file' => 'aicapp.admin.inc',
     'file path' => drupal_get_path('module', 'aicapp') . '/includes',
     'type' => MENU_LOCAL_TASK,
+    'weight' => -5,
   );
 
   return $items;
@@ -3156,6 +3157,22 @@ function aicapp_date_format_types() {
   $types = array();
   $types['aicapp_date_type'] = t('Short Date, 12 Hour Time');
   return $types;
+}
+
+/**
+ * Implements hook_query_TAG_alter()
+ */
+function aicapp_query_tour_stops_missing_alter(QueryAlterableInterface $query) {
+  $query->leftJoin('field_data_field_tour_stops', 'o', 'node.nid = o.entity_id');
+  $query->isNull('o.field_tour_stops_value');
+}
+
+/**
+ * Implements hook_query_TAG_alter()
+ */
+function aicapp_query_object_audio_missing_alter(QueryAlterableInterface $query) {
+  $query->leftJoin('field_data_field_audio_commentary', 'o', 'node.nid = o.entity_id');
+  $query->isNull('o.field_audio_commentary_value');
 }
 
 /**

@@ -10,11 +10,69 @@
  *
  * Delete {system} records for modules that are no longer in the file system.
  */
-function aicapp_update_7201() {
-  db_delete('system')
-    ->condition('name', 'wcreek')
-    ->execute();
+function aicapp_update_7000() {
+  // Remove wcreek module from system table.
+  // db_delete('system')
+  //   ->condition('filename', 'profiles/wcreek/wcreek.profile')
+  //   ->execute();
+  // Remove aibatch module from system table.
   db_delete('system')
     ->condition('name', 'aibatch')
     ->execute();
+  return t('The unused modules were removed from the system table.');
+}
+
+/**
+ * Implements hook_update_N.
+ *
+ * Update the language to site default for Audio and Tour nodes.
+ */
+function aicapp_update_7001() {
+  aicapp_init();
+  // Update the following node types language.
+  $types = array(
+    AICAPP_TYPE_AUDIO,
+    AICAPP_TYPE_TOUR,
+  );
+  module_load_include('inc', 'aicapp', 'includes/aicapp.update');
+  if (!aicapp_update_content_language($types)) {
+    throw new DrupalUpdateException('Something went wrong when updating content languages. You can enable the AIC Content Migration module to migrate content language.');
+  }
+  return t('Audio and Tour items were updated to the default language.');
+}
+
+/**
+ * Implements hook_update_N.
+ *
+ * Update the field values to new format for Object Audio Commentary values.
+ */
+function aicapp_update_7002() {
+  aicapp_init();
+  // Update the following node types language.
+  $types = array(
+    AICAPP_TYPE_OBJECT,
+  );
+  module_load_include('inc', 'aicapp', 'includes/aicapp.update');
+  if (!aicapp_update_content_fields($types)) {
+    throw new DrupalUpdateException('Something went wrong when updating Object audio commentary values. You can enable the AIC Content Migration module to migrate audio commentary values.');
+  }
+  return t('Object field values were updated to the new format.');
+}
+
+/**
+ * Implements hook_update_N.
+ *
+ * Update the field values to new format for Tour Stop values.
+ */
+function aicapp_update_7003() {
+  aicapp_init();
+  // Update the following node types language.
+  module_load_include('inc', 'aicapp', 'includes/aicapp.update');
+  $types = array(
+    AICAPP_TYPE_TOUR,
+  );
+  if (!aicapp_update_content_fields($types)) {
+    throw new DrupalUpdateException('Something went wrong when updating Tour stop values. You can enable the AIC Content Migration module to migrate tour stop values.');
+  }
+  return t('Tour stop values were updated to the new format.');
 }
