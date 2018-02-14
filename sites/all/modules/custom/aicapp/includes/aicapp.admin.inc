@@ -810,7 +810,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $remote_type = AICA
     foreach ($results['data'] as $remote_record) {
       if ($type === AICAPP_TYPE_EXHIBITION) {
         // Skip any that are closed?
-        if ($now > new DateTime($remote_record['aic_end_at'])) {
+        if ($now > new DateTime($remote_record['end_at'])) {
           # Now is greater than end time, i.e. in the past.
           continue;
         }
@@ -829,7 +829,7 @@ function aicapp_load_remote_form_submit($form, &$form_state, $remote_type = AICA
           if (isset($decoded_loop['data'])) {
             foreach ($decoded_loop['data'] as $remote_record) {
               if ($type === AICAPP_TYPE_EXHIBITION) {
-                if ($now > new DateTime($remote_record['aic_end_at'])) {
+                if ($now > new DateTime($remote_record['end_at'])) {
                   # Now is greater than end time, i.e. in the past.
                   continue;
                 }
