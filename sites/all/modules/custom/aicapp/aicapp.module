@@ -2432,9 +2432,11 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
       foreach ($results['data'] as $doc) {
         $collect[] = aicapp_field_markup('object_id', $doc['id']);
         $collect[] = aicapp_field_markup('title', $doc['title']);
-        if (!empty($doc['main_reference_number'])) {
-          $collect[] = aicapp_field_markup('main_reference_number', $doc['main_reference_number']);
+        if (empty($doc['main_reference_number'])) {
+          // Get this value from the data aggregator.
+          $doc['main_reference_number'] = _aicapp_get_reference_id(NULL, $doc['id']);
         }
+        $collect[] = aicapp_field_markup('main_reference_number', $doc['main_reference_number']);
         $collect[] = '<a class="button small" href="' . $base_path . 'objects/object_add/' . $doc['id'] . '">Add or Update Object</a>';
       }
     }
@@ -2687,6 +2689,57 @@ function _aicapp_get_image_id($object) {
     }
   }
   return isset($image_ids[$object_id]) ? $image_ids[$object_id] : NULL;
+}
+
+/**
+ * Return a object reference id from the data hub, given a object node.
+ */
+function _aicapp_get_reference_id($object, $object_id = NULL) {
+  $reference_ids = &drupal_static(__FUNCTION__);
+  if (empty($object) && !empty($object_id)) {
+    // Check for nid by data hub object_id.
+    $qres = db_query("SELECT entity_id
+                 FROM {field_data_field_object_id}
+                 WHERE field_object_id_value = :id",
+        array(':id' => $object_id)
+    );
+    $record = $qres->fetchObject();
+    if (!empty($record->entity_id)) {
+      // We have an existing node, so load its data.
+      $object = node_load($record->entity_id);
+    }
+  }
+  if (is_object($object) && !empty($object->nid)) {
+    $entity = entity_metadata_wrapper('node', $object);
+    $reference_num = $entity->field_reference_num->value();
+    $object_id = $entity->field_object_id->value();
+    $reference_ids = array($object_id => $reference_num);
+  }
+  if (empty($reference_num) && empty($object_id)) {
+    return;
+  }
+  elseif (!empty($reference_ids[$object_id])) {
+    if ($update) {
+      // @TODO
+    }
+    return $reference_ids[$object_id];
+  }
+  $options = array(
+    'fields' => 'id,main_reference_number',
+    'ids' => $object_id,
+  );
+  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  // Query the data aggregrator.
+  $results = _aicapp_fetch_data($url, $options);
+  if (empty($results)) {
+    return;
+  }
+  foreach ($results as $key => $values) {
+    if (!empty($values['main_reference_number'])) {
+      $reference_ids[$values['id']] = $values['main_reference_number'];
+    }
+  }
+  return isset($reference_ids[$object_id]) ? $reference_ids[$object_id] : NULL;
 }
 
 /**

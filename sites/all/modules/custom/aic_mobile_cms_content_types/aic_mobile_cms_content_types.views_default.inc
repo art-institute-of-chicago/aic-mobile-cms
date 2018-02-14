@@ -1678,7 +1678,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['title_field_et']['relationship'] = 'field_audio_commentary_audio_target_id';
   $handler->display->display_options['fields']['title_field_et']['label'] = '';
   $handler->display->display_options['fields']['title_field_et']['alter']['alter_text'] = TRUE;
-  $handler->display->display_options['fields']['title_field_et']['alter']['text'] = '[title_field_et] (nid:[nid_1])';
+  $handler->display->display_options['fields']['title_field_et']['alter']['text'] = '[title_field_et] (Audio nid:[nid_1])';
   $handler->display->display_options['fields']['title_field_et']['element_type'] = '0';
   $handler->display->display_options['fields']['title_field_et']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['title_field_et']['element_default_classes'] = FALSE;
@@ -1716,7 +1716,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['title']['relationship'] = 'field_audio_commentary_node';
   $handler->display->display_options['fields']['title']['label'] = '';
   $handler->display->display_options['fields']['title']['alter']['alter_text'] = TRUE;
-  $handler->display->display_options['fields']['title']['alter']['text'] = '[title]  (nid:[nid])';
+  $handler->display->display_options['fields']['title']['alter']['text'] = '[title]  (Object nid:[nid])';
   $handler->display->display_options['fields']['title']['element_type'] = '0';
   $handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['title']['element_default_classes'] = FALSE;
@@ -1869,11 +1869,11 @@ function aic_mobile_cms_content_types_views_default_views() {
     t('field_audio_commentary'),
     t('Content entity referenced from field_audio_commentary_audio'),
     t('Audio Nid'),
-    t('[title_field_et] (nid:[nid_1])'),
+    t('[title_field_et] (Audio nid:[nid_1])'),
     t('Field collection item ID'),
     t('.'),
     t(','),
-    t('[title]  (nid:[nid])'),
+    t('[title]  (Object nid:[nid])'),
     t('Type'),
     t('All'),
     t('Entity Reference'),
