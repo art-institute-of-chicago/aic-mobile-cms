@@ -776,22 +776,22 @@ function aicapp_load_remote_form_submit($form, &$form_state, $remote_type = AICA
       $options['query'] = json_encode(array(
         '_source' => true,
         'sort' => array(
-          'aic_start_at',
-          'aic_end_at'
+          'start_at',
+          'end_at',
         ),
         'query' => array(
           'bool' => array(
             'must' => array(
               array(
                 'range' => array(
-                  'aic_start_at' => array(
+                  'start_at' => array(
                     'lte' => 'now+2w',
                   )
                 ),
               ),
               array(
                 'range' => array(
-                  'aic_end_at' => array(
+                  'end_at' => array(
                     'gte' => 'now',
                   )
                 ),
@@ -935,8 +935,8 @@ function _aicapp_save_remote_entity(&$to_import, $type, $entity_wrapper = NULL) 
   $entity_wrapper->field_imported_object->set(json_encode($to_import));
   // Start and end dates.
   if ($type === AICAPP_TYPE_EXHIBITION) {
-    $start = new DateTime($to_import['aic_start_at']);
-    $end = new DateTime($to_import['aic_end_at']);
+    $start = new DateTime($to_import['start_at']);
+    $end = new DateTime($to_import['end_at']);
   }
   $tz = $start->getTimezone();
   $date_values['value'] = $start->getTimestamp();
