@@ -747,7 +747,7 @@ function aicapp_load_remote_exhibitions_form_submit($form, &$form_state, $start 
 /**
  * Save remote objects to nodes.
  */
-function aicapp_load_remote_form_submit($form, &$form_state, $remote_type = AICAPP_TYPE_EXHIBITION, $start = 0, $limit_count = 50) {
+function aicapp_load_remote_form_submit($form = array(), &$form_state = array(), $remote_type = AICAPP_TYPE_EXHIBITION, $start = 0, $limit_count = 50) {
   $now = new DateTime();
   $remote_objects = array();
   $max_page = 10;
