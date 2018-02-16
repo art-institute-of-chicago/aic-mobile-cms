@@ -100,6 +100,7 @@ function aicapp_update_7004() {
  * Update Object Image URL fields.
  */
 function aicapp_update_7005() {
+  aicapp_init();
   module_load_include('inc', 'aicapp', 'includes/aicapp.admin');
   try {
     aicapp_update_object_image_data();
@@ -118,6 +119,7 @@ function aicapp_update_7005() {
  * Import Exhibitions.
  */
 function aicapp_update_7006() {
+  aicapp_init();
   module_load_include('inc', 'aicapp', 'includes/aicapp.admin');
   try {
     aicapp_load_remote_form_submit();
@@ -135,6 +137,7 @@ function aicapp_update_7006() {
  * Refresh gallery data from Data Aggregator..
  */
 function aicapp_update_7007() {
+  aicapp_init();
   $form = $form_state = array();
   try {
     aicapp_loadgalleries_form_submit($form, $form_state);
@@ -153,6 +156,7 @@ function aicapp_update_7007() {
  * Regenerate JSON and trigger publishing.
  */
 function aicapp_update_7008() {
+  aicapp_init();
   $form = $form_state = array();
   try {
     aicapp_gendata_form_submit($fm, $fm2);
