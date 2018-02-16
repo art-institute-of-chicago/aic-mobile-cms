@@ -2049,7 +2049,7 @@ function aicapp_loadgalleries_form_submit($form, &$form_state) {
         node_delete($node->nid);
       }
     }
-    drupal_set_message(t("Data has been loaded!"), 'status');
+    drupal_set_message(t("Gallery data has been loaded!"), 'status');
   }
   catch (Exception $e) {
     drupal_set_message(t("An error occurred: " . $e), 'error');

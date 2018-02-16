@@ -76,3 +76,91 @@ function aicapp_update_7003() {
   }
   return t('Tour stop values were updated to the new format.');
 }
+
+/**
+ * Implements hook_update_N.
+ *
+ * Enable page info block to show on all node pages.
+ */
+function aicapp_update_7004() {
+  // Update the block table to show page_info block only on node/* paths.
+  db_update('block')
+    ->fields(array(
+       'pages' => 'node/*',
+    ))
+    ->condition('module', 'aicapp')
+    ->condition('delta', 'page_info')
+    ->execute();
+  return t('The page info block as set to show only on node pages.');
+}
+
+/**
+ * Implements hook_update_N.
+ *
+ * Update Object Image URL fields.
+ */
+function aicapp_update_7005() {
+  module_load_include('inc', 'aicapp', 'includes/aicapp.admin');
+  try {
+    aicapp_update_object_image_data();
+  }
+  catch (Exception $e) {
+    drupal_set_message('There was a problem updating image URL fields.', 'warning');
+    return FALSE;
+  }
+  return t('Artwork object image URL fields have been updated.');
+}
+
+
+/**
+ * Implements hook_update_N.
+ *
+ * Import Exhibitions.
+ */
+function aicapp_update_7006() {
+  module_load_include('inc', 'aicapp', 'includes/aicapp.admin');
+  try {
+    aicapp_load_remote_form_submit();
+  }
+  catch (Exception $e) {
+    drupal_set_message('There was a problem importing exhibitions.', 'warning');
+    return FALSE;
+  }
+  return t('Exhibitions have been imported.');
+}
+
+/**
+ * Implements hook_update_N.
+ *
+ * Refresh gallery data from Data Aggregator..
+ */
+function aicapp_update_7007() {
+  $form = $form_state = array();
+  try {
+    aicapp_loadgalleries_form_submit($form, $form_state);
+  }
+  catch (Exception $e) {
+    drupal_set_message('There was a problem loading gallery data.', 'warning');
+    return FALSE;
+  }
+  return t('Gallery data loaded.');
+}
+
+
+/**
+ * Implements hook_update_N.
+ *
+ * Regenerate JSON and trigger publishing.
+ */
+function aicapp_update_7008() {
+  $form = $form_state = array();
+  try {
+    aicapp_gendata_form_submit($fm, $fm2);
+    aicapp_file_sync_form_submit();
+  }
+  catch (Exception $e) {
+    drupal_set_message('There was a problem re-generating the JSON file.', 'warning');
+    return FALSE;
+  }
+  return t('JSON files have been re-generated and published.');
+}
