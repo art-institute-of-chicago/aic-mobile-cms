@@ -130,21 +130,3 @@ function aicapp_update_7006() {
   }
   return t('Exhibitions have been imported.');
 }
-
-/**
- * Implements hook_update_N.
- *
- * Refresh gallery data from Data Aggregator..
- */
-function aicapp_update_7007() {
-  aicapp_init();
-  $form = $form_state = array();
-  try {
-    aicapp_loadgalleries_form_submit($form, $form_state);
-  }
-  catch (Exception $e) {
-    drupal_set_message('There was a problem loading gallery data.', 'warning');
-    return FALSE;
-  }
-  return t('Gallery data loaded.');
-}
