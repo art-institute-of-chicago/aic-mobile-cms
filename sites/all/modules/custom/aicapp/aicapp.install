@@ -148,23 +148,3 @@ function aicapp_update_7007() {
   }
   return t('Gallery data loaded.');
 }
-
-
-/**
- * Implements hook_update_N.
- *
- * Regenerate JSON and trigger publishing.
- */
-function aicapp_update_7008() {
-  aicapp_init();
-  $form = $form_state = array();
-  try {
-    aicapp_gendata_form_submit($fm, $fm2);
-    aicapp_file_sync_form_submit();
-  }
-  catch (Exception $e) {
-    drupal_set_message('There was a problem re-generating the JSON file.', 'warning');
-    return FALSE;
-  }
-  return t('JSON files have been re-generated and published.');
-}
