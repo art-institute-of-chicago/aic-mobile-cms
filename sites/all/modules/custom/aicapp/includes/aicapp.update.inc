@@ -21,7 +21,8 @@ function aicapp_update_content_language($types) {
  * Update the fields of node values from on set of fields to another.
  *
  */
-function aicapp_update_content_fields($types) {
+ , $type, $batch_size, $add_associations
+function aicapp_update_content_fields($types, $add_associations = 0) {
   $migration_attempted = $migration_success = 0;
   foreach ($types as $type) {
     if ($migration_attempted !== $migration_success) {
@@ -30,7 +31,7 @@ function aicapp_update_content_fields($types) {
     $migration_attempted++;
     $nodes = _aic_get_nodes_without_v2_field_values($type);
 
-    if (!empty($nodes['node']) && aicapp_update_v2_field_values($nodes, $type, count($nodes['node']))) {
+    if (!empty($nodes['node']) && aicapp_update_v2_field_values($nodes, $type, count($nodes['node'], $add_associations))) {
       $migration_success++;
     }
     elseif (empty($nodes)) {

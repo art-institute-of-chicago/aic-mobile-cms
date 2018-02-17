@@ -71,7 +71,7 @@ function aicapp_update_7003() {
   $types = array(
     AICAPP_TYPE_TOUR,
   );
-  if (!aicapp_update_content_fields($types)) {
+  if (!aicapp_update_content_fields($types, 1)) {
     throw new DrupalUpdateException('Something went wrong when updating Tour stop values. You can enable the AIC Content Migration module to migrate tour stop values.');
   }
   return t('Tour stop values were updated to the new format.');
@@ -103,7 +103,10 @@ function aicapp_update_7005() {
   aicapp_init();
   module_load_include('inc', 'aicapp', 'includes/aicapp.admin');
   try {
-    aicapp_update_object_image_data();
+    $artwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
+    $object_nids = array_keys($artwork_objects);
+    variable_set('aic_update_object_nids', $object_nids);
+    aicapp_update_object_image_data($object_nids, 200);
   }
   catch (Exception $e) {
     drupal_set_message('There was a problem updating image URL fields.', 'warning');
@@ -111,7 +114,6 @@ function aicapp_update_7005() {
   }
   return t('Artwork object image URL fields have been updated.');
 }
-
 
 /**
  * Implements hook_update_N.
