@@ -21,7 +21,6 @@ function aicapp_update_content_language($types) {
  * Update the fields of node values from on set of fields to another.
  *
  */
- , $type, $batch_size, $add_associations
 function aicapp_update_content_fields($types, $add_associations = 0) {
   $migration_attempted = $migration_success = 0;
   foreach ($types as $type) {
