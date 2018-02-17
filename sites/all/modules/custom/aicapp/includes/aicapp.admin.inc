@@ -607,7 +607,7 @@ function aicapp_json_compare_form_submit($form, &$form_state) {
         $filename .= '/sites/default/files';
         break;
 
-      case 'stage':
+      case 'staging':
         $filename .= '/sites/default_' . $options[0] . '/files';
         break;
 
