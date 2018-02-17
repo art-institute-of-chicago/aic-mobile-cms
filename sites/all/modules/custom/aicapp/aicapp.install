@@ -112,7 +112,15 @@ function aicapp_update_7005() {
     drupal_set_message('There was a problem updating image URL fields.', 'warning');
     return FALSE;
   }
-  return t('Artwork object image URL fields have been updated.');
+  $link = array(
+    '!link' => l(t('AIC Operation page'), 'admin/config/system/aic/operations')
+  );
+  $notice = t('The remaining object image fields should be updated at the !link', $link);
+  $message = format_plural((count($object_nids) - 150),
+    '1 object image URL field has been updated. ' . $notice,
+    '@count object image URL fields have been updated. ' . $notice
+  );
+  return $message;
 }
 
 /**
