@@ -486,8 +486,8 @@ function aicapp_admin_operations($form, &$form_state) {
   $compare_options = array(
     'prod__v1' => 'Production v1',
     'prod__v2' => 'Production v2',
-    'stage__v1' => 'Staging v1',
-    'stage__v2' => 'Staging v2',
+    'staging__v1' => 'Staging v1',
+    'staging__v2' => 'Staging v2',
     'test__v1' => 'Testing v1',
     'test__v2' => 'Testing v2',
     'local__v1' => 'Local v1',
