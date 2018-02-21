@@ -36,7 +36,7 @@ function aicapp_import_batch(&$form, &$form_state) {
     '#type' => 'submit',
     '#value' => 'Upload & Import',
     '#validate' => array('aicapp_import_batch_validate'),
-    '#submit' => array('aicapp_import_download_submit'),
+    '#submit' => array('aicapp_import_batch_submit'),
   );
   $form['import_data']['aicapp_import_ops'] = array(
     '#type' => 'fieldset',
