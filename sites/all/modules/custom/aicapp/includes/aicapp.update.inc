@@ -327,7 +327,6 @@ function aicapp_update_v2_field_values($result, $type, $batch_size = 50, $add_as
       $add_associations,
     );
     if (!call_user_func_array($callback, $params)) {
-      dsm($params);
       return FALSE;
     }
   }
@@ -599,7 +598,7 @@ function aicapp_update_migrate_type_object($nid, &$counts = array(), $i = 0, &$t
     'field_object_audio' => NULL,
   );
   // Check for field_object_selector_numbers, field_object_selector_number, and field_object_audio
-  if (!empty($entity_wrapper->field_object_selector_numbers[LANGUAGE_NONE])) {
+  if (!empty($node->field_object_selector_numbers[LANGUAGE_NONE])) {
     $found['field_object_selector_numbers'] = $node->field_object_selector_numbers[LANGUAGE_NONE];
   }
   if (!empty($node->field_object_selector_number[LANGUAGE_NONE])) {
@@ -651,11 +650,11 @@ function aicapp_update_migrate_type_object($nid, &$counts = array(), $i = 0, &$t
   }
   // More than one field_object_selector_numbers found.
   elseif ($count_multi > 1) {
-    foreach ($found['field_object_selector_numbers'][LANGUAGE_NONE] as $k => $v) {
+    foreach ($found['field_object_selector_numbers'] as $k => $v) {
       $to_add[$i]['selector'][] = $found['field_object_selector_numbers'][$k]['value'];
     }
     if ($count_audio) {
-      foreach ($found['field_object_audio'][LANGUAGE_NONE] as $k => $v) {
+      foreach ($found['field_object_audio'] as $k => $v) {
         $to_add[$i]['audio'][] = $found['field_object_audio'][$k]['nid'];
       }
     }
