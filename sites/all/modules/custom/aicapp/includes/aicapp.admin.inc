@@ -949,8 +949,6 @@ function _aicapp_save_remote_entity(&$to_import, $type, $entity_wrapper = NULL) 
   $entity_wrapper->title->set($title);
   // Object ID.
   $entity_wrapper->field_imported_object_id->set($to_import['id']);
-  // Object JSON.
-  $entity_wrapper->field_imported_object->set(json_encode($to_import));
   // Start and end dates.
   if ($type === AICAPP_TYPE_EXHIBITION) {
     $start = new DateTime($to_import['start_at']);
