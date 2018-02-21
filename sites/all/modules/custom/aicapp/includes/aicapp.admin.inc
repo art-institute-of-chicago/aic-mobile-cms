@@ -751,11 +751,11 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
   $now = new DateTime();
   $remote_objects = array();
   $max_page = 10;
-  $page = 'page=';
   // Define what we're going to import.
   $defaults = array(
     AICAPP_TYPE_EXHIBITION => array(
       'endpoint' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION . '/search',
+      'endpoint_details' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION,
       'remote' => array(),
     ),
   );
@@ -773,8 +773,12 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
     $page_start = 2;
     $url = $remote['endpoint'];
     if ($type === AICAPP_TYPE_EXHIBITION) {
+
       $options['query'] = json_encode(array(
         '_source' => true,
+        'fields' => array(
+          'id', 'title', 'start_at', 'end_at',
+        ),
         'sort' => array(
           'start_at',
           'end_at',
@@ -797,10 +801,16 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
                 ),
               ),
             ),
+            'must_not' => array(
+              'term' => array(
+                'status' => 'Closed'
+              ),
+            ),
           )
         )
       ));
     }
+    $count = 0;
     // Query the data aggregrator.
     $results = _aicapp_fetch_data($url, $options, TRUE);
     if (empty($results['data'])) {
@@ -810,16 +820,6 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
       if (empty($remote_record['id'])) {
         continue;
       }
-      $options = array(
-        'ids' => $remote_record['id'],
-      );
-      $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION;
-      // Query the data aggregrator.
-      $details = _aicapp_fetch_data($url, $options);
-      if (empty($details) && isset($details[0])) {
-        continue;
-      }
-      $remote_record = $details[0];
       if ($type === AICAPP_TYPE_EXHIBITION) {
         // Skip any that are closed?
         if (empty($remote_record['end_at']) || $now > new DateTime($remote_record['end_at'])) {
@@ -829,45 +829,33 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
       }
       $remote['remote'][$remote_record['id']] = $remote_record;
     }
-
     // Now loop though up to $max_page adding records that are active and
     // having an end date in the past.
-    if (isset($results['pagination']) && isset($results['pagination']['next_url'])) {
-      $loop_url = $results['pagination']['next_url'];
+    if (isset($results['pagination']) && $results['pagination']['total_pages'] > $results['pagination']['current_page']) {
+      // Only make up to $max_page number of requests.
       while ($page_start <= $max_page) {
-        $loop_json = file_get_contents($loop_url);
-        if ($loop_json) {
-          $decoded_loop = json_decode($loop_json, TRUE);
-          if (isset($decoded_loop['data'])) {
-            foreach ($decoded_loop['data'] as $remote_record) {
-              if (empty($remote_record['id'])) {
-                continue;
-              }
-              $options = array(
-                'ids' => $remote_record['id'],
-              );
-              $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION;
-              // Query the data aggregrator.
-              $details = _aicapp_fetch_data($url, $options);
-              if (empty($details) && isset($details[0])) {
-                continue;
-              }
-              $remote_record = $details[0];
-              if ($type === AICAPP_TYPE_EXHIBITION) {
-                if ($now > new DateTime($remote_record['end_at'])) {
-                  # Now is greater than end time, i.e. in the past.
-                  continue;
-                }
-              }
-              $remote['remote'][$remote_record['id']] = $remote_record;
+        $options['from'] = $options['from'] + $options['size'];
+        $loop_json = _aicapp_fetch_data($remote['endpoint'], $options, TRUE);
+        if (empty($loop_json['data']) || isset($loop_json['pagination']) && $loop_json['pagination']['total_pages'] < $loop_json['pagination']['current_page']) {
+          break;
+        }
+        else {
+          $page_start++;
+        }
+        foreach ($loop_json['data'] as $remote_record) {
+          if (empty($remote_record['id'])) {
+            continue;
+          }
+          if ($type === AICAPP_TYPE_EXHIBITION) {
+            if ($now > new DateTime($remote_record['end_at'])) {
+              # Now is greater than end time, i.e. in the past.
+              continue;
             }
           }
-          $loop_url = isset($decoded_loop['pagination']) ? $decoded_loop['pagination']['next_url'] : NULL;
+          $remote['remote'][$remote_record['id']] = $remote_record;
         }
-        $page_start++;
       }
     }
-
     // Fetch all locally saved objects using the key of remote ids.
     $remote['local'] = array();
     $remote['to_import'] = array_keys($remote['remote']);
@@ -880,7 +868,6 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
       $nids = array_keys($result['node']);
       $remote['local'] = entity_load('node', $nids);
     }
-    $count = 0;
     // Loop through objects and save updated values from API.
     foreach ($remote['local'] as $local_node) {
       // Load an entity.
@@ -916,7 +903,7 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
       }
     }
   }
-  if ($count) {
+  if (!empty($count)) {
     $message = format_plural($count,
       '1 record has been updated.',
       '@count records have been updated.'
@@ -925,6 +912,11 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
     drupal_set_message($message);
     // Clear drupal cache.
     drupal_flush_all_caches();
+  }
+  else {
+    $message = 'There was a problem importing exhibitons.';
+    watchdog('aic_import_remote', $message, array(), WATCHDOG_ERROR);
+    drupal_set_message(t($message), 'warning');
   }
 }
 
