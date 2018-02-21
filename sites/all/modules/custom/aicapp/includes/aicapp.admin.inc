@@ -755,7 +755,6 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
   $defaults = array(
     AICAPP_TYPE_EXHIBITION => array(
       'endpoint' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION . '/search',
-      'endpoint_details' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION,
       'remote' => array(),
     ),
   );

@@ -1393,7 +1393,6 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
     }
   }
   catch (Exception $e) {
-    dsm($result);
     $replacements = array(
       '%url' => $url,
       '%e' => !empty($result->error) ? $result->error : '',
