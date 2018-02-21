@@ -894,14 +894,15 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
       // Update all local objects that have local update date previous to last
       // updated remote object dates.
       $to_import = $remote['remote'][$remote_id];
-      _aicapp_save_remote_entity($to_import, $type, $ewrapper, $local_node);
-      // Get the key value for this remote id.
-      $remote_key = array_search($remote_id, $remote['to_import']);
-      // Unset this item from the import stack.
-      if (!empty($remote['to_import'][$remote_key])) {
-        unset($remote['to_import'][$remote_key]);
+      if (_aicapp_save_remote_entity($to_import, $type, $ewrapper, $local_node)) {
+        // Get the key value for this remote id.
+        $remote_key = array_search($remote_id, $remote['to_import']);
+        // Unset this item from the import stack.
+        if (!empty($remote['to_import'][$remote_key])) {
+          unset($remote['to_import'][$remote_key]);
+        }
+        $count++;
       }
-      $count++;
     }
     // Add any new remote objects that do not exist locally.
     foreach ($remote['to_import'] as $remote_id) {
@@ -910,8 +911,9 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
       }
       // Update node fields with values from remote enities, but only if
       // remote updated date is more recent than local date.
-      _aicapp_save_remote_entity($remote['remote'][$remote_id], $type);
-      $count++;
+      if (_aicapp_save_remote_entity($remote['remote'][$remote_id], $type)) {
+        $count++;
+      }
     }
   }
   if ($count) {
@@ -984,6 +986,7 @@ function _aicapp_save_remote_entity(&$to_import, $type, $entity_wrapper = NULL) 
   try {
     // Now just save the wrapper and the entity.
     $entity_wrapper->save();
+    return TRUE;
   }
   catch (Exception $e) {
     drupal_set_message(t("An error occurred when importing an #type: @e", array('#type' => $type, '@e' => $e)), 'error');
