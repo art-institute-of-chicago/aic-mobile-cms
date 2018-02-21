@@ -806,11 +806,23 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
     if (empty($results['data'])) {
       continue;
     }
-
     foreach ($results['data'] as $remote_record) {
+      if (empty($remote_record['id'])) {
+        continue;
+      }
+      $options = array(
+        'ids' => $remote_record['id'],
+      );
+      $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION;
+      // Query the data aggregrator.
+      $details = _aicapp_fetch_data($url, $options);
+      if (empty($details) && isset($details[0])) {
+        continue;
+      }
+      $remote_record = $details[0];
       if ($type === AICAPP_TYPE_EXHIBITION) {
         // Skip any that are closed?
-        if ($now > new DateTime($remote_record['end_at'])) {
+        if (empty($remote_record['end_at']) || $now > new DateTime($remote_record['end_at'])) {
           # Now is greater than end time, i.e. in the past.
           continue;
         }
@@ -828,6 +840,19 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
           $decoded_loop = json_decode($loop_json, TRUE);
           if (isset($decoded_loop['data'])) {
             foreach ($decoded_loop['data'] as $remote_record) {
+              if (empty($remote_record['id'])) {
+                continue;
+              }
+              $options = array(
+                'ids' => $remote_record['id'],
+              );
+              $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION;
+              // Query the data aggregrator.
+              $details = _aicapp_fetch_data($url, $options);
+              if (empty($details) && isset($details[0])) {
+                continue;
+              }
+              $remote_record = $details[0];
               if ($type === AICAPP_TYPE_EXHIBITION) {
                 if ($now > new DateTime($remote_record['end_at'])) {
                   # Now is greater than end time, i.e. in the past.
