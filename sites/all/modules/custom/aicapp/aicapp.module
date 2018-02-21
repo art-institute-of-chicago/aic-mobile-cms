@@ -1372,36 +1372,39 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
       'data' => $options['query'],
       'headers' => array('Content-Type' => 'application/json'),
     );
-    try {
-      $result = drupal_http_request($endpoint, $post_options);
-      if ($result->code === '200' && !empty($result->data)) {
-        $data = $result->data;
-      }
-    }
-    catch (Exception $e) {
+    unset($options['https'], $options['query']);
 
-    }
   }
   else {
     unset($options['https']);
-    $url = $endpoint . '?' . http_build_query($options);
-    try {
-      $data = file_get_contents($url);
+    $post_options = array();
+  }
+  // Create the URL for the request.
+  $url = $endpoint . '?' . http_build_query($options);
+
+  try {
+    // Make the request using drupal_http_request, passing $post_options array.
+    $result = drupal_http_request($url, $post_options);
+    if ($result->code === '200' && !empty($result->data)) {
+      $data = $result->data;
     }
-    catch (Exception $e) {
-      // Likely hitting 429, too many requests.
-      $replacements = array(
-        '%url' => $object->nid,
-        '%e' => !empty($e->errorInfo[2]) ? $e->errorInfo[2] : '',
-      );
-      drupal_set_message(t("An error (%e) occurred when fetching data from: %url", $replacements), 'error');
-      if (module_exists('devel')) {
-        $d = debug_backtrace();
-        $replacements['%debug'] = $d[1]['function'];
-        $message = t('There was a problem (%e) fetching data from: %url. The calling function was %debug', $replacements);
-        watchdog('aic_update_object', $message, array(), WATCHDOG_ERROR);
-      }
+    else {
+      throw new Exception('Problem with HTTP request.');
     }
+  }
+  catch (Exception $e) {
+    $replacements = array(
+      '%url' => $url,
+      '%e' => !empty($result->error) ? $result->error : '',
+    );
+    drupal_set_message(t('An error (%e) occurred when fetching data from the data aggregrator api: %url', $replacements), 'warning');
+    if (module_exists('devel')) {
+      $d = debug_backtrace();
+      $replacements['%debug'] = $d[1]['function'];
+      $message = t('There was a problem (%e) fetching data from: %url. The calling function was %debug', $replacements);
+      watchdog('aic_update_object', $message, $replacements, WATCHDOG_ERROR);
+    }
+    return;
   }
   // If connection not available.
   if (!$data) {
@@ -2395,6 +2398,9 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
       $options['http'] = 'POST';
       $options['query'] = json_encode(array(
         'type' => 'artworks',
+        'fields' => array(
+          'id', 'title', 'main_reference_number',
+        ),
         'query' => array(
           'term' => array(
             'main_reference_number' => $search_term,
@@ -2407,6 +2413,9 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
       $options['http'] = 'POST';
       $options['query'] = json_encode(array(
         'type' => 'artworks',
+        'fields' => array(
+          'id', 'title', 'main_reference_number',
+        ),
         'query' => array(
           'match' => array(
             'title' => array(
@@ -2417,7 +2426,6 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
         )
       ));
     }
-
     // Query the data aggregrator.
     $results = _aicapp_fetch_data($api_endpoint, $options, TRUE);
     if (!empty($results['data'])) {
@@ -2432,10 +2440,6 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
       foreach ($results['data'] as $doc) {
         $collect[] = aicapp_field_markup('object_id', $doc['id']);
         $collect[] = aicapp_field_markup('title', $doc['title']);
-        if (empty($doc['main_reference_number'])) {
-          // Get this value from the data aggregator.
-          $doc['main_reference_number'] = _aicapp_get_reference_id(NULL, $doc['id']);
-        }
         $collect[] = aicapp_field_markup('main_reference_number', $doc['main_reference_number']);
         $collect[] = '<a class="button small" href="' . $base_path . 'objects/object_add/' . $doc['id'] . '">Add or Update Object</a>';
       }
@@ -2689,57 +2693,6 @@ function _aicapp_get_image_id($object) {
     }
   }
   return isset($image_ids[$object_id]) ? $image_ids[$object_id] : NULL;
-}
-
-/**
- * Return a object reference id from the data hub, given a object node.
- */
-function _aicapp_get_reference_id($object, $object_id = NULL) {
-  $reference_ids = &drupal_static(__FUNCTION__);
-  if (empty($object) && !empty($object_id)) {
-    // Check for nid by data hub object_id.
-    $qres = db_query("SELECT entity_id
-                 FROM {field_data_field_object_id}
-                 WHERE field_object_id_value = :id",
-        array(':id' => $object_id)
-    );
-    $record = $qres->fetchObject();
-    if (!empty($record->entity_id)) {
-      // We have an existing node, so load its data.
-      $object = node_load($record->entity_id);
-    }
-  }
-  if (is_object($object) && !empty($object->nid)) {
-    $entity = entity_metadata_wrapper('node', $object);
-    $reference_num = $entity->field_reference_num->value();
-    $object_id = $entity->field_object_id->value();
-    $reference_ids = array($object_id => $reference_num);
-  }
-  if (empty($reference_num) && empty($object_id)) {
-    return;
-  }
-  elseif (!empty($reference_ids[$object_id])) {
-    if ($update) {
-      // @TODO
-    }
-    return $reference_ids[$object_id];
-  }
-  $options = array(
-    'fields' => 'id,main_reference_number',
-    'ids' => $object_id,
-  );
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
-  // Query the data aggregrator.
-  $results = _aicapp_fetch_data($url, $options);
-  if (empty($results)) {
-    return;
-  }
-  foreach ($results as $key => $values) {
-    if (!empty($values['main_reference_number'])) {
-      $reference_ids[$values['id']] = $values['main_reference_number'];
-    }
-  }
-  return isset($reference_ids[$object_id]) ? $reference_ids[$object_id] : NULL;
 }
 
 /**
