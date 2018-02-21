@@ -1971,50 +1971,6 @@ Ex: ""Head of Buddha (Spanish)"""',
     ),
   );
 
-  // Exported field_instance: 'node-exhibition-field_exhibit_is_active'.
-  $field_instances['node-exhibition-field_exhibit_is_active'] = array(
-    'bundle' => 'exhibition',
-    'default_value' => array(
-      0 => array(
-        'value' => 0,
-      ),
-    ),
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'module' => 'list',
-        'settings' => array(),
-        'type' => 'list_default',
-        'weight' => 4,
-      ),
-      'teaser' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 0,
-      ),
-    ),
-    'entity_type' => 'node',
-    'field_name' => 'field_exhibit_is_active',
-    'label' => 'Is Active',
-    'required' => 0,
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'options',
-      'settings' => array(
-        'display_label' => 1,
-      ),
-      'type' => 'options_onoff',
-      'weight' => 1,
-    ),
-  );
-
   // Exported field_instance: 'node-exhibition-field_exhibition_dates'.
   $field_instances['node-exhibition-field_exhibition_dates'] = array(
     'bundle' => 'exhibition',
@@ -2119,47 +2075,6 @@ Ex: ""Head of Buddha (Spanish)"""',
       ),
       'type' => 'image_image',
       'weight' => 7,
-    ),
-  );
-
-  // Exported field_instance: 'node-exhibition-field_imported_object'.
-  $field_instances['node-exhibition-field_imported_object'] = array(
-    'bundle' => 'exhibition',
-    'default_value' => NULL,
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'module' => 'text',
-        'settings' => array(),
-        'type' => 'text_default',
-        'weight' => 2,
-      ),
-      'teaser' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 0,
-      ),
-    ),
-    'entity_type' => 'node',
-    'field_name' => 'field_imported_object',
-    'label' => 'Imported Exhibition Object',
-    'required' => 0,
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-      'text_processing' => 0,
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'text',
-      'settings' => array(
-        'rows' => 5,
-      ),
-      'type' => 'text_textarea',
-      'weight' => 6,
     ),
   );
 
