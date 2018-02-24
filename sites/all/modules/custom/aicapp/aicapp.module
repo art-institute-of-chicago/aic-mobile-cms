@@ -1930,14 +1930,14 @@ function strip_drupal_from_node(&$node) {
           $node->description = $node->field_annotation_description[$node->language][0]['safe_value'];
         }
       }
-      // Label (field_annotation_label)
+      // Map annontation  label (field_annotation_label)
       if (isset($node->field_annotation_label)) {
         $node->label = NULL;
         if (isset($node->field_annotation_label[$node->language][0]['safe_value'])) {
           $node->label = $node->field_annotation_label[$node->language][0]['safe_value'];
         }
       }
-      // Map annontation_type (field_annotation_type)
+      // Map annontation type (field_annotation_type)
       if (isset($node->field_annotation_type)) {
         $node->annotation_type = NULL;
         if (isset($node->field_annotation_type[LANGUAGE_NONE][0]['value'])) {
@@ -1946,6 +1946,28 @@ function strip_drupal_from_node(&$node) {
           $node->annotation_type = $label;
         }
       }
+
+      // Map annotation text type (field_annotation_text_type)
+      if (isset($node->field_annotation_text_type)) {
+        $node->text_type = NULL;
+        if (isset($node->field_annotation_text_type[LANGUAGE_NONE][0]['value'])) {
+          $type_field = field_info_field('field_annotation_text_type');
+          $text_type = $type_field['settings']['allowed_values'][$node->field_annotation_text_type[LANGUAGE_NONE][0]['value']];
+          $node->text_type = $text_type;
+        }
+      }
+
+      // Map annontation amenity type (field_annotation_amenity_type)
+      if (isset($node->field_annotation_amenity_type)) {
+        $node->amenity_type = NULL;
+        if (isset($node->field_annotation_amenity_type[LANGUAGE_NONE][0]['value'])) {
+          $type_field = field_info_field('field_annotation_amenity_type');
+          $amenity_type = $type_field['settings']['allowed_values'][$node->field_annotation_amenity_type[LANGUAGE_NONE][0]['value']];
+          $node->amenity_type = $amenity_type;
+        }
+      }
+
+
       // Map Annotation translations.
       foreach ($translations as $lang_key => $details) {
         if ($lang_key === 'en') {
