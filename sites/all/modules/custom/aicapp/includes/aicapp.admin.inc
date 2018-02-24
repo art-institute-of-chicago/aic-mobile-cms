@@ -402,7 +402,7 @@ function aicapp_admin_operations($form, &$form_state) {
     '#suffix' => t('Click this button to create or update exhibitions from the data aggregator.') . '</div>',
     '#submit' => array('aicapp_load_remote_exhibitions_form_submit'),
   );
-  $suffix_message = t('Click this button to update all Object.');
+  $suffix_message = t('Click this button to update a batch of Object image URLs.');
   $object_nids = variable_get('aic_update_object_nids', array());
   if (empty($object_nids) || count($object_nids) < 50) {
     // Load all objects, including unpublished, because we compare if objects
@@ -419,8 +419,8 @@ function aicapp_admin_operations($form, &$form_state) {
   }
   $form['aicapp_ops']['aicapp_data_aggregator']['aicapp_data_update_all_objects'] = array(
     '#type' => 'checkbox',
-    '#prefix' => '<h5>' . t('Artwork Object Images') . '</h5><div>',
-    '#title' => t('Update All Objects'),
+    '#prefix' => '<h5>' . t('Artwork Object Image URLs') . '</h5><div>',
+    '#title' => t('Update a batch of Objects'),
     '#default_value' => (variable_get('aicapp_data_update_all_objects', 1)) ?: 0,
     '#description' => t('Whether or not to update all objects. Uncheck this if you would like to update only specific objects.'),
   );
@@ -471,7 +471,7 @@ function aicapp_admin_operations($form, &$form_state) {
   // );
   $form['aicapp_ops']['aicapp_data_aggregator']['update_object_images'] = array(
     '#type' => 'submit',
-    '#value' => t('Update Object Images'),
+    '#value' => t('Update Object Image URLs'),
     '#suffix' => $suffix_message . '</div>',
     '#validate' => array('aicapp_update_object_validate'),
     '#submit' => array('aicapp_update_object_submit'),
