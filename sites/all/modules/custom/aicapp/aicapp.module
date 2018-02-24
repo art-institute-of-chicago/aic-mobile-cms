@@ -1946,7 +1946,6 @@ function strip_drupal_from_node(&$node) {
           $node->annotation_type = $label;
         }
       }
-
       // Map annotation text type (field_annotation_text_type)
       if (isset($node->field_annotation_text_type)) {
         $node->text_type = NULL;
@@ -1956,7 +1955,6 @@ function strip_drupal_from_node(&$node) {
           $node->text_type = $text_type;
         }
       }
-
       // Map annontation amenity type (field_annotation_amenity_type)
       if (isset($node->field_annotation_amenity_type)) {
         $node->amenity_type = NULL;
@@ -1966,7 +1964,23 @@ function strip_drupal_from_node(&$node) {
           $node->amenity_type = $amenity_type;
         }
       }
-
+      // Map annontation amenity type (field_annotation_amenity_type)
+      if (isset($node->field_annotation_image)) {
+        $node->image_filename = NULL;
+        $node->image_url = NULL;
+        $node->image_filemime = NULL;
+        $node->image_filesize = NULL;
+        $node->image_width = NULL;
+        $node->image_height = NULL;
+        if (isset($node->field_annotation_image[LANGUAGE_NONE][0]['uri'])) {
+          $node->image_filename = $node->field_annotation_image[LANGUAGE_NONE][0]['filename'];
+          $node->image_url = _aicapp_file_create_url($node->field_annotation_image[LANGUAGE_NONE][0]['uri']);
+          $node->image_filemime = $node->field_annotation_image[LANGUAGE_NONE][0]['filemime'];
+          $node->image_filesize = $node->field_annotation_image[LANGUAGE_NONE][0]['filesize'];
+          $node->image_width = $node->field_annotation_image[LANGUAGE_NONE][0]['width'];
+          $node->image_height = $node->field_annotation_image[LANGUAGE_NONE][0]['height'];
+        }
+      }
 
       // Map Annotation translations.
       foreach ($translations as $lang_key => $details) {
