@@ -1,6 +1,0 @@
-name = AIC Batch upload
-description = Custom module doing the batch upload for the content
-package = WC Custom Modules
-version = VERSION
-core = 7.x
-files[] = aibatch.module

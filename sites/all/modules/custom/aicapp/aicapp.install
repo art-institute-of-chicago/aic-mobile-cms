@@ -1,0 +1,142 @@
+<?php
+
+/**
+ * @file
+ * Installation functions for the AICAPP module.
+ */
+
+/**
+ * Implements hook_update_N.
+ *
+ * Delete {system} records for modules that are no longer in the file system.
+ */
+function aicapp_update_7000() {
+  // Remove wcreek module from system table.
+  // db_delete('system')
+  //   ->condition('filename', 'profiles/wcreek/wcreek.profile')
+  //   ->execute();
+  // Remove aibatch module from system table.
+  db_delete('system')
+    ->condition('name', 'aibatch')
+    ->execute();
+  return t('The unused modules were removed from the system table.');
+}
+
+/**
+ * Implements hook_update_N.
+ *
+ * Update the language to site default for Audio and Tour nodes.
+ */
+function aicapp_update_7001() {
+  aicapp_init();
+  // Update the following node types language.
+  $types = array(
+    AICAPP_TYPE_AUDIO,
+    AICAPP_TYPE_TOUR,
+  );
+  module_load_include('inc', 'aicapp', 'includes/aicapp.update');
+  if (!aicapp_update_content_language($types)) {
+    throw new DrupalUpdateException('Something went wrong when updating content languages. You can enable the AIC Content Migration module to migrate content language.');
+  }
+  return t('Audio and Tour items were updated to the default language.');
+}
+
+/**
+ * Implements hook_update_N.
+ *
+ * Update the field values to new format for Object Audio Commentary values.
+ */
+function aicapp_update_7002() {
+  aicapp_init();
+  // Update the following node types language.
+  $types = array(
+    AICAPP_TYPE_OBJECT,
+  );
+  module_load_include('inc', 'aicapp', 'includes/aicapp.update');
+  if (!aicapp_update_content_fields($types)) {
+    throw new DrupalUpdateException('Something went wrong when updating Object audio commentary values. You can enable the AIC Content Migration module to migrate audio commentary values.');
+  }
+  return t('Object field values were updated to the new format.');
+}
+
+/**
+ * Implements hook_update_N.
+ *
+ * Update the field values to new format for Tour Stop values.
+ */
+function aicapp_update_7003() {
+  aicapp_init();
+  // Update the following node types language.
+  module_load_include('inc', 'aicapp', 'includes/aicapp.update');
+  $types = array(
+    AICAPP_TYPE_TOUR,
+  );
+  if (!aicapp_update_content_fields($types, 1)) {
+    throw new DrupalUpdateException('Something went wrong when updating Tour stop values. You can enable the AIC Content Migration module to migrate tour stop values.');
+  }
+  return t('Tour stop values were updated to the new format.');
+}
+
+/**
+ * Implements hook_update_N.
+ *
+ * Enable page info block to show on all node pages.
+ */
+function aicapp_update_7004() {
+  // Update the block table to show page_info block only on node/* paths.
+  db_update('block')
+    ->fields(array(
+       'pages' => 'node/*',
+    ))
+    ->condition('module', 'aicapp')
+    ->condition('delta', 'page_info')
+    ->execute();
+  return t('The page info block as set to show only on node pages.');
+}
+
+/**
+ * Implements hook_update_N.
+ *
+ * Update Object Image URL fields.
+ */
+function aicapp_update_7005() {
+  aicapp_init();
+  module_load_include('inc', 'aicapp', 'includes/aicapp.admin');
+  try {
+    $artwork_objects = node_load_multiple(array(), array('type' => AICAPP_TYPE_OBJECT));
+    $object_nids = array_keys($artwork_objects);
+    variable_set('aic_update_object_nids', $object_nids);
+    aicapp_update_object_image_data($object_nids, 150);
+  }
+  catch (Exception $e) {
+    drupal_set_message('There was a problem updating image URL fields.', 'warning');
+    return FALSE;
+  }
+  $link = array(
+    '!link' => l(t('AIC Operation page'), 'admin/config/system/aic/operations')
+  );
+  $notice = t('The remaining object image fields should be updated at the !link', $link);
+  $message = format_plural((count($object_nids) - 150),
+    '1 object image URL field has been updated. ' . $notice,
+    '@count object image URL fields have been updated. ' . $notice
+  );
+  return $message;
+}
+
+/**
+ * Implements hook_update_N.
+ *
+ * Import Exhibitions.
+ */
+function aicapp_update_7006() {
+  aicapp_init();
+  module_load_include('inc', 'aicapp', 'includes/aicapp.admin');
+  try {
+    aicapp_load_remote_form_submit();
+  }
+  catch (Exception $e) {
+    drupal_set_message('There was a problem importing exhibitions.', 'warning');
+    return FALSE;
+  }
+  return t('Exhibitions have been imported.');
+}

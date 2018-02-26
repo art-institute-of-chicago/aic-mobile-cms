@@ -1,0 +1,59 @@
+<?php
+
+/**
+ * @file
+ * Manage objects and galleries that are used in the Mobile APP.
+ * Objects and galleries have some data stored in Drupal, and some coming from SOLR queries to the
+ * Chicago Art Institute's existing DB. Objects physical location can be pinned on a Google Map of the Institute.
+ * This module creates a button that when clicked, pulls all the published content into a JSON file (appData.json) at
+ * the site root, which is then called by the mobile APP.
+ * Email notices are also fired when objects are pulled out of galleries or added back into galleries.
+ */
+
+/**
+ * Implementation of hook_menu()
+ */
+function aicapp_import_menu() {
+  $items['admin/config/system/aic/batch'] = array(
+    'title' => 'Batch import',
+    'description' => 'Tools to batch update from CSV files..',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('aicapp_import_form_batch'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer nodes'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 100,
+  );
+
+  return $items;
+}
+
+/**
+ * @file aicapp_migrate.module
+ */
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function aicapp_import_form_batch($form, &$form_state) {
+  // Alter the setup form
+  module_load_include('inc', 'aicapp', 'includes/aicapp.import');
+  // Run the form alter routine.
+  return aicapp_import_batch($form, $form_state);
+}
+
+/**
+ * filter class that applies CRLF line endings.
+ */
+class CRLFilter extends php_user_filter {
+    function filter($in, $out, &$consumed, $closing)
+    {
+        while ($bucket = stream_bucket_make_writeable($in)) {
+            // make sure the line endings aren't already CRLF
+            $bucket->data = preg_replace("/(?<!\r)\n/", "\r\n", $bucket->data);
+            $consumed += $bucket->datalen;
+            stream_bucket_append($out, $bucket);
+        }
+        return PSFS_PASS_ON;
+    }
+}

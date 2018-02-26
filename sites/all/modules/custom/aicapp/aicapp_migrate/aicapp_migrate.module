@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * @file aicapp_migrate.module
+ */
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function aicapp_migrate_form_aicapp_admin_operations_alter(&$form, &$form_state, $form_id) {
+  // Alter the setup form
+  module_load_include('inc', 'aicapp', 'includes/aicapp.update');
+  // Run the form alter routine.
+  aicapp_update_admin_migrate($form, $form_state);
+}

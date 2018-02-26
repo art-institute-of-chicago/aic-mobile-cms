@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the AIC Export Content feature.
+ */
+
+include_once 'aic_export_content.features.inc';
