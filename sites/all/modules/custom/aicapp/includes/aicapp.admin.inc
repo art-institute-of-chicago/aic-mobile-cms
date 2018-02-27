@@ -331,7 +331,14 @@ function aicapp_admin_api($form, &$form_state) {
     '#title' => t('Members endpoint'),
     '#default_value' => variable_get('aicapp_data_endpoint_members', '/api/v1/members'),
   );
-  $form['aicapp_data_aggregator']['aicapp_tickets_endpoint'] = array(
+  $form['aicapp_tickets'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Tickets'),
+    '#tree' => FALSE,
+  );
+  $form['aicapp_tickets']['aicapp_tickets_endpoint'] = array(
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
