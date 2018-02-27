@@ -334,7 +334,7 @@ function aicapp_admin_api($form, &$form_state) {
   $form['aicapp_tickets'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+    '#collapsed' => FALSE,
     '#title' => t('Tickets'),
     '#tree' => FALSE,
   );
