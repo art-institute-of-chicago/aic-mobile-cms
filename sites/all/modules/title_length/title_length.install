@@ -1,0 +1,81 @@
+<?php
+
+define('TITLE_LENGTH_CHARS', 8000);
+
+/**
+ * Implements hook_schema_alter().
+ */
+function title_length_schema_alter(&$schema) {
+  if (isset($schema['node'])) {
+    $schema['node']['fields']['title']['length'] = TITLE_LENGTH_CHARS;
+    $schema['node']['indexes']['node_title_type'] = array(array('title', 250), array('type', 4));
+
+  }
+
+  if (isset($schema['node_revision'])) {
+    $schema['node_revision']['fields']['title']['length'] = TITLE_LENGTH_CHARS;
+  }
+}
+
+/**
+ * Implements hook_install().
+ */
+function title_length_install() {
+  $schema = drupal_get_schema();
+  if (empty($schema['node']['fields']['title'])) {
+    // Is it possible?
+    throw new Exception('Node module is not installed.');
+  }
+
+  $node_title_field_definition = $schema['node']['fields']['title'];
+  $revision_title_field_definition = $schema['node_revision']['fields']['title'];
+
+  $revision_title_field_definition['length'] = TITLE_LENGTH_CHARS;
+  $node_title_field_definition['length'] = TITLE_LENGTH_CHARS;
+  $index_definition = array('indexes' => array('node_title_type' => array(array('title', 250), array('type', 4))));
+
+  db_drop_index('node', 'node_title_type');
+  db_change_field('node', 'title', 'title', $node_title_field_definition, $index_definition);
+  db_change_field('node_revision', 'title', 'title', $revision_title_field_definition);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function title_length_uninstall() {
+  $schema = drupal_get_schema();
+  if (empty($schema['node']['fields']['title'])) {
+    // Is it possible?
+    return;
+  }
+
+  $length_function = 'char_length';
+
+  switch (Database::getConnection()->databaseType()) {
+    case 'sqlite':
+      $length_function = 'length';
+      break;
+
+    case 'sqlsrv':
+      $length_function = 'len';
+      break;
+  }
+
+  $long_title_count = db_query("SELECT COUNT(*) FROM {node} WHERE {$length_function}(title) > 255")->fetchField();
+  $long_revision_title_count = db_query("SELECT COUNT(*) FROM {node_revision} WHERE {$length_function}(title) > 255")->fetchField();
+
+  if ($long_title_count + $long_revision_title_count > 0) {
+    throw new Exception('Nodes or node revisions exist with long titles. Module cannot be deleted.');
+  }
+
+  $node_title_field_definition = $schema['node']['fields']['title'];
+  $revision_title_field_definition = $schema['node_revision']['fields']['title'];
+
+  $node_title_field_definition['length'] = 255;
+  $revision_title_field_definition['length'] = 255;
+  $index_definition = array('indexes' => array('node_title_type' => array('title', array('type', 4))));
+
+  db_drop_index('node', 'node_title_type');
+  db_change_field('node', 'title', 'title', $node_title_field_definition, $index_definition);
+  db_change_field('node_revision', 'title', 'title', $revision_title_field_definition);
+}
