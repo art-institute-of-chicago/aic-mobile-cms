@@ -760,6 +760,8 @@ function aic_mobile_cms_content_types_user_default_permissions() {
     'name' => 'translate node entities',
     'roles' => array(
       'admin' => 'admin',
+      'editor' => 'editor',
+      'publisher' => 'publisher',
     ),
     'module' => 'entity_translation',
   );
