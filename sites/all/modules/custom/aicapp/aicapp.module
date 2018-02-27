@@ -44,6 +44,7 @@ function aicapp_init() {
   define('AICAPP_DATA_API_ENDPOINT_TOURS', variable_get('aicapp_data_endpoint_tours', '/api/v1/tours'));
   define('AICAPP_DATA_API_ENDPOINT_AUTOCOMPLETE', variable_get('aicapp_data_endpoint_autocomplete', '/api/v1/autocomplete'));
   define('AICAPP_DATA_API_ENDPOINT_MEMBERS', variable_get('aicapp_data_endpoint_members', '/api/v1/members'));
+  define('AICAPP_TICKETS_ENDPOINT', variable_get('aicapp_tickets_endpoint', 'https://sales.artic.edu/admissiondate'));
   define('AICAPP_JSON_FILENAME', variable_get('aicapp_json_filename', 'appData'));
   define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
   define('AICAPP_TOUR_VOCABULARY_NAME', variable_get('aicapp_tour_vocabular_name', 'categories'));
@@ -918,7 +919,9 @@ function _email_object_gallery_change($changed) {
       that have changed gallery locations. You might need to update the object\'s location (map LAT/LNG) values:</p><ul>';
     $object_list = '';
     foreach ($changed as $object) {
-      $object_list .= '<li>object_id - ' . $object['id'] . ' - ' . $object['title'] . '<br />Previous location: ' . $object['old_location'] . ', New location: ' . $object['location'] . '</li>';
+      $object_list .= '<li>object_id - ' . $object['object_id'] . ' - ' . $object['title'];
+      $object_list .= '<br />Previous location: ' . $object['old_location'];
+      $object_list .= ', New location: ' . $object['location'] . '</li>';
     }
     $msg .= $object_list . '</ul><p>Do not reply to this email.</p>';
     $headers = "From: <" . $from . ">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
@@ -3233,5 +3236,6 @@ function _aic_app_get_data_endpoints() {
     'autocomplete_endpoint' => AICAPP_DATA_API_ENDPOINT_AUTOCOMPLETE,
     'tours_endpoint' => AICAPP_DATA_API_ENDPOINT_TOURS,
     'members_endpoint' => AICAPP_DATA_API_ENDPOINT_MEMBERS,
+    'tickets_endpoint' => AICAPP_TICKETS_ENDPOINT,
   );
 }
