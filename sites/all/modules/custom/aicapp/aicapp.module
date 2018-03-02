@@ -2195,23 +2195,6 @@ function aicappSaveNode($object, $type, $status = 0) {
     }
     if (isset($object['floor'])) {
       $node->field_floor[$node->language][0]['value'] = $object['floor'];
-      // Set the floor reference field.
-      // First find the entity to reference.
-      $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', 'field_collection_item');
-      $query->propertyCondition('field_name', 'field_floor_map');
-      // Sometimes Level 0 is known as LL.
-      $floors = array($object['floor']);
-      if (strtolower($object['floor']) === 'll') {
-        $floors[] = 0;
-      }
-      $query->fieldCondition('field_floor_label', 'value', $floors, 'IN');
-      $query->range(0, 1);
-      $result = $query->execute();
-      if (!empty($result['field_collection_item'])) {
-        $floor_reference = key($result['field_collection_item']);
-        $node->field_floor_reference[$node->language][0]['target_id'] = $floor_reference;
-      }
     }
     // Set node to published.
     $node->status = 1;

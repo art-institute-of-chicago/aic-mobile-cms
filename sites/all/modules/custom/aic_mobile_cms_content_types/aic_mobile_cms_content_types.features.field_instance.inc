@@ -2203,47 +2203,6 @@ Ex: ""Head of Buddha (Spanish)"""',
     ),
   );
 
-  // Exported field_instance: 'node-gallery-field_floor_reference'.
-  $field_instances['node-gallery-field_floor_reference'] = array(
-    'bundle' => 'gallery',
-    'default_value' => NULL,
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'module' => 'entityreference',
-        'settings' => array(
-          'bypass_access' => FALSE,
-          'link' => FALSE,
-        ),
-        'type' => 'entityreference_label',
-        'weight' => 5,
-      ),
-      'teaser' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 0,
-      ),
-    ),
-    'entity_type' => 'node',
-    'field_name' => 'field_floor_reference',
-    'label' => 'Floor',
-    'required' => 0,
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'options',
-      'settings' => array(),
-      'type' => 'options_select',
-      'weight' => 6,
-    ),
-  );
-
   // Exported field_instance: 'node-gallery-field_gallery_id'.
   $field_instances['node-gallery-field_gallery_id'] = array(
     'bundle' => 'gallery',
@@ -2992,47 +2951,6 @@ Ex: ""Head of Buddha (Spanish)"""',
       ),
       'type' => 'text_textarea',
       'weight' => 17,
-    ),
-  );
-
-  // Exported field_instance: 'node-object-field_floor_reference'.
-  $field_instances['node-object-field_floor_reference'] = array(
-    'bundle' => 'object',
-    'default_value' => NULL,
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'module' => 'entityreference',
-        'settings' => array(
-          'bypass_access' => FALSE,
-          'link' => FALSE,
-        ),
-        'type' => 'entityreference_label',
-        'weight' => 21,
-      ),
-      'teaser' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 0,
-      ),
-    ),
-    'entity_type' => 'node',
-    'field_name' => 'field_floor_reference',
-    'label' => 'Floor',
-    'required' => 0,
-    'settings' => array(
-      'entity_translation_sync' => FALSE,
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'options',
-      'settings' => array(),
-      'type' => 'options_select',
-      'weight' => 9,
     ),
   );
 
