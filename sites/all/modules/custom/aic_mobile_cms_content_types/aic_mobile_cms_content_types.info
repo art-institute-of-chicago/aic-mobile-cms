@@ -258,6 +258,7 @@ features[menu_custom][] = management
 features[menu_custom][] = navigation
 features[menu_custom][] = user-menu
 features[menu_links][] = main-menu_audio:audio
+features[menu_links][] = main-menu_app-search-page:app-search
 features[menu_links][] = main-menu_exhibitions:exhibitions
 features[menu_links][] = main-menu_galleries:galleries
 features[menu_links][] = main-menu_general-info:node/1
