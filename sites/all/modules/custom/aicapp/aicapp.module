@@ -92,6 +92,16 @@ function aicapp_menu() {
     'weight' => 20,
     'access arguments' => array('add objects'),
   );
+  $items['app-search'] = array(
+    'title' => 'App Search Start Page',
+    'description' => 'Settings for the iOS app search start page.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('aicapp_app_search_admin'),
+    'access callback' => 'user_access',
+    'access arguments' => array('edit any object content'),
+    'file' => 'aicapp.app_search.inc',
+    'file path' => drupal_get_path('module', 'aicapp') . '/includes',
+  );
   /* Queries to retrieve data from remote API */
   $items['admin/settings/aic-api'] = array(
     'title' => 'AIC API module settings',
@@ -1194,6 +1204,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'tour_categories' => _aicapp_get_tour_categories(),
     'exhibitions' => $by_exhibition_id,
     'data' => _aic_app_get_data_endpoints(),
+    'search' => _aic_app_get_search_items(),
   );
   // Writing version 2 file output.
   $v2_json_output = json_encode($v2_data);
@@ -3237,5 +3248,15 @@ function _aic_app_get_data_endpoints() {
     'tours_endpoint' => AICAPP_DATA_API_ENDPOINT_TOURS,
     'members_endpoint' => AICAPP_DATA_API_ENDPOINT_MEMBERS,
     'tickets_endpoint' => AICAPP_TICKETS_ENDPOINT,
+  );
+}
+
+/**
+ * Return an array of app search page elements.
+ */
+function _aic_app_get_search_items() {
+  return array(
+    'search_strings' => variable_get('aicapp_search_strings', "Essentials Tour\nImpressionism\nAmerican Gothic"),
+    'search_objects' => variable_get('aicapp_search_objects', ''),
   );
 }
