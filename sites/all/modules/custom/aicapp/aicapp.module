@@ -1544,9 +1544,6 @@ function strip_drupal_from_node(&$node) {
             'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
           );
           json_encode($node->thumbnail_crop_rect);
-          // Set v2 values by default to v1. They will be overwritten by
-          // v2 values below, if they exist.
-          $node->thumbnail_crop_v2 = $node->thumbnail_crop_rect;
         }
       }
     }
@@ -1558,15 +1555,25 @@ function strip_drupal_from_node(&$node) {
       foreach ($items as $itemid) {
         $item = field_collection_field_get_entity($itemid);
         if ($item->field_x) {
-          $node->thumbnail_crop_v2 = array(
+          $preview = array(
+            'width' => !empty($item->field_image_width) ? $item->field_image_width[LANGUAGE_NONE][0]['value'] : NULL,
+            'height' => !empty($item->field_image_height) ? $item->field_image_height[LANGUAGE_NONE][0]['value'] : NULL,
+          );
+          $crops = array(
             'x' => !empty($item->field_x) ? $item->field_x[LANGUAGE_NONE][0]['value'] : NULL,
             'y' => !empty($item->field_y) ? $item->field_y[LANGUAGE_NONE][0]['value'] : NULL,
             'width' => !empty($item->field_width) ? $item->field_width[LANGUAGE_NONE][0]['value'] : NULL,
             'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
-            'image_width' => !empty($item->field_image_width) ? $item->field_image_width[LANGUAGE_NONE][0]['value'] : NULL,
-            'image_height' => !empty($item->field_image_height) ? $item->field_image_height[LANGUAGE_NONE][0]['value'] : NULL,
           );
-          json_encode($node->thumbnail_crop_v2);
+          if (!empty($preview['width']) && !empty($preview['height'])) {
+            $node->thumbnail_crop_v2 = array(
+              'x' => round($crops['x'] / $preview['width'], 3),
+              'y' => round($crops['y'] / $preview['height'], 3),
+              'width' => round($crops['width'] / $preview['width'], 3),
+              'height' => round($crops['height'] / $preview['height'], 3),
+            );
+            json_encode($node->thumbnail_crop_v2);
+          }
         }
       }
     }
@@ -1594,9 +1601,6 @@ function strip_drupal_from_node(&$node) {
             'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
           );
           json_encode($node->large_image_crop_rect);
-          // Set v2 values by default to v1. They will be overwritten by
-          // v2 values below, if they exist.
-          $node->large_image_crop_v2 = $node->large_image_crop_rect;
         }
       }
     }
@@ -1608,13 +1612,25 @@ function strip_drupal_from_node(&$node) {
       foreach ($items as $itemid) {
         $item = field_collection_field_get_entity($itemid);
         if ($item->field_x) {
-          $node->large_image_crop_v2 = array(
+          $preview = array(
+            'width' => !empty($item->field_image_width) ? $item->field_image_width[LANGUAGE_NONE][0]['value'] : NULL,
+            'height' => !empty($item->field_image_height) ? $item->field_image_height[LANGUAGE_NONE][0]['value'] : NULL,
+          );
+          $crops = array(
             'x' => !empty($item->field_x) ? $item->field_x[LANGUAGE_NONE][0]['value'] : NULL,
             'y' => !empty($item->field_y) ? $item->field_y[LANGUAGE_NONE][0]['value'] : NULL,
             'width' => !empty($item->field_width) ? $item->field_width[LANGUAGE_NONE][0]['value'] : NULL,
             'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
           );
-          json_encode($node->large_image_crop_v2);
+          if (!empty($preview['width']) && !empty($preview['height'])) {
+            $node->large_image_crop_v2 = array(
+              'x' => round($crops['x'] / $preview['width'], 3),
+              'y' => round($crops['y'] / $preview['height'], 3),
+              'width' => round($crops['width'] / $preview['width'], 3),
+              'height' => round($crops['height'] / $preview['height'], 3),
+            );
+            json_encode($node->large_image_crop_v2);
+          }
         }
       }
     }
@@ -3213,6 +3229,22 @@ function aicapp_query_tour_stops_missing_alter(QueryAlterableInterface $query) {
 function aicapp_query_object_audio_missing_alter(QueryAlterableInterface $query) {
   $query->leftJoin('field_data_field_audio_commentary', 'o', 'node.nid = o.entity_id');
   $query->isNull('o.field_audio_commentary_value');
+}
+
+/**
+ * Implements hook_query_TAG_alter()
+ */
+function aicapp_query_thumb_crop_missing_alter(QueryAlterableInterface $query) {
+  $query->leftJoin('field_data_field_thumbnail_image_crop', 'o', 'node.nid = o.entity_id');
+  $query->isNull('o.field_thumbnail_image_crop_value');
+}
+
+/**
+ * Implements hook_query_TAG_alter()
+ */
+function aicapp_query_large_crop_missing_alter(QueryAlterableInterface $query) {
+  $query->leftJoin('field_data_field_large_image_crop', 'o', 'node.nid = o.entity_id');
+  $query->isNull('o.field_large_image_crop_value');
 }
 
 /**
