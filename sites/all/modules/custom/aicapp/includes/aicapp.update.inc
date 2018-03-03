@@ -129,8 +129,9 @@ function aicapp_update_admin_migrate(&$form, &$form_state) {
           continue;
         }
         $i++;
+        $update_type = !empty($obj->update_type) ? $obj->update_type : 'fields';
         $callback = 'aicapp_update_validate_type_' . $type;
-        $params = array($nid, &$counts, $i, &$to_add);
+        $params = array($nid, &$counts, $i, &$to_add, $update_type);
         $valid = call_user_func_array($callback, $params);
         if (empty($valid)) {
           unset($result['node'][$nid]);
@@ -163,7 +164,7 @@ function aicapp_update_admin_migrate(&$form, &$form_state) {
     // Only allow tour after all objects have been updated.
     $form['aicapp_data']['migration_fields_types'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('Select content type(s) with fields to updated:'),
+      '#title' => t('Select content type(s) with fields to be migrated:'),
       '#options' => $types,
       '#default_value' => array($default),
       '#description' => t('Every node of the chosen type(s) fields will be updated. Before updating tours, make sure that all objects have been updated.'),
@@ -298,7 +299,7 @@ function aicapp_update_node_language($nodes) {
 /**
  * Admin setting validation callback.
  */
-function aicapp_update_v2_field_values($result, $type, $batch_size = 50, $add_associations = 0) {
+function aicapp_update_v2_field_values($result, $type, $batch_size = 50, $add_associations = 0, $update_type = 'update', $update_msg = 'to use the new field format') {
   $counts = array();
   $counts[$type] = $i = 0;
   $to_add = array();
@@ -317,6 +318,7 @@ function aicapp_update_v2_field_values($result, $type, $batch_size = 50, $add_as
       continue;
     }
     $i++;
+    $update_type = !empty($obj->update_type) ? $obj->update_type : 'fields';
     $callback = 'aicapp_update_migrate_type_' . $type;
     $params = array(
       $nid,
@@ -324,8 +326,13 @@ function aicapp_update_v2_field_values($result, $type, $batch_size = 50, $add_as
       $i,
       &$to_add,
       'update',
-      $add_associations,
     );
+    if ($obj->type === AICAPP_TYPE_TOUR) {
+      $params[] = $add_associations;
+    }
+    elseif ($obj->type === AICAPP_TYPE_OBJECT) {
+      $params[] = $update_type;
+    }
     if (!call_user_func_array($callback, $params)) {
       return FALSE;
     }
@@ -333,11 +340,12 @@ function aicapp_update_v2_field_values($result, $type, $batch_size = 50, $add_as
   $remaining = !empty($result['node']) ? count($result['node']) : 0;
   $type_message = array(
     '@type' => $type,
+    '@update' => $update_msg,
     '@size' => $counts[$type],
     '@remain' => max(($total - $counts[$type]), 0),
   );
   drupal_set_message(t(
-    '@size @type items have been migrated to use the new field format. @remain @type item(s) remain to migrate.',
+    '@size @type items have been migrated @update. @remain @type item(s) remain to migrate.',
     $type_message
   ));
   return TRUE;
@@ -432,19 +440,13 @@ function aicapp_update_migrate_type_tour($nid, &$counts = array(), $i = 0, &$to_
   $count_object = count($found['field_t_object']);
   $count_audio = count($found['field_t_audio']);
   $count_bumper = count($found['field_t_audio_bumper']);
-  // if ($count_object > $count_audio) {
-  //
-  // }
-  // elseif ($count_object < $count_audio) {
-  //
-  // }
   // Check if there are currently audio commentary items.
   if (!empty($node->field_tour_stops[LANGUAGE_NONE])) {
     foreach ($node->field_tour_stops[LANGUAGE_NONE] as $key => $value) {
       $field_collection_item_values[] = $value['value'];
     }
   }
-  // Add the new tour stop
+  // Add the new tour stop.
   if (!empty($found['field_t_object'])) {
     if ($mode === 'validate') {
       return TRUE;
@@ -524,13 +526,7 @@ function aicapp_update_migrate_type_tour($nid, &$counts = array(), $i = 0, &$to_
           'value' => $found['field_t_audio_bumper'][$k],
         );
       }
-      // Create the collection entity and set it's "host".
-      $collection = entity_create('field_collection_item', array('field_name' => 'field_tour_stops'));
-      $collection->setHostEntity('node', $node);
-      $collection_wrapper = entity_metadata_wrapper('field_collection_item', $collection);
-      foreach ($item_values as $key => $values) {
-        $collection_wrapper->{$key}->set($values['value']);
-      }
+      _aic_set_field_collection_items($node, 'field_tour_stops', $item_values);
     }
     $node->_is_changed = TRUE;
   }
@@ -564,8 +560,8 @@ function aicapp_update_get_object_audio_nids($object_node) {
 /**
  * Helper function to migrate tour fields.
  */
-function aicapp_update_validate_type_tour($nid, &$counts = array(), $i = 0, &$to_add = array()) {
-  $validate = aicapp_update_migrate_type_tour($nid, $counts, $i, $to_add, 'validate');
+function aicapp_update_validate_type_tour($nid, &$counts = array(), $i = 0, &$to_add = array(), $type = 'fields') {
+  $validate = aicapp_update_migrate_type_tour($nid, $counts, $i, $to_add, 'validate', $type);
   if ($validate) {
     return TRUE;
   }
@@ -574,17 +570,17 @@ function aicapp_update_validate_type_tour($nid, &$counts = array(), $i = 0, &$to
 /**
  * Helper function to migrate object fields.
  */
-function aicapp_update_validate_type_object($nid, &$counts = array(), $i = 0, &$to_add = array()) {
-  $validate = aicapp_update_migrate_type_object($nid, $counts, $i, $to_add, 'validate');
-  if ($validate) {
+function aicapp_update_validate_type_object($nid, &$counts = array(), $i = 0, &$to_add = array(), $type = 'fields') {
+  if (aicapp_update_migrate_type_object($nid, $counts, $i, $to_add, 'validate', $type)) {
     return TRUE;
   }
 }
 
+
 /**
  * Helper function to migrate object fields.
  */
-function aicapp_update_migrate_type_object($nid, &$counts = array(), $i = 0, &$to_add = array(), $mode = 'update') {
+function aicapp_update_migrate_type_object($nid, &$counts = array(), $i = 0, &$to_add = array(), $mode = 'update', $update_type = 'fields') {
   if (empty($counts)) {
     $counts[AICAPP_TYPE_OBJECT] = 0;
   }
@@ -592,6 +588,34 @@ function aicapp_update_migrate_type_object($nid, &$counts = array(), $i = 0, &$t
   $node->_is_changed = FALSE;
   $node->skip_hooks_presave = TRUE;
   $entity_wrapper = entity_metadata_wrapper('node', $node);
+  // If only validating, return the result of the object object function.
+  if ($mode === 'validate') {
+    if ($update_type === 'crop_fields') {
+      return aicapp_update_migrate_type_object_update_crops($node, $i, $to_add, $mode);
+    }
+    return aicapp_update_migrate_type_object_update_audio($node, $i, $to_add, $mode);
+  }
+  if ($update_type === 'crop_fields') {
+    // Call the crop function to modify by reference.
+    aicapp_update_migrate_type_object_update_crops($node, $i, $to_add, $mode);
+  }
+  else {
+    // Otherwise just call the function to modify by reference.
+    aicapp_update_migrate_type_object_update_audio($node, $i, $to_add, $mode);
+  }
+  // If node is changed, save entity.
+  if ($node->_is_changed) {
+    unset($node->_is_changed);
+    $entity_wrapper->save();
+    $counts[AICAPP_TYPE_OBJECT]++;
+  }
+  return TRUE;
+}
+
+/**
+ * Helper function to migrate object json fields.
+ */
+function aicapp_update_migrate_type_object_update_audio(&$node, $i, &$to_add, $mode = 'update') {
   $found = array(
     'field_object_selector_numbers' => NULL,
     'field_object_selector_number' => NULL,
@@ -710,22 +734,120 @@ function aicapp_update_migrate_type_object($nid, &$counts = array(), $i = 0, &$t
           'value' => $to_add[$i]['selector'][$k],
         );
       }
-      // Create the collection entity and set it's "host".
-      $collection = entity_create('field_collection_item', array('field_name' => 'field_audio_commentary'));
-      $collection->setHostEntity('node', $node);
-      $collection_wrapper = entity_metadata_wrapper('field_collection_item', $collection);
-      foreach ($item_values as $key => $values) {
-        $collection_wrapper->{$key}->set($values['value']);
+      _aic_set_field_collection_items($node, 'field_audio_commentary', $item_values);
+    }
+    $node->_is_changed = TRUE;
+  }
+}
+
+/**
+ * Helper function to migrate object crop fields.
+ */
+function aicapp_update_migrate_type_object_update_crops(&$node, $i, &$to_add, $mode = 'update') {
+  $found = array(
+    'field_large_image_crop_rect' => NULL,
+    'field_thumbnail_crop_rect' => NULL,
+  );
+  // Check for field_large_image_crop_rect, and field_thumbnail_crop_rect
+  if (!empty($node->field_large_image_crop_rect[LANGUAGE_NONE])) {
+    $image_info = array(0, 0);
+    if (!empty($node->field_large_image[LANGUAGE_NONE][0]['value'])) {
+      $url = $node->field_large_image[LANGUAGE_NONE][0]['value'];
+    }
+    elseif (!empty($node->field_image[LANGUAGE_NONE][0]['uri'])) {
+      $url = image_style_url('large_six_hundred', $node->field_image[LANGUAGE_NONE][0]['uri']);
+    }
+    if (!empty($url) && filter_var($url, FILTER_VALIDATE_URL) && $mode !== 'validate') {
+      $image_info = getimagesize($url);
+    }
+    $id = $node->field_large_image_crop_rect[LANGUAGE_NONE][0];
+    $crop = field_collection_item_load_multiple($id);
+    $crop = current($crop);
+    $to_add[$i]['crop_large'][] = array(
+      'x1' => $crop->field_x[LANGUAGE_NONE][0]['value'],
+      'y1' => $crop->field_y[LANGUAGE_NONE][0]['value'],
+      'width' => $crop->field_width[LANGUAGE_NONE][0]['value'],
+      'height' => $crop->field_height[LANGUAGE_NONE][0]['value'],
+      'image_width' => $image_info[0],
+      'image_height' => $image_info[1],
+    );
+  }
+  if (!empty($node->field_thumbnail_crop_rect[LANGUAGE_NONE])) {
+    $image_info = array(0, 0);
+    if (!empty($node->field_thumbnail_image[LANGUAGE_NONE][0]['value'])) {
+      $url = $node->field_thumbnail_image[LANGUAGE_NONE][0]['value'];
+    }
+    elseif (!empty($node->field_image[LANGUAGE_NONE][0]['uri'])) {
+      $url = image_style_url('thumbnail_one_twelve', $node->field_image[LANGUAGE_NONE][0]['uri']);
+    }
+    if (!empty($url) && filter_var($url, FILTER_VALIDATE_URL) && $mode !== 'validate') {
+      $image_info = getimagesize($url);
+    }
+    $id = $node->field_thumbnail_crop_rect[LANGUAGE_NONE][0];
+    $crop = field_collection_item_load_multiple($id);
+    $crop = current($crop);
+    $to_add[$i]['crop_thumb'][] = array(
+      'x1' => $crop->field_x[LANGUAGE_NONE][0]['value'],
+      'y1' => $crop->field_y[LANGUAGE_NONE][0]['value'],
+      'width' => $crop->field_width[LANGUAGE_NONE][0]['value'],
+      'height' => $crop->field_height[LANGUAGE_NONE][0]['value'],
+      'image_width' => $image_info[0],
+      'image_height' => $image_info[1],
+    );
+  }
+  // Add the new crops
+  if (!empty($to_add[$i]) && (!empty($to_add[$i]['crop_thumb']) || !empty($to_add[$i]['crop_large']))) {
+    if ($mode === 'validate') {
+      return TRUE;
+    }
+    $crop_types = array();
+    if (!empty($to_add[$i]['crop_large'])) {
+      $crop_types['crop_large'] = 'field_large_image_crop';
+    }
+    if (!empty($to_add[$i]['crop_thumb'])) {
+      $crop_types['crop_thumb'] = 'field_thumbnail_image_crop';
+    }
+    foreach ($crop_types as $type => $field_name) {
+      foreach ($to_add[$i][$type] as $key => $crop_values) {
+        // Setup the values in the structure expected by the field_collection entity.
+        $item_values = array(
+          'field_x' => array(
+            'value' => $crop_values['x1'],
+          ),
+          'field_y' => array(
+            'value' => $crop_values['y1'],
+          ),
+          'field_image_width' => array(
+            'value' => $crop_values['image_width'],
+          ),
+          'field_image_height' => array(
+            'value' => $crop_values['image_height'],
+          ),
+          'field_width' => array(
+            'value' => $crop_values['width'],
+          ),
+          'field_height' => array(
+            'value' => $crop_values['height'],
+          ),
+        );
+        _aic_set_field_collection_items($node, $field_name, $item_values);
       }
     }
     $node->_is_changed = TRUE;
   }
-  if ($node->_is_changed) {
-    unset($node->_is_changed);
-    $entity_wrapper->save();
-    $counts[AICAPP_TYPE_OBJECT]++;
+}
+
+/**
+ * Find nodes of the passed type that do not have a language set.
+ */
+function _aic_set_field_collection_items(&$node, $field_name, $item_values) {
+  // Create the collection entity and set it's "host".
+  $collection = entity_create('field_collection_item', array('field_name' => $field_name));
+  $collection->setHostEntity('node', $node);
+  $collection_wrapper = entity_metadata_wrapper('field_collection_item', $collection);
+  foreach ($item_values as $key => $values) {
+    $collection_wrapper->{$key}->set($values['value']);
   }
-  return TRUE;
 }
 
 /**
@@ -743,12 +865,15 @@ function _aic_get_nodes_without_language($types) {
 /**
  * Find nodes of the passed type that do not have a language set.
  */
-function _aic_get_nodes_without_v2_field_values($type) {
+function _aic_get_nodes_without_v2_field_values($type, $query_tag = NULL) {
   $query = new EntityFieldQuery();
   $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', $type, '=');
-  if ($type === AICAPP_TYPE_OBJECT) {
+  if (!empty($query_tag)) {
+    $query->addTag($query_tag);
+  }
+  elseif ($type === AICAPP_TYPE_OBJECT) {
     $query->addTag('object_audio_missing');
   }
   elseif ($type === AICAPP_TYPE_TOUR) {
@@ -758,9 +883,19 @@ function _aic_get_nodes_without_v2_field_values($type) {
   if (!empty($result['node'])) {
     foreach ($result['node'] as $nid => $item) {
       $node = node_load($nid);
-      if ($type === AICAPP_TYPE_OBJECT && empty($node->field_object_audio[LANGUAGE_NONE])) {
-        // Exclude v1 object unless it has at least 1 audio node.
-        unset($result['node'][$node->nid]);
+      if ($type === AICAPP_TYPE_OBJECT) {
+        if (empty($query_tag) && empty($node->field_object_audio[LANGUAGE_NONE])) {
+          // Exclude v1 object unless it has at least 1 audio node.
+          unset($result['node'][$node->nid]);
+        }
+        elseif ($query_tag === 'thumb_crop_missing' && empty($node->field_thumbnail_crop_rect[LANGUAGE_NONE])) {
+          // Exclude v1 object unless it has crop values.
+          unset($result['node'][$node->nid]);
+        }
+        elseif ($query_tag === 'large_crop_missing' && empty($node->field_large_image_crop_rect[LANGUAGE_NONE])) {
+          // Exclude v1 object unless it has crop values.
+          unset($result['node'][$node->nid]);
+        }
       }
       elseif ($type === AICAPP_TYPE_TOUR) {
         // Exclude v1 tour stops with an missing object reference.
@@ -792,5 +927,25 @@ function _aic_get_nodes_without_v2_field_values($type) {
       }
     }
   }
+  if ($type === AICAPP_TYPE_OBJECT && empty($query_tag)) {
+    // Also check that crop values have been updated.
+    $result = array_merge($result, aicapp_get_crop_field_objects());
+  }
   return $result;
+}
+
+/**
+ * Return object nodes with crop values needing to be copied.
+ */
+function aicapp_get_crop_field_objects() {
+  $nodes = _aic_get_nodes_without_v2_field_values(AICAPP_TYPE_OBJECT, 'thumb_crop_missing');
+  $nodes = array_merge($nodes, _aic_get_nodes_without_v2_field_values(AICAPP_TYPE_OBJECT, 'large_crop_missing'));
+  // Mark the nodes as need crop updates.
+  if (empty($nodes)) {
+    return array();
+  }
+  foreach ($nodes['node'] as $nid => $node) {
+    $nodes['node'][$nid]->update_type = 'crop_fields';
+  }
+  return $nodes;
 }
