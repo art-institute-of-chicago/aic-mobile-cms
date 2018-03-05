@@ -674,6 +674,12 @@ function getDefaults(&$form, $field, $item, &$thumbValues) {
   $thumbValues['y2'] = !empty($item->field_y2[LANGUAGE_NONE]) && !empty($item->field_y2[LANGUAGE_NONE][0]['value']) ? $item->field_y2[LANGUAGE_NONE][0]['value'] : 0;
   $thumbValues['width'] = !empty($item->field_width[LANGUAGE_NONE]) && !empty($item->field_width[LANGUAGE_NONE][0]['value']) ? $item->field_width[LANGUAGE_NONE][0]['value'] : 0;
   $thumbValues['height'] = !empty($item->field_height[LANGUAGE_NONE]) && !empty($item->field_height[LANGUAGE_NONE][0]['value']) ? $item->field_height[LANGUAGE_NONE][0]['value'] : 0;
+  if (empty($thumbValues['x2'])) {
+    $thumbValues['x2'] = $thumbValues['x1'] + $thumbValues['width'];
+  }
+  if (empty($thumbValues['y2'])) {
+    $thumbValues['y2'] = $thumbValues['y1'] + $thumbValues['height'];
+  }
   // Protect against when a crop would expend beyond the preview image size.
   if ($thumbValues['width'] > $thumbValues['image_width']) {
     $thumbValues['width'] = $thumbValues['image_width'] - $thumbValues['x1'];

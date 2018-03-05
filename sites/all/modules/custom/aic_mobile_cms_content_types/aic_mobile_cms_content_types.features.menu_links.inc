@@ -27,6 +27,23 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
     'weight' => -49,
     'customized' => 1,
   );
+  // Exported menu link: main-menu_search_page:app-search.
+  $menu_links['main-menu_app-search-page:app-search'] = array(
+    'menu_name' => 'main-menu',
+    'link_path' => 'app-search',
+    'router_path' => 'app-search',
+    'link_title' => 'App Search Page',
+    'options' => array(
+      'identifier' => 'main-menu_app-search-page:app-search',
+    ),
+    'module' => 'system',
+    'hidden' => 0,
+    'external' => 0,
+    'has_children' => 0,
+    'expanded' => 0,
+    'weight' => 15,
+    'customized' => 1,
+  );
   // Exported menu link: main-menu_exhibitions:exhibitions.
   $menu_links['main-menu_exhibitions:exhibitions'] = array(
     'menu_name' => 'main-menu',
@@ -150,6 +167,7 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
   // Translatables
   // Included for use with string extractors like potx.
   t('Audio');
+  t('App Search Page');
   t('Events');
   t('Exhibitions');
   t('Galleries');
