@@ -834,22 +834,13 @@ function _aicapp_get_tour_stops($tour) {
     $i = 0;
     foreach ($fc_items as $fc_item) {
       $item = field_collection_field_get_entity($fc_item);
+
       $audio_commentary_id = !empty($item->field_tour_stop_audio_commentary) ? $item->field_tour_stop_audio_commentary[LANGUAGE_NONE][0]['target_id'] : NULL;
       $audio_commentary = $audio_commentary_id ? entity_load_single('field_collection_item', $audio_commentary_id) : NULL;
       $audio_node_id = !empty($audio_commentary->field_audio_commentary_audio) ? $audio_commentary->field_audio_commentary_audio[LANGUAGE_NONE][0]['target_id']: NULL;
-      $bumper_commentary_id = !empty($item->field_tour_stop_bumper) ? $item->field_tour_stop_bumper[LANGUAGE_NONE][0]['target_id'] : NULL;
-      $bumper_commentary = $bumper_commentary_id ? entity_load_single('field_collection_item', $bumper_commentary_id) : NULL;
-      $bumper_node_id = is_object($bumper_commentary) ? $bumper_commentary->hostEntityId() : NULL;
+      $bumper_node_id = !empty($item->field_tour_stop_bumper) ? $item->field_tour_stop_bumper[LANGUAGE_NONE][0]['target_id'] : NULL;
       $object_node_id = !empty($item->field_tour_stop_object) ? $item->field_tour_stop_object[LANGUAGE_NONE][0]['target_id'] : NULL;
-      // if ($object_node = node_load($object_node_id)) {
-      //   $entity = entity_metadata_wrapper('node', $object_node_id);
-      //   $object_id = $entity->field_object_id->value();
-      // }
-      // else {
-      //   $object_id = NULL;
-      // }
       $stops[] = array(
-        //'object_id' => $object_id,
         'object' => $object_node_id,
         'audio_id' => $audio_node_id,
         'audio_bumper' => $bumper_node_id,
