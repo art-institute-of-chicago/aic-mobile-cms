@@ -834,7 +834,6 @@ function _aicapp_get_tour_stops($tour) {
     $i = 0;
     foreach ($fc_items as $fc_item) {
       $item = field_collection_field_get_entity($fc_item);
-
       $audio_commentary_id = !empty($item->field_tour_stop_audio_commentary) ? $item->field_tour_stop_audio_commentary[LANGUAGE_NONE][0]['target_id'] : NULL;
       $audio_commentary = $audio_commentary_id ? entity_load_single('field_collection_item', $audio_commentary_id) : NULL;
       $audio_node_id = !empty($audio_commentary->field_audio_commentary_audio) ? $audio_commentary->field_audio_commentary_audio[LANGUAGE_NONE][0]['target_id']: NULL;
