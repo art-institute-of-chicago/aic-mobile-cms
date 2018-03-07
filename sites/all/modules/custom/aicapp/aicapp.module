@@ -2196,6 +2196,9 @@ function aicappSaveNode($object, $type, $status = 0) {
     if (isset($object['number'])) {
       $node->field_gallery_number[$node->language][0]['value'] = $object['number'];
     }
+    if (!empty($object['latitude']) && !empty($object['longitude'])) {
+      $node->field_location[$node->language][0]['value'] = $object['latitude'] . ',' . $object['longitude'];
+    }
     if (isset($object['floor'])) {
       $node->field_floor[$node->language][0]['value'] = $object['floor'];
     }
