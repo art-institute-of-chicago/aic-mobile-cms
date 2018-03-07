@@ -2311,7 +2311,7 @@ Ex: ""Head of Buddha (Spanish)"""',
     'label' => 'Location',
     'required' => 0,
     'settings' => array(
-    'entity_translation_sync' => FALSE,
+      'entity_translation_sync' => FALSE,
       'text_processing' => 0,
       'user_register_form' => FALSE,
     ),
@@ -5151,6 +5151,7 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Floor Map File');
   t('Full Size Image');
   t('Gallery ID');
+  t('Gallery Location');
   t('Gallery Number');
   t('Highlighted Object');
   t('Home Member Prompt Text');
