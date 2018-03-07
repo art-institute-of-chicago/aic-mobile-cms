@@ -174,7 +174,6 @@ features[field_instance][] = node-exhibition-title_field
 features[field_instance][] = node-gallery-field_floor
 features[field_instance][] = node-gallery-field_gallery_id
 features[field_instance][] = node-gallery-field_gallery_number
-features[field_instance][] = node-gallery-field_location
 features[field_instance][] = node-map_annotation-field_annotation_amenity_type
 features[field_instance][] = node-map_annotation-field_annotation_description
 features[field_instance][] = node-map_annotation-field_annotation_image
