@@ -2299,9 +2299,9 @@ function aicapp_node_view($node, $view_mode, $langcode) {
       $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
       // Query the data aggregrator.
       $results = _aicapp_fetch_data($url, $options);
-      if (!empty($result[0])) {
+      if (!empty($results[0])) {
         $w = 10;
-        foreach ($result[0] as $key => $val) {
+        foreach ($results[0] as $key => $val) {
           $node->content[$key] = array(
             '#markup' => aicapp_field_markup($key, $val),
             '#weight' => $w++,

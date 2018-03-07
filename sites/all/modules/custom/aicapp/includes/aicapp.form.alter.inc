@@ -248,7 +248,7 @@ function _aicapp_form_alter(&$form, &$form_state, $form_id) {
 function _aicapp_form_afterbuild(&$form, &$form_state) {
   $path_part_3 = arg(3);
   // Add a google map for pages that have a location field.
-  if (!empty($form['field_location']) && empty($path_part_3)) {
+  if (!empty($form['field_location']) && empty($path_part_3) && $form['#node']->type !== AICAPP_TYPE_GALLERY) {
     $coords = !empty($form['#node']->field_location[LANGUAGE_NONE][0]['safe_value']) ? $form['#node']->field_location[LANGUAGE_NONE][0]['safe_value'] : 0;
     $map_markup = '<iframe width="650" height="600" frameborder="0" scrolling="no"';
     $map_markup .= ' marginheight="0" marginwidth="0" src="' . base_path();
