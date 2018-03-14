@@ -783,25 +783,25 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
       $options['query'] = json_encode(array(
         '_source' => true,
         'fields' => array(
-          'id', 'title', 'start_at', 'end_at',
+          'id', 'title', 'aic_start_at', 'aic_end_at',
         ),
         'sort' => array(
-          'start_at',
-          'end_at',
+          'aic_start_at',
+          'aic_end_at',
         ),
         'query' => array(
           'bool' => array(
             'must' => array(
               array(
                 'range' => array(
-                  'start_at' => array(
+                  'aic_start_at' => array(
                     'lte' => 'now+2w',
                   )
                 ),
               ),
               array(
                 'range' => array(
-                  'end_at' => array(
+                  'aic_end_at' => array(
                     'gte' => 'now',
                   )
                 ),
@@ -828,7 +828,7 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
       }
       if ($type === AICAPP_TYPE_EXHIBITION) {
         // Skip any that are closed?
-        if (empty($remote_record['end_at']) || $now > new DateTime($remote_record['end_at'])) {
+        if (empty($remote_record['aic_end_at']) || $now > new DateTime($remote_record['aic_end_at'])) {
           # Now is greater than end time, i.e. in the past.
           continue;
         }
@@ -853,7 +853,7 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
             continue;
           }
           if ($type === AICAPP_TYPE_EXHIBITION) {
-            if ($now > new DateTime($remote_record['end_at'])) {
+            if ($now > new DateTime($remote_record['aic_end_at'])) {
               # Now is greater than end time, i.e. in the past.
               continue;
             }
@@ -958,8 +958,8 @@ function _aicapp_save_remote_entity(&$to_import, $type, $entity_wrapper = NULL) 
   $entity_wrapper->field_imported_object_id->set($to_import['id']);
   // Start and end dates.
   if ($type === AICAPP_TYPE_EXHIBITION) {
-    $start = new DateTime($to_import['start_at']);
-    $end = new DateTime($to_import['end_at']);
+    $start = new DateTime($to_import['aic_start_at']);
+    $end = new DateTime($to_import['aic_end_at']);
   }
   $tz = $start->getTimezone();
   $date_values['value'] = $start->getTimestamp();
