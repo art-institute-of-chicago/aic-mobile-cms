@@ -324,6 +324,13 @@ function aicapp_admin_api($form, &$form_state) {
     '#title' => t('Autocomplete endpoint'),
     '#default_value' => variable_get('aicapp_data_endpoint_autocomplete', '/api/v1/autocomplete'),
   );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_multisearch'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Multi Search endpoint'),
+    '#default_value' => variable_get('aicapp_data_endpoint_multisearch', '/api/v1/msearch'),
+  );
   $form['aicapp_tickets'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
