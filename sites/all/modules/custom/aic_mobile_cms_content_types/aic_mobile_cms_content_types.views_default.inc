@@ -314,7 +314,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['views_bulk_operations']['vbo_operations'] = array(
     'action::node_promote_action' => array(
       'selected' => 1,
-      'postpone_processing' => 1,
+      'postpone_processing' => 0,
       'skip_confirmation' => 0,
       'skip_permission_check' => 0,
       'override_label' => 1,
@@ -322,7 +322,7 @@ function aic_mobile_cms_content_types_views_default_views() {
     ),
     'action::node_unpromote_action' => array(
       'selected' => 1,
-      'postpone_processing' => 1,
+      'postpone_processing' => 0,
       'skip_confirmation' => 0,
       'skip_permission_check' => 0,
       'override_label' => 1,
@@ -382,7 +382,7 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['filters']['promote']['id'] = 'promote';
   $handler->display->display_options['filters']['promote']['table'] = 'node';
   $handler->display->display_options['filters']['promote']['field'] = 'promote';
-  $handler->display->display_options['filters']['promote']['value'] = '0';
+  $handler->display->display_options['filters']['promote']['value'] = 'All';
   $handler->display->display_options['filters']['promote']['exposed'] = TRUE;
   $handler->display->display_options['filters']['promote']['expose']['operator_id'] = '';
   $handler->display->display_options['filters']['promote']['expose']['label'] = 'Featured';
