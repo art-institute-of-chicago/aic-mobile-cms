@@ -43,6 +43,7 @@ function aicapp_init() {
   define('AICAPP_DATA_API_ENDPOINT_EVENTS', variable_get('aicapp_data_endpoint_events', '/api/v1/events'));
   define('AICAPP_DATA_API_ENDPOINT_TOURS', variable_get('aicapp_data_endpoint_tours', '/api/v1/tours'));
   define('AICAPP_DATA_API_ENDPOINT_AUTOCOMPLETE', variable_get('aicapp_data_endpoint_autocomplete', '/api/v1/autocomplete'));
+  define('AICAPP_MULTISEARCH_ENDPOINT', variable_get('aicapp_data_endpoint_multisearch', '/api/v1/msearch'));
   define('AICAPP_TICKETS_ENDPOINT', variable_get('aicapp_tickets_endpoint', 'https://sales.artic.edu/admissiondate'));
   define('AICAPP_JSON_FILENAME', variable_get('aicapp_json_filename', 'appData'));
   define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
@@ -975,19 +976,10 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $map_annotations = node_load_multiple(array(), array('type' => AICAPP_TYPE_MAP_ANNOTATION, 'status' => 1));
   // Load map floor that are published. There should only be 1 node loaded.
   $map_floor = node_load_multiple(array(), array('type' => AICAPP_TYPE_MAP_FLOOR, 'status' => 1));
-  // Load all published exhibition nodes.
-  $exhibitions = node_load_multiple(array(), array('type' => AICAPP_TYPE_EXHIBITION, 'status' => 1));
-  // Load featured Events & Objects via an entity field query because we Only
-  // need a list of node IDs instead of entire objects.
-  $query = new EntityFieldQuery();
-  $results = $query
-    ->entityCondition('entity_type', 'node')
-    ->propertyCondition('type', array(AICAPP_TYPE_EXHIBITION), 'IN')
-    ->propertyCondition('status', 1, '=')
-    ->propertyCondition('promote', 1, '=')
-    ->execute();
-  // Load all featured nodes.
-  $featured = isset($results['node']) ? node_load_multiple(array_keys($results['node'])) : array();
+  // Load exhibition from a view, which give the ordered and promoted exhibitions.
+  $exhibitions = views_get_view_result('exhibitions', 'page');
+  // Store a list of featured items.
+  $featured = array();
   // Gallery nodes.
   $gallery_ids = array();
   $by_gallery_id = array();
@@ -1082,7 +1074,6 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       unset($objects['#updated'][$key]);
     }
   }
-
   // Overwrite the objects with the updated copy.
   $objects = $objects['#updated'];
   // Format audio node.
@@ -1091,11 +1082,14 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   }
   // Loop through all tours.
   foreach ($tours as $key => $tour) {
+    $promote = FALSE;
     // If tour is featured (ie, promote = 1), then add to featued lists.
-    if ($tour->promote && $tour->status) {
-      $featured[$tour->nid] = new stdClass();
-      $featured[$tour->nid]->nid = $tour->nid;
-      $featured[$tour->nid]->type = AICAPP_TYPE_TOUR;
+    if ($tour->promote) {
+      $promote = TRUE;
+      $item = new stdClass();
+      $item->nid = $tour->nid;
+      $item->type = AICAPP_TYPE_TOUR;
+      $featured[] = $item;
     }
     // Clean the tour node of extra properties.
     strip_drupal_from_node($tour);
@@ -1119,12 +1113,18 @@ function aicapp_gendata_form_submit($form, &$form_state) {
         db_query("UPDATE {node} SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
         db_query("UPDATE {node_revision} SET status = 0 WHERE nid = :nid", array(':nid' => $tour->nid));
         unset($tours[$key]);
-        // Also remove from featured.
-        unset($featured[$tour->nid]);
+        if ($promote) {
+          // Remove the last item added to the featured array.
+          array_pop($featured);
+        }
       }
     }
     elseif (empty($tour->tour_dates) && $tour->status == 0) {
       unset($tours[$key]);
+      if ($promote) {
+        // Remove the last item added to the featured array.
+        array_pop($featured);
+      }
     }
     // Add the weight from the view page so we can sort.
     $result = db_query('SELECT weight FROM {draggableviews_structure} WHERE entity_id = :d', array(':d' => $tour->nid));
@@ -1156,26 +1156,34 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   }
   // Format exhibitions
   $by_exhibition_id = array();
-  foreach ($exhibitions as $exhibition) {
-    if ($exhibition->promote && $exhibition->status) {
-      $featured[$exhibition->nid] = new stdClass();
-      $featured[$exhibition->nid]->nid = $exhibition->nid;
-      $featured[$exhibition->nid]->type = AICAPP_TYPE_EXHIBITION;
+  foreach ($exhibitions as $result) {
+    $id = !empty($result->field_field_imported_object_id[0]) ? $result->field_field_imported_object_id[0]['raw']['safe_value'] : NULL;
+    if ($result->node_promote && $id) {
+      $item = new stdClass();
+      $item->nid = $result->nid;
+      $item->exhibition_id = $id;
+      $item->type = AICAPP_TYPE_EXHIBITION;
+      $featured[] = $item;
     }
+    $exhibition = node_load($result->nid);
     // Strip out Drupal native stuff we don't need in the JSON output from galleries.
     strip_drupal_from_node($exhibition);
-    if (!empty($exhibition->image_url)) {
-      $by_exhibition_id[$exhibition->exhibition_id] = $exhibition;
-      unset($exhibition->exhibition_id);
-    }
+    $by_exhibition_id[$exhibition->exhibition_id] = $exhibition;
+    unset($exhibition->exhibition_id);
   }
   // Format featured tours and exhibitions.
   $featured_sorted = array();
   if (!empty($featured)) {
     foreach ($featured as $feature) {
-      $featured_sorted[$feature->type][] = $feature->nid;
+      if ($feature->type === AICAPP_TYPE_EXHIBITION) {
+        $featured_sorted[$feature->type][] = $feature->exhibition_id;
+      }
+      else {
+        $featured_sorted[$feature->type][] = $feature->nid;
+      }
     }
   }
+
   // Prepare to output JSON Version 2 JSON data.
   // Add all the entities to a single array for JSON encoding.
   $v2_data = array(
@@ -1636,60 +1644,69 @@ function strip_drupal_from_node(&$node) {
   switch ($node->type) {
     case AICAPP_TYPE_PAGE:
       // General Info node field items.
-      if (isset($node->field_museum_hours)) {
-        $node->museum_hours = NULL;
-        if (isset($node->field_museum_hours[$node->language][0]['safe_value'])) {
-          $node->museum_hours = $node->field_museum_hours[$node->language][0]['safe_value'];
-        }
+      $node->museum_hours = NULL;
+      if (isset($node->field_museum_hours[$node->language][0]['safe_value'])) {
+        $node->museum_hours = $node->field_museum_hours[$node->language][0]['safe_value'];
       }
       // (field_home_member_prompt_text) home_member_prompt_text.
-      if (isset($node->field_home_member_prompt_text)) {
-        $node->home_member_prompt_text = NULL;
-        if (isset($node->field_home_member_prompt_text[$node->language][0]['safe_value'])) {
-          $node->home_member_prompt_text = $node->field_home_member_prompt_text[$node->language][0]['safe_value'];
-        }
+      $node->home_member_prompt_text = NULL;
+      if (isset($node->field_home_member_prompt_text[$node->language][0]['safe_value'])) {
+        $node->home_member_prompt_text = $node->field_home_member_prompt_text[$node->language][0]['safe_value'];
       }
       // (field_audio_title) audio_title.
-      if (isset($node->field_audio_title)) {
-        $node->audio_title = NULL;
-        if (isset($node->field_audio_title[$node->language][0]['safe_value'])) {
-          $node->audio_title = $node->field_audio_title[$node->language][0]['safe_value'];
-        }
+      $node->audio_title = NULL;
+      if (isset($node->field_audio_title[$node->language][0]['safe_value'])) {
+        $node->audio_title = $node->field_audio_title[$node->language][0]['safe_value'];
       }
       // (field_audio_subtitle) audio_subtitle.
-      if (isset($node->field_audio_subtitle)) {
-        $node->audio_subtitle = NULL;
-        if (isset($node->field_audio_subtitle[$node->language][0]['safe_value'])) {
-          $node->audio_subtitle = $node->field_audio_subtitle[$node->language][0]['safe_value'];
-        }
+      $node->audio_subtitle = NULL;
+      if (isset($node->field_audio_subtitle[$node->language][0]['safe_value'])) {
+        $node->audio_subtitle = $node->field_audio_subtitle[$node->language][0]['safe_value'];
       }
       // (field_map_title) map_title.
-      if (isset($node->field_map_title)) {
-        $node->map_title = NULL;
-        if (isset($node->field_map_title[$node->language][0]['safe_value'])) {
-          $node->map_title = $node->field_map_title[$node->language][0]['safe_value'];
-        }
+      $node->map_title = NULL;
+      if (isset($node->field_map_title[$node->language][0]['safe_value'])) {
+        $node->map_title = $node->field_map_title[$node->language][0]['safe_value'];
       }
       // (field_map_subtitle) map_subtitle.
-      if (isset($node->field_map_subtitle)) {
-        $node->map_subtitle = NULL;
-        if (isset($node->field_map_subtitle[$node->language][0]['safe_value'])) {
-          $node->map_subtitle = $node->field_map_subtitle[$node->language][0]['safe_value'];
-        }
+      $node->map_subtitle = NULL;
+      if (isset($node->field_map_subtitle[$node->language][0]['safe_value'])) {
+        $node->map_subtitle = $node->field_map_subtitle[$node->language][0]['safe_value'];
       }
       // (field_info_title) info_title.
-      if (isset($node->field_info_title)) {
-        $node->info_title = NULL;
-        if (isset($node->field_info_title[$node->language][0]['safe_value'])) {
-          $node->info_title = $node->field_info_title[$node->language][0]['safe_value'];
-        }
+      $node->info_title = NULL;
+      if (isset($node->field_info_title[$node->language][0]['safe_value'])) {
+        $node->info_title = $node->field_info_title[$node->language][0]['safe_value'];
       }
       // (field_info_subtitle) info_subtitle.
-      if (isset($node->field_info_subtitle)) {
-        $node->info_subtitle = NULL;
-        if (isset($node->field_info_subtitle[$node->language][0]['safe_value'])) {
-          $node->info_subtitle = $node->field_info_subtitle[$node->language][0]['safe_value'];
-        }
+      $node->info_subtitle = NULL;
+      if (isset($node->field_info_subtitle[$node->language][0]['safe_value'])) {
+        $node->info_subtitle = $node->field_info_subtitle[$node->language][0]['safe_value'];
+      }
+      // Dining Title "dining_title".
+      $node->dining_title = NULL;
+      if (isset($node->field_dining_title[$node->language][0]['safe_value'])) {
+        $node->dining_title = $node->field_dining_title[$node->language][0]['safe_value'];
+      }
+      // Gift Shops Title "gift_shops_title".
+      $node->gift_shops_title = NULL;
+      if (isset($node->field_gift_shops_title[$node->language][0]['safe_value'])) {
+        $node->gift_shops_title = $node->field_gift_shops_title[$node->language][0]['safe_value'];
+      }
+      // Members Lounge Title "members_lounge_title".
+      $node->members_lounge_title = NULL;
+      if (isset($node->field_members_lounge_title[$node->language][0]['safe_value'])) {
+        $node->members_lounge_title = $node->field_members_lounge_title[$node->language][0]['safe_value'];
+      }
+      // See All Tours Intro "see_all_tours_intro".
+      $node->see_all_tours_intro = NULL;
+      if (isset($node->field_see_all_tours_intro[$node->language][0]['safe_value'])) {
+        $node->see_all_tours_intro = $node->field_see_all_tours_intro[$node->language][0]['safe_value'];
+      }
+      // Restrooms Title" "restrooms_title".
+      $node->restrooms_title = NULL;
+      if (isset($node->field_restrooms_title[$node->language][0]['safe_value'])) {
+        $node->restrooms_title = $node->field_restrooms_title[$node->language][0]['safe_value'];
       }
       // General Info translations.
       if (!empty($node->museum_hours)) {
@@ -1707,6 +1724,11 @@ function strip_drupal_from_node(&$node) {
             'map_subtitle' => isset($node->field_map_subtitle[$lang_key][0]['safe_value']) ? $node->field_map_subtitle[$lang_key][0]['safe_value'] : '',
             'info_title' => isset($node->field_info_title[$lang_key][0]['safe_value']) ? $node->field_info_title[$lang_key][0]['safe_value'] : '',
             'info_subtitle' => isset($node->field_info_subtitle[$lang_key][0]['safe_value']) ? $node->field_info_subtitle[$lang_key][0]['safe_value'] : '',
+            'dining_title' => isset($node->field_dining_title[$lang_key][0]['safe_value']) ? $node->field_dining_title[$lang_key][0]['safe_value'] : '',
+            'gift_shops_title' => isset($node->field_gift_shops_title[$lang_key][0]['safe_value']) ? $node->field_gift_shops_title[$lang_key][0]['safe_value'] : '',
+            'members_lounge_title' => isset($node->field_members_lounge_title[$lang_key][0]['safe_value']) ? $node->field_members_lounge_title[$lang_key][0]['safe_value'] : '',
+            'see_all_tours_intro' => isset($node->field_see_all_tours_intro[$lang_key][0]['safe_value']) ? $node->field_see_all_tours_intro[$lang_key][0]['safe_value'] : '',
+            'restrooms_title' => isset($node->field_restrooms_title[$lang_key][0]['safe_value']) ? $node->field_restrooms_title[$lang_key][0]['safe_value'] : '',
           );
         }
       }
@@ -3251,6 +3273,7 @@ function _aic_app_get_data_endpoints() {
     'autocomplete_endpoint' => AICAPP_DATA_API_ENDPOINT_AUTOCOMPLETE,
     'tours_endpoint' => AICAPP_DATA_API_ENDPOINT_TOURS,
     'tickets_endpoint' => AICAPP_TICKETS_ENDPOINT,
+    'multisearch_endpoint' => AICAPP_MULTISEARCH_ENDPOINT,
   );
 }
 
