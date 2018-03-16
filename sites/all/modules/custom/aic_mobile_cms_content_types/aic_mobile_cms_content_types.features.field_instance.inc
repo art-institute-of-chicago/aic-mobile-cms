@@ -4255,7 +4255,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 13,
+        'weight' => 15,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -4277,10 +4277,10 @@ Ex: ""Head of Buddha (Spanish)"""',
       'active' => 1,
       'module' => 'text',
       'settings' => array(
-        'size' => 60,
+        'rows' => 5,
       ),
-      'type' => 'text_textfield',
-      'weight' => 14,
+      'type' => 'text_textarea',
+      'weight' => 16,
     ),
   );
 
