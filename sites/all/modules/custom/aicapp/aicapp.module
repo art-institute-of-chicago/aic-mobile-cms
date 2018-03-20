@@ -1394,6 +1394,7 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
   $url = $endpoint . '?' . http_build_query($options);
 
   try {
+    $post_options['timeout'] = 45;
     // Make the request using drupal_http_request, passing $post_options array.
     $result = drupal_http_request($url, $post_options);
     if ($result->code === '200' && !empty($result->data)) {
