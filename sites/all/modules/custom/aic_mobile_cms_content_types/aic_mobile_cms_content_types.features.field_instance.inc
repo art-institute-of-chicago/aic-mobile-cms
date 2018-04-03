@@ -3833,8 +3833,8 @@ Ex: ""Head of Buddha (Spanish)"""',
     ),
   );
 
-  // Exported field_instance: 'node-page-field_dining_title'.
-  $field_instances['node-page-field_dining_title'] = array(
+  // Exported field_instance: 'node-page-field_gift_shop_text'.
+  $field_instances['node-page-field_gift_shop_text'] = array(
     'bundle' => 'page',
     'default_value' => NULL,
     'deleted' => 0,
@@ -3845,7 +3845,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 10,
+        'weight' => 16,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -3855,8 +3855,8 @@ Ex: ""Head of Buddha (Spanish)"""',
       ),
     ),
     'entity_type' => 'node',
-    'field_name' => 'field_dining_title',
-    'label' => 'Dining Title',
+    'field_name' => 'field_gift_shop_text',
+    'label' => 'Gift Shop Text',
     'required' => 0,
     'settings' => array(
       'entity_translation_sync' => FALSE,
@@ -3867,10 +3867,10 @@ Ex: ""Head of Buddha (Spanish)"""',
       'active' => 1,
       'module' => 'text',
       'settings' => array(
-        'size' => 60,
+        'rows' => 5,
       ),
-      'type' => 'text_textfield',
-      'weight' => 11,
+      'type' => 'text_textarea',
+      'weight' => 12,
     ),
   );
 
@@ -3911,7 +3911,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'size' => 60,
       ),
       'type' => 'text_textfield',
-      'weight' => 12,
+      'weight' => 11,
     ),
   );
 
@@ -4120,6 +4120,47 @@ Ex: ""Head of Buddha (Spanish)"""',
     ),
   );
 
+  // Exported field_instance: 'node-page-field_members_lounge_text'.
+  $field_instances['node-page-field_members_lounge_text'] = array(
+    'bundle' => 'page',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 17,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_members_lounge_text',
+    'label' => 'Members Lounge Text',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 5,
+      ),
+      'type' => 'text_textarea',
+      'weight' => 14,
+    ),
+  );
+
   // Exported field_instance: 'node-page-field_members_lounge_title'.
   $field_instances['node-page-field_members_lounge_title'] = array(
     'bundle' => 'page',
@@ -4202,6 +4243,47 @@ Ex: ""Head of Buddha (Spanish)"""',
     ),
   );
 
+  // Exported field_instance: 'node-page-field_restrooms_text'.
+  $field_instances['node-page-field_restrooms_text'] = array(
+    'bundle' => 'page',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 18,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_restrooms_text',
+    'label' => 'Restrooms Text',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 5,
+      ),
+      'type' => 'text_textarea',
+      'weight' => 16,
+    ),
+  );
+
   // Exported field_instance: 'node-page-field_restrooms_title'.
   $field_instances['node-page-field_restrooms_title'] = array(
     'bundle' => 'page',
@@ -4280,7 +4362,7 @@ Ex: ""Head of Buddha (Spanish)"""',
         'rows' => 5,
       ),
       'type' => 'text_textarea',
-      'weight' => 16,
+      'weight' => 17,
     ),
   );
 
@@ -5346,7 +5428,6 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Credits');
   t('Deprecated - Tour Stops');
   t('Description');
-  t('Dining Title');
   t('Enter artist first and last name, i.e. Irving Penn');
   t('Enter artist\'s origin, i.e. American, 1917-2009');
   t('Exhibition Dates');
@@ -5359,6 +5440,7 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Gallery ID');
   t('Gallery Location');
   t('Gallery Number');
+  t('Gift Shop Text');
   t('Gift Shops Title');
   t('Highlighted Object');
   t('Home Member Prompt Text');
@@ -5375,6 +5457,7 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Location');
   t('Map Subtitle');
   t('Map Title');
+  t('Members Lounge Text');
   t('Members Lounge Title');
   t('Move the crop square around to set new crop for map annotations in the app. This crop cannot be resized.');
   t('Move the crop square around to set new crop for the tours carousel in the app. This crop can be resized with the minimum size being 364(w) x 200(h).');
@@ -5388,6 +5471,7 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Object Selector Number');
   t('Object Selector Numbers');
   t('Reference Number');
+  t('Restrooms Text');
   t('Restrooms Title');
   t('See All Tours Intro');
   t('Selector Number');

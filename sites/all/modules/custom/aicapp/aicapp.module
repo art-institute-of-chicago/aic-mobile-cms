@@ -44,7 +44,9 @@ function aicapp_init() {
   define('AICAPP_DATA_API_ENDPOINT_TOURS', variable_get('aicapp_data_endpoint_tours', '/api/v1/tours'));
   define('AICAPP_DATA_API_ENDPOINT_AUTOCOMPLETE', variable_get('aicapp_data_endpoint_autocomplete', '/api/v1/autocomplete'));
   define('AICAPP_MULTISEARCH_ENDPOINT', variable_get('aicapp_data_endpoint_multisearch', '/api/v1/msearch'));
-  define('AICAPP_TICKETS_ENDPOINT', variable_get('aicapp_tickets_endpoint', 'https://sales.artic.edu/admissiondate'));
+  define('AICAPP_TICKETS_URL', variable_get('aicapp_tickets_url', 'https://sales.artic.edu/admissiondate?&utm_medium=mobile-app&utm_source=iphone&utm_campaign=buy-tickets'));
+  define('AICAPP_MEMBERSHIP_URL', variable_get('aicapp_membership_url', 'https://sales.artic.edu/admissiondate?&utm_medium=mobile-app&utm_source=iphone&utm_campaign=buy-tickets'));
+  define('AICAPP_WEBSITE_URL', variable_get('aicapp_website_url', 'http://www.artic.edu/?&utm_medium=mobile-app&utm_source=iphone&utm_campaign=homepage'));
   define('AICAPP_JSON_FILENAME', variable_get('aicapp_json_filename', 'appData'));
   define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
   define('AICAPP_TOUR_VOCABULARY_NAME', variable_get('aicapp_tour_vocabular_name', 'categories'));
@@ -1196,7 +1198,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'objects' => $objects,
     'audio_files' => $audio_files,
     'tours' => $tours,
-    'annontations' => $map_annotations,
+    'map_annontations' => $map_annotations,
     'map_floors' => !empty($map_floor) ? $map_floor : array(),
     'tour_categories' => _aicapp_get_tour_categories(),
     'exhibitions' => $by_exhibition_id,
@@ -1684,20 +1686,25 @@ function strip_drupal_from_node(&$node) {
       if (isset($node->field_info_subtitle[$node->language][0]['safe_value'])) {
         $node->info_subtitle = $node->field_info_subtitle[$node->language][0]['safe_value'];
       }
-      // Dining Title "dining_title".
-      $node->dining_title = NULL;
-      if (isset($node->field_dining_title[$node->language][0]['safe_value'])) {
-        $node->dining_title = $node->field_dining_title[$node->language][0]['safe_value'];
-      }
       // Gift Shops Title "gift_shops_title".
       $node->gift_shops_title = NULL;
       if (isset($node->field_gift_shops_title[$node->language][0]['safe_value'])) {
         $node->gift_shops_title = $node->field_gift_shops_title[$node->language][0]['safe_value'];
       }
+      // Gift Shops Text "gift_shops_text".
+      $node->gift_shops_text = NULL;
+      if (isset($node->field_gift_shops_text[$node->language][0]['safe_value'])) {
+        $node->gift_shops_text = $node->field_gift_shops_text[$node->language][0]['safe_value'];
+      }
       // Members Lounge Title "members_lounge_title".
       $node->members_lounge_title = NULL;
       if (isset($node->field_members_lounge_title[$node->language][0]['safe_value'])) {
         $node->members_lounge_title = $node->field_members_lounge_title[$node->language][0]['safe_value'];
+      }
+      // Members Lounge Text "members_lounge_text".
+      $node->members_lounge_text = NULL;
+      if (isset($node->field_members_lounge_text[$node->language][0]['safe_value'])) {
+        $node->members_lounge_text = $node->field_members_lounge_text[$node->language][0]['safe_value'];
       }
       // See All Tours Intro "see_all_tours_intro".
       $node->see_all_tours_intro = NULL;
@@ -1708,6 +1715,11 @@ function strip_drupal_from_node(&$node) {
       $node->restrooms_title = NULL;
       if (isset($node->field_restrooms_title[$node->language][0]['safe_value'])) {
         $node->restrooms_title = $node->field_restrooms_title[$node->language][0]['safe_value'];
+      }
+      // Restrooms Text "restrooms_text".
+      $node->restrooms_text = NULL;
+      if (isset($node->field_restrooms_text[$node->language][0]['safe_value'])) {
+        $node->restrooms_text = $node->field_restrooms_text[$node->language][0]['safe_value'];
       }
       // General Info translations.
       if (!empty($node->museum_hours)) {
@@ -1725,11 +1737,13 @@ function strip_drupal_from_node(&$node) {
             'map_subtitle' => isset($node->field_map_subtitle[$lang_key][0]['safe_value']) ? $node->field_map_subtitle[$lang_key][0]['safe_value'] : '',
             'info_title' => isset($node->field_info_title[$lang_key][0]['safe_value']) ? $node->field_info_title[$lang_key][0]['safe_value'] : '',
             'info_subtitle' => isset($node->field_info_subtitle[$lang_key][0]['safe_value']) ? $node->field_info_subtitle[$lang_key][0]['safe_value'] : '',
-            'dining_title' => isset($node->field_dining_title[$lang_key][0]['safe_value']) ? $node->field_dining_title[$lang_key][0]['safe_value'] : '',
             'gift_shops_title' => isset($node->field_gift_shops_title[$lang_key][0]['safe_value']) ? $node->field_gift_shops_title[$lang_key][0]['safe_value'] : '',
+            'gift_shops_text' => isset($node->field_gift_shop_text[$lang_key][0]['safe_value']) ? $node->field_gift_shop_text[$lang_key][0]['safe_value'] : '',
             'members_lounge_title' => isset($node->field_members_lounge_title[$lang_key][0]['safe_value']) ? $node->field_members_lounge_title[$lang_key][0]['safe_value'] : '',
+            'members_lounge_text' => isset($node->field_members_lounge_text[$lang_key][0]['safe_value']) ? $node->field_members_lounge_text[$lang_key][0]['safe_value'] : '',
             'see_all_tours_intro' => isset($node->field_see_all_tours_intro[$lang_key][0]['safe_value']) ? $node->field_see_all_tours_intro[$lang_key][0]['safe_value'] : '',
             'restrooms_title' => isset($node->field_restrooms_title[$lang_key][0]['safe_value']) ? $node->field_restrooms_title[$lang_key][0]['safe_value'] : '',
+            'restrooms_text' => isset($node->field_restrooms_text[$lang_key][0]['safe_value']) ? $node->field_restrooms_text[$lang_key][0]['safe_value'] : '',
           );
         }
       }
@@ -3273,8 +3287,11 @@ function _aic_app_get_data_endpoints() {
     'events_endpoint' => AICAPP_DATA_API_ENDPOINT_EVENTS,
     'autocomplete_endpoint' => AICAPP_DATA_API_ENDPOINT_AUTOCOMPLETE,
     'tours_endpoint' => AICAPP_DATA_API_ENDPOINT_TOURS,
-    'tickets_endpoint' => AICAPP_TICKETS_ENDPOINT,
     'multisearch_endpoint' => AICAPP_MULTISEARCH_ENDPOINT,
+    'membership_url' => AICAPP_MEMBERSHIP_URL,
+    'website_url' => AICAPP_WEBSITE_URL,
+    'tickets_url' => AICAPP_TICKETS_URL,
+
   );
 }
 
