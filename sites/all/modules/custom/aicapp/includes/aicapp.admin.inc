@@ -335,15 +335,29 @@ function aicapp_admin_api($form, &$form_state) {
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
-    '#title' => t('Tickets'),
+    '#title' => t('Website URLs'),
     '#tree' => FALSE,
   );
-  $form['aicapp_tickets']['aicapp_tickets_endpoint'] = array(
+  $form['aicapp_tickets']['aicapp_website_url'] = array(
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
-    '#title' => t('Buy Tickets URL'),
-    '#default_value' => variable_get('aicapp_tickets_endpoint', 'https://sales.artic.edu/admissiondate'),
+    '#title' => t('Website URL'),
+    '#default_value' => variable_get('aicapp_website_url', 'http://www.artic.edu/?&utm_medium=mobile-app&utm_source=iphone&utm_campaign=homepage'),
+  );
+  $form['aicapp_tickets']['aicapp_membership_url'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Membership URL'),
+    '#default_value' => variable_get('aicapp_membership_url', 'https://sales.artic.edu/memberships?&utm_medium=mobile-app&utm_source=iphone&utm_campaign=join'),
+  );
+  $form['aicapp_tickets']['aicapp_tickets_url'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Tickets URL'),
+    '#default_value' => variable_get('aicapp_tickets_url', 'https://sales.artic.edu/admissiondate?&utm_medium=mobile-app&utm_source=iphone&utm_campaign=buy-tickets'),
   );
   $form['aicapp_deprecated'] = array(
     '#type' => 'fieldset',
