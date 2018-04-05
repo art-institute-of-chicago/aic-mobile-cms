@@ -1693,8 +1693,8 @@ function strip_drupal_from_node(&$node) {
       }
       // Gift Shops Text "gift_shops_text".
       $node->gift_shops_text = NULL;
-      if (isset($node->field_gift_shops_text[$node->language][0]['safe_value'])) {
-        $node->gift_shops_text = $node->field_gift_shops_text[$node->language][0]['safe_value'];
+      if (isset($node->field_gift_shop_text[$node->language][0]['safe_value'])) {
+        $node->gift_shops_text = $node->field_gift_shop_text[$node->language][0]['safe_value'];
       }
       // Members Lounge Title "members_lounge_title".
       $node->members_lounge_title = NULL;
