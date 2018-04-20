@@ -1157,7 +1157,8 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     $map_floor = $floor->floors;
   }
   // Format exhibitions
-  $by_exhibition_id = array();
+  $sorted_exhibitions = array();
+  $sort = 0;
   foreach ($exhibitions as $result) {
     $id = !empty($result->field_field_imported_object_id[0]) ? $result->field_field_imported_object_id[0]['raw']['safe_value'] : NULL;
     if ($result->node_promote && $id) {
@@ -1170,8 +1171,9 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     $exhibition = node_load($result->nid);
     // Strip out Drupal native stuff we don't need in the JSON output from galleries.
     strip_drupal_from_node($exhibition);
-    $by_exhibition_id[$exhibition->exhibition_id] = $exhibition;
-    unset($exhibition->exhibition_id);
+    $exhibition->sort = $sort;
+    $sorted_exhibitions[] = $exhibition;
+    $sort++;
   }
   // Format featured tours and exhibitions.
   $featured_sorted = array();
@@ -1201,7 +1203,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'map_annontations' => $map_annotations,
     'map_floors' => !empty($map_floor) ? $map_floor : array(),
     'tour_categories' => _aicapp_get_tour_categories(),
-    'exhibitions' => $by_exhibition_id,
+    'exhibitions' => $sorted_exhibitions,
     'data' => _aic_app_get_data_endpoints(),
     'search' => _aic_app_get_search_items(),
   );
