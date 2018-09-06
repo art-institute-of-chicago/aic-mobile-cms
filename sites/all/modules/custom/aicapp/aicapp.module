@@ -2080,6 +2080,7 @@ function strip_drupal_from_node(&$node) {
           'anchor_pixel_2' => !empty($item->field_floor_map_anchor_pixel_2) ? $item->field_floor_map_anchor_pixel_2[LANGUAGE_NONE][0]['value'] : NULL,
           'anchor_location_1' => !empty($item->field_floor_anchor_geolocation) ? $item->field_floor_anchor_geolocation[LANGUAGE_NONE][0]['value'] : NULL,
           'anchor_location_2' => !empty($item->field_floor_anchor_geolocation_2) ? $item->field_floor_anchor_geolocation_2[LANGUAGE_NONE][0]['value'] : NULL,
+          'tile_images' => !empty($item->field_tile_images_path) ? $item->field_tile_images_path[LANGUAGE_NONE][0]['value'] : NULL,
         );
         $i++;
       }
