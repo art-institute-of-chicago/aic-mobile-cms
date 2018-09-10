@@ -21,7 +21,7 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
   $strongarm->name = 'aicapp_data_api_host';
-  $strongarm->value = 'http://aggregator-data-test.artic.edu';
+  $strongarm->value = 'http://aggregator-data.artic.edu';
   $export['aicapp_data_api_host'] = $strongarm;
 
   $strongarm = new stdClass();
@@ -42,7 +42,7 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
   $strongarm->name = 'aicapp_data_endpoint_events';
-  $strongarm->value = '/api/v1/events';
+  $strongarm->value = '/api/v1/legacy-events';
   $export['aicapp_data_endpoint_events'] = $strongarm;
 
   $strongarm = new stdClass();
@@ -128,7 +128,7 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
   $strongarm->name = 'aicapp_image_large_crop_aspect';
-  $strongarm->value = '1.82:1';
+  $strongarm->value = '1.6:1';
   $export['aicapp_image_large_crop_aspect'] = $strongarm;
 
   $strongarm = new stdClass();

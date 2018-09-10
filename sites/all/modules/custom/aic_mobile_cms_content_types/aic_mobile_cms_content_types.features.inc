@@ -77,7 +77,7 @@ function aic_mobile_cms_content_types_image_default_styles() {
     ),
   );
 
-  // Exported image style: large_landscape.
+  // Exported image style: thumbnail_landscape.
   $styles['thumbnail_landscape'] = array(
     'label' => 'Thumbnail Landscape',
     'effects' => array(
@@ -93,23 +93,7 @@ function aic_mobile_cms_content_types_image_default_styles() {
     ),
   );
 
-  // Exported image style: large_portrait.
-  $styles['thumbnail_portrait'] = array(
-    'label' => 'Thumbnail Portrait',
-    'effects' => array(
-      0 => array(
-        'name' => 'image_scale',
-        'data' => array(
-          'width' => '',
-          'height' => 112,
-          'upscale' => 0,
-        ),
-        'weight' => 1,
-      ),
-    ),
-  );
-
-  // Exported image style: thumb_one_twelve.
+  // Exported image style: thumbnail_one_twelve.
   $styles['thumbnail_one_twelve'] = array(
     'label' => 'Thumbnail',
     'effects' => array(
@@ -119,6 +103,22 @@ function aic_mobile_cms_content_types_image_default_styles() {
           'portrait' => 'thumbnail_portrait',
           'landscape' => 'thumbnail_landscape',
           'ratio_adjustment' => 1,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: thumbnail_portrait.
+  $styles['thumbnail_portrait'] = array(
+    'label' => 'Thumbnail Portrait',
+    'effects' => array(
+      0 => array(
+        'name' => 'image_scale',
+        'data' => array(
+          'width' => '',
+          'height' => 112,
+          'upscale' => 0,
         ),
         'weight' => 1,
       ),

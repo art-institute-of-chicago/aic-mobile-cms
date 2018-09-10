@@ -10,6 +10,23 @@
 function aic_mobile_cms_content_types_menu_default_menu_links() {
   $menu_links = array();
 
+  // Exported menu link: main-menu_app-search-page:app-search.
+  $menu_links['main-menu_app-search-page:app-search'] = array(
+    'menu_name' => 'main-menu',
+    'link_path' => 'app-search',
+    'router_path' => 'app-search',
+    'link_title' => 'App Search Page',
+    'options' => array(
+      'identifier' => 'main-menu_app-search-page:app-search',
+    ),
+    'module' => 'system',
+    'hidden' => 0,
+    'external' => 0,
+    'has_children' => 0,
+    'expanded' => 0,
+    'weight' => 15,
+    'customized' => 1,
+  );
   // Exported menu link: main-menu_audio:audio.
   $menu_links['main-menu_audio:audio'] = array(
     'menu_name' => 'main-menu',
@@ -25,23 +42,6 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
     'has_children' => 0,
     'expanded' => 0,
     'weight' => -49,
-    'customized' => 1,
-  );
-  // Exported menu link: main-menu_search_page:app-search.
-  $menu_links['main-menu_app-search-page:app-search'] = array(
-    'menu_name' => 'main-menu',
-    'link_path' => 'app-search',
-    'router_path' => 'app-search',
-    'link_title' => 'App Search Page',
-    'options' => array(
-      'identifier' => 'main-menu_app-search-page:app-search',
-    ),
-    'module' => 'system',
-    'hidden' => 0,
-    'external' => 0,
-    'has_children' => 0,
-    'expanded' => 0,
-    'weight' => 15,
     'customized' => 1,
   );
   // Exported menu link: main-menu_exhibitions:exhibitions.
@@ -95,40 +95,6 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
     'weight' => -50,
     'customized' => 1,
   );
-  // Exported menu link: main-menu_map-annotations:annotations.
-  $menu_links['main-menu_map-annotations:annotations'] = array(
-    'menu_name' => 'main-menu',
-    'link_path' => 'annotations',
-    'router_path' => 'annotations',
-    'link_title' => 'Map Annotations',
-    'options' => array(
-      'identifier' => 'main-menu_map-annotations:annotations',
-    ),
-    'module' => 'system',
-    'hidden' => 0,
-    'external' => 0,
-    'has_children' => 0,
-    'expanded' => 0,
-    'weight' => 9,
-    'customized' => 0,
-  );
-  // Exported menu link: main-menu_map-floors:floors.
-  $menu_links['main-menu_map-floors:floors'] = array(
-    'menu_name' => 'main-menu',
-    'link_path' => 'floors',
-    'router_path' => 'floors',
-    'link_title' => 'Map Floors',
-    'options' => array(
-      'identifier' => 'main-menu_map-floors:floors',
-    ),
-    'module' => 'system',
-    'hidden' => 0,
-    'external' => 0,
-    'has_children' => 0,
-    'expanded' => 0,
-    'weight' => 9,
-    'customized' => 0,
-  );
   // Exported menu link: main-menu_objects:objects.
   $menu_links['main-menu_objects:objects'] = array(
     'menu_name' => 'main-menu',
@@ -166,14 +132,11 @@ function aic_mobile_cms_content_types_menu_default_menu_links() {
 
   // Translatables
   // Included for use with string extractors like potx.
-  t('Audio');
   t('App Search Page');
-  t('Events');
+  t('Audio');
   t('Exhibitions');
   t('Galleries');
   t('General Info');
-  t('Map Annotations');
-  t('Map Floors');
   t('Objects');
   t('Tours');
 

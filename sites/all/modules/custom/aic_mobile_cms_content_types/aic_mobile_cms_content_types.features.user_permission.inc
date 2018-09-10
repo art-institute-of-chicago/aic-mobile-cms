@@ -261,7 +261,6 @@ function aic_mobile_cms_content_types_user_default_permissions() {
     'module' => 'node',
   );
 
-
   // Exported permission: 'delete any exhibition content'.
   $permissions['delete any exhibition content'] = array(
     'name' => 'delete any exhibition content',

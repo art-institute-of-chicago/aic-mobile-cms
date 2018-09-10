@@ -314,6 +314,40 @@ function aic_mobile_cms_content_types_field_default_field_instances() {
   );
 
   // Exported field_instance:
+  // 'field_collection_item-field_floor_map-field_tile_images_path'.
+  $field_instances['field_collection_item-field_floor_map-field_tile_images_path'] = array(
+    'bundle' => 'field_floor_map',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 6,
+      ),
+    ),
+    'entity_type' => 'field_collection_item',
+    'field_name' => 'field_tile_images_path',
+    'label' => 'Tile Images Path',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'html5_tools',
+      'settings' => array(),
+      'type' => 'urlwidget',
+      'weight' => 6,
+    ),
+  );
+
+  // Exported field_instance:
   // 'field_collection_item-field_large_image_crop-field_height'.
   $field_instances['field_collection_item-field_large_image_crop-field_height'] = array(
     'bundle' => 'field_large_image_crop',
@@ -5482,6 +5516,7 @@ Ex: ""Head of Buddha (Spanish)"""');
   t('Thumbail Image');
   t('Thumbnail Crop');
   t('Thumbnail Image');
+  t('Tile Images Path');
   t('Title');
   t('Tour Audio');
   t('Tour Banner');
