@@ -21,7 +21,13 @@ function aicapp_init() {
   define('AICAPP_DEFAULT_LANG', $language->language);
   define('AICAPP_ARTWORK_QUERY', 'artwork');
   define('AICAPP_GALLERY_QUERY', 'gallery');
-  define('AICAPP_IMAGE_SERVER', rtrim(variable_get('aicapp_image_server_url', 'https://lakeimagesweb.artic.edu/iiif/2'), '/'));
+  define('AICAPP_IMAGE_SERVER_DEFAULT', rtrim(variable_get('aicapp_image_server_url', 'https://lakeimagesweb.artic.edu/iiif/2'), '/'));
+  define('AICAPP_IMAGE_SERVER_OVERRIDE', rtrim(variable_get('aicapp_image_server_override', 'https://lakeimagesweb.artic.edu/iiif/2'), '/'));
+  if (!empty(AICAPP_IMAGE_SERVER_OVERRIDE)) {
+    define('AICAPP_IMAGE_SERVER', AICAPP_IMAGE_SERVER_OVERRIDE);
+  } else {
+    define('AICAPP_IMAGE_SERVER', AICAPP_IMAGE_SERVER_DEFAULT);
+  }
   define('AICAPP_IMAGE_CROP_REGION', 'full');
   define('AICAPP_IMAGE_CROP_ROTATION', 0);
   define('AICAPP_IMAGE_CROP_QUALITY', 'default');
@@ -1586,6 +1592,9 @@ function strip_drupal_from_node(&$node) {
     $node->thumbnail_full_path = NULL;
     if (isset($node->field_thumbnail_image[LANGUAGE_NONE][0]['safe_value'])) {
       $node->thumbnail_full_path = $node->field_thumbnail_image[LANGUAGE_NONE][0]['safe_value'];
+      if (!empty(AICAPP_IMAGE_SERVER_OVERRIDE)) {
+        $node->thumbnail_full_path = str_replace(AICAPP_IMAGE_SERVER_DEFAULT,AICAPP_IMAGE_SERVER_OVERRIDE,$node->thumbnail_full_path);
+      }
     }
   }
   // Object & Tour large image crop dimensions for v1 of app.
@@ -1643,6 +1652,9 @@ function strip_drupal_from_node(&$node) {
     $node->large_image_full_path = NULL;
     if (isset($node->field_large_image[LANGUAGE_NONE][0]['safe_value'])) {
       $node->large_image_full_path = $node->field_large_image[LANGUAGE_NONE][0]['safe_value'];
+      if (!empty(AICAPP_IMAGE_SERVER_OVERRIDE)) {
+        $node->large_image_full_path = str_replace(AICAPP_IMAGE_SERVER_DEFAULT,AICAPP_IMAGE_SERVER_OVERRIDE,$node->large_image_full_path);
+      }
     }
   }
   // Fields that belong to only 1 content type.
@@ -1796,11 +1808,11 @@ function strip_drupal_from_node(&$node) {
       }
       // Path to full size image.
       $node->full_image_full_path = NULL;
-      if (isset($node->field_full_image)) {
+      /*if (isset($node->field_full_image)) {
         if (isset($node->field_full_image[LANGUAGE_NONE][0]['safe_value'])) {
           $node->full_image_full_path = $node->field_full_image[LANGUAGE_NONE][0]['safe_value'];
         }
-      }
+      }*/
       // App v1 property: audio.
       $node->audio = array();
       if (isset($node->field_object_audio[LANGUAGE_NONE][0]['nid'])) {

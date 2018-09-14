@@ -253,6 +253,14 @@ function aicapp_admin_api($form, &$form_state) {
     '#default_value' => variable_get('aicapp_image_server_url', 'https://lakeimagesweb.artic.edu/iiif/2'),
     '#description' => t('Full URL to the IIIF Image Server.'),
   );
+  $form['aicapp_image_api']['aicapp_image_server_override'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Image Server Override'),
+    '#default_value' => variable_get('aicapp_image_server_override', ''),
+    '#description' => t('Replace Image Server URL with a different URL.'),
+  );
   // Data aggregrator API.
   $form['aicapp_data_aggregator'] = array(
     '#type' => 'fieldset',
