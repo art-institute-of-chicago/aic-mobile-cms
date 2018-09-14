@@ -23,7 +23,7 @@ function aicapp_init() {
   define('AICAPP_GALLERY_QUERY', 'gallery');
   define('AICAPP_IMAGE_SERVER_DEFAULT', rtrim(variable_get('aicapp_image_server_url', 'https://lakeimagesweb.artic.edu/iiif/2'), '/'));
   define('AICAPP_IMAGE_SERVER_OVERRIDE', rtrim(variable_get('aicapp_image_server_override', 'https://lakeimagesweb.artic.edu/iiif/2'), '/'));
-  if (!empty(AICAPP_IMAGE_SERVER_OVERRIDE)) {
+  if (defined('AICAPP_IMAGE_SERVER_OVERRIDE') && AICAPP_IMAGE_SERVER_OVERRIDE) {
     define('AICAPP_IMAGE_SERVER', AICAPP_IMAGE_SERVER_OVERRIDE);
   } else {
     define('AICAPP_IMAGE_SERVER', AICAPP_IMAGE_SERVER_DEFAULT);
@@ -1592,7 +1592,7 @@ function strip_drupal_from_node(&$node) {
     $node->thumbnail_full_path = NULL;
     if (isset($node->field_thumbnail_image[LANGUAGE_NONE][0]['safe_value'])) {
       $node->thumbnail_full_path = $node->field_thumbnail_image[LANGUAGE_NONE][0]['safe_value'];
-      if (!empty(AICAPP_IMAGE_SERVER_OVERRIDE)) {
+      if (defined('AICAPP_IMAGE_SERVER_OVERRIDE') && AICAPP_IMAGE_SERVER_OVERRIDE) {
         $node->thumbnail_full_path = str_replace(AICAPP_IMAGE_SERVER_DEFAULT,AICAPP_IMAGE_SERVER_OVERRIDE,$node->thumbnail_full_path);
       }
     }
@@ -1652,7 +1652,7 @@ function strip_drupal_from_node(&$node) {
     $node->large_image_full_path = NULL;
     if (isset($node->field_large_image[LANGUAGE_NONE][0]['safe_value'])) {
       $node->large_image_full_path = $node->field_large_image[LANGUAGE_NONE][0]['safe_value'];
-      if (!empty(AICAPP_IMAGE_SERVER_OVERRIDE)) {
+      if (defined('AICAPP_IMAGE_SERVER_OVERRIDE') && AICAPP_IMAGE_SERVER_OVERRIDE) {
         $node->large_image_full_path = str_replace(AICAPP_IMAGE_SERVER_DEFAULT,AICAPP_IMAGE_SERVER_OVERRIDE,$node->large_image_full_path);
       }
     }
