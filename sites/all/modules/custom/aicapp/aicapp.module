@@ -1806,13 +1806,6 @@ function strip_drupal_from_node(&$node) {
       if (isset($node->field_highlighted_object[LANGUAGE_NONE][0])) {
         $node->highlighted_object = $node->field_highlighted_object[LANGUAGE_NONE][0]['value'];
       }
-      // Path to full size image.
-      $node->full_image_full_path = NULL;
-      /*if (isset($node->field_full_image)) {
-        if (isset($node->field_full_image[LANGUAGE_NONE][0]['safe_value'])) {
-          $node->full_image_full_path = $node->field_full_image[LANGUAGE_NONE][0]['safe_value'];
-        }
-      }*/
       // App v1 property: audio.
       $node->audio = array();
       if (isset($node->field_object_audio[LANGUAGE_NONE][0]['nid'])) {
