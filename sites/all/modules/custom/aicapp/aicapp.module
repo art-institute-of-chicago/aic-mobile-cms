@@ -21,13 +21,10 @@ function aicapp_init() {
   define('AICAPP_DEFAULT_LANG', $language->language);
   define('AICAPP_ARTWORK_QUERY', 'artwork');
   define('AICAPP_GALLERY_QUERY', 'gallery');
+  //internal use
   define('AICAPP_IMAGE_SERVER_DEFAULT', rtrim(variable_get('aicapp_image_server_url', 'https://lakeimagesweb.artic.edu/iiif/2'), '/'));
+  //external use
   define('AICAPP_IMAGE_SERVER_OVERRIDE', rtrim(variable_get('aicapp_image_server_override', 'https://lakeimagesweb.artic.edu/iiif/2'), '/'));
-  if (defined('AICAPP_IMAGE_SERVER_OVERRIDE') && AICAPP_IMAGE_SERVER_OVERRIDE) {
-    define('AICAPP_IMAGE_SERVER', AICAPP_IMAGE_SERVER_OVERRIDE);
-  } else {
-    define('AICAPP_IMAGE_SERVER', AICAPP_IMAGE_SERVER_DEFAULT);
-  }
   define('AICAPP_IMAGE_CROP_REGION', 'full');
   define('AICAPP_IMAGE_CROP_ROTATION', 0);
   define('AICAPP_IMAGE_CROP_QUALITY', 'default');
@@ -2908,7 +2905,7 @@ function _aicapp_get_image_crop($image_id, $crop_values = array()) {
     'region' => AICAPP_IMAGE_CROP_REGION,
     'quality' => AICAPP_IMAGE_CROP_QUALITY,
     'filename' => AICAPP_IMAGE_CROP_FORMAT,
-    'server' => AICAPP_IMAGE_SERVER,
+    'server' => AICAPP_IMAGE_SERVER_DEFAULT,
     'rotation' => AICAPP_IMAGE_CROP_ROTATION,
   );
   $crop_values += $defaults;
@@ -3286,7 +3283,7 @@ function aicapp_query_large_crop_missing_alter(QueryAlterableInterface $query) {
  */
 function _aic_app_get_data_endpoints() {
   return array(
-    'image_server_url' => AICAPP_IMAGE_SERVER,
+    'image_server_url' => (defined('AICAPP_IMAGE_SERVER_OVERRIDE') && AICAPP_IMAGE_SERVER_OVERRIDE ? AICAPP_IMAGE_SERVER_OVERRIDE : AICAPP_IMAGE_SERVER_DEFAULT),
     'data_api_url' => AICAPP_DATA_API_HOST,
     'exhibitions_endpoint' => AICAPP_DATA_API_ENDPOINT_EXHIBITION,
     'artworks_endpoint' => AICAPP_DATA_API_ENDPOINT_ARTWORKS,
