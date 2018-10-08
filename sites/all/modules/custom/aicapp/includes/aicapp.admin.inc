@@ -317,6 +317,14 @@ function aicapp_admin_api($form, &$form_state) {
     '#default_value' => variable_get('aicapp_data_endpoint_events', '/api/v1/events'),
     '#description' => t('Query for events via the events endpoint.'),
   );
+  $form['aicapp_data_aggregator']['aicapp_data_endpoint_events_v2'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Events endpoint v2'),
+    '#default_value' => variable_get('aicapp_data_endpoint_events_v2', '/api/v1/event-occurrences'),
+    '#description' => t('Query for events via the events endpoint. This endpoint replaces the old endpoint with the launch of the new website in 10/2018.'),
+  );
   $form['aicapp_data_aggregator']['aicapp_data_endpoint_tours'] = array(
     '#type' => 'textfield',
     '#size' => 200,

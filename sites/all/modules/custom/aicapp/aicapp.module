@@ -44,6 +44,7 @@ function aicapp_init() {
   define('AICAPP_DATA_API_ENDPOINT_GALLERIES', variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'));
   define('AICAPP_DATA_API_ENDPOINT_IMAGES', variable_get('aicapp_data_endpoint_images', '/api/v1/images'));
   define('AICAPP_DATA_API_ENDPOINT_EVENTS', variable_get('aicapp_data_endpoint_events', '/api/v1/events'));
+  define('AICAPP_DATA_API_ENDPOINT_EVENTS_v2', variable_get('aicapp_data_endpoint_events_v2', '/api/v1/event-occurrences'));
   define('AICAPP_DATA_API_ENDPOINT_TOURS', variable_get('aicapp_data_endpoint_tours', '/api/v1/tours'));
   define('AICAPP_DATA_API_ENDPOINT_AUTOCOMPLETE', variable_get('aicapp_data_endpoint_autocomplete', '/api/v1/autocomplete'));
   define('AICAPP_MULTISEARCH_ENDPOINT', variable_get('aicapp_data_endpoint_multisearch', '/api/v1/msearch'));
@@ -3290,6 +3291,7 @@ function _aic_app_get_data_endpoints() {
     'galleries_endpoint' => AICAPP_DATA_API_ENDPOINT_GALLERIES,
     'images_endpoint' => AICAPP_DATA_API_ENDPOINT_IMAGES,
     'events_endpoint' => AICAPP_DATA_API_ENDPOINT_EVENTS,
+    'events_endpoint_v2' => AICAPP_DATA_API_ENDPOINT_EVENTS_v2,
     'autocomplete_endpoint' => AICAPP_DATA_API_ENDPOINT_AUTOCOMPLETE,
     'tours_endpoint' => AICAPP_DATA_API_ENDPOINT_TOURS,
     'multisearch_endpoint' => AICAPP_MULTISEARCH_ENDPOINT,

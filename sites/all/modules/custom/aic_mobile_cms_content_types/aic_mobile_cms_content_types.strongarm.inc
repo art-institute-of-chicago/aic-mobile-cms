@@ -48,6 +48,13 @@ function aic_mobile_cms_content_types_strongarm() {
   $strongarm = new stdClass();
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
+  $strongarm->name = 'aicapp_data_endpoint_events_v2';
+  $strongarm->value = '/api/v1/event-occurrences';
+  $export['aicapp_data_endpoint_events_v2'] = $strongarm;
+
+  $strongarm = new stdClass();
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
   $strongarm->name = 'aicapp_data_endpoint_exhibitions';
   $strongarm->value = '/api/v1/exhibitions';
   $export['aicapp_data_endpoint_exhibitions'] = $strongarm;

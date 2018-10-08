@@ -369,6 +369,7 @@ features[variable][] = aicapp_data_api_host
 features[variable][] = aicapp_data_endpoint_artworks
 features[variable][] = aicapp_data_endpoint_autocomplete
 features[variable][] = aicapp_data_endpoint_events
+features[variable][] = aicapp_data_endpoint_events_v2
 features[variable][] = aicapp_data_endpoint_exhibitions
 features[variable][] = aicapp_data_endpoint_galleries
 features[variable][] = aicapp_data_endpoint_images
