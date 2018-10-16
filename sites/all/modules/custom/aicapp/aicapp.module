@@ -39,6 +39,7 @@ function aicapp_init() {
   define('AICAPP_TYPE_MAP_FLOOR', 'map_floor');
   define('AICAPP_DATA_AGGREGATOR', 'aic_data_aggregrator');
   define('AICAPP_DATA_API_HOST', rtrim(variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'), '/'));
+  define('AICAPP_DATA_API_HOST_INTERNAL', rtrim(variable_get('aicapp_data_api_host_internal', 'http://nocache.aggregator-data.artic.edu'), '/'));
   define('AICAPP_DATA_API_ENDPOINT_EXHIBITION', variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'));
   define('AICAPP_DATA_API_ENDPOINT_ARTWORKS', variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'));
   define('AICAPP_DATA_API_ENDPOINT_GALLERIES', variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'));
@@ -211,7 +212,7 @@ function aicapp_add_object($object_id = 0) {
       'limit' => 1,
     );
     // Query the data aggregrator.
-    $results = _aicapp_fetch_data(AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS, $options);
+    $results = _aicapp_fetch_data(AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_ARTWORKS, $options);
     if (!empty($results[0])) {
       // Creates the new object or updates existing if it finds it in our Db.
       $nid = aicappSaveNode($results[0], AICAPP_TYPE_OBJECT);
@@ -545,7 +546,7 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
   }
   // Query the data aggregrator for recent data using the object ids.
   $options = array('ids' => $object_ids, 'limit' => count($object_ids));
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  $url = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
   $results = _aicapp_fetch_data($url, $options);
   if (!empty($results)) {
     foreach ($results as $item) {
@@ -683,7 +684,7 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
 
   // Query the data aggregrator for recent data using the object ids.
   $options = array('ids' => $object_ids, 'limit' => count($object_ids));
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  $url = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
   $results = _aicapp_fetch_data($url, $options);
   if (!empty($results)) {
     foreach ($results as $item) {
@@ -998,7 +999,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $galleries['#updated'] = array();
   // Query the data aggregrator for recent data using the gallery ids.
   $options = array('ids' => $gallery_ids, 'limit' => count($gallery_ids));
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+  $url = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_GALLERIES;
   $results = _aicapp_fetch_data($url, $options);
   if (!empty($results)) {
     // @TODO a better way would be to only request the fields we want.
@@ -1051,7 +1052,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   }
   // Query the data aggregrator for recent data using the object ids.
   $options = array('ids' => $object_ids, 'limit' => count($object_ids));
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  $url = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
   $results = _aicapp_fetch_data($url, $options);
   if (!empty($results)) {
     // @TODO a better way would be to only request the fields we want.
@@ -2104,7 +2105,7 @@ function strip_drupal_from_node(&$node) {
 function aicapp_gallery_count() {
   $count = t('None found');
   $options = array('limit' => 1);
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+  $url = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_GALLERIES;
   // Query the data aggregrator.
   $results = _aicapp_fetch_data($url, $options, TRUE);
   if (!empty($results['pagination'])) {
@@ -2121,7 +2122,7 @@ function aicapp_gallery_count() {
  */
 function aicapp_loadgalleries_form_submit($form, &$form_state) {
   $options = array('limit' => 1000);
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+  $url = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_GALLERIES;
   // Query the data aggregrator.
   $results = _aicapp_fetch_data($url, $options);
   if (empty($results)) {
@@ -2311,7 +2312,7 @@ function aicapp_node_view($node, $view_mode, $langcode) {
         'limit' => 1,
       );
       // Query the data aggregrator.
-      $results = _aicapp_fetch_data(AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS, $options);
+      $results = _aicapp_fetch_data(AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_ARTWORKS, $options);
       if (!empty($results[0])) {
         $w = 10;
         foreach ($results[0] as $key => $val) {
@@ -2338,7 +2339,7 @@ function aicapp_node_view($node, $view_mode, $langcode) {
         'limit' => 1,
         'ids' => array($gallery_id),
       );
-      $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_GALLERIES;
+      $url = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_GALLERIES;
       // Query the data aggregrator.
       $results = _aicapp_fetch_data($url, $options);
       if (!empty($results[0])) {
@@ -2435,7 +2436,7 @@ function aicapp_search_form_validate($form, &$form_state) {
  */
 function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) {
   global $base_path;
-  $api_endpoint = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS . '/search';
+  $api_endpoint = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_ARTWORKS . '/search';
   // An object ID was passed and is not empty, query based on object ID.
   $options = array(
     'size' => $rows,
@@ -2455,7 +2456,7 @@ function aicapp_search_form_submit($form, &$form_state, $start = 0, $rows = 50) 
     // collecting IDs for add/update all function
     $object_ids = $search_term;
     // When searching by object ID, we do not need to use the /search endpoint.
-    $api_endpoint = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+    $api_endpoint = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
     $options['limit'] = 1;
     // The following are not used for the artworks endpoint.
     unset($options['size']);
@@ -2659,7 +2660,7 @@ function aicapp_node_presave($node) {
           'limit' => 1,
         );
         // Query the data aggregrator.
-        $results = _aicapp_fetch_data(AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS, $options);
+        $results = _aicapp_fetch_data(AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_ARTWORKS, $options);
         if (empty($results[0]) || empty($results[0]['image_id'])) {
           drupal_set_message('The object ' . $node->title . ' does not have a preferred image id the data hub.', 'warning');
         }
@@ -2762,7 +2763,7 @@ function _aicapp_get_image_id($object) {
     'fields' => 'id,image_id',
     'ids' => implode(',', array_keys($image_ids)),
   );
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  $url = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
   // Query the data aggregrator.
   $results = _aicapp_fetch_data($url, $options);
   if (empty($results)) {
@@ -3102,7 +3103,7 @@ function aicapp_object_noimg() {
       'limit' => 1,
     );
     // Query the data aggregrator.
-    $results = _aicapp_fetch_data(AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS, $options);
+    $results = _aicapp_fetch_data(AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_ARTWORKS, $options);
     if (!empty($results[0])) {
       $item = $results[0];
       if (empty($item['image_id'])) {

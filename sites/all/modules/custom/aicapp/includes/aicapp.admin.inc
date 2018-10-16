@@ -273,9 +273,17 @@ function aicapp_admin_api($form, &$form_state) {
     '#type' => 'textfield',
     '#size' => 200,
     '#maxlength' => 256,
-    '#title' => t('Data Aggregator URL'),
+    '#title' => t('Data Aggregator URL (External)'),
     '#default_value' => variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'),
-    '#description' => t('Enter the URL to the Data Aggregator API.'),
+    '#description' => t('Enter the URL to the Data Aggregator API to be accessed outside the firewall.'),
+  );
+  $form['aicapp_data_aggregator']['aicapp_data_api_host_internal'] = array(
+    '#type' => 'textfield',
+    '#size' => 200,
+    '#maxlength' => 256,
+    '#title' => t('Data Aggregator URL (Internal)'),
+    '#default_value' => variable_get('aicapp_data_api_host_internal', 'http://nocache.aggregator-data.artic.edu'),
+    '#description' => t('Enter the URL to the Data Aggregator API to be accessed inside the firewall.'),
   );
   $form['aicapp_data_aggregator']['aicapp_data_endpoint_artworks'] = array(
     '#type' => 'textfield',
@@ -798,7 +806,7 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
   // Define what we're going to import.
   $defaults = array(
     AICAPP_TYPE_EXHIBITION => array(
-      'endpoint' => AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_EXHIBITION . '/search',
+      'endpoint' => AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_EXHIBITION . '/search',
       'remote' => array(),
     ),
   );
@@ -1067,7 +1075,7 @@ function aicapp_update_object_image_data($to_update = array(), $hard_limit = 100
     'fields' => 'id,image_id',
   );
 
-  $url = AICAPP_DATA_API_HOST . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
+  $url = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_ARTWORKS;
   $results = _aicapp_fetch_data($url, $options);
   if (empty($results)) {
     $message = 'No results were found when searching for artwork objects.';
