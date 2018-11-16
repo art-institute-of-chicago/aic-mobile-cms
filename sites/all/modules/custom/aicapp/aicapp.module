@@ -1009,7 +1009,8 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     );
     foreach ($results as $item) {
       $id = isset($item['id']) ? $item['id'] : NULL;
-      if (empty($id) || !isset($by_gallery_id[$id])) {
+      $galleryFloor = isset($item['floor']) ? $item['floor'] : NULL;
+      if (empty($id) || !isset($by_gallery_id[$id]) || !isset($galleryFloor)) {
         continue;
       }
       $gallery = $by_gallery_id[$id];
