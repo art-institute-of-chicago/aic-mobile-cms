@@ -1010,7 +1010,8 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     foreach ($results as $item) {
       $id = isset($item['id']) ? $item['id'] : NULL;
       $galleryFloor = isset($item['floor']) ? $item['floor'] : NULL;
-      if (empty($id) || !isset($by_gallery_id[$id]) || !isset($galleryFloor)) {
+      $galleryLatitude = isset($item['latitude']) ? $item['latitude'] : NULL;
+      if (empty($id) || !isset($by_gallery_id[$id]) || !isset($galleryFloor) || !isset($galleryLatitude)) {
         continue;
       }
       $gallery = $by_gallery_id[$id];
