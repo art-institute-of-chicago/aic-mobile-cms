@@ -701,7 +701,7 @@ function aicapp_verify_obj_gallery_submit($form, &$form_state) {
     if (isset($object->gallery_title)) {
       $match = array_search($object->gallery_title, $gals);
     }
-    if (($match === FALSE) && isset($object->gallery_title) && $object->gallery_title != 'Currently not on display') {
+    if (($match === FALSE) && isset($object->gallery_title) && $object->gallery_title != NULL) {
       $bad_obj_galleries .= '<li>Object ID: ' . $object->object_id . ' -- ' . $object->gallery_title . '</li>';
     }
   }
