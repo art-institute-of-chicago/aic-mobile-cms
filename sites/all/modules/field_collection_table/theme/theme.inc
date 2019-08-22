@@ -16,8 +16,10 @@ function theme_field_collection_table_multiple_value_field($variables) {
       continue;
     }
 
-    $header[] = _field_collection_table_get_title($element[$field_name]);
-    $cells[] = array('data' => $element[$field_name]);
+    if (!isset($item[$field_name]['#access']) || $item[$field_name]['#access']) {
+      $header[] = _field_collection_table_get_title($element[$field_name]);
+      $cells[] = array('data' => $element[$field_name]);
+    }
 
     // Remove the original field to prevent duplicate printing.
     unset($element[$field_name]);
@@ -51,24 +53,25 @@ function _field_collection_table_sort_items_widget_helper($a, $b) {
 function theme_field_collection_table_multiple_value_fields($variables) {
   $element = $variables['element'];
   $output = '';
-  /*
-   * MN
-   * extract display settings if we can find them
-   */
-  $settings = (isset($element['#instance']['display']['default']['settings']) ?
-    $element['#instance']['display']['default']['settings'] :
-    array('csscolrow' => FALSE, 'cssfield' => FALSE));
 
+  // Ensure default widget settings turn dragging off for field formatter
+  // without custom settings.
+  if (!isset($element['#custom_settings'])) {
+    $element['#custom_settings'] = array(
+      'nodragging' => TRUE,
+      'title_on_top' => TRUE,
+    );
+  }
 
   if (isset($element['#cardinality']) && ($element['#cardinality'] > 1 || $element['#cardinality'] == FIELD_CARDINALITY_UNLIMITED)) {
     $table_id = drupal_html_id($element['#field_name'] . '_values');
     $order_class = $element['#field_name'] . '-delta-order';
-    $required = !empty($element['#required']) ? '<span class="form-required" title="' . t('This field is required. ') . '">*</span>' : '';
+    $required = !empty($element['#required']) ? theme('form_required_marker', array('element' => $element)) : '';
 
     $rows = array();
 
-    // Sort items according to '_weight' (needed when the form comes back after
-    // preview or failed validation)
+    // Sort items according to '_weight'.
+    // Needed when the form comes back after preview or failed validation.
     $items = array();
     foreach (element_children($element) as $key) {
       if (!isset($element[$key]['#entity_type'])) {
@@ -80,29 +83,17 @@ function theme_field_collection_table_multiple_value_fields($variables) {
         $items[] = &$element[$key];
       }
     }
-    usort($items, '_field_sort_items_value_helper');
 
-
-    // Add header for table dragging.
+    // No need to sort if nodragging is selected.
     if (!$element['#custom_settings']['nodragging']) {
+      usort($items, '_field_sort_items_value_helper');
 
-      // check if we need to add css classes for rows and columns
-      $classes = array('field-label');
-      if (isset($settings['cssrowcol']) && $settings['cssrowcol']) {
-        // add css classes to field label tat is in the first column of the header
-        $classes = array_merge($classes,array('h1','c1','h1-c1'));
-      }
-      // check if we need to add css field classes
-      if (isset($settings['cssfield']) && $settings['cssfield']) {
-        // add css classes to field label tat is in the first column of the header
-        $classes = array_merge($classes,array('label_'.$element['#field_name']));
-      }
-
+      // Add header for table dragging.
       $header = array(
-          array(
-              'data' => '<label>' . t('!title: !required', array('!title' => $element['#title'], '!required' => $required)) . "</label>",
-              'class' => $classes,
-          ),
+        array(
+          'data' => '',
+          'class' => 'tabledrag',
+        ),
       );
     }
 
@@ -111,69 +102,31 @@ function theme_field_collection_table_multiple_value_fields($variables) {
       uasort($item, 'element_sort');
       $item['_weight']['#attributes']['class'] = array($order_class);
 
-      // find row number
-      $rown = count($rows)+1;
-      //initialize cells array
       $cells = array();
 
       // Add classes for dragging if needed.
       if (!$element['#custom_settings']['nodragging']) {
-        // insert css class identifiers if needed
-        $classes = array('field-multiple-drag','field_body');
-        if (isset($settings['cssrowcol']) && $settings['cssrowcol']) {
-          // add css classes to field label that is in the first column of the header
-          $classes = array_merge($classes,array('r'.$rown,'c1','r'.$rown.'-c1'));
-        }
-        // check if we need to add css field classes
-        if (isset($settings['cssfield']) && $settings['cssfield']) {
-          // add css classes to field label tat is in the first column of the header
-          $classes = array_merge($classes,array('drag_r'.$rown.'_'.$element['#field_name'],'td_drag','drag_'.$element['#field_name']));
-        }
-
-        // prepare row
         $cells = array(
-          array('data' => '', 'class' => $classes),
+          array('data' => '', 'class' => 'field-multiple-drag'),
         );
       }
 
       foreach (element_children($item) as $field_name) {
-        // find column number
-        $coln = count($cells)+1;
-        // Don't add the _weight
+        // Don't add the _weight.
         if (!$element['#custom_settings']['nodragging'] || $field_name != '_weight') {
-          // Only add the header once.
-          if ($key == 0) {
-            // check if we need to add css classes for rows and columns
-            $classes = array('field-label');
-            if (isset($settings['cssrowcol']) && $settings['cssrowcol']) {
-              // add css classes to field label tat is in the first column of the header
-              $classes = array_merge($classes,array('h1','c'.$coln,'h1-c'.$coln));
+          if (!isset($item[$field_name]['#access']) || $item[$field_name]['#access']) {
+            // Only add the header once.
+            if ($key == 0) {
+              $header[] = array(
+                'data' => '<label>' . t('!title', array('!title' => _field_collection_table_get_title($item[$field_name]))) . '</label>',
+                'class' => array('field-label'),
+              );
             }
-            // check if we need to add css field classes
-            if (isset($settings['cssfield']) && $settings['cssfield']) {
-              // add css classes to field label tat is in the first column of the header
-              $classes = array_merge($classes,array('h1_'.$field_name,'th_'.$field_name));
-            }
-            $header[] = array(
-              'data' => '<label>' . t('!title', array('!title' => _field_collection_table_get_title($item[$field_name]))) . '</label>',
-              'class' => $classes,
+            $cells[] = array(
+              'data' => $item[$field_name],
+              'class' => drupal_html_class($field_name),
             );
           }
-          // check if we need to add css classes for rows and columns
-          $classes = array('field-body');
-          if (isset($settings['cssrowcol']) && $settings['cssrowcol']) {
-            // add css classes to field label tat is in the first column of the header
-            $classes = array_merge($classes,array('r'.$rown,'c'.$coln,'r'.$rown.'-c'.$coln));
-          }
-          // check if we need to add css field classes
-          if (isset($settings['cssfield']) && $settings['cssfield']) {
-            // add css classes to field label tat is in the first column of the header
-            $classes = array_merge($classes,array('r'.$rown.'_'.$field_name,'td_'.$field_name));
-          }
-          // append value to cells array
-          $cells[] = array(
-            'data' => $item[$field_name],
-            'class' => $classes);
         }
       }
       // Mark rows as draggable if needed.
@@ -186,7 +139,7 @@ function theme_field_collection_table_multiple_value_fields($variables) {
       else {
         $rows[] = array(
           'data' => $cells,
-         );
+        );
       }
     }
 
@@ -194,6 +147,18 @@ function theme_field_collection_table_multiple_value_fields($variables) {
       '#prefix' => '<div class="form-item">',
       '#suffix' => '</div>',
     );
+
+    if ($element['#custom_settings']['title_on_top']) {
+      $output['title'] = array(
+        '#prefix' => "<label class='form-item-title'>",
+        '#markup' => t('!title !required', array(
+          '!title' => $element['#title'],
+          '!required' => $required,
+        )),
+        '#suffix' => '</label>',
+      );
+    }
+
     $output['field_collection_table'] = array(
       '#theme' => 'table',
       '#header' => $header,
@@ -216,15 +181,16 @@ function theme_field_collection_table_multiple_value_fields($variables) {
     }
     if (isset($add_more_button)) {
       $add_more_button['#weight'] = 40;
-      $output[] = $add_more_button + array(
-        '#prefix' => '<div class="clearfix">',
-        '#suffix' => '</div>',
-      );
+      $output[]
+        = $add_more_button + array(
+          '#prefix' => '<div class="clearfix">',
+          '#suffix' => '</div>',
+        );
     }
 
     $output = drupal_render($output);
 
-    // Add table drag
+    // Add table drag.
     if (!$element['#custom_settings']['nodragging']) {
       drupal_add_tabledrag($table_id, 'order', 'sibling', $order_class);
     }
@@ -234,7 +200,6 @@ function theme_field_collection_table_multiple_value_fields($variables) {
       $output .= drupal_render($element[$key]);
     }
   }
-
   return $output;
 }
 
@@ -289,22 +254,31 @@ function theme_table__field_collection_table($variables) {
  */
 function _field_collection_table_get_title($field) {
   $title = '';
+  $required = FALSE;
 
   if (isset($field['#language']) && isset($field[$field['#language']])) {
     $language = $field['#language'];
     if (isset($field[$language]['#title'])) {
       $title = $field[$language]['#title'];
+      $required = !empty($field[$language]['#required']);
+
     }
     elseif (isset($field[$language][0]['#title'])) {
       $title = $field[$language][0]['#title'];
+      $required = !empty($field[$language][0]['#required']);
     }
   }
   elseif (isset($field['#title'])) {
     $title = empty($field['#is_weight']) ? $field['#title'] : t('Order');
+    $required = !empty($field['#required']);
   }
   elseif (isset($field['#value'])) {
     $title = $field['#value'];
+    $required = !empty($field['#required']);
   }
-
-  return $title;
+  $required = $required ? theme('form_required_marker', array('element' => $field)) : '';
+  return t('!title !required', array(
+    '!title' => $title,
+    '!required' => $required,
+  ));
 }

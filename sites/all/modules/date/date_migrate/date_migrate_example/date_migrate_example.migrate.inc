@@ -128,4 +128,5 @@ class DateExampleMigration extends XMLMigration {
     $current_row->date_repeat_rrule
       = (string) $current_row->xml->date_repeat->rule[0];
   }
+
 }

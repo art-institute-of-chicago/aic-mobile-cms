@@ -1,6 +1,5 @@
 <?php
 
-
 /**
  * @file
  * A filter for compressing bckups with zip, gz bzip etc.
@@ -12,11 +11,11 @@
  * @ingroup backup_migrate_filters
  */
 class backup_migrate_filter_statusnotify extends backup_migrate_filter {
-  
+
   /**
    * Get the default backup settings for this filter.
    */
-  function backup_settings_default() {
+  public function backup_settings_default() {
     return array(
       'notify_success_enable' => FALSE,
       'notify_failure_enable' => FALSE,
@@ -28,7 +27,7 @@ class backup_migrate_filter_statusnotify extends backup_migrate_filter {
   /**
    * Get the form for the settings for this filter.
    */
-  function backup_settings_form($settings) {
+  public function backup_settings_form($settings) {
     $form = array();
     $form['advanced']['notify_success_enable'] = array(
       "#type" => 'checkbox',
@@ -68,41 +67,39 @@ class backup_migrate_filter_statusnotify extends backup_migrate_filter {
   /**
    * Send the success email.
    */
-  function backup_succeed($settings) {
+  public function backup_succeed($settings) {
     if (@$settings->filters['notify_success_enable'] && $to = @$settings->filters['notify_success_email']) {
       $messages = $this->get_messages();
-      $subject = t('!site backup succeeded', array('!site' => variable_get('site_name', 'Drupal site')));
       if ($messages = $this->get_messages()) {
         $body = t("The site backup has completed successfully with the following messages:\n!messages", array('!messages' => $messages));
       }
       else {
         $body = t("The site backup has completed successfully.\n");
       }
-      mail($settings->filters['notify_success_email'], $subject, $body);
+      drupal_mail('backup_migrate', 'backup_succeed', $settings->filters['notify_success_email'], language_default(), array('body' => $body));
     }
   }
 
   /**
    * Send the failure email.
    */
-  function backup_fail($settings) {
+  public function backup_fail($settings) {
     if (@$settings->filters['notify_failure_enable'] && $to = @$settings->filters['notify_failure_email']) {
       $messages = $this->get_messages();
-      $subject = t('!site backup failed', array('!site' => variable_get('site_name', 'Drupal site')));
       if ($messages = $this->get_messages()) {
         $body = t("The site backup has failed with the following messages:\n!messages", array('!messages' => $messages));
       }
       else {
         $body = t("The site backup has failed for an unknown reason.");
       }
-      mail($settings->filters['notify_failure_email'], $subject, $body);
+      drupal_mail('backup_migrate', 'backup_fail', $settings->filters['notify_failure_email'], language_default(), array('body' => $body));
     }
   }
 
   /**
    * Render the messages and errors for the email.
    */
-  function get_messages() {
+  public function get_messages() {
     $out = "";
     $messages = _backup_migrate_messages();
     foreach ($messages as $message) {
@@ -110,5 +107,5 @@ class backup_migrate_filter_statusnotify extends backup_migrate_filter {
     }
     return $out;
   }
-}
 
+}

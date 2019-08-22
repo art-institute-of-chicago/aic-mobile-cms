@@ -14,7 +14,7 @@ function date_migrate_example_migrate_api() {
   $api = array(
     'api' => 2,
     'migrations' => array(
-      'DateExample' => array('class_name' => 'DateExampleMigration')
+      'DateExample' => array('class_name' => 'DateExampleMigration'),
     ),
   );
   return $api;

@@ -1,7 +1,11 @@
 <?php
+
 /**
  * @file
  * Date validation tests.
+ */
+/**
+ *
  */
 class DateValidationTestCase extends DateFieldBasic {
 
@@ -148,4 +152,5 @@ class DateValidationTestCase extends DateFieldBasic {
     $this->assertNoText($should_not_be, "Correctly blocked creation of node with missing time for a $field_type field using the $widget_type widget.");
     $this->assertText('invalid', "Marked form with missing time as invalid for a $field_type field using the $widget_type widget.");
   }
+
 }

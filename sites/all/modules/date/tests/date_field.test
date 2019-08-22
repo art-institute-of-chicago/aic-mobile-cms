@@ -4,20 +4,33 @@
  * @file
  * Basic functions for Date tests.
  */
+/**
+ *
+ */
 abstract class DateFieldBasic extends DrupalWebTestCase {
   protected $privileged_user;
 
   /**
-   * @todo.
+   * {@inheritdoc}
    */
-  protected function setUp() {
-    // Load the date_api module.
-    parent::setUp('field', 'field_ui', 'date_api', 'date', 'date_popup', 'date_tools');
+  public function setUp(array $modules = array()) {
+    $modules[] = 'field';
+    $modules[] = 'field_ui';
+    $modules[] = 'date_api';
+    $modules[] = 'date';
+    $modules[] = 'date_popup';
+    $modules[] = 'date_tools';
+    parent::setUp($modules);
 
     // Create and log in our privileged user.
-    $this->privileged_user = $this->drupalCreateUser(
-      array('administer content types', 'administer nodes', 'bypass node access', 'administer date tools', 'administer fields')
+    $perms = array(
+      'administer content types',
+      'administer nodes',
+      'bypass node access',
+      'administer date tools',
+      'administer fields',
     );
+    $this->privileged_user = $this->drupalCreateUser($perms);
     $this->drupalLogin($this->privileged_user);
 
     variable_set('date_popup_timepicker', 'none');
@@ -32,7 +45,6 @@ abstract class DateFieldBasic extends DrupalWebTestCase {
     $edit['type'] = 'story';
     $this->drupalPost('admin/structure/types/add', $edit, t('Save content type'));
     $this->assertText('The content type Story has been added.', 'Content type added.');
-
   }
 
   /**
@@ -84,8 +96,8 @@ abstract class DateFieldBasic extends DrupalWebTestCase {
       'field_name' => $field_name,
       'label' => $label,
       'bundle' => $bundle,
-      // Move the date right below the title.
-      'weight' => -4,
+      // Move the date to the top.
+      'weight' => -100,
       'widget' => array(
         'type' => $widget_type,
         // Increment for minutes and seconds, can be 1, 5, 10, 15, or 30.
@@ -100,7 +112,7 @@ abstract class DateFieldBasic extends DrupalWebTestCase {
           'label_position' => 'above',
           'repeat_collapsed' => 0,
         ),
-        'weight' => -4,
+        'weight' => -100,
       ),
       'settings' => array(
         'default_value' => $default_value,
@@ -148,7 +160,6 @@ abstract class DateFieldBasic extends DrupalWebTestCase {
     // Look at how the field got configured.
     $this->drupalGet("admin/structure/types/manage/$bundle/fields/$field_name");
     $this->drupalGet("admin/structure/types/manage/$bundle/display");
-
   }
 
   /**
@@ -202,8 +213,8 @@ abstract class DateFieldBasic extends DrupalWebTestCase {
       'field_name' => $field_name,
       'label' => $label,
       'bundle' => $bundle,
-      // Move the date right below the title.
-      'weight' => -4,
+      // Move the date to the top.
+      'weight' => -100,
       'widget' => array(
         'type' => $widget_type,
         // Increment for minutes and seconds, can be 1, 5, 10, 15, or 30.
@@ -218,7 +229,7 @@ abstract class DateFieldBasic extends DrupalWebTestCase {
           'label_position' => 'above',
           'repeat_collapsed' => 0,
         ),
-        'weight' => -4,
+        'weight' => -100,
       ),
       'settings' => array(
         'default_value' => $default_value,
@@ -280,6 +291,9 @@ abstract class DateFieldBasic extends DrupalWebTestCase {
 
 }
 
+/**
+ * Test the field handling.
+ */
 class DateFieldTestCase extends DateFieldBasic {
 
   /**
@@ -354,9 +368,9 @@ class DateFieldTestCase extends DateFieldBasic {
         $edit[$field_name . '[und][0][value2][time]'] = '11:30';
       }
     }
+
     // Test that the date is displayed correctly using both the 'short' and
     // 'long' date types.
-    //
     // For the short type, save an explicit format and assert that is the one
     // which is displayed.
     variable_set('date_format_short', 'l, m/d/Y - H:i:s');
@@ -367,6 +381,7 @@ class DateFieldTestCase extends DateFieldBasic {
     $this->assertText($edit['title'], "Node has been created");
     $should_be = $todate ? 'Thursday, 10/07/2010 - 10:30 to 11:30' : 'Thursday, 10/07/2010 - 10:30';
     $this->assertText($should_be, "Found the correct date for a $field_type field using the $widget_type widget displayed using the short date format.");
+
     // For the long format, do not save anything, and assert that the displayed
     // date uses the expected default value of this format provided by Drupal
     // core ('l, F j, Y - H:i').
@@ -378,4 +393,5 @@ class DateFieldTestCase extends DateFieldBasic {
     $should_be = $todate ? 'Thursday, October 7, 2010 - 10:30 to 11:30' : 'Thursday, October 7, 2010 - 10:30';
     $this->assertText($should_be, "Found the correct date for a $field_type field using the $widget_type widget displayed using the long date format.");
   }
+
 }
