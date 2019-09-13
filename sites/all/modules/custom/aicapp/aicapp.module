@@ -753,20 +753,14 @@ function _email_art_removed($art_gone) {
     foreach ($recent_pulled as $nid) {
       $object = node_load($nid);
       // was this object on a tour?
-      // V1 version of finding if a object is on a tour.
-      $result = db_query("SELECT entity_id FROM field_data_field_stops2 WHERE field_stops2_value = :d", array(':d' => $nid));
+      // v2 tour stops
       $tours = array();
-      foreach ($result as $item) {
-        $tours[] = node_load($item->entity_id);
-      }
-      // Try V2 tour stops if $tours is empty.
-      if (empty($tours)) {
-        if ($tour_objects = _aicapp_get_tour_objects(array(), $nid)) {
-          foreach ($tour_objects as $tour_nid => $tour_values) {
-            $tours[] = node_load($tour_nid);
-          }
+      if ($tour_objects = _aicapp_get_tour_objects(array(), $nid)) {
+        foreach ($tour_objects as $tour_nid => $tour_values) {
+          $tours[] = node_load($tour_nid);
         }
       }
+      
 
       $object_list .= '<li>object_id = ' . $object->id . ' -- ' . $object->title;
       if (!empty($tours[0])) {
@@ -1503,13 +1497,6 @@ function strip_drupal_from_node(&$node) {
       $node->longitude = isset($pieces[1]) ? $pieces[1] : '';
     }
   }
-  // Current Floor is used in Gallery, Map Annotation & Tour nodes. App V1.
-  if (isset($node->field_floor)) {
-    $node->floor = NULL;
-    if (isset($node->field_floor[LANGUAGE_NONE][0]['safe_value'])) {
-      $node->floor = $node->field_floor[LANGUAGE_NONE][0]['safe_value'];
-    }
-  }
   // If the floor reference field is set.
   if (isset($node->field_floor_reference)) {
     $node->floor = NULL;
@@ -1538,26 +1525,8 @@ function strip_drupal_from_node(&$node) {
       $node->image_height = $node->field_image[LANGUAGE_NONE][0]['height'];
     }
   }
-  // Object & Tour thumbnail image crop dimensions. First handle v1 of app.
-  if (isset($node->field_thumbnail_crop_rect)) {
-    $node->thumbnail_crop_rect = array();
-    if (isset($node->field_thumbnail_crop_rect[LANGUAGE_NONE][0])) {
-      $items = field_get_items('node', $node, 'field_thumbnail_crop_rect');
-      foreach ($items as $itemid) {
-        $item = field_collection_field_get_entity($itemid);
-        if ($item->field_x) {
-          $node->thumbnail_crop_rect = array(
-            'x' => !empty($item->field_x) ? $item->field_x[LANGUAGE_NONE][0]['value'] : NULL,
-            'y' => !empty($item->field_y) ? $item->field_y[LANGUAGE_NONE][0]['value'] : NULL,
-            'width' => !empty($item->field_width) ? $item->field_width[LANGUAGE_NONE][0]['value'] : NULL,
-            'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
-          );
-          json_encode($node->thumbnail_crop_rect);
-        }
-      }
-    }
-  }
-  // Now v2 app fields for thumbnail crop rectangle.
+  
+  // v2 app fields for thumbnail crop rectangle.
   if (isset($node->field_thumbnail_image_crop)) {
     if (isset($node->field_thumbnail_image_crop[LANGUAGE_NONE][0])) {
       $items = field_get_items('node', $node, 'field_thumbnail_image_crop');
@@ -1598,26 +1567,7 @@ function strip_drupal_from_node(&$node) {
       }
     }
   }
-  // Object & Tour large image crop dimensions for v1 of app.
-  if (isset($node->field_large_image_crop_rect)) {
-    $node->large_image_crop_rect = array();
-    if (isset($node->field_large_image_crop_rect[LANGUAGE_NONE][0])) {
-      $items = field_get_items('node', $node, 'field_large_image_crop_rect');
-      foreach ($items as $itemid) {
-        $item = field_collection_field_get_entity($itemid);
-        if ($item->field_x) {
-          $node->large_image_crop_rect = array(
-            'x' => !empty($item->field_x) ? $item->field_x[LANGUAGE_NONE][0]['value'] : NULL,
-            'y' => !empty($item->field_y) ? $item->field_y[LANGUAGE_NONE][0]['value'] : NULL,
-            'width' => !empty($item->field_width) ? $item->field_width[LANGUAGE_NONE][0]['value'] : NULL,
-            'height' => !empty($item->field_height) ? $item->field_height[LANGUAGE_NONE][0]['value'] : NULL,
-          );
-          json_encode($node->large_image_crop_rect);
-        }
-      }
-    }
-  }
-  // Now v2 app fields for thumbnail crop rectangle.
+  // v2 app fields for thumbnail crop rectangle.
   if (isset($node->field_large_image_crop)) {
     if (isset($node->field_large_image_crop[LANGUAGE_NONE][0])) {
       $items = field_get_items('node', $node, 'field_large_image_crop');
@@ -1824,23 +1774,6 @@ function strip_drupal_from_node(&$node) {
       if (isset($node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'])) {
         $node->audio_transcript = $node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'];
       }
-      // App v1 property: Object selector number.
-      $node->object_selector_number = NULL;
-      if (isset($node->field_object_selector_number[LANGUAGE_NONE][0]['value'])) {
-        $node->object_selector_number = $node->field_object_selector_number[LANGUAGE_NONE][0]['value'];
-      }
-      // App v1 property: Object selector number.
-      $node->object_selector_numbers = array();
-      if (isset($node->field_object_selector_numbers[LANGUAGE_NONE][0]['value'])) {
-        foreach ($node->field_object_selector_numbers[LANGUAGE_NONE] as $object_selector) {
-          $node->object_selector_numbers[] = $object_selector['value'];
-        }
-      }
-      // If the object selctor numbers array is empty, but an integer selector
-      // number exists, fill the first element of the array with the integer value.
-      if (!empty($node->object_selector_number) && empty($node->object_selector_numbers)) {
-        $node->object_selector_numbers[] = $node->object_selector_number;
-      }
       // Artist display.
       if (!empty($node->artist_culture_place_delim)) {
         $node->artist_culture_place_delim = str_replace("\n", "\r", $node->artist_culture_place_delim);
@@ -1920,13 +1853,6 @@ function strip_drupal_from_node(&$node) {
           $translation_data['category'] = isset($term->name_field[$lang_key][0]['safe_value']) ? $term->name_field[$lang_key][0]['safe_value'] : '';
         }
         $node->translations[] = $translation_data;
-      }
-      // App V1 - version of tour stops.
-      if (isset($node->field_stops2)) {
-        $node->stops = array();
-        if (isset($node->field_stops2[LANGUAGE_NONE][0])) {
-          $node->stops = $node->field_stops2[LANGUAGE_NONE];
-        }
       }
       break;
 
@@ -3011,10 +2937,6 @@ function _aicapp_check_for_tour_problems(&$tour) {
       }
       entity_delete_multiple('field_collection_item', $to_remove);
     }
-  }
-  // App V1 - To be deprecated. field_stops2 will no longer be used.
-  if (empty($stops) && !empty($tour->field_stops2[LANGUAGE_NONE][0]['entity']->field_t_object[LANGUAGE_NONE])) {
-    $stops = $tour->field_stops2[LANGUAGE_NONE][0]['entity']->field_t_object[LANGUAGE_NONE];
   }
   // Loop through stops to check for problems.
   foreach ($stops as $stop) {
