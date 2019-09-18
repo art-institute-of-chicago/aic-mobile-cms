@@ -1135,10 +1135,6 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       $tour->weight = (!empty($item->weight)) ? $item->weight : 0;
     }
     // Collect the tour stops (objects + audio files)
-    // App v1 -- this will be deprecated.
-    if (!empty($tour->stops)) {
-      $tour->stops = aicapp_collect_tour_stops($tour->stops);
-    }
     // App v2 -- process all tour stops..
     if (isset($tour->tour_stop_items)) {
       $tour->tour_stops = $tour->tour_stop_items;
@@ -1213,93 +1209,15 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $v2_filename = variable_get('file_public_path', conf_path() . '/files');
   $v2_filename .= '/' . AICAPP_JSON_FILENAME . '-' . AICAPP_JSON_V2 . '.json';
   $v2_file = file_put_contents($v2_filename, $v2_json_output);
-  // Version 1 data.
-  $v1_data = array(
-    'general_info' => $node_gen,
-    'galleries' => $galleries,
-    'objects' => $objects,
-    'audio_files' => $audio_files,
-    'tours' => $tours,
-  );
-  // Remove translations property to prevent any changes to v1 JSON.
-  foreach ($v1_data as $type => $items) {
-    if ($type === 'general_info') {
-      if (isset($items->translations)) {
-        unset($items->translations);
-      }
-      $v1_data[$type] = $items;
-      continue;
-    }
-    elseif ($type === 'tours') {
-      $cleaned_items = array();
-      foreach ($items as &$item) {
-        if (isset($item->translations)) {
-          unset($item->translations);
-        }
-        $cleaned_items[] = $item;
-      }
-      $v1_data[$type] = $cleaned_items;
-      continue;
-    }
-    foreach ($items as $key => &$item) {
-      if (isset($item->translations)) {
-        unset($item->translations);
-      }
-      $v1_data[$type][$key] = $item;
-    }
-  }
   // Write JSON output to files.
-  // v1 verion file output.
-  $v1_json_output = json_encode($v1_data);
-  $v1_filename = variable_get('file_public_path', conf_path() . '/files');
-  $v1_filename .= '/' . AICAPP_JSON_FILENAME . '.json';
-  $v1_file = file_put_contents($v1_filename, $v1_json_output);
-  // If both v1 & v1 files were written successfully.
-  if ($v1_file && $v2_file) {
-    drupal_set_message('Updated files <strong>v1</strong>: <a href="' . $base_path . 'sites/default/files/appData.json' . '">appData.json</a> or <strong>v2</strong>: <a href="' . $base_path . 'sites/default/files/appData-v2.json' . '">appData-v2.json</a><br>When you click to view one of the files, be sure to refresh your browser as it might be cached. Best viewed in Chrome.', 'status');
+  // If v2 file was written successfully.
+  if ($v2_file) {
+    drupal_set_message('Updated file <strong>v2</strong>: <a href="' . $base_path . 'sites/default/files/appData-v2.json' . '">appData-v2.json</a><br>When you click to view the file, be sure to refresh your browser as it might be cached. Best viewed in Chrome.', 'status');
     variable_set('aicapp_pending', 0);
   }
   else {
     drupal_set_message('Problem occurred, file not written.', 'error');
   }
-}
-
-/**
- * Collect tour stops and return as a group. Use for V1 App JSON.
- */
-function aicapp_collect_tour_stops($stops = array()) {
-  $full_stops = $audio = $objects = array();
-  foreach ($stops as $stop) {
-    if (empty($stop['value'])) {
-      continue;
-    }
-    $result = db_query("SELECT field_t_audio_nid, delta
-      FROM {field_revision_field_t_audio}
-      WHERE revision_id = :vid
-      ORDER by delta", array(':vid' => $stop['value']));
-    foreach ($result as $item) {
-      $audio[] = array('nid' => $item->field_t_audio_nid, 'delta' => $item->delta);
-    }
-
-    $result = db_query("SELECT field_t_object_nid, delta
-      FROM {field_revision_field_t_object}
-      WHERE revision_id = :vid
-      ORDER by delta", array(':vid' => $stop['value']));
-    foreach ($result as $item) {
-      $objects[] = array('nid' => $item->field_t_object_nid, 'delta' => $item->delta);
-    }
-    // Now we should have 2 arrays of same length, sorted in order.
-    if (count($audio) == count($objects)) {
-      for ($i = 0; $i < count($audio); $i++) {
-        $full_stops[] = array(
-          AICAPP_TYPE_AUDIO => $audio[$i]['nid'],
-          AICAPP_TYPE_OBJECT => $objects[$i]['nid'],
-          'sort' => $objects[$i]['delta'],
-        );
-      }
-    }
-  }
-  return $full_stops;
 }
 
 /**
@@ -1756,23 +1674,6 @@ function strip_drupal_from_node(&$node) {
       // Is this a highlighed object?
       if (isset($node->field_highlighted_object[LANGUAGE_NONE][0])) {
         $node->highlighted_object = $node->field_highlighted_object[LANGUAGE_NONE][0]['value'];
-      }
-      // App v1 property: audio.
-      $node->audio = array();
-      if (isset($node->field_object_audio[LANGUAGE_NONE][0]['nid'])) {
-        foreach ($node->field_object_audio[LANGUAGE_NONE] as $audiofld) {
-          $node->audio[] = $audiofld['nid'];
-        }
-      }
-      // For backward compliance, if audio is empty, but audio commentary items
-      // aren't we can fill audio with the values from audio commentary.
-      if (empty($node->audio) && !empty($node->audio_commentary)) {
-        $node->audio = $node->audio_commentary;
-      }
-      // App v1 property: audio_transcript.
-      $node->audio_transcript = NULL;
-      if (isset($node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'])) {
-        $node->audio_transcript = $node->field_object_audio[LANGUAGE_NONE][0]['node']->field_audio_transcript[LANGUAGE_NONE][0]['safe_value'];
       }
       // Artist display.
       if (!empty($node->artist_culture_place_delim)) {
