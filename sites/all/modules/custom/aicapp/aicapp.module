@@ -1367,7 +1367,7 @@ function strip_drupal_from_node(&$node) {
     // Artwork object properties that we do not want to strip away.
     'id', 'in_gallery', 'gallery_location', 'credit_line', 'copyright_notice',
     'artist_culture_place_delim', 'object_id', 'main_reference_number',
-    'title_t', 'artist_sort_name', 'artist_culture_place', 'dimensions',
+    'artist_sort_name', 'artist_culture_place', 'dimensions',
     'date_display', 'date_range', 'reference_num', 'artist_display',
   );
   // Node properties that we want to strip.
@@ -1633,8 +1633,6 @@ function strip_drupal_from_node(&$node) {
       break;
 
     case $node->type === AICAPP_TYPE_GALLERY:
-      // For v1 compliance.
-      $node->title_t = $node->title;
       if (!empty($node->field_gallery_id[LANGUAGE_NONE])) {
         $node->gallery_id = $node->field_gallery_id[LANGUAGE_NONE][0]['safe_value'];
       }
@@ -1642,8 +1640,6 @@ function strip_drupal_from_node(&$node) {
 
     // Object node type field items, starging with the object id.
     case  AICAPP_TYPE_OBJECT:
-      // For v1 compliance title_t must remain.
-      $node->title_t = $node->title;
       // What is this object's gallery location?
       if (isset($node->gallery_title)) {
         // Keep property name of gallery location despite the underlying
