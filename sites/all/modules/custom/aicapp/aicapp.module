@@ -999,7 +999,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     // @TODO a better way would be to only request the fields we want.
     $gallery_to_skip = array(
       'id', 'lake_guid', 'category_ids', 'last_updated_fedora', 'latlon',
-      'last_updated_source', 'last_updated', 'last_updated_citi',
+      'last_updated_source', 'last_updated', 'last_updated_citi', 'api_model', 'api_link', 'timestamp',
     );
     foreach ($results as $item) {
       $id = isset($item['id']) ? $item['id'] : NULL;
@@ -1018,6 +1018,9 @@ function aicapp_gendata_form_submit($form, &$form_state) {
           continue;
         }
         $gallery->{$key} = $val;
+        //fields not needed in json
+        unset($gallery->status);
+        unset($gallery->type);
       }
       $galleries['#updated'][$gallery->nid] = $gallery;
     }
