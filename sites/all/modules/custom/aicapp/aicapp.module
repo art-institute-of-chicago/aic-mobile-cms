@@ -1058,7 +1058,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     $object_props_to_skip = array('#skip' => array(
       'description', 'medium', 'inscriptions', 'provenance_text', 'exhibition_history',
       'object_type', 'object_type_id', 'publication_history', 'collection_status',
-      'publishing_verification_level', 'gallery_id', 'place_of_origin',
+      'publishing_verification_level', 'gallery_id', 'place_of_origin', 'alt_titles', 'boost_rank', 'date_display', 'dimensions', 'artwork_type_title', 'artwork_type_id', 'subject_id', 'technique_id',
     ));
     foreach ($results as $item) {
       $id = isset($item['id']) ? $item['id'] : NULL;
@@ -1079,12 +1079,34 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     if (empty($object->in_gallery) || empty($object->location) || empty($object->status)) {
       unset($objects['#updated'][$key]);
     }
+    //fields not needed in json
+    unset($object->status);
+    unset($object->type);
+    unset($object->object_id);
+    unset($object->main_reference_number);
+    unset($object->in_gallery);
+    unset($object->image_filename);
+    unset($object->image_filemime);
+    unset($object->image_filesize);
+    unset($object->image_width);
+    unset($object->image_height);
+    unset($object->reference_num);
+    unset($object->highlighted_object);
   }
+
   // Overwrite the objects with the updated copy.
   $objects = $objects['#updated'];
   // Format audio node.
   foreach ($audio_files as $audio) {
     strip_drupal_from_node($audio);
+    //fields not needed in json
+    unset($audio->status);
+    unset($audio->type);
+    unset($audio->audio_filename);
+    unset($audio->audio_filemime);
+    unset($audio->audio_filesize);
+    unset($audio->credits);
+
   }
   // Loop through all tours.
   foreach ($tours as $key => $tour) {
@@ -1143,6 +1165,20 @@ function aicapp_gendata_form_submit($form, &$form_state) {
       $tour->tour_stops = $tour->tour_stop_items;
       unset($tour->tour_stop_items);
     }
+    //fields not needed in json
+    unset($tour->status);
+    unset($tour->type);
+    unset($tour->image_filename);
+    unset($tour->image_filemime);
+    unset($tour->image_filesize);
+    unset($tour->image_width);
+    unset($tour->image_height);
+    unset($tour->thumbnail_crop_v2);
+    unset($tour->tour_banner);
+    unset($tour->description_html);
+    unset($tour->tour_dates);
+    unset($tour->intro_html);
+    unset($tour->stops);
   }
   // Sort tours.
   usort($tours, 'sort_objects_by_weight');
@@ -1171,6 +1207,11 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     $exhibition = node_load($result->nid);
     // Strip out Drupal native stuff we don't need in the JSON output from galleries.
     strip_drupal_from_node($exhibition);
+    unset($exhibition->image_filename);
+    unset($exhibition->image_filemime);
+    unset($exhibition->image_filesize);
+    unset($exhibition->image_width);
+    unset($exhibition->image_height);
     $exhibition->sort = $sort;
     $sorted_exhibitions[] = $exhibition;
     $sort++;
@@ -1371,7 +1412,7 @@ function strip_drupal_from_node(&$node) {
     'id', 'in_gallery', 'gallery_location', 'credit_line', 'copyright_notice',
     'artist_culture_place_delim', 'object_id', 'main_reference_number',
     'artist_sort_name', 'artist_culture_place', 'dimensions',
-    'date_display', 'date_range', 'reference_num', 'artist_display',
+    'date_range', 'artist_display',
   );
   // Node properties that we want to strip.
   $to_unset = array(
