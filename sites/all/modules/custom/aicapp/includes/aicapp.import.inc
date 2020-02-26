@@ -167,6 +167,14 @@ function aicapp_import_generate_template() {
     'filename_chn.mp3',
     'Transcripts Chn',
     'Credits Chn',
+    'Track Title Fr',
+    'filename_fr.mp3',
+    'Transcripts Fr',
+    'Credits Fr',
+    'Track Title Ko',
+    'filename_ko.mp3',
+    'Transcripts Ko',
+    'Credits Ko',
     )
   );
   $audio_files = node_load_multiple(array(), array('type' => AICAPP_TYPE_AUDIO));
@@ -247,6 +255,60 @@ function aicapp_import_generate_template() {
     }
     $row[] = $transcripts;
     // Credits Chn
+    $credits = NULL;
+    if (!empty($node->field_credits[$node->language])) {
+      $credits = $node->field_credits[$node->language][0]['value'];
+    }
+    $row[] = $credits;
+
+    // French values
+    $node->language = 'fr';
+    // Track Title Fr
+    $track_title = NULL;
+    if (!empty($node->field_track_title[$node->language])) {
+      $track_title = $node->field_track_title[$node->language][0]['value'];
+    }
+    $row[] = $track_title;
+    // filename_fr.mp3
+    $filename = NULL;
+    if (!empty($node->field_audio_file[$node->language])) {
+      $filename = $node->field_audio_file[$node->language][0]['filename'];
+    }
+    $row[] = $filename;
+    // Transcripts Fr
+    $transcripts = NULL;
+    if (!empty($node->field_audio_transcript[$node->language])) {
+      $transcripts = $node->field_audio_transcript[$node->language][0]['value'];
+    }
+    $row[] = $transcripts;
+    // Credits Fr
+    $credits = NULL;
+    if (!empty($node->field_credits[$node->language])) {
+      $credits = $node->field_credits[$node->language][0]['value'];
+    }
+    $row[] = $credits;
+
+    // Korean values
+    $node->language = 'ko';
+    // Track Title Ko
+    $track_title = NULL;
+    if (!empty($node->field_track_title[$node->language])) {
+      $track_title = $node->field_track_title[$node->language][0]['value'];
+    }
+    $row[] = $track_title;
+    // filename_ko.mp3
+    $filename = NULL;
+    if (!empty($node->field_audio_file[$node->language])) {
+      $filename = $node->field_audio_file[$node->language][0]['filename'];
+    }
+    $row[] = $filename;
+    // Transcripts Ko
+    $transcripts = NULL;
+    if (!empty($node->field_audio_transcript[$node->language])) {
+      $transcripts = $node->field_audio_transcript[$node->language][0]['value'];
+    }
+    $row[] = $transcripts;
+    // Credits Ko
     $credits = NULL;
     if (!empty($node->field_credits[$node->language])) {
       $credits = $node->field_credits[$node->language][0]['value'];
@@ -371,6 +433,36 @@ function aicapp_import_items($items, $audio_file_path) {
           // Chinese audio file
           if ($file_obj = _aicapp_import_file_uri_to_object('public://' . $audio_file_path . '/' . $values['filename_chn.mp3'])) {
             $entity->language('zh-hant')->field_audio_file->file->set($file_obj);
+          }
+        }
+        if (!empty($values['filename_fr.mp3']) && !empty($values['Track Title Fr'])) {
+          $translate_to['fr'] = 'fr';
+          $entity->language('fr')->title_field->set($values['Title']);
+          $entity->language('fr')->field_track_title->set($values['Track Title Fr']);
+          if (!in_array($values['Transcripts Fr'], $skip_text)) {
+            $entity->language('fr')->field_audio_transcript->set($values['Transcripts Fr']);
+          }
+          if (!in_array($values['Credits Fr'], $skip_text)) {
+            $entity->language('fr')->field_credits->set($values['Credits Fr']);
+          }
+          // Chinese audio file
+          if ($file_obj = _aicapp_import_file_uri_to_object('public://' . $audio_file_path . '/' . $values['filename_fr.mp3'])) {
+            $entity->language('fr')->field_audio_file->file->set($file_obj);
+          }
+        }
+        if (!empty($values['filename_ko.mp3']) && !empty($values['Track Title Ko'])) {
+          $translate_to['ko'] = 'ko';
+          $entity->language('ko')->title_field->set($values['Title']);
+          $entity->language('ko')->field_track_title->set($values['Track Title Ko']);
+          if (!in_array($values['Transcripts Ko'], $skip_text)) {
+            $entity->language('ko')->field_audio_transcript->set($values['Transcripts Ko']);
+          }
+          if (!in_array($values['Credits Ko'], $skip_text)) {
+            $entity->language('ko')->field_credits->set($values['Credits Ko']);
+          }
+          // Chinese audio file
+          if ($file_obj = _aicapp_import_file_uri_to_object('public://' . $audio_file_path . '/' . $values['filename_ko.mp3'])) {
+            $entity->language('ko')->field_audio_file->file->set($file_obj);
           }
         }
         // For each translation to the English version of this node.
