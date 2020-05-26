@@ -54,6 +54,7 @@ function aicapp_init() {
   define('AICAPP_WEBSITE_URL', variable_get('aicapp_website_url', 'http://www.artic.edu/?&utm_medium=mobile-app&utm_source=iphone&utm_campaign=homepage'));
   define('AICAPP_JSON_FILENAME', variable_get('aicapp_json_filename', 'appData'));
   define('AICAPP_JSON_V2', variable_get('aicapp_json_version_2', 'v2'));
+  define('AICAPP_JSON_V3', variable_get('aicapp_json_version_3', 'v3'));
   define('AICAPP_TOUR_VOCABULARY_NAME', variable_get('aicapp_tour_vocabular_name', 'categories'));
   define('AICAPP_CURRENT_SERVER_FQDM', rtrim(variable_get('aicapp_env_fqdm', 'http://aicweb10.artic.edu'), '/'));
 }
@@ -1248,15 +1249,50 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'data' => _aic_app_get_data_endpoints(),
     'search' => _aic_app_get_search_items(),
   );
+
+  //copy v2 array without references
+  $v3_data = json_decode(json_encode($v2_data), true);
+
+  // remove all translations except for spanish and mandarin for v2
+  $translated_content = array('general_info','audio_files','tours','map_annontations','tour_categories');
+  foreach ($v2_data as $json_content => $items) {
+    if (in_array($json_content, $translated_content)) {
+      if (isset($items->translations)) {
+        foreach ($items->translations as $key => $language) {
+          if ($language['language'] != "es" && $language['language'] != "zh-hant") {
+            unset($items->translations[$key]);
+          }
+        }
+        $items->translations = array_values($items->translations);
+      } else {
+        foreach ($items as $key => $objectitems) {
+          if (isset($objectitems->translations)) {
+            foreach ($objectitems->translations as $key => $language) {
+              if ($language['language'] != "es" && $language['language'] != "zh-hant") {
+                unset($objectitems->translations[$key]);
+              }
+            }
+            $objectitems->translations = array_values($objectitems->translations);
+          }
+        }
+      }
+    }
+  }
+
   // Writing version 2 file output.
   $v2_json_output = json_encode($v2_data);
   $v2_filename = variable_get('file_public_path', conf_path() . '/files');
   $v2_filename .= '/' . AICAPP_JSON_FILENAME . '-' . AICAPP_JSON_V2 . '.json';
   $v2_file = file_put_contents($v2_filename, $v2_json_output);
+  // Writing version 3 file output.
+  $v3_json_output = json_encode($v3_data);
+  $v3_filename = variable_get('file_public_path', conf_path() . '/files');
+  $v3_filename .= '/' . AICAPP_JSON_FILENAME . '-' . AICAPP_JSON_V3 . '.json';
+  $v3_file = file_put_contents($v3_filename, $v3_json_output);
   // Write JSON output to files.
   // If v2 file was written successfully.
-  if ($v2_file) {
-    drupal_set_message('Updated file <strong>v2</strong>: <a href="' . $base_path . 'sites/default/files/appData-v2.json' . '">appData-v2.json</a><br>When you click to view the file, be sure to refresh your browser as it might be cached. Best viewed in Chrome.', 'status');
+  if ($v2_file && $v3_file) {
+    drupal_set_message('Updated files <strong>v2</strong>: <a href="' . $base_path . 'sites/default/files/appData-v2.json' . '">appData-v2.json</a> or <strong>v3</strong>: <a href="' . $base_path . 'sites/default/files/appData-v3.json' . '">appData-v3.json</a><br>When you click to view one of the files, be sure to refresh your browser as it might be cached. Best viewed in Chrome.', 'status');
     variable_set('aicapp_pending', 0);
   }
   else {

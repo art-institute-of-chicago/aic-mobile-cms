@@ -674,12 +674,12 @@ function aicapp_json_compare_form_submit($form, &$form_state) {
     switch ($options[1]) {
       default:
         break;
-      case 'v1':
-        $filename .= '/' . AICAPP_JSON_FILENAME . '.json';
-        break;
-
       case 'v2':
         $filename .= '/' . AICAPP_JSON_FILENAME . '-' . AICAPP_JSON_V2 . '.json';
+        break;
+
+      case 'v3':
+        $filename .= '/' . AICAPP_JSON_FILENAME . '-' . AICAPP_JSON_V3 . '.json';
         break;
     }
     $json = file_get_contents($filename);
