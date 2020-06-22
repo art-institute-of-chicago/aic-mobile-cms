@@ -37,6 +37,7 @@ function aicapp_init() {
   define('AICAPP_TYPE_EXHIBITION', 'exhibition');
   define('AICAPP_TYPE_MAP_ANNOTATION', 'map_annotation');
   define('AICAPP_TYPE_MAP_FLOOR', 'map_floor');
+  define('AICAPP_TYPE_MESSAGE', 'message');
   define('AICAPP_DATA_AGGREGATOR', 'aic_data_aggregrator');
   define('AICAPP_DATA_API_HOST', rtrim(variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'), '/'));
   define('AICAPP_DATA_API_HOST_INTERNAL', rtrim(variable_get('aicapp_data_api_host_internal', 'http://nocache.aggregator-data.artic.edu'), '/'));
@@ -978,6 +979,8 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $map_annotations = node_load_multiple(array(), array('type' => AICAPP_TYPE_MAP_ANNOTATION, 'status' => 1));
   // Load map floor that are published. There should only be 1 node loaded.
   $map_floor = node_load_multiple(array(), array('type' => AICAPP_TYPE_MAP_FLOOR, 'status' => 1));
+  // Load messages that are published. 
+  $app_messages = node_load_multiple(array(), array('type' => AICAPP_TYPE_MESSAGE, 'status' => 1));
   // Load exhibition from a view, which give the ordered and promoted exhibitions.
   $exhibitions = views_get_view_result('exhibitions', 'page');
   // Store a list of featured items.
@@ -1193,6 +1196,14 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     // There should only be 1 map floor node.
     $map_floor = $floor->floors;
   }
+  // Format messages
+  foreach ($app_messages as $app_message) {
+    strip_drupal_from_node($app_message);
+    //fields not needed in json
+    unset($app_message->status);
+    unset($app_message->nid);
+    unset($app_message->type);
+  }
   // Format exhibitions
   $sorted_exhibitions = array();
   $sort = 0;
@@ -1244,6 +1255,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'tours' => $tours,
     'map_annontations' => $map_annotations,
     'map_floors' => !empty($map_floor) ? $map_floor : array(),
+    'messages' => $app_messages,
     'tour_categories' => _aicapp_get_tour_categories(),
     'exhibitions' => $sorted_exhibitions,
     'data' => _aic_app_get_data_endpoints(),
@@ -1472,7 +1484,7 @@ function strip_drupal_from_node(&$node) {
   }
   $i18n_types = array(
     AICAPP_TYPE_AUDIO, AICAPP_TYPE_TOUR,
-    AICAPP_TYPE_MAP_ANNOTATION, AICAPP_TYPE_PAGE,
+    AICAPP_TYPE_MAP_ANNOTATION, AICAPP_TYPE_PAGE, AICAPP_TYPE_MESSAGE,
   );
   if (in_array($node->type, $i18n_types)) {
     // Create an empty translations property to store all translations.
@@ -1961,6 +1973,76 @@ function strip_drupal_from_node(&$node) {
         );
       }
       break;
+
+    // Message item fields.
+    case AICAPP_TYPE_MESSAGE:
+      // Message type (field_message_type)
+      if (isset($node->field_message_type)) {
+        $node->message_type = NULL;
+        if (isset($node->field_message_type[LANGUAGE_NONE][0]['value'])) {
+          $node->message_type = $node->field_message_type[LANGUAGE_NONE][0]['value'];
+        }
+      }
+      // Expiration threshold (field_expiration_threshold)
+      if (isset($node->field_expiration_threshold)) {
+        $node->expiration_threshold = NULL;
+        if (isset($node->field_expiration_threshold[LANGUAGE_NONE][0]['value'])) {
+          $node->expiration_threshold = (int)$node->field_expiration_threshold[LANGUAGE_NONE][0]['value'];
+        }
+      }
+      // Tour Exit (field_tour_exit)
+      if (isset($node->field_tour_exit)) {
+        $node->tour_exit = NULL;
+        if (isset($node->field_tour_exit[LANGUAGE_NONE][0]['nid'])) {
+          $node->tour_exit = $node->field_tour_exit[LANGUAGE_NONE][0]['nid'];
+        }
+      }
+      // Persisten (field_persistent)
+      if (isset($node->field_persistent)) {
+        $node->persistent = NULL;
+        if (isset($node->field_persistent[LANGUAGE_NONE][0]['value'])) {
+          $node->persistent = $node->field_persistent[LANGUAGE_NONE][0]['value'];
+          if ($node->persistent == '0') {
+            $node->persistent = false;
+          } else {
+            $node->persistent = true;
+          }
+        }
+      }
+      // Message (field_message)
+      if (isset($node->field_message)) {
+        $node->message = NULL;
+        if (isset($node->field_message[$node->language][0]['safe_value'])) {
+          $node->message = $node->field_message[$node->language][0]['safe_value'];
+        }
+      }
+      // Action URL (field_action)
+      if (isset($node->field_action)) {
+        $node->action = NULL;
+        if (isset($node->field_action[LANGUAGE_NONE][0]['value'])) {
+          $node->action = $node->field_action[LANGUAGE_NONE][0]['value'];
+        }
+      }
+      // Action Title (field_action_title)
+      if (isset($node->field_action_title)) {
+        $node->action_title = NULL;
+        if (isset($node->field_action_title[$node->language][0]['safe_value'])) {
+          $node->action_title = $node->field_action_title[$node->language][0]['safe_value'];
+        }
+      }
+      // Translations.
+      foreach ($translations as $lang_key => $details) {
+        if ($lang_key === 'en') {
+          continue;
+        }
+        $node->translations[] = array(
+          'language' => $lang_key,
+          'title' => isset($node->title_field[$lang_key][0]['safe_value']) ? $node->title_field[$lang_key][0]['safe_value'] : '',
+          'message' => isset($node->field_message[$lang_key][0]['safe_value']) ? $node->field_message[$lang_key][0]['safe_value'] : '',
+          'action_title' => isset($node->field_action_title[$lang_key][0]['safe_value']) ? $node->field_action_title[$lang_key][0]['safe_value'] : '',
+        );
+      }
+    break;
 
     // Exhibtion item fields.
     case AICAPP_TYPE_EXHIBITION:

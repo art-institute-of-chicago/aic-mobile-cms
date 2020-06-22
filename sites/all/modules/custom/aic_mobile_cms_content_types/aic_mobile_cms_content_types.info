@@ -469,6 +469,7 @@ features[views_view][] = object_references
 features[views_view][] = objects
 features[views_view][] = tour_stop_audio_commentaries
 features[views_view][] = tours
+features[views_view][] = app_messages
 features_exclude[dependencies][ckeditor] = ckeditor
 features_exclude[dependencies][features] = features
 features_exclude[dependencies][field_collection_table] = field_collection_table
