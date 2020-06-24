@@ -1261,10 +1261,12 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'data' => _aic_app_get_data_endpoints(),
     'search' => _aic_app_get_search_items(),
   );
-
+  
   //copy v2 array without references
   $v3_data = json_decode(json_encode($v2_data), true);
 
+  //remove messages from v2
+  unset($v2_data['messages']);
   // remove all translations except for spanish and mandarin for v2
   $translated_content = array('general_info','audio_files','tours','map_annontations','tour_categories');
   foreach ($v2_data as $json_content => $items) {
