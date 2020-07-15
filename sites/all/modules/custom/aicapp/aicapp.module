@@ -1255,15 +1255,18 @@ function aicapp_gendata_form_submit($form, &$form_state) {
     'tours' => $tours,
     'map_annontations' => $map_annotations,
     'map_floors' => !empty($map_floor) ? $map_floor : array(),
-    'messages' => $app_messages,
+    'messages' => !empty($app_messages) ? $app_messages : (object) null,
     'tour_categories' => _aicapp_get_tour_categories(),
     'exhibitions' => $sorted_exhibitions,
     'data' => _aic_app_get_data_endpoints(),
     'search' => _aic_app_get_search_items(),
   );
-  
-  //copy v2 array without references
-  $v3_data = json_decode(json_encode($v2_data), true);
+
+  // Writing version 3 file output.
+  $v3_json_output = json_encode($v2_data);
+  $v3_filename = variable_get('file_public_path', conf_path() . '/files');
+  $v3_filename .= '/' . AICAPP_JSON_FILENAME . '-' . AICAPP_JSON_V3 . '.json';
+  $v3_file = file_put_contents($v3_filename, $v3_json_output);
 
   //remove messages from v2
   unset($v2_data['messages']);
@@ -1298,11 +1301,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $v2_filename = variable_get('file_public_path', conf_path() . '/files');
   $v2_filename .= '/' . AICAPP_JSON_FILENAME . '-' . AICAPP_JSON_V2 . '.json';
   $v2_file = file_put_contents($v2_filename, $v2_json_output);
-  // Writing version 3 file output.
-  $v3_json_output = json_encode($v3_data);
-  $v3_filename = variable_get('file_public_path', conf_path() . '/files');
-  $v3_filename .= '/' . AICAPP_JSON_FILENAME . '-' . AICAPP_JSON_V3 . '.json';
-  $v3_file = file_put_contents($v3_filename, $v3_json_output);
+  
   // Write JSON output to files.
   // If v2 file was written successfully.
   if ($v2_file && $v3_file) {
