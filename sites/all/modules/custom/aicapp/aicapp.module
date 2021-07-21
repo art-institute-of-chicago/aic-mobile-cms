@@ -39,8 +39,8 @@ function aicapp_init() {
   define('AICAPP_TYPE_MAP_FLOOR', 'map_floor');
   define('AICAPP_TYPE_MESSAGE', 'message');
   define('AICAPP_DATA_AGGREGATOR', 'aic_data_aggregrator');
-  define('AICAPP_DATA_API_HOST', rtrim(variable_get('aicapp_data_api_host', 'http://aggregator-data-test.artic.edu'), '/'));
-  define('AICAPP_DATA_API_HOST_INTERNAL', rtrim(variable_get('aicapp_data_api_host_internal', 'http://nocache.aggregator-data.artic.edu'), '/'));
+  define('AICAPP_DATA_API_HOST', rtrim(variable_get('aicapp_data_api_host', 'https://aggregator-data.artic.edu'), '/'));
+  define('AICAPP_DATA_API_HOST_INTERNAL', rtrim(variable_get('aicapp_data_api_host_internal', 'https://aggregator-data.artic.edu'), '/'));
   define('AICAPP_DATA_API_ENDPOINT_EXHIBITION', variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'));
   define('AICAPP_DATA_API_ENDPOINT_ARTWORKS', variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'));
   define('AICAPP_DATA_API_ENDPOINT_GALLERIES', variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'));
@@ -762,7 +762,6 @@ function _email_art_removed($art_gone) {
           $tours[] = node_load($tour_nid);
         }
       }
-      
 
       $object_list .= '<li>object_id = ' . $object->id . ' -- ' . $object->title;
       if (!empty($tours[0])) {
@@ -979,7 +978,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $map_annotations = node_load_multiple(array(), array('type' => AICAPP_TYPE_MAP_ANNOTATION, 'status' => 1));
   // Load map floor that are published. There should only be 1 node loaded.
   $map_floor = node_load_multiple(array(), array('type' => AICAPP_TYPE_MAP_FLOOR, 'status' => 1));
-  // Load messages that are published. 
+  // Load messages that are published.
   $app_messages = node_load_multiple(array(), array('type' => AICAPP_TYPE_MESSAGE, 'status' => 1));
   // Load exhibition from a view, which give the ordered and promoted exhibitions.
   $exhibitions = views_get_view_result('exhibitions', 'page');
@@ -1301,7 +1300,7 @@ function aicapp_gendata_form_submit($form, &$form_state) {
   $v2_filename = variable_get('file_public_path', conf_path() . '/files');
   $v2_filename .= '/' . AICAPP_JSON_FILENAME . '-' . AICAPP_JSON_V2 . '.json';
   $v2_file = file_put_contents($v2_filename, $v2_json_output);
-  
+
   // Write JSON output to files.
   // If v2 file was written successfully.
   if ($v2_file && $v3_file) {
@@ -1372,6 +1371,7 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
     // @TODO In order to handle large number of requests, explore whether
     // https://www.drupal.org/project/httprl would help by making parallel http requests.
     $id_count = count($options['ids']);
+
     if ($id_count > $options['batch_count']) {
       // Separate the request into batches.
       $batch_options = $options;
@@ -1438,7 +1438,26 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
   if (!$data) {
     return;
   }
+
   $json = json_decode($data, TRUE);
+
+  //if more than one page of results
+  $pages = !empty($json['pagination']['total_pages']) ? intval($json['pagination']['total_pages']) : null;
+
+  if ($pages > 1 && !empty($options['limit']) && $options['limit'] > 1) {
+    for ($i=2; $i<=$pages; $i++){
+      $page_options = array('page' => $i);
+      $options += $page_options;
+      $new_query = $endpoint . '?' . http_build_query($options);
+      $page_results = drupal_http_request($new_query);
+      if ($page_results->code === '200' && !empty($page_results->data)) {
+        $moredata = $page_results->data;
+        $morejson = json_decode($moredata, TRUE);
+        $json = array_merge_recursive($json, $morejson);
+      }
+    }
+  }
+
   if ($full_response && !empty($json)) {
     $results = $json;
   }
@@ -1536,7 +1555,7 @@ function strip_drupal_from_node(&$node) {
       $node->image_height = $node->field_image[LANGUAGE_NONE][0]['height'];
     }
   }
-  
+
   // v2 app fields for thumbnail crop rectangle.
   if (isset($node->field_thumbnail_image_crop)) {
     if (isset($node->field_thumbnail_image_crop[LANGUAGE_NONE][0])) {
@@ -2109,7 +2128,7 @@ function aicapp_gallery_count() {
  * Used to multi-load in the galleries.  Objects don't use this, they are loaded one at a time via search.
  */
 function aicapp_loadgalleries_form_submit($form, &$form_state) {
-  $options = array('limit' => 1000);
+  $options = array('limit' => 100);
   $url = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_GALLERIES;
   // Query the data aggregrator.
   $results = _aicapp_fetch_data($url, $options);
