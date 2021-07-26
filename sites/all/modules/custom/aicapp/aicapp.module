@@ -617,9 +617,14 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
           AND entity_type = 'node'
           AND bundle = :bundle", array(':bundle' => AICAPP_TYPE_OBJECT, ':nid' => $object->nid, ':gal' => $loc));
 
-      // Setting node to unpublished.
-      db_query("UPDATE {node} SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
-      db_query("UPDATE {node_revision} SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
+      // Publish objects in gallery and unpublish objects not in gallery
+      if (!empty($loc)) {
+        db_query("UPDATE {node} SET status = 1 WHERE nid = :nid", array(':nid' => $object->nid));
+        db_query("UPDATE {node_revision} SET status = 1 WHERE nid = :nid", array(':nid' => $object->nid));
+      } else {
+        db_query("UPDATE {node} SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
+        db_query("UPDATE {node_revision} SET status = 0 WHERE nid = :nid", array(':nid' => $object->nid));
+      }
 
       $changed[] = array(
         'object_id' => $object->id,
@@ -635,9 +640,6 @@ function aicapp_objectGalleryStatus_submit($form, &$form_state) {
 
   // notify of any objects no longer on display.
   _email_art_removed($art_gone);
-
-  // notify of any objects BACK on display
-  _email_art_gallery($art_in_gallery, $locations, $objects['#updated']);
 
   // notify of any objects that have changed gallery location.
   _email_object_gallery_change($changed);
@@ -851,59 +853,6 @@ function _aicapp_get_tour_stops($tour) {
     }
   }
   return $stops;
-}
-
-/**
- * Helper function for aicapp_gendata_form_submit()
- * Similar to above, but the reverse. Notify of objects that are now on display in gallery.
- */
-function _email_art_gallery($art_in_gallery, $locations, $objects) {
-  global $base_url;
-  $site_name = variable_get('site_name');
-
-  // Now collect all objects from our Drupal DB (field_in_gallery table) that are NOT in gallery
-  $not_displayed = array();
-  foreach ($objects as $obj) {
-    if (!is_object($obj) || empty($obj->field_in_gallery)) {
-      continue;
-    }
-    if ($obj->field_in_gallery[LANGUAGE_NONE][0]['value'] == 0) {
-      $not_displayed[] = $obj->nid;
-    }
-  }
-
-  // now compare
-  $recent_added = array_intersect($art_in_gallery, $not_displayed);
-
-  if (!empty($recent_added)) {
-    $from = 'admin@' . $base_url;
-    $to = variable_get('site_mail', '');
-    $msg = '<p>This automated email is to notify you that we\'ve found objects
-        that were recently ADDED into galleries. You might need to update the object location information
-        and the tours:</p><ul>';
-    $object_list = '';
-    $recent_full_objects = array();
-    foreach ($recent_added as $nid) {
-      $recent_full_objects[$nid] = $objects[$nid];
-      $object_list .= '<li>object_id - ' . $objects[$nid]->id . ' - ';
-      $object_list .= $objects[$nid]->title . ' - ' . $objects[$nid]->gallery_title . '</li>';
-    }
-    $msg .= $object_list . '</ul><p>Do not reply to this email.</p>';
-    $headers = "From: <" . $from . ">\nMIME-Version: 1.0\nContent-type: text/html; charset=utf-8";
-
-    $subject = $site_name . ': Objects Now On Display Notice';
-
-    if (mail($to, $subject, $msg, $headers)) {
-      drupal_set_message('Email notice was sent regarding objects now ADDED into galleries:<ul>' . $object_list . '</ul>', 'status');
-    }
-    else {
-      drupal_set_message('Email notice unable to send. (These objects were removed):<ul>' . $object_list . '</ul>', 'error');
-    }
-    _update_object_galleries($recent_added, $locations);
-  }
-  else {
-    drupal_set_message('\'Update Objects Gallery Status\' has been run. No new gallery_locations were added.', 'status');
-  }
 }
 
 /**
