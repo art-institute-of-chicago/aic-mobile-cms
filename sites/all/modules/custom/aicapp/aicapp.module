@@ -1390,23 +1390,6 @@ function _aicapp_fetch_data($endpoint, $options = array(), $full_response = FALS
 
   $json = json_decode($data, TRUE);
 
-  //if more than one page of results
-  $pages = !empty($json['pagination']['total_pages']) ? intval($json['pagination']['total_pages']) : null;
-
-  if ($pages > 1 && !empty($options['limit']) && $options['limit'] > 1) {
-    for ($i=2; $i<=$pages; $i++){
-      $page_options = array('page' => $i);
-      $options += $page_options;
-      $new_query = $endpoint . '?' . http_build_query($options);
-      $page_results = drupal_http_request($new_query);
-      if ($page_results->code === '200' && !empty($page_results->data)) {
-        $moredata = $page_results->data;
-        $morejson = json_decode($moredata, TRUE);
-        $json = array_merge_recursive($json, $morejson);
-      }
-    }
-  }
-
   if ($full_response && !empty($json)) {
     $results = $json;
   }
@@ -2077,7 +2060,7 @@ function aicapp_gallery_count() {
  * Used to multi-load in the galleries.  Objects don't use this, they are loaded one at a time via search.
  */
 function aicapp_loadgalleries_form_submit($form, &$form_state) {
-  $options = array('limit' => 100);
+  $options = array('limit' => 500);
   $url = AICAPP_DATA_API_HOST_INTERNAL . AICAPP_DATA_API_ENDPOINT_GALLERIES;
   // Query the data aggregrator.
   $results = _aicapp_fetch_data($url, $options);
