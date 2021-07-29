@@ -39,8 +39,8 @@ function aicapp_init() {
   define('AICAPP_TYPE_MAP_FLOOR', 'map_floor');
   define('AICAPP_TYPE_MESSAGE', 'message');
   define('AICAPP_DATA_AGGREGATOR', 'aic_data_aggregrator');
-  define('AICAPP_DATA_API_HOST', rtrim(variable_get('aicapp_data_api_host', 'https://aggregator-data.artic.edu'), '/'));
-  define('AICAPP_DATA_API_HOST_INTERNAL', rtrim(variable_get('aicapp_data_api_host_internal', 'https://aggregator-data.artic.edu'), '/'));
+  define('AICAPP_DATA_API_HOST', rtrim(variable_get('aicapp_data_api_host', 'http://api.artic.edu/'), '/'));
+  define('AICAPP_DATA_API_HOST_INTERNAL', rtrim(variable_get('aicapp_data_api_host_internal', 'http://api.artic.edu/'), '/'));
   define('AICAPP_DATA_API_ENDPOINT_EXHIBITION', variable_get('aicapp_data_endpoint_exhibitions', '/api/v1/exhibitions'));
   define('AICAPP_DATA_API_ENDPOINT_ARTWORKS', variable_get('aicapp_data_endpoint_artworks', '/api/v1/artworks'));
   define('AICAPP_DATA_API_ENDPOINT_GALLERIES', variable_get('aicapp_data_endpoint_galleries', '/api/v1/galleries'));
