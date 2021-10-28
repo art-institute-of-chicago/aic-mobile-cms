@@ -800,7 +800,6 @@ function aicapp_load_remote_exhibitions_form_submit($form, &$form_state, $start 
  * Save remote objects to nodes.
  */
 function aicapp_load_remote_form_submit($form = array(), &$form_state = array(), $remote_type = AICAPP_TYPE_EXHIBITION, $start = 0, $limit_count = 50) {
-  $now = new DateTime();
   $remote_objects = array();
   $max_page = 10;
   // Define what we're going to import.
@@ -840,15 +839,13 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
               array(
                 'range' => array(
                   'aic_start_at' => array(
-                    'lte' => 'now+2w',
+                    'lte' => 'now',
                   )
                 ),
               ),
               array(
-                'range' => array(
-                  'aic_end_at' => array(
-                    'gte' => 'now',
-                  )
+                'term' => array(
+                    'is_featured' => true,
                 ),
               ),
             ),
@@ -871,13 +868,6 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
       if (empty($remote_record['id'])) {
         continue;
       }
-      if ($type === AICAPP_TYPE_EXHIBITION) {
-        // Skip any that are closed?
-        if (empty($remote_record['aic_end_at']) || $now > new DateTime($remote_record['aic_end_at'])) {
-          # Now is greater than end time, i.e. in the past.
-          continue;
-        }
-      }
       $remote['remote'][$remote_record['id']] = $remote_record;
     }
     // Now loop though up to $max_page adding records that are active and
@@ -896,12 +886,6 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
         foreach ($loop_json['data'] as $remote_record) {
           if (empty($remote_record['id'])) {
             continue;
-          }
-          if ($type === AICAPP_TYPE_EXHIBITION) {
-            if ($now > new DateTime($remote_record['aic_end_at'])) {
-              # Now is greater than end time, i.e. in the past.
-              continue;
-            }
           }
           $remote['remote'][$remote_record['id']] = $remote_record;
         }
@@ -975,14 +959,6 @@ function aicapp_load_remote_form_submit($form = array(), &$form_state = array(),
  * Helper function to update exhibiton nodes.
  */
 function _aicapp_save_remote_entity(&$to_import, $type, $entity_wrapper = NULL) {
-  $timezone = variable_get('date_default_timezone', 'America/Chicago');
-  $date_values = array(
-    'value' => '',
-    'value2' => '',
-    'offset' => '',
-    'offset2' => '',
-    'timezone' => $timezone,
-  );
   if (empty($entity_wrapper)) {
     // Creating a new object $node and setting its 'type' and uid property.
     $entity = entity_create('node', array(
@@ -1001,29 +977,6 @@ function _aicapp_save_remote_entity(&$to_import, $type, $entity_wrapper = NULL) 
   $entity_wrapper->title->set($title);
   // Object ID.
   $entity_wrapper->field_imported_object_id->set($to_import['id']);
-  // Start and end dates.
-  if ($type === AICAPP_TYPE_EXHIBITION) {
-    $start = new DateTime($to_import['aic_start_at']);
-    $end = new DateTime($to_import['aic_end_at']);
-  }
-  $tz = $start->getTimezone();
-  $date_values['value'] = $start->getTimestamp();
-  $date_values['value2'] = $end->getTimestamp();
-  $date_values['offset'] = $tz->getName();
-  $date_values['offset2'] = $tz->getName();
-  // Make sure all date value are not negative.
-  if ($date_values['value'] <= 0 || $date_values['value2'] <= 0 || $date_values['value'] >= 2147483648 || $date_values['value2'] >= 2147483648) {
-    return;
-  }
-  if ($type === AICAPP_TYPE_EXHIBITION) {
-    // Set Exhibition dates..
-    $entity_wrapper->field_exhibition_dates->set($date_values);
-  }
-  if ($end < new DateTime()) {
-    // Unpubish and demote this node.
-    $entity_wrapper->status->set(0);
-    $entity_wrapper->promote->set(0);
-  }
   try {
     // Now just save the wrapper and the entity.
     $entity_wrapper->save();
