@@ -335,20 +335,6 @@ function aic_mobile_cms_content_types_views_default_views() {
   $handler->display->display_options['fields']['title']['field'] = 'title';
   $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
   $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
-  /* Field: Content: Exhibition Dates */
-  $handler->display->display_options['fields']['field_exhibition_dates']['id'] = 'field_exhibition_dates';
-  $handler->display->display_options['fields']['field_exhibition_dates']['table'] = 'field_data_field_exhibition_dates';
-  $handler->display->display_options['fields']['field_exhibition_dates']['field'] = 'field_exhibition_dates';
-  $handler->display->display_options['fields']['field_exhibition_dates']['label'] = 'Dates';
-  $handler->display->display_options['fields']['field_exhibition_dates']['settings'] = array(
-    'format_type' => 'custom',
-    'custom_date_format' => 'M j Y - g:ia',
-    'fromto' => 'both',
-    'multiple_number' => '',
-    'multiple_from' => '',
-    'multiple_to' => '',
-    'show_remaining_days' => 0,
-  );
   /* Field: Content: Exhibition ID */
   $handler->display->display_options['fields']['field_imported_object_id']['id'] = 'field_imported_object_id';
   $handler->display->display_options['fields']['field_imported_object_id']['table'] = 'field_data_field_imported_object_id';

@@ -580,39 +580,6 @@ function aic_mobile_cms_content_types_field_default_field_bases() {
     'type' => 'text_long',
   );
 
-  // Exported field_base: 'field_exhibition_dates'.
-  $field_bases['field_exhibition_dates'] = array(
-    'active' => 1,
-    'cardinality' => 1,
-    'deleted' => 0,
-    'entity_types' => array(),
-    'field_name' => 'field_exhibition_dates',
-    'field_permissions' => array(
-      'type' => 0,
-    ),
-    'indexes' => array(),
-    'locked' => 0,
-    'module' => 'date',
-    'settings' => array(
-      'cache_count' => 4,
-      'cache_enabled' => 0,
-      'entity_translation_sync' => FALSE,
-      'granularity' => array(
-        'day' => 'day',
-        'hour' => 'hour',
-        'minute' => 'minute',
-        'month' => 'month',
-        'second' => 0,
-        'year' => 'year',
-      ),
-      'timezone_db' => 'UTC',
-      'todate' => 'optional',
-      'tz_handling' => 'site',
-    ),
-    'translatable' => 0,
-    'type' => 'datestamp',
-  );
-
   // Exported field_base: 'field_floor'.
   $field_bases['field_floor'] = array(
     'active' => 1,
