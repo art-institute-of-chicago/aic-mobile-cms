@@ -1,11 +1,21 @@
 {
-    "name": "laravel/laravel",
+    "name": "aic/mobile-cms",
     "type": "project",
-    "description": "The Laravel Framework.",
-    "keywords": ["framework", "laravel"],
-    "license": "MIT",
+    "description": "Art Institute of Chicago mobile app CMS",
+    "keywords": ["mobile", "museum", "musetech", "art institute of chicago"],
+    "license": "AGPL-3.0-or-later",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../data-hub-foundation",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "require": {
         "php": "^8.1",
+        "aic/data-hub-foundation": "dev-laravel-8-support",
         "area17/twill": "^3.0",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.8",
@@ -47,6 +57,14 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
+        ],
+        "lint": [
+            "@putenv COMPOSER=vendor/aic/data-hub-foundation/composer.json",
+            "@composer lint"
+        ],
+        "format": [
+            "@putenv COMPOSER=vendor/aic/data-hub-foundation/composer.json",
+            "@composer format"
         ]
     },
     "extra": {
@@ -60,7 +78,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "netresearch/composer-patches-plugin": true
         }
     },
     "minimum-stability": "stable",
