@@ -10,9 +10,24 @@ This repository contains the code that manages content for the mobile app.
 
 For local development, we run the CMS in a [Homestead](https://laravel.com/docs/master/homestead) environment which provides all the software required to run the website.
 
-* Update the `folders.map` in `Homestead.yaml` with the path to this directory
+* Update the `folders.map` in `Homestead.yaml` with the path to this directory:
+  ```
+  - map: "~/Documents/aic-mobile-cms"
+    to: /home/vagrant/aic-mobile-cms
+  ```
+* Optionally, also add the data-hub-foundation to `folders.map` if you need to do work on that project simultaneously:
+  ```
+  - map: "~/Documents/data-hub-foundation"
+    to: /home/vagrant/data-hub-foundation
+  ```
+* Add an entry to `sites.map` in `Homestead.yaml` to access your site locally:
+  ```
+  - map: mobile-cms-dev.artic.edu
+    to: "/home/vagrant/aic-mobile-cms"
+    php: '8.1'
+  ```
 * Add the domain your defined in `Homestead.yaml` to your local `/etc/hosts` file
-* Run `vagrant up` to provision your vagrant machine
+* Run `vagrant up` to provision your vagrant machine, or `vagrant provision` if you're changing to an already-existing environment
 * Run `vagrant ssh` to login to the VM
 * Navigate to the project directory and run `composer install` to install the
 PHP dependencies
