@@ -4,15 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f2b5ee3eb0f6452ac573e7035ea2c3cf",
+    "content-hash": "1397e5beef88c2d44da807535c619bcb",
     "packages": [
         {
             "name": "aic/data-hub-foundation",
-            "version": "dev-laravel-8-support",
+            "version": "1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/art-institute-of-chicago/data-hub-foundation.git",
+                "reference": "77a72f371be2e4882ca3d4fa844d240d2535d248"
+            },
             "dist": {
-                "type": "path",
-                "url": "../data-hub-foundation",
-                "reference": "290ef8e57acf76684e3f38af7edc4b5c97e2159b"
+                "type": "zip",
+                "url": "https://api.github.com/repos/art-institute-of-chicago/data-hub-foundation/zipball/77a72f371be2e4882ca3d4fa844d240d2535d248",
+                "reference": "77a72f371be2e4882ca3d4fa844d240d2535d248",
+                "shasum": ""
             },
             "require": {
                 "composer": "^2.2.0",
@@ -74,10 +80,11 @@
                 }
             ],
             "description": "Shared components for our data hub services.",
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
+            "support": {
+                "source": "https://github.com/art-institute-of-chicago/data-hub-foundation/tree/1.1",
+                "issues": "https://github.com/art-institute-of-chicago/data-hub-foundation/issues"
+            },
+            "time": "2023-05-03T19:36:57+00:00"
         },
         {
             "name": "area17/twill",
@@ -11749,9 +11756,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "aic/data-hub-foundation": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

@@ -6,16 +6,13 @@
     "license": "AGPL-3.0-or-later",
     "repositories": [
         {
-            "type": "path",
-            "url": "../data-hub-foundation",
-            "options": {
-                "symlink": true
-            }
+            "type": "vcs",
+            "url": "https://github.com/art-institute-of-chicago/data-hub-foundation.git"
         }
     ],
     "require": {
         "php": "^8.1",
-        "aic/data-hub-foundation": "dev-laravel-8-support",
+        "aic/data-hub-foundation": "^1.1",
         "area17/twill": "^3.0",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.8",
