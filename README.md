@@ -1,40 +1,37 @@
 ![Art Institute of Chicago](https://raw.githubusercontent.com/Art-Institute-of-Chicago/template/master/aic-logo.gif)
 
-Mobile CMS
------
-This repository contains the code that manages content for the mobile app.
+# Mobile CMS
+> This repository contains the code that manages content for Art Institute of Chicago mobile app.
 
 ## Installing
 
-### Homestead
+For local development, we run the CMS in a [Homestead](https://laravel.com/docs/master/homestead) environment which provides all the software required to run the website. To set up the project, set up a basic Homestead environment locally then do the following:
 
-For local development, we run the CMS in a [Homestead](https://laravel.com/docs/master/homestead) environment which provides all the software required to run the website.
-
-* Update the `folders.map` in `Homestead.yaml` with the path to this directory:
+1. Add a `folders.map` value in `Homestead.yaml` with the path to this directory:
   ```
   - map: "~/Documents/aic-mobile-cms"
     to: /home/vagrant/aic-mobile-cms
   ```
-* Optionally, also add the data-hub-foundation to `folders.map` if you need to do work on that project simultaneously:
+2. Optionally, also add the data-hub-foundation to `folders.map` if you need to do work on that project simultaneously:
   ```
   - map: "~/Documents/data-hub-foundation"
     to: /home/vagrant/data-hub-foundation
   ```
-* Add an entry to `sites.map` in `Homestead.yaml` to access your site locally:
+3. Add an entry to `sites.map` in `Homestead.yaml` to access your site locally:
   ```
-  - map: mobile-cms-dev.artic.edu
+  - map: mobile-dev.artic.edu
     to: "/home/vagrant/aic-mobile-cms"
     php: '8.1'
   ```
-* Add the domain your defined in `Homestead.yaml` to your local `/etc/hosts` file
-* Run `vagrant up` to provision your vagrant machine, or `vagrant provision` if you're changing to an already-existing environment
-* Run `vagrant ssh` to login to the VM
-* Navigate to the project directory and run `composer install` to install the
-PHP dependencies
-* Copy `.env.example` as `.env` and update with your local settings
-* Run `php artisan key:generate` to generate your application key
-* Run `php artisan migrate` to migrate the database schema
-* Run `php artisan twill:superadmin` to create a superadmin user
-* Build all necessary Twill assets: `php artisan twill:build`
-* Access the frontend at http://{your_dev_domain}.
-* Access the CMS at http://admin.{your_dev_domain}.
+4. Add a `mobile-cms` value to the `databases` array in `Homestead.yaml`
+5. Add the domain you defined in `Homestead.yaml` to your local `/etc/hosts` file
+6. Run `vagrant up` to provision your vagrant machine, or `vagrant provision` if you're changing an already-existing environment
+7. Run `vagrant ssh` to login to the VM
+8. Navigate to the project directory and run `composer install` to install the PHP dependencies
+9. Copy `.env.example` as `.env` and update with your local settings
+10. Run `php artisan key:generate` to generate your application key
+11. Run `php artisan migrate` to migrate the database schema
+12. Run `php artisan twill:superadmin` to create a superadmin user
+13. Build all necessary Twill assets: `php artisan twill:build`
+14. Access the frontend at http://{your_dev_domain}.
+15. Access the CMS at http://{your_dev_domain}/admin.
