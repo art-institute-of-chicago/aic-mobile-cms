@@ -1,0 +1,85 @@
+{
+    "name": "aic/mobile-cms",
+    "type": "project",
+    "description": "Art Institute of Chicago mobile app CMS",
+    "keywords": ["mobile", "museum", "musetech", "art institute of chicago"],
+    "license": "AGPL-3.0-or-later",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/art-institute-of-chicago/data-hub-foundation.git"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "aic/data-hub-foundation": "^1.1",
+        "area17/twill": "^3.0",
+        "guzzlehttp/guzzle": "^7.2",
+        "laravel/framework": "^10.8",
+        "laravel/sanctum": "^3.2",
+        "laravel/tinker": "^2.8",
+        "league/fractal": "^0.16.0"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.9.1",
+        "laravel/dusk": "^7.7",
+        "laravel/pint": "^1.0",
+        "laravel/sail": "^1.18",
+        "mockery/mockery": "^1.4.4",
+        "nunomaduro/collision": "^7.0",
+        "phpunit/phpunit": "^10.1",
+        "spatie/laravel-ignition": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi"
+        ],
+        "lint": [
+            "@putenv COMPOSER=vendor/aic/data-hub-foundation/composer.json",
+            "@composer lint"
+        ],
+        "format": [
+            "@putenv COMPOSER=vendor/aic/data-hub-foundation/composer.json",
+            "@composer format"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true,
+            "netresearch/composer-patches-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
