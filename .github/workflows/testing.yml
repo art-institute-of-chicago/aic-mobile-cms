@@ -9,9 +9,11 @@ jobs:
         env:
           MYSQL_DATABASE: mobile-admin
           MYSQL_USER: mobile-admin
+          MYSQL_PASSWORD: secret
           MYSQL_ROOT_PASSWORD: secret
         ports:
-          - 3306
+          - 3306:3306
+        # See https://firefart.at/post/using-mysql-service-with-github-actions/
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - name: Install PHP
