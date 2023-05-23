@@ -1,0 +1,37 @@
+name: Testing
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_DATABASE: mobile-admin
+          MYSQL_ROOT_PASSWORD: secret
+        ports:
+          - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.1
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 8.10.0
+      - name: Install NPM
+        run: npm install --global npm@6.13
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --no-progress --no-scripts
+      - name: Generate key
+        run: php artisan key:generate --env=testing
+      - name: Migrate database
+        run: php artisan migrate --env=testing
+      - name: Build Twill assets
+        run: php artisan twill:build --env=testing
+      - name: Run PHPUnit
+        run: php artisan test --env=testing
