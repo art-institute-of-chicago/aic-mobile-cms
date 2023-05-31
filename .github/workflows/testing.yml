@@ -7,7 +7,7 @@ jobs:
       mysql:
         image: mysql:5.7
         env:
-          MYSQL_DATABASE: mobile-admin
+          MYSQL_DATABASE: mobile-admin-test
           MYSQL_USER: mobile-admin
           MYSQL_PASSWORD: secret
           MYSQL_ROOT_PASSWORD: secret
