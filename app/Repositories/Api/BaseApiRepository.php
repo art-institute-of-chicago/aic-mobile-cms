@@ -51,4 +51,32 @@ abstract class BaseApiRepository extends ModuleRepository
 
         return $results;
     }
+
+    /**
+     * The following function was adapted from
+     * A17\Twill\Repositories\ModuleRepository v2.5.3 for backwards
+     * compatibility.
+     */
+    public function getCountByStatusSlug(string $slug, array $scope = []): int
+    {
+        $query = $this->model->newQuery();
+        switch ($slug) {
+            case 'all':
+                return $query->count();
+            case 'published':
+                return $query->published()->count();
+            case 'draft':
+                return $query->draft()->count();
+            case 'trash':
+                return $query->onlyTrashed()->count();
+        }
+
+        foreach ($this->traitsMethods(__FUNCTION__) as $method) {
+            if (($count = $this->$method($slug)) !== false) {
+                return $count;
+            }
+        }
+
+        return 0;
+    }
 }

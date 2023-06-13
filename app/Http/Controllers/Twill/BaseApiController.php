@@ -13,8 +13,12 @@
 
 namespace App\Http\Controllers\Twill;
 
+use A17\Twill\Facades\TwillPermissions;
 use A17\Twill\Http\Controllers\Admin\ModuleController;
 use A17\Twill\Repositories\ModuleRepository;
+use A17\Twill\Services\Listings\Filters\BasicFilter;
+use A17\Twill\Services\Listings\Filters\FreeTextSearch;
+use A17\Twill\Services\Listings\Filters\QuickFilter;
 use App\Helpers\UrlHelpers;
 
 class BaseApiController extends ModuleController
@@ -89,21 +93,62 @@ class BaseApiController extends ModuleController
 
     public function getIndexItems($scopes = [], $forcePagination = false)
     {
-        $perPage = request('offset') ?? $this->perPage ?? 50;
-        $items = $this->getApiRepository()->get($this->indexWith, $scopes, $this->orderScope(), $perPage, $forcePagination);
-
-        if ($this->hasAugmentedModel) {
-            $ids = $items->pluck('id')->toArray();
-            $this->localElements = $this->repository->whereIn('datahub_id', $ids)->get();
-            $items->setCollection($items->getCollection()->map(function ($item) {
-                if ($element = collect($this->localElements)->where('datahub_id', $item->id)->first()) {
-                    $item->setAugmentedModel($element);
-                }
-
-                return $item;
-            }));
+        if (TwillPermissions::enabled() && TwillPermissions::getPermissionModule($this->moduleName)) {
+            $scopes += ['accessible' => true];
         }
 
+        $appliedFilters = [];
+
+        $requestFilters = $this->getRequestFilters();
+
+        // Get the applied quick filter..
+        if (array_key_exists('status', $requestFilters)) {
+            $filter = $this->quickFilters()->filter(
+                fn(QuickFilter $filter) => $filter->getQueryString() === $requestFilters['status']
+            )->first();
+
+            if ($filter !== null) {
+                $appliedFilters[] = $filter;
+            }
+        }
+
+        unset($requestFilters['status']);
+
+        // Get other filters that need to applied.
+        foreach ($requestFilters as $filterKey => $filterValue) {
+            $filter = $this->filters()->filter(
+                fn(BasicFilter $filter) => $filter->getQueryString() === $filterKey
+            )->first();
+
+            if ($filter !== null) {
+                $appliedFilters[] = $filter->withFilterValue($filterValue);
+            } elseif ($filterKey === 'search') {
+                $appliedFilters[] = FreeTextSearch::make()
+                    ->searchFor($filterValue)
+                    ->searchColumns($this->searchColumns);
+            }
+        }
+
+        $items =  $this->transformIndexItems(
+            $this->repository->get(
+                with: $this->indexWith,
+                scopes: $scopes,
+                orders: $this->orderScope(),
+                perPage: $this->request->get('offset') ?? $this->perPage ?? 50,
+                forcePagination: $forcePagination,
+                appliedFilters: $appliedFilters
+            )
+        );
+        // if ($this->hasAugmentedModel) {
+        //     $ids = $items->pluck('id')->toArray();
+        //     $this->localElements = $this->repository->whereIn('datahub_id', $ids)->get();
+        //     $items->setCollection($items->getCollection()->map(function ($item) {
+        //         if ($element = collect($this->localElements)->where('datahub_id', $item->id)->first()) {
+        //             $item->setAugmentedModel($element);
+        //         }
+
+        //         return $item;
+        //     }));
         return $items;
     }
 

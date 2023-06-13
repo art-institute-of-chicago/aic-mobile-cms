@@ -6,19 +6,23 @@ use App\Models\Behaviors\HasApiModel;
 use App\Models\Behaviors\HasMedias;
 use App\Models\Behaviors\Transformable;
 use App\Helpers\StringHelpers;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Gallery extends AbstractModel
 {
     use HasApiModel;
-    use Transformable;
     use HasMedias;
+    use Transformable;
 
-    protected $apiModel = 'App\Models\Api\Gallery';
+    protected $apiModel = \App\Models\Api\Gallery::class;
 
     protected $fillable = [
         'datahub_id',
-        'latitude',
-        'longitude',
+    ];
+
+    protected $casts = [
+        'latitude' => 'decimal:13',
+        'longitude' => 'decimal:13',
     ];
 
     public $slugAttributes = [

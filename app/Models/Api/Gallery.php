@@ -2,8 +2,9 @@
 
 namespace App\Models\Api;
 
-use App\Libraries\Api\Models\BaseApiModel;
 use App\Helpers\StringHelpers;
+use App\Libraries\Api\Models\BaseApiModel;
+use App\Presenters\Admin\GalleryPresenter;
 
 class Gallery extends BaseApiModel
 {
@@ -13,11 +14,10 @@ class Gallery extends BaseApiModel
         'search' => '/api/v1/galleries/search',
     ];
 
-    protected $augmented = true;
-    protected $augmentedModelClass = 'App\Models\Gallery';
+    protected $augmented = false;
 
-    protected $presenter = 'App\Presenters\Admin\GalleryPresenter';
-    protected $presenterAdmin = 'App\Presenters\Admin\GalleryPresenter';
+    protected $presenter = GalleryPresenter::class;
+    protected $presenterAdmin = GalleryPresenter::class;
 
     public function getTypeAttribute()
     {

@@ -12,12 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('galleries', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-            $table->softDeletes();
+            createDefaultTableFields($table, true, false);
             $table->string('datahub_id');
-            $table->double('latitude', 16, 13)->nullable();
-            $table->double('longitude', 16, 13)->nullable();
         });
     }
 

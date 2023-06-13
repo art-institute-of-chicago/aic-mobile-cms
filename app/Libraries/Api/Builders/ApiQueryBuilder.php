@@ -527,6 +527,16 @@ class ApiQueryBuilder
         return $collection;
     }
 
+    /**
+     * Execute a GET query and return the total number of results noted in the
+     * pagination data.
+     */
+    public function count($endpoint = null): int
+    {
+        $results = $this->runGet($endpoint);
+        return $results->body->pagination->total;
+    }
+
     public function getPaginationData()
     {
         return $this->paginationData;
@@ -546,6 +556,7 @@ class ApiQueryBuilder
         } elseif (Str::endsWith($endpoint, '/search')) {
             $grammar = new SearchGrammar();
         }
+        dd($endpoint);
 
         return $this->connection->ttl($this->ttl)->get($endpoint, $this->resolveParameters($grammar));
     }
