@@ -12,7 +12,7 @@ return [
     |
     */
 
-    'base_uri' => env('API_BASE_URI', 'https://api.artic.edu'),
+    'base_uri' => env('API_BASE_URI', 'https://api-test.artic.edu'),
 
     /*
     |--------------------------------------------------------------------------
@@ -23,7 +23,7 @@ return [
     |
     */
 
-    'public_uri' => env('API_PUBLIC_URI', 'https://api.artic.edu'),
+    'public_uri' => env('API_PUBLIC_URI', 'https://api-test.artic.edu'),
 
     /*
     |--------------------------------------------------------------------------
