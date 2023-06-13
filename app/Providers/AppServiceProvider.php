@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Libraries\DamsImageService;
 use App\Libraries\Api\Consumers\GuzzleApiConsumer;
 use Illuminate\Support\ServiceProvider;
 
@@ -12,6 +13,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton('damsimageservice', function ($app) {
+            return new DamsImageService();
         });
         $this->app->singleton('ApiClient', function ($app) {
             return new GuzzleApiConsumer([
