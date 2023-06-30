@@ -17,9 +17,12 @@ use A17\Twill\Facades\TwillPermissions;
 use A17\Twill\Http\Controllers\Admin\ModuleController;
 use A17\Twill\Repositories\ModuleRepository;
 use A17\Twill\Services\Listings\Filters\BasicFilter;
-use A17\Twill\Services\Listings\Filters\FreeTextSearch;
 use A17\Twill\Services\Listings\Filters\QuickFilter;
 use App\Helpers\UrlHelpers;
+use App\Libraries\Api\Filters\Search;
+use App\Repositories\Api\BaseApiRepository;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class BaseApiController extends ModuleController
 {
@@ -34,18 +37,18 @@ class BaseApiController extends ModuleController
         'search' => 'search',
     ];
 
-    public function getIndexTableMainFilters($items, $scopes = [])
+    /**
+     * Remove Twill table filters.
+     */
+    public function getIndexTableMainFilters($items, $scopes = []): array
     {
-        // Remove Twill table filters.
         return [];
     }
 
     /**
      * Create a new model to augment it and redirect to the editing form
-     *
-     * @param string $datahubId
      */
-    public function augment($datahubId)
+    public function augment(string $datahubId)
     {
         // Load data from the API
         $apiItem = $this->getApiRepository()->getById($datahubId);
@@ -65,8 +68,12 @@ class BaseApiController extends ModuleController
         if ($this->hasAugmentedModel) {
             return parent::getRepository();
         }
-
         return $this->getApiRepository();
+    }
+
+    protected function getApiRepository(): BaseApiRepository
+    {
+        return $this->app->make("{$this->namespace}\Repositories\\Api\\" . $this->modelName . 'Repository');
     }
 
     protected function getBrowserTableData(mixed $items, bool $forRepeater = false): array
@@ -86,22 +93,33 @@ class BaseApiController extends ModuleController
         return $results;
     }
 
-    protected function getApiRepository()
-    {
-        return $this->app->make("{$this->namespace}\Repositories\\Api\\" . $this->modelName . 'Repository');
-    }
-
-    public function getIndexItems($scopes = [], $forcePagination = false)
+    public function getIndexItems(array $scopes = [], bool $forcePagination = false): Collection
     {
         if (TwillPermissions::enabled() && TwillPermissions::getPermissionModule($this->moduleName)) {
             $scopes += ['accessible' => true];
         }
 
-        $appliedFilters = [];
-
         $requestFilters = $this->getRequestFilters();
+        $appliedFilters = [];
+        $this->applyQuickFilters($requestFilters, $appliedFilters);
+        $this->applyBasicFilters($requestFilters, $appliedFilters);
+        return $this->transformIndexItems(
+            $this->repository->get(
+                with: $this->indexWith,
+                scopes: $scopes,
+                orders: $this->orderScope(),
+                perPage: $this->request->get('offset') ?? $this->perPage,
+                forcePagination: $forcePagination,
+                appliedFilters: $appliedFilters
+            )
+        );
+    }
 
-        // Get the applied quick filter..
+    /**
+     * Get the applied quick filter.
+     */
+    protected function applyQuickFilters(array &$requestFilters, array &$appliedFilters): void
+    {
         if (array_key_exists('status', $requestFilters)) {
             $filter = $this->quickFilters()->filter(
                 fn(QuickFilter $filter) => $filter->getQueryString() === $requestFilters['status']
@@ -111,10 +129,15 @@ class BaseApiController extends ModuleController
                 $appliedFilters[] = $filter;
             }
         }
-
         unset($requestFilters['status']);
+    }
 
-        // Get other filters that need to applied.
+    /**
+     * Get other filters that need to applied. Use the API search filter when
+     * requested.
+     */
+    protected function applyBasicFilters(array &$requestFilters, array &$appliedFilters): void
+    {
         foreach ($requestFilters as $filterKey => $filterValue) {
             $filter = $this->filters()->filter(
                 fn(BasicFilter $filter) => $filter->getQueryString() === $filterKey
@@ -123,32 +146,25 @@ class BaseApiController extends ModuleController
             if ($filter !== null) {
                 $appliedFilters[] = $filter->withFilterValue($filterValue);
             } elseif ($filterKey === 'search') {
-                $appliedFilters[] = FreeTextSearch::make()
+                $appliedFilters[] = Search::make()
                     ->searchFor($filterValue)
                     ->searchColumns($this->searchColumns);
             }
         }
+    }
 
-        $items =  $this->transformIndexItems(
-            $this->repository->get(
-                with: $this->indexWith,
-                scopes: $scopes,
-                orders: $this->orderScope(),
-                perPage: $this->request->get('offset') ?? $this->perPage ?? 50,
-                forcePagination: $forcePagination,
-                appliedFilters: $appliedFilters
-            )
-        );
-        // if ($this->hasAugmentedModel) {
-        //     $ids = $items->pluck('id')->toArray();
-        //     $this->localElements = $this->repository->whereIn('datahub_id', $ids)->get();
-        //     $items->setCollection($items->getCollection()->map(function ($item) {
-        //         if ($element = collect($this->localElements)->where('datahub_id', $item->id)->first()) {
-        //             $item->setAugmentedModel($element);
-        //         }
-
-        //         return $item;
-        //     }));
+    protected function transformIndexItems(Collection|LengthAwarePaginator $items): Collection|LengthAwarePaginator
+    {
+        if ($this->hasAugmentedModel) {
+            $ids = $items->pluck('id')->toArray();
+            $this->localElements = $this->repository->whereIn('datahub_id', $ids)->get();
+            $items->setCollection($items->getCollection()->map(function ($item) {
+                if ($element = collect($this->localElements)->where('datahub_id', $item->id)->first()) {
+                    $item->setAugmentedModel($element);
+                }
+                return $item;
+            }));
+        }
         return $items;
     }
 

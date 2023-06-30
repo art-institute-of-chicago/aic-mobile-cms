@@ -559,7 +559,6 @@ class ApiModelBuilder extends Builder
      */
     public function paginate($perPage = null, $columns = [], $pageName = 'page', $page = null)
     {
-        dump('ApiModelBuilder::paginate()', $this->performSearch);
         if ($this->performSearch) {
             return $this->getSearch($perPage, $columns, $pageName, $page);
         }

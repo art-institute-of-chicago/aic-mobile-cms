@@ -556,7 +556,6 @@ class ApiQueryBuilder
         } elseif (Str::endsWith($endpoint, '/search')) {
             $grammar = new SearchGrammar();
         }
-        dd($endpoint);
 
         return $this->connection->ttl($this->ttl)->get($endpoint, $this->resolveParameters($grammar));
     }
