@@ -100,10 +100,8 @@ class AicConnection implements ApiConnectionInterface
                 $options = array_merge($adaptedParameters, $headers);
             }
         }
-
         if (config('api.logger')) {
-            $ttl = $this->ttl ?? config('api.cache_ttl');
-            \Log::info($verb . ' ttl = ' . $ttl . ' ' . $endpoint);
+            \Log::info($verb . ' ' . $endpoint);
             \Log::info(print_r($options, true));
         }
 
@@ -120,20 +118,25 @@ class AicConnection implements ApiConnectionInterface
 
             // Use default TTL if no explicit has been defined
             $ttl = $this->ttl ?? config('api.cache_ttl');
-
-            $response = \Cache::remember($cacheKey, $ttl, function () use ($verb, $endpoint, $options) {
+            $response = \Cache::remember($cacheKey, $ttl, function () use ($ttl, $verb, $endpoint, $options) {
                 // WEB-2259: Error handling is done in the ApiConsumer
-                return $this->client->request($verb, $endpoint, $options);
+                $response = $this->client->request($verb, $endpoint, $options);
+                if (config('api.logger')) {
+                    \Log::info('cache ttl = ' . $ttl . ' seconds');
+                    \Log::info(print_r((array) $response->body, true));
+                }
+                return $response;
             });
-
             if (isset($response->status) && $response->status != 200) {
                 \Cache::forget($cacheKey);
             }
-
             return $response;
         }
-
-        return $this->client->request($verb, $endpoint, $options);
+        $response = $this->client->request($verb, $endpoint, $options);
+        if (config('api.logger')) {
+            \Log::info((array) $response->body);
+        }
+        return $response;
     }
 
     /**

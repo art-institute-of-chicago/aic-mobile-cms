@@ -533,8 +533,7 @@ class ApiQueryBuilder
      */
     public function count($endpoint = null): int
     {
-        $results = $this->runGet($endpoint);
-        return $results->body->pagination->total;
+        return $this->forPage(1, 1)->get([], $endpoint)->getMetadata('pagination')->total;
     }
 
     public function getPaginationData()

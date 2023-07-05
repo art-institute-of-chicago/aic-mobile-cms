@@ -93,7 +93,7 @@ class BaseApiController extends ModuleController
         return $results;
     }
 
-    public function getIndexItems(array $scopes = [], bool $forcePagination = false): Collection
+    public function getIndexItems(array $scopes = [], bool $forcePagination = false): Collection|LengthAwarePaginator
     {
         if (TwillPermissions::enabled() && TwillPermissions::getPermissionModule($this->moduleName)) {
             $scopes += ['accessible' => true];

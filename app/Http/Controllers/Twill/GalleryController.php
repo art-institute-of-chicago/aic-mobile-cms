@@ -31,21 +31,6 @@ class GalleryController extends BaseApiController
         $this->disableRestore();
     }
 
-    // public function filters(): TableFilters
-    // {
-    //     return TableFilters::make([
-    //         BasicFilter::make()
-    //             ->label('availablility')
-    //             ->queryString('is_closed')
-    //             ->options(collect([0 => 'Open', 1 => 'Closed']))
-    //             ->apply(function (Builder $builder, ?int $option = null) {
-    //                 if (!is_null($option)) {
-    //                     $builder->where('is_closed', $option);
-    //                 }
-    //             })
-    //     ]);
-    // }
-
     protected function getIndexTableColumns(): TableColumns
     {
         $columns = new TableColumns();
