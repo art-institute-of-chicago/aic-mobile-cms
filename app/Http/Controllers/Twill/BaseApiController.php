@@ -104,7 +104,7 @@ class BaseApiController extends ModuleController
         $this->applyQuickFilters($requestFilters, $appliedFilters);
         $this->applyBasicFilters($requestFilters, $appliedFilters);
         return $this->transformIndexItems(
-            $this->repository->get(
+            $this->getApiRepository()->get(
                 with: $this->indexWith,
                 scopes: $scopes,
                 orders: $this->orderScope(),
