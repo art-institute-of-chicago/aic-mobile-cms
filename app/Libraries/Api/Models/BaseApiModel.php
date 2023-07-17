@@ -171,12 +171,12 @@ abstract class BaseApiModel implements TwillModelContract, ArrayAccess, Arrayabl
 
     public function scopeOnlyTrashed(Builder $query): Builder
     {
-        return $query->where("{$this->getTable()}.published", false);
+        return $query->onlyTrashed();
     }
 
     public function scopeDraft(Builder $query): Builder
     {
-        return $query->onlyTrashed();
+        return $query->where("{$this->getTable()}.published", false);
     }
 
     public function getTranslatedAttributes(): array
