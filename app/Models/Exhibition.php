@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use App\Helpers\StringHelpers;
 use App\Models\Behaviors\HasApiModel;
 use App\Models\Behaviors\HasMedias;
 use App\Models\Behaviors\Transformable;
-use App\Helpers\StringHelpers;
 
 class Exhibition extends AbstractModel
 {
@@ -13,7 +13,7 @@ class Exhibition extends AbstractModel
     use HasMedias;
     use Transformable;
 
-    protected $apiModel = \App\Models\Api\Exhibition::class;
+    protected $apiModelClass = \App\Models\Api\Exhibition::class;
 
     protected $fillable = [
         'datahub_id',

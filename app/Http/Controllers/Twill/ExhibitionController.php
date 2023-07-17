@@ -16,17 +16,19 @@ class ExhibitionController extends BaseApiController
     public function setUpController(): void
     {
         $this->setSearchColumns(['title']);
+
         $this->disableBulkDelete();
         $this->disableBulkEdit();
         $this->disableBulkPublish();
         $this->disableCreate();
         $this->disableDelete();
         $this->disableEdit();
+        $this->disablePermalink();
         $this->disablePublish();
         $this->disableRestore();
     }
 
-    protected function getIndexTableColumns(): TableColumns
+    protected function additionalIndexTableColumns(): TableColumns
     {
         $columns = new TableColumns();
         $columns->add(
@@ -38,10 +40,6 @@ class ExhibitionController extends BaseApiController
         );
         $columns->add(
             Text::make()
-                ->field('title')
-        );
-        $columns->add(
-            Text::make()
                 ->field('image_url')
                 ->optional()
         );
@@ -50,6 +48,7 @@ class ExhibitionController extends BaseApiController
 
     public function getForm(TwillModelContract $exhibition): Form
     {
+        $apiValues = $exhibition->refreshApi()->getApiModel()->getAttributes();
         $form = Form::make();
         $form->add(
             Input::make()
@@ -59,10 +58,12 @@ class ExhibitionController extends BaseApiController
         $form->add(
             Input::make()
                 ->name('title')
+                ->placeholder($apiValues['title'])
         );
         $form->add(
             Input::make()
                 ->name('image_url')
+                ->placeholder($apiValues['image_url'])
         );
         return $form;
     }

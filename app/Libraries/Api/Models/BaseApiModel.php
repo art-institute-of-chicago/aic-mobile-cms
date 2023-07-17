@@ -863,13 +863,11 @@ abstract class BaseApiModel implements TwillModelContract, ArrayAccess, Arrayabl
      */
     public function __get(string $key): mixed
     {
-        $value = $this->getAttribute($key);
-
-        if ($value === null && method_exists($this, 'getAugmentedModel') && $this->getAugmentedModel()) {
-            return $this->getAugmentedModel()->{$key};
+        $value = null;
+        if ($key !== 'id' && method_exists($this, 'getAugmentedModel') && $this->getAugmentedModel()) {
+            $value = $this->getAugmentedModel()->{$key};
         }
-
-        return $value;
+        return $value ?? $this->getAttribute($key);
     }
 
     /**

@@ -14,7 +14,7 @@ class Gallery extends AbstractModel
     use HasMedias;
     use Transformable;
 
-    protected $apiModel = \App\Models\Api\Gallery::class;
+    protected $apiModelClass = \App\Models\Api\Gallery::class;
 
     protected $fillable = [
         'datahub_id',

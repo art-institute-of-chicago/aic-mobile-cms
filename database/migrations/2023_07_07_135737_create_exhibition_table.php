@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('exhibitions', function (Blueprint $table) {
             createDefaultTableFields($table, true, false);
             $table->string('datahub_id');
-            $table->string('title');
+            $table->string('title')->nullable();
             $table->string('image_url')->nullable();
         });
     }

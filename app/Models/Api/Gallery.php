@@ -14,7 +14,7 @@ class Gallery extends BaseApiModel
         'search' => '/api/v1/galleries/search',
     ];
 
-    protected $augmented = false;
+    protected $augmentedModelClass = \App\Models\Gallery::class;
 
     protected $presenter = GalleryPresenter::class;
     protected $presenterAdmin = GalleryPresenter::class;

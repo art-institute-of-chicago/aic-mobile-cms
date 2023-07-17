@@ -4,15 +4,12 @@ namespace App\Libraries\Api\Models\Behaviors;
 
 trait HasAugmentedModel
 {
-    protected $augmented = false;
-
-    protected $augmentedModel;
+    protected $augmentedModel = null;
     protected $augmentedModelClass;
 
     public function setAugmentedModel($model)
     {
         $this->augmentedModel = $model;
-        $this->augmented = true;
     }
 
     public function getAugmentedModelClass()
@@ -22,26 +19,18 @@ trait HasAugmentedModel
 
     public function getAugmentedModel()
     {
-        if (!$this->augmented) {
-            return;
-        }
-
         if ($this->augmentedModel) {
             return $this->augmentedModel;
         }
 
         $this->augmentedModel = $this->augmentedModelClass::where('datahub_id', $this->id)->first();
 
-        if (!$this->augmentedModel) {
-            $this->augmented = false;
-        }
-
         return $this->augmentedModel;
     }
 
-    public function hasAugmentedModel()
+    public function hasAugmentedModel(): bool
     {
-        return $this->augmented;
+        return (bool) $this->augmentedModel;
     }
 
     /**
@@ -54,7 +43,7 @@ trait HasAugmentedModel
             return $this->{$method}($parameters);
         }
 
-        if ($this->hasAugmentedModel() && $this->getAugmentedModel() && method_exists($this->getAugmentedModel(), $method)) {
+        if ($this->hasAugmentedModel() && method_exists($this->getAugmentedModel(), $method)) {
             return $this->getAugmentedModel()->{$method}(...$parameters);
         }
 

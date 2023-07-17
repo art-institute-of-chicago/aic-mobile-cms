@@ -14,7 +14,6 @@ class Exhibition extends BaseApiModel
         'search' => '/api/v1/exhibitions/search',
     ];
 
-    protected $augmented = true;
     protected $augmentedModelClass = \App\Models\Exhibition::class;
 
     protected $presenter = ExhibitionPresenter::class;
