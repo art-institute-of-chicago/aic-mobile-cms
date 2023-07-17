@@ -20,31 +20,14 @@ class GalleryController extends BaseApiController
 
     public function setUpController(): void
     {
+        parent::setUpController();
+
         $this->setSearchColumns(['title', 'floor', 'number']);
-        $this->disableBulkDelete();
-        $this->disableBulkEdit();
-        $this->disableBulkPublish();
-        $this->disableCreate();
-        $this->disableDelete();
-        $this->disableEdit();
-        $this->disablePublish();
-        $this->disableRestore();
     }
 
-    protected function getIndexTableColumns(): TableColumns
+    protected function additionalIndexTableColumns(): TableColumns
     {
         $columns = new TableColumns();
-        $columns->add(
-            Text::make()
-                ->field('id')
-                ->title('Datahub Id')
-                ->optional()
-                ->hide()
-        );
-        $columns->add(
-            Text::make()
-                ->field('title')
-        );
         $columns->add(
             Text::make()
                 ->field('floor')
@@ -82,50 +65,32 @@ class GalleryController extends BaseApiController
                 ->optional()
                 ->hide()
         );
-        $columns->add(
-            Text::make()
-                ->field('source_updated_at')
-                ->optional()
-                ->hide()
-        );
-        $columns->add(
-            Text::make()
-                ->field('updated_at')
-                ->title('API Updated At')
-                ->optional()
-                ->hide()
-        );
         return $columns;
     }
 
-    public function getForm(TwillModelContract $gallery): Form
+    public function additionalFormFields($model, $apiModel): Form
     {
-        $form = Form::make();
-        $form->add(
-            Input::make()
-                ->name('datahub_id')
-                ->disabled()
-        );
-        $form->add(
+        $fields = new Form();
+        $fields->add(
             Input::make()
                 ->name('title')
                 ->disabled()
         );
-        $form->add(
+        $fields->add(
             Input::make()
                 ->name('floor')
                 ->disabled()
         );
-        $form->add(
+        $fields->add(
             Input::make()
                 ->name('number')
                 ->disabled()
         );
-        $form->add(
+        $fields->add(
             Checkbox::make()
                 ->name('is_closed')
                 ->disabled()
         );
-        return $form;
+        return $fields;
     }
 }

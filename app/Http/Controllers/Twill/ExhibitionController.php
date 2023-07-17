@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Twill;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
+use A17\Twill\Services\Forms\Fields\Checkbox;
 use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Form;
+use A17\Twill\Services\Listings\Columns\Boolean;
 use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\TableColumns;
 
@@ -15,56 +17,42 @@ class ExhibitionController extends BaseApiController
 
     public function setUpController(): void
     {
+        parent::setUpController();
+
         $this->setSearchColumns(['title']);
 
-        $this->disableBulkDelete();
-        $this->disableBulkEdit();
-        $this->disableBulkPublish();
-        $this->disableCreate();
-        $this->disableDelete();
-        $this->disableEdit();
-        $this->disablePermalink();
-        $this->disablePublish();
-        $this->disableRestore();
+        $this->enableFeature();
     }
 
     protected function additionalIndexTableColumns(): TableColumns
     {
         $columns = new TableColumns();
         $columns->add(
-            Text::make()
-                ->field('id')
-                ->title('Datahub Id')
-                ->optional()
-                ->hide()
+            Boolean::make()
+                ->field('is_featured')
         );
         $columns->add(
             Text::make()
                 ->field('image_url')
                 ->optional()
+                ->hide()
         );
         return $columns;
     }
-
-    public function getForm(TwillModelContract $exhibition): Form
+    public function additionalFormFields($exhibition, $apiExhibition): Form
     {
-        $apiValues = $exhibition->refreshApi()->getApiModel()->getAttributes();
-        $form = Form::make();
-        $form->add(
-            Input::make()
-                ->name('datahub_id')
-                ->disabled()
+        $apiValues = $apiExhibition->getAttributes();
+        $fields = new Form();
+        $fields->add(
+            Checkbox::make()
+                ->name('is_featured')
+                ->default($apiValues['is_featured'])
         );
-        $form->add(
-            Input::make()
-                ->name('title')
-                ->placeholder($apiValues['title'])
-        );
-        $form->add(
+        $fields->add(
             Input::make()
                 ->name('image_url')
                 ->placeholder($apiValues['image_url'])
         );
-        return $form;
+        return $fields;
     }
 }

@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('datahub_id');
             $table->string('title')->nullable();
             $table->string('image_url')->nullable();
+            $table->boolean('is_featured')->nullable();
         });
     }
 

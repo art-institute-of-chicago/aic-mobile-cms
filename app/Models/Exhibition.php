@@ -19,6 +19,11 @@ class Exhibition extends AbstractModel
         'datahub_id',
         'title',
         'image_url',
+        'is_featured',
+    ];
+
+    protected $casts = [
+        'is_featured' => 'boolean',
     ];
 
     public $slugAttributes = [
