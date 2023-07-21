@@ -16,6 +16,7 @@ use App\Libraries\Api\Models\ApiCollection as BaseCollection;
 use App\Libraries\Api\Models\Behaviors\HasApiCalls;
 use App\Libraries\Api\Models\Behaviors\HasAugmentedModel;
 use App\Libraries\Api\Models\Behaviors\HasRelationships;
+use App\Models\Behaviors\HasApiRelations;
 use ArrayAccess;
 use DateTimeInterface;
 use Illuminate\Contracts\Routing\UrlRoutable;
@@ -32,6 +33,7 @@ use JsonSerializable;
 abstract class BaseApiModel implements TwillModelContract, ArrayAccess, Arrayable, Jsonable, JsonSerializable, UrlRoutable
 {
     use HasApiCalls;
+    use HasApiRelations;
     use HasAugmentedModel;
     use HasRelationships;
     use HasPresenter;

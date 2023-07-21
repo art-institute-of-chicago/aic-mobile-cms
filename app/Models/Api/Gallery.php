@@ -16,9 +16,6 @@ class Gallery extends BaseApiModel
 
     protected $augmentedModelClass = \App\Models\Gallery::class;
 
-    protected $presenter = GalleryPresenter::class;
-    protected $presenterAdmin = GalleryPresenter::class;
-
     public function getTypeAttribute()
     {
         return 'gallery';
@@ -27,5 +24,10 @@ class Gallery extends BaseApiModel
     public function getTitleSlugAttribute()
     {
         return StringHelpers::getUtf8Slug($this->title);
+    }
+
+    public function __toString(): string
+    {
+        return "Floor $this->floor, Room $this->number: $this->title";
     }
 }

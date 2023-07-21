@@ -37,8 +37,8 @@ class ExhibitionController extends BaseApiController
             ->add(QuickFilter::make()
                 ->queryString('sfnc')
                 ->label('Started, Featured, and Not Closed')
-                ->apply(fn (Builder $builder) => $builder->startedFeaturedAndNotClosed())
-                ->amount(fn () => Exhibition::query()->startedFeaturedAndNotClosed()->count()));
+                ->apply(fn(Builder $builder) => $builder->startedFeaturedAndNotClosed())
+                ->amount(fn() => Exhibition::query()->startedFeaturedAndNotClosed()->count()));
     }
 
     protected function additionalIndexTableColumns(): TableColumns

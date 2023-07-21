@@ -38,5 +38,8 @@ class AppServiceProvider extends ServiceProvider
         TwillNavigation::addLink(
             NavigationLink::make()->forModule('galleries')
         );
+        TwillNavigation::addLink(
+            NavigationLink::make()->title('Objects')->forModule('artworks')
+        );
     }
 }

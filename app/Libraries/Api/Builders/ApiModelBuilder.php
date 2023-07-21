@@ -477,7 +477,7 @@ class ApiModelBuilder extends Builder
      * @param  string  $name
      * @return array
      */
-    protected function eagerLoadRelation(array $models, $name, Closure $constraints)
+    protected function eagerLoadRelation($models, $name, Closure $constraints = null)
     {
         foreach ($models as $model) {
             if ($model instanceof BaseApiModel) {
