@@ -152,7 +152,7 @@ class ArtworkController extends BaseApiController
                 ]);
         }
         foreach ($this->galleries as $gallery) {
-            $options[] = Option::make($gallery->id, $gallery);
+            $options []= Option::make($gallery->id, $gallery);
         }
         return $options;
     }
