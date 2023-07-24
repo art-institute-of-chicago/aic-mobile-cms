@@ -527,6 +527,15 @@ class ApiQueryBuilder
         return $collection;
     }
 
+    /**
+     * Execute a GET query and return the total number of results noted in the
+     * pagination data.
+     */
+    public function count($endpoint = null): int
+    {
+        return $this->forPage(1, 1)->get([], $endpoint)->getMetadata('pagination')->total;
+    }
+
     public function getPaginationData()
     {
         return $this->paginationData;

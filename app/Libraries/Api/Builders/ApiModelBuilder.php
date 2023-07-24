@@ -346,6 +346,16 @@ class ApiModelBuilder extends Builder
     }
 
     /**
+     * Execute a query and return the total count from the pagination data
+     */
+    public function count(): int
+    {
+        $builder = clone $this;
+
+        return $builder->query->count($this->getEndpoint($this->resolveCollectionEndpoint()));
+    }
+
+    /**
      * Get the hydrated models
      *
      * @param  array  $columns
