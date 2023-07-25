@@ -18,6 +18,7 @@ use A17\Twill\Http\Controllers\Admin\ModuleController;
 use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Repositories\ModuleRepository;
 use A17\Twill\Services\Forms\Fields\Input;
+use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Boolean;
 use A17\Twill\Services\Listings\Columns\Text;
@@ -43,7 +44,7 @@ class BaseApiController extends ModuleController
         'search' => 'search',
     ];
 
-    public function setUpController(): void
+    protected function setUpController(): void
     {
         $this->setFeatureField('is_featured');
 
@@ -72,10 +73,10 @@ class BaseApiController extends ModuleController
      */
     public function augment(string $datahubId)
     {
-        $apiItem = $this->getApiRepository()->getById($datahubId);
-        $item = $this->getRepository()->firstOrCreate(['datahub_id' => $apiItem->id]);
-
-        return $this->redirectToForm($item->id);
+        if ($apiModel = $this->getApiRepository()->getById($datahubId)) {
+            $augmentedModel = $this->getRepository()->firstOrCreate(['datahub_id' => $apiModel->id]);
+        }
+        return $this->redirectToForm($augmentedModel->id);
     }
 
     public function feature()
@@ -130,14 +131,19 @@ class BaseApiController extends ModuleController
         $this->applyQuickFilters($requestFilters, $appliedFilters);
         $this->applyBasicFilters($requestFilters, $appliedFilters);
         return $this->transformIndexItems(
-            $this->getApiRepository()->get(
-                with: $this->indexWith,
-                scopes: $scopes,
-                orders: $this->orderScope(),
-                perPage: $this->request->get('offset') ?? $this->perPage,
-                forcePagination: $forcePagination,
-                appliedFilters: $appliedFilters
-            )
+            $this->getApiData($scopes, $forcePagination, $appliedFilters)
+        );
+    }
+
+    public function getApiData($scopes = [], $forcePagination = false, $appliedFilters = [])
+    {
+        return $this->getApiRepository()->get(
+            with: $this->indexWith,
+            scopes: $scopes,
+            orders: $this->orderScope(),
+            perPage: $this->request->get('offset') ?? $this->perPage,
+            forcePagination: $forcePagination,
+            appliedFilters: $appliedFilters
         );
     }
 
@@ -145,63 +151,78 @@ class BaseApiController extends ModuleController
     {
         $table = parent::getIndexTableColumns();
         $after = $table->splice(0);
-        $table->push(
-            Boolean::make()
+        return $table
+            ->push(Boolean::make()
                 ->field('is_augmented')
                 ->optional()
-                ->hide()
-        );
-        $table->push(
-            Text::make()
+                ->hide())
+            ->push(Text::make()
                 ->field('id')
                 ->title('Datahub Id')
                 ->optional()
-                ->hide()
-        );
-        $table->push(
-            Text::make()
+                ->hide())
+            ->push(Text::make()
                 ->field('source_updated_at')
                 ->optional()
-                ->hide()
-        );
-        $table->push(
-            Text::make()
+                ->hide())
+            ->push(Text::make()
                 ->field('updated_at')
                 ->optional()
-                ->hide()
-        );
-        return $table->merge($after);
+                ->hide())
+            ->merge($after);
     }
 
     public function getForm(TwillModelContract $model): Form
     {
-        $apiValues = $model->refreshApi()->getApiModel()->getAttributes();
-        $form = parent::getForm($model);
-        $form->add(
-            Input::make()
-                ->name('datahub_id')
-                ->disabled()
-                ->disabled()
+        $model->refreshApi();
+        $form = Form::make()
+            ->addFieldset(
+                Fieldset::make()
+                    ->title('Datahub')
+                    ->id('datahub')
+                    ->closed()
+                    ->fields([
+                        Input::make()
+                            ->name('datahub_id')
+                            ->disabled()
+                            ->note('readonly'),
+                        Input::make()
+                            ->name('source_updated_at')
+                            ->disabled()
+                            ->note('readonly'),
+                    ])
+            )
+            ->addFieldset(
+                Fieldset::make()
+                    ->title('Timestamps')
+                    ->id('timestamps')
+                    ->closed()
+                    ->fields([
+                        Input::make()
+                            ->name('created_at')
+                            ->disabled()
+                            ->note('readonly'),
+                        Input::make()
+                            ->name('updated_at')
+                            ->disabled()
+                            ->note('readonly'),
+                    ])
+            );
+        $content = Form::make()
+            ->add(Input::make()
+                    ->name('title')
+                    ->placeholder($model->getApiModel()->title))
+            ->merge($this->additionalFormFields($model, $model->getApiModel()));
+        $form->addFieldset(
+            Fieldset::make()
+                ->title('Content')
+                ->id('content')
+                ->fields($content->toArray())
         );
-        $form->add(
-            Input::make()
-                ->name('source_updated_at')
-                ->disabled()
-        );
-        $form->add(
-            Input::make()
-                ->name('updated_at')
-                ->disabled()
-        );
-        $form->add(
-            Input::make()
-                ->name('title')
-                ->placeholder($apiValues['title'])
-        );
-        return $form->merge($this->additionalFormFields($model, $model->getApiModel()));
+        return $form;
     }
 
-    public function additionalFormFields($model, $apiModel): Form
+    protected function additionalFormFields($model, $apiModel): Form
     {
         return new Form();
     }
@@ -213,7 +234,7 @@ class BaseApiController extends ModuleController
     {
         if (array_key_exists('status', $requestFilters)) {
             $filter = $this->quickFilters()->filter(
-                fn(QuickFilter $filter) => $filter->getQueryString() === $requestFilters['status']
+                fn (QuickFilter $filter) => $filter->getQueryString() === $requestFilters['status']
             )->first();
 
             if ($filter !== null) {
@@ -231,7 +252,7 @@ class BaseApiController extends ModuleController
     {
         foreach ($requestFilters as $filterKey => $filterValue) {
             $filter = $this->filters()->filter(
-                fn(BasicFilter $filter) => $filter->getQueryString() === $filterKey
+                fn (BasicFilter $filter) => $filter->getQueryString() === $filterKey
             )->first();
 
             if ($filter !== null) {
