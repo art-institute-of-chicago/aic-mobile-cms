@@ -23,8 +23,15 @@ class ObjectTransformer extends TransformerAbstract
                 'on_loan_display' => $object->on_loan_display,
                 'location' => $object->latlon,
                 'image_url' => $object->image_url,
-                // TODO image-related items go here
-                'gallery_location' => $object->gallery()?->title,
+                'thumbnail_full_path' => null, // TODO load images from iiif
+                'large_image_crop_v2' => [ // TODO crop images
+                    'x' => null,
+                    'y' => null,
+                    'width' => null,
+                    'height' => null,
+                ],
+                'large_image_full_path' => null,
+                'gallery_location' => null, // TODO fake retrieving the gallery relation in a testing env
                 'audio_commentary' => [], // TODO Tours and Audio files
             ]
         ];

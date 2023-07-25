@@ -2,6 +2,8 @@
 
 namespace App\Repositories\Serializers;
 
+use App\Models\Api\Exhibition as ApiExhibition;
+use App\Models\Exhibition;
 use League\Fractal\Manager;
 use League\Fractal\Resource;
 use League\Fractal\Serializer\ArraySerializer;
@@ -19,7 +21,12 @@ class ExhibitionSerializer
 
     public function serialize($exhibitions)
     {
-        collect($exhibitions)->each->getAugmentedModel();
+        $exhibitions = collect($exhibitions);
+        if ($exhibitions instanceof ApiExhibition) {
+            $exhibitions->each->getAugmentedModel();
+        } elseif ($exhibitions instanceof Exhibition) {
+            $exhibitions->each->refreshApi();
+        }
         $resource = new Resource\Collection($exhibitions, new ExhibitionTransformer(), 'exhibitions');
         return $this->manager->createData($resource)->toArray();
     }

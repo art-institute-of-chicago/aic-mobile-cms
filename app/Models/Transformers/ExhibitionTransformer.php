@@ -13,7 +13,7 @@ class ExhibitionTransformer extends TransformerAbstract
             'title' => $exhibition->title,
             'image_url' => $exhibition->image_url,
             'exhibition_id' => (string) $exhibition->id,
-            'sort' => 0, // TODO: Implement with `HasPostion` trait on model
+            'sort' => $exhibition->sort,
         ];
     }
 }

@@ -2,9 +2,11 @@
 
 namespace App\Repositories\Serializers;
 
+use App\Models\Api\Gallery as ApiGallery;
+use App\Models\Gallery;
+use App\Models\Transformers\GalleryTransformer;
 use League\Fractal\Manager;
 use League\Fractal\Resource;
-use App\Models\Transformers\GalleryTransformer;
 
 class GallerySerializer
 {
@@ -18,7 +20,12 @@ class GallerySerializer
 
     public function serialize($galleries)
     {
-        collect($galleries)->each->getAugmentedModel();
+        $galleries = collect($galleries);
+        if ($galleries instanceof ApiGallery) {
+            $galleries->each->getAugmentedModel();
+        } elseif ($galleries instanceof Gallery) {
+            $galleries->each->refreshApi();
+        }
         $resource = new Resource\Collection($galleries, new GalleryTransformer(), 'galleries');
         return $this->manager->createData($resource)->toArray();
     }
