@@ -20,13 +20,15 @@ trait HasAugmentedModel
 
     public function getAugmentedModel()
     {
+        $this->setAttribute('is_augmented', false);
         if ($this->augmentedModel) {
+            $this->setAttribute('is_augmented', true);
             return $this->augmentedModel;
         }
-
-        $this->augmentedModel = $this->augmentedModelClass::where('datahub_id', $this->id)->first();
-        $this->setAttribute('is_augmented', true);
-
+        if ($this->augmentedModel = $this->augmentedModelClass::where('datahub_id', $this->id)->first()) {
+            $this->setAttribute('is_augmented', true);
+            return $this->augmentedModel;
+        }
         return $this->augmentedModel;
     }
 

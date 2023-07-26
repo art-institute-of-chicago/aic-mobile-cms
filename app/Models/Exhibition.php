@@ -20,9 +20,14 @@ class Exhibition extends AbstractModel
         'title',
         'image_url',
         'is_featured',
+        'status',
+        'aic_start_at',
+        'aic_end_at',
     ];
 
     protected $casts = [
+        'aic_start_at' => 'datetime',
+        'aic_end_at' => 'datetime',
         'is_featured' => 'boolean',
     ];
 
