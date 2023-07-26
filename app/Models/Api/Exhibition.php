@@ -15,6 +15,11 @@ class Exhibition extends BaseApiModel
 
     protected $augmentedModelClass = \App\Models\Exhibition::class;
 
+    protected array $casts = [
+        'aic_start_at' => 'date',
+        'aic_end_at' => 'date'
+    ];
+
     public function getTypeAttribute()
     {
         return 'exhibition';

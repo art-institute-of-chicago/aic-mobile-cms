@@ -696,6 +696,8 @@ abstract class BaseApiModel implements TwillModelContract, ArrayAccess, Arrayabl
                 return new BaseCollection($this->fromJson($value));
             case 'datetime':
                 return $this->asDateTime($value);
+            case 'date':
+                return $this->asDateTime($value)->toDateString();
             default:
                 return $value;
         }
