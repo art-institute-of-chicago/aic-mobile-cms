@@ -2,130 +2,85 @@
 
 namespace App\Http\Controllers\Twill;
 
-use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Services\Forms\Fields\Checkbox;
 use A17\Twill\Services\Forms\Fields\Input;
+use A17\Twill\Services\Forms\Fields\Map;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Text;
-use A17\Twill\Services\Listings\Filters\BasicFilter;
-use A17\Twill\Services\Listings\Filters\TableFilters;
 use A17\Twill\Services\Listings\TableColumns;
 use App\Models\Api\Gallery;
-use Illuminate\Database\Eloquent\Builder;
 
 class GalleryController extends BaseApiController
 {
     protected $moduleName = 'galleries';
-    protected $hasAugmentedModel = false;
+    protected $hasAugmentedModel = true;
 
     public function setUpController(): void
     {
+        parent::setUpController();
+
         $this->setSearchColumns(['title', 'floor', 'number']);
-        $this->disableBulkDelete();
-        $this->disableBulkEdit();
-        $this->disableBulkPublish();
-        $this->disableCreate();
-        $this->disableDelete();
-        $this->disableEdit();
-        $this->disablePublish();
-        $this->disableRestore();
+
+        $this->disableIncludeScheduledInList();
     }
 
-    protected function getIndexTableColumns(): TableColumns
+    protected function additionalIndexTableColumns(): TableColumns
     {
-        $columns = new TableColumns();
-        $columns->add(
-            Text::make()
-                ->field('id')
-                ->title('Datahub Id')
-                ->optional()
-                ->hide()
-        );
-        $columns->add(
-            Text::make()
-                ->field('title')
-        );
-        $columns->add(
-            Text::make()
+        return parent::additionalIndexTableColumns()
+            ->add(Text::make()
                 ->field('floor')
-                ->optional()
-        );
-        $columns->add(
-            Text::make()
+                ->optional())
+            ->add(Text::make()
                 ->field('number')
-                ->optional()
-        );
-        $columns->add(
-            Text::make()
+                ->optional())
+            ->add(Text::make()
                 ->field('is_closed')
-                ->title('Open/Closed')
+                ->title('Is Open')
                 ->customRender(function (Gallery $gallery) {
-                    return $gallery->is_closed ? 'Closed' : 'Open';
+                    // It's more comprehensible to have "closed" be a big red X
+                    return $gallery->is_closed ? "❌" : "✅";
                 })
-                ->sortable()
-        );
-        $columns->add(
-            Text::make()
+                ->optional())
+            ->add(Text::make()
                 ->field('latitude')
                 ->customRender(function (Gallery $gallery) {
                     return number_format((float) $gallery->latitude, 13);
                 })
                 ->optional()
-                ->hide()
-        );
-        $columns->add(
-            Text::make()
+                ->hide())
+            ->add(Text::make()
                 ->field('longitude')
                 ->customRender(function (Gallery $gallery) {
                     return number_format((float) $gallery->longitude, 13);
                 })
                 ->optional()
-                ->hide()
-        );
-        $columns->add(
-            Text::make()
-                ->field('source_updated_at')
-                ->optional()
-                ->hide()
-        );
-        $columns->add(
-            Text::make()
-                ->field('updated_at')
-                ->title('API Updated At')
-                ->optional()
-                ->hide()
-        );
-        return $columns;
+                ->hide());
     }
 
-    public function getForm(TwillModelContract $gallery): Form
+    public function additionalFormFields($gallery, $apiGallery): Form
     {
-        $form = Form::make();
-        $form->add(
-            Input::make()
-                ->name('datahub_id')
-                ->disabled()
-        );
-        $form->add(
-            Input::make()
-                ->name('title')
-                ->disabled()
-        );
-        $form->add(
+        return Form::make([
             Input::make()
                 ->name('floor')
-                ->disabled()
-        );
-        $form->add(
+                ->placeholder($apiGallery->floor),
             Input::make()
                 ->name('number')
-                ->disabled()
-        );
-        $form->add(
+                ->placeholder($apiGallery->number),
             Checkbox::make()
-                ->name('is_closed')
-                ->disabled()
-        );
-        return $form;
+                ->name('is_closed'),
+            Map::make()
+                ->name('latlng')
+                ->label('Location (out of order)'),
+            Input::make()
+                ->name('latlng')
+                ->label("Location's map data")
+                ->type('textarea'),
+            Input::make()
+                ->name('latitude')
+                ->placeholder($apiGallery->latitude),
+            Input::make()
+                ->name('longitude')
+                ->placeholder($apiGallery->longitude),
+        ]);
     }
 }
