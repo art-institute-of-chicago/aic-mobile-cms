@@ -1,7 +1,14 @@
 <?php
 
+use App\Repositories\Api\ArtworkRepository;
+use App\Repositories\Api\ExhibitionRepository;
+use App\Repositories\Api\GalleryRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
+use App\Repositories\Serializers\ExhibitionSerializer;
+use App\Repositories\Serializers\GallerySerializer;
+use App\Repositories\Serializers\ObjectSerializer;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,7 +20,27 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::get('/exhibitions', function () {
+    $repository = App::make(ExhibitionRepository::class);
+    $exhibitions = $repository->getBaseModel()->newQuery()->startedFeaturedAndNotClosed()->get();
+    $serializer = new ExhibitionSerializer();
+    return $serializer->serialize($exhibitions);
+});
+
+Route::get('/galleries', function () {
+    $repository = App::make(GalleryRepository::class);
+    $galleries = $repository->getBaseModel()->newQuery()->get();
+    $serializer = new GallerySerializer();
+    return $serializer->serialize($galleries);
+});
+
+Route::get('/objects', function () {
+    $repository = App::make(ArtworkRepository::class);
+    $objects = $repository->getBaseModel()->newQuery()->get();
+    $serializer = new ObjectSerializer();
+    return $serializer->serialize($objects);
 });

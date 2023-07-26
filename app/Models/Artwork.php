@@ -7,6 +7,7 @@ use A17\Twill\Models\Behaviors\HasMedias;
 use A17\Twill\Models\Behaviors\HasTranslation;
 use App\Models\Behaviors\HasApiModel;
 use App\Models\Behaviors\HasApiRelations;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 
 class Artwork extends AbstractModel
@@ -14,6 +15,7 @@ class Artwork extends AbstractModel
     use HasApiModel;
     use HasApiRelations;
     use HasBlocks;
+    use HasFactory;
     use HasMedias;
     use HasTranslation;
 

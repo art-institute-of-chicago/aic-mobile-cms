@@ -6,10 +6,12 @@ use App\Helpers\StringHelpers;
 use App\Models\Behaviors\HasApiModel;
 use App\Models\Behaviors\HasMedias;
 use App\Models\Behaviors\Transformable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Exhibition extends AbstractModel
 {
     use HasApiModel;
+    use HasFactory;
     use HasMedias;
     use Transformable;
 
