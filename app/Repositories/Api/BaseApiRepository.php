@@ -59,16 +59,17 @@ abstract class BaseApiRepository extends ModuleRepository
      */
     public function getCountByStatusSlug(string $slug, array $scope = []): int
     {
-        $query = $this->model->newQuery();
+        $dbQuery = $this->model->newQuery();
+        $apiQuery = $this->model->getApiModel()->newQuery();
         switch ($slug) {
             case 'all':
-                return $query->count();
+                return $dbQuery->count() + $apiQuery->count();
             case 'published':
-                return $query->published()->count();
+                return $dbQuery->published()->count();
             case 'draft':
-                return $query->draft()->count();
+                return $dbQuery->draft()->count();
             case 'trash':
-                return $query->onlyTrashed()->count();
+                return $dbQuery->onlyTrashed()->count();
         }
 
         foreach ($this->traitsMethods(__FUNCTION__) as $method) {
