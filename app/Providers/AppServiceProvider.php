@@ -6,6 +6,7 @@ use A17\Twill\Facades\TwillNavigation;
 use A17\Twill\View\Components\Navigation\NavigationLink;
 use App\Libraries\Api\Consumers\GuzzleApiConsumer;
 use App\Libraries\DamsImageService;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -32,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        URL::forceScheme('https');
         TwillNavigation::addLink(
             NavigationLink::make()->forModule('exhibitions')
         );
