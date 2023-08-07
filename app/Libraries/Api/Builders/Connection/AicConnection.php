@@ -123,7 +123,6 @@ class AicConnection implements ApiConnectionInterface
                 $response = $this->client->request($verb, $endpoint, $options);
                 if (config('api.logger')) {
                     \Log::info('cache ttl = ' . $ttl . ' seconds');
-                    \Log::info(print_r((array) $response->body, true));
                 }
                 return $response;
             });
