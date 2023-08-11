@@ -27,7 +27,7 @@ class ArtworkController extends BaseApiController
     {
         parent::setUpController();
 
-        $this->setSearchColumns(['title', 'artist_display', 'catalogue_display']);
+        $this->setSearchColumns(['title', 'artist_display', 'datahub_id', 'main_reference_number']);
 
         $this->eagerLoadListingRelations(['gallery']);
     }
@@ -43,6 +43,10 @@ class ArtworkController extends BaseApiController
                 ->field('gallery_id')
                 ->title('Gallery')
                 ->relation('gallery'))
+            ->add(Text::make()
+                ->field('main_reference_number')
+                ->optional()
+                ->hide())
             ->add(Text::make()
                 ->field('credit_line')
                 ->optional()
@@ -88,6 +92,11 @@ class ArtworkController extends BaseApiController
             ->add(Checkbox::make()
                 ->name('is_on_view')
                 ->default($apiValues['is_on_view']))
+            ->add(Input::make()
+                ->name('main_reference_number')
+                ->placeholder($apiValues['main_reference_number'])
+                ->disabled()
+                ->note('readonly'))
             ->add(Input::make()
                 ->name('credit_line')
                 ->placeholder($apiValues['credit_line']))
