@@ -1,16 +1,5 @@
 <?php
 
-/**
- * WIP.
- *
- * TODO: Refactor this controller so we don't have dependencies to update
- * When we are updating the CMS.
- *
- * Right now the relationship between model and modelApi, redefinition of forms, and it's harcoded nature
- * doesn't scale in a maintenance window.
- *
- */
-
 namespace App\Http\Controllers\Twill;
 
 use A17\Twill\Facades\TwillPermissions;
@@ -21,6 +10,11 @@ use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Boolean;
+use A17\Twill\Services\Listings\Columns\FeaturedStatus;
+use A17\Twill\Services\Listings\Columns\Image;
+use A17\Twill\Services\Listings\Columns\Languages;
+use A17\Twill\Services\Listings\Columns\PublishStatus;
+use A17\Twill\Services\Listings\Columns\ScheduledStatus;
 use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\Filters\BasicFilter;
 use A17\Twill\Services\Listings\Filters\QuickFilter;
@@ -149,27 +143,90 @@ class BaseApiController extends ModuleController
 
     protected function getIndexTableColumns(): TableColumns
     {
-        $table = parent::getIndexTableColumns();
-        $after = $table->splice(0);
-        return $table
-            ->push(Boolean::make()
+        $columns = TableColumns::make();
+
+        if ($this->getIndexOption('publish')) {
+            $columns->add(
+                PublishStatus::make()
+                    ->title(twillTrans('twill::lang.listing.columns.published'))
+                    ->sortable()
+                    ->optional()
+            );
+        }
+
+        if ($this->getIndexOption('showImage')) {
+            $columns->add(
+                Image::make()
+                    ->field('thumbnail')
+                    ->title(twillTrans('Image'))
+            );
+        }
+
+        if ($this->getIndexOption('feature') && $this->repository->isFillable('featured')) {
+            $columns->add(
+                FeaturedStatus::make()
+                    ->title(twillTrans('twill::lang.listing.columns.featured'))
+            );
+        }
+
+        $columns->add(
+            Boolean::make()
                 ->field('is_augmented')
                 ->optional()
-                ->hide())
-            ->push(Text::make()
+                ->hide()
+        );
+        $columns->add(
+            Text::make()
                 ->field('id')
                 ->title('Datahub Id')
                 ->optional()
-                ->hide())
-            ->push(Text::make()
+                ->hide()
+        );
+        $columns->add(
+            Text::make()
                 ->field('source_updated_at')
                 ->optional()
-                ->hide())
-            ->push(Text::make()
+                ->hide()
+        );
+        $columns->add(
+            Text::make()
                 ->field('updated_at')
                 ->optional()
-                ->hide())
-            ->merge($after);
+                ->hide()
+        );
+        $columns->add(
+            Text::make()
+                ->field($this->titleColumnKey)
+                ->linkCell(function (TwillModelContract $model) {
+                    if ($model->is_augmented) {
+                        $action =  'edit';
+                        $id = $model->getAugmentedModel()->id;
+                    } else {
+                        $action = 'augment';
+                        $id = $model->id;
+                    }
+                    return moduleRoute($this->moduleName, $this->routePrefix, $action, [$id]);
+                })
+        );
+        $columns = $columns->merge($this->additionalIndexTableColumns());
+
+        if ($this->getIndexOption('includeScheduledInList') && $this->repository->isFillable('publish_start_date')) {
+            $columns->add(
+                ScheduledStatus::make()
+                    ->title(twillTrans('twill::lang.listing.columns.published'))
+                    ->optional()
+            );
+        }
+
+        if ($this->moduleHas('translations') && count(getLocales()) > 1) {
+            $columns->add(
+                Languages::make()
+                    ->title(twillTrans('twill::lang.listing.languages'))
+                    ->optional()
+            );
+        }
+
+        return $columns;
     }
 
     public function getForm(TwillModelContract $model): Form
