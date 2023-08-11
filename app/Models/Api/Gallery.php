@@ -4,7 +4,6 @@ namespace App\Models\Api;
 
 use App\Helpers\StringHelpers;
 use App\Libraries\Api\Models\BaseApiModel;
-use App\Presenters\Admin\GalleryPresenter;
 
 class Gallery extends BaseApiModel
 {
