@@ -29,4 +29,16 @@ class Artwork extends BaseApiModel
     {
         return $this->belongsToApi(\App\Models\Api\Gallery::class, 'gallery_id');
     }
+
+    public function scopeOnView($query)
+    {
+        return $query
+            ->rawSearch([
+                'bool' => [
+                    'must' => [
+                        ['term' => ['is_on_view' => true]],
+                    ],
+                ]
+            ]);
+    }
 }
