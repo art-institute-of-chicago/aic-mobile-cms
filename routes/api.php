@@ -1,12 +1,10 @@
 <?php
 
 use App\Repositories\Api\ArtworkRepository;
-use App\Repositories\Api\ExhibitionRepository;
 use App\Repositories\Api\GalleryRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
-use App\Repositories\Serializers\ExhibitionSerializer;
 use App\Repositories\Serializers\GallerySerializer;
 use App\Repositories\Serializers\ObjectSerializer;
 
@@ -22,13 +20,6 @@ use App\Repositories\Serializers\ObjectSerializer;
 */
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
-});
-
-Route::get('/exhibitions', function () {
-    $repository = App::make(ExhibitionRepository::class);
-    $exhibitions = $repository->getBaseModel()->newQuery()->startedFeaturedAndNotClosed()->get();
-    $serializer = new ExhibitionSerializer();
-    return $serializer->serialize($exhibitions);
 });
 
 Route::get('/galleries', function () {
