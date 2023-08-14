@@ -12,9 +12,12 @@ use A17\Twill\Services\Forms\Option;
 use A17\Twill\Services\Forms\Options;
 use A17\Twill\Services\Listings\Columns\Boolean;
 use A17\Twill\Services\Listings\Columns\Text;
+use A17\Twill\Services\Listings\Filters\QuickFilter;
+use A17\Twill\Services\Listings\Filters\QuickFilters;
 use A17\Twill\Services\Listings\TableColumns;
 use App\Http\Controllers\Twill\Columns\ApiRelation;
 use App\Models\Api\Artwork;
+use Illuminate\Contracts\Database\Query\Builder;
 
 class ArtworkController extends BaseApiController
 {
@@ -31,6 +34,17 @@ class ArtworkController extends BaseApiController
 
         $this->eagerLoadListingRelations(['gallery']);
     }
+
+    public function quickFilters(): QuickFilters
+    {
+        return $this->getDefaultQuickFilters()
+            ->add(QuickFilter::make()
+                ->queryString('is_on_view')
+                ->label('On View')
+                ->apply(fn (Builder $builder) => $builder->onView())
+                ->amount(fn () => Artwork::query()->onView()->count()));
+    }
+
 
     protected function additionalIndexTableColumns(): TableColumns
     {
