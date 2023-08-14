@@ -38,9 +38,6 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
         TwillNavigation::addLink(
-            NavigationLink::make()->forModule('exhibitions')
-        );
-        TwillNavigation::addLink(
             NavigationLink::make()->forModule('galleries')
         );
         TwillNavigation::addLink(
