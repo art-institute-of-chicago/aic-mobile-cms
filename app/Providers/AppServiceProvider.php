@@ -38,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
         TwillNavigation::addLink(
+            NavigationLink::make()->title('Audio')->forModule('sounds')
+        );
+        TwillNavigation::addLink(
             NavigationLink::make()->forModule('galleries')
         );
         TwillNavigation::addLink(

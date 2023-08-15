@@ -2,9 +2,11 @@
 
 use App\Repositories\Api\ArtworkRepository;
 use App\Repositories\Api\GalleryRepository;
+use App\Repositories\Api\SoundRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
+use App\Repositories\Serializers\AudioSerializer;
 use App\Repositories\Serializers\GallerySerializer;
 use App\Repositories\Serializers\ObjectSerializer;
 
@@ -20,6 +22,13 @@ use App\Repositories\Serializers\ObjectSerializer;
 */
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::get('/audio_files', function () {
+    $repository = App::make(SoundRepository::class);
+    $audios = $repository->getBaseModel()->newQuery()->get();
+    $serializer = new AudioSerializer();
+    return $serializer->serialize($audios);
 });
 
 Route::get('/galleries', function () {
