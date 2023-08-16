@@ -20,8 +20,8 @@ class Sound extends BaseApiModel
         return 'sound';
     }
 
-    public function getTitleSlugAttribute()
+    public function __toString(): string
     {
-        return StringHelpers::getUtf8Slug($this->title);
+        return $this->title;
     }
 }
