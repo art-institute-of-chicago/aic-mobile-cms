@@ -21,7 +21,7 @@ class ApiRelation extends Relation
         if (null === $this->relation) {
             throw new ColumnMissingPropertyException('Relation column missing relation value: ' . $this->field);
         }
-        if ($augmentedModel = $model->getAugmentedModel()) {
+        if (method_exists($model, 'getAugmentedModel') && $augmentedModel = $model->getAugmentedModel()) {
             if ($relation = $augmentedModel->{$this->relation}()) {
                 return $relation;
             }

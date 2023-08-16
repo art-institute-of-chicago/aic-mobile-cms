@@ -41,4 +41,9 @@ class Artwork extends BaseApiModel
                 ]
             ]);
     }
+
+    public function __toString(): string
+    {
+        return "$this->title - $this->artist_display";
+    }
 }
