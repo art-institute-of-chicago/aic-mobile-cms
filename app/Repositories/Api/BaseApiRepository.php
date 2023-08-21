@@ -12,7 +12,7 @@ abstract class BaseApiRepository extends ModuleRepository
 {
     use HandleApiRelations;
 
-    public function getById(int $id, array $with = [], array $withCount = []): TwillModelContract
+    public function getById(mixed $id, array $with = [], array $withCount = []): TwillModelContract
     {
         $item = $this->model->with($with)->withCount($withCount)->findOrFail($id);
 
