@@ -13,7 +13,6 @@ class CreateSoundsTables extends Migration
             $table->string('datahub_id');
             $table->string('title')->nullable();
             $table->string('content')->nullable();
-            $table->string('transcript')->nullable();
         });
     }
 

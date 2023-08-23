@@ -88,16 +88,16 @@
         },
         {
             "name": "area17/twill",
-            "version": "3.0.1",
+            "version": "3.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/area17/twill.git",
-                "reference": "f90884b3ad313b98b484e9d51a047607dc988d84"
+                "reference": "4ff9d9694adfe10842f7324ed9cc03e98f33146a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/area17/twill/zipball/f90884b3ad313b98b484e9d51a047607dc988d84",
-                "reference": "f90884b3ad313b98b484e9d51a047607dc988d84",
+                "url": "https://api.github.com/repos/area17/twill/zipball/4ff9d9694adfe10842f7324ed9cc03e98f33146a",
+                "reference": "4ff9d9694adfe10842f7324ed9cc03e98f33146a",
                 "shasum": ""
             },
             "require": {
@@ -183,9 +183,9 @@
                 "chat": "https://discord.gg/cnWk7EFv8R",
                 "docs": "https://twillcms.com/docs/",
                 "issues": "https://github.com/area17/twill/issues/",
-                "source": "https://github.com/area17/twill/tree/3.0.1"
+                "source": "https://github.com/area17/twill/tree/3.0.2"
             },
-            "time": "2023-04-14T19:54:17+00:00"
+            "time": "2023-05-23T19:06:11+00:00"
         },
         {
             "name": "astrotomic/laravel-translatable",
