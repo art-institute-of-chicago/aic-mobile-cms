@@ -12,6 +12,9 @@ return [
      */
     'locales' => [
         'en',
+        'es',
+        'ko',
+        'zh-hant',
     ],
 
     /*

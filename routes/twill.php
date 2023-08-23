@@ -16,3 +16,6 @@ TwillRoutes::module('sounds');
 Route::get('sounds/augment/{datahub_id}', [SoundController::class, 'augment'])->name('sounds.augment');
 
 TwillRoutes::module('stops');
+
+TwillRoutes::module('tours');
+TwillRoutes::module('tours.stops');

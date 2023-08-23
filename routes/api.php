@@ -3,12 +3,14 @@
 use App\Repositories\Api\ArtworkRepository;
 use App\Repositories\Api\GalleryRepository;
 use App\Repositories\Api\SoundRepository;
+use App\Repositories\Serializers\AudioSerializer;
+use App\Repositories\TourRepository;
+use App\Repositories\Serializers\GallerySerializer;
+use App\Repositories\Serializers\ObjectSerializer;
+use App\Repositories\Serializers\TourSerializer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
-use App\Repositories\Serializers\AudioSerializer;
-use App\Repositories\Serializers\GallerySerializer;
-use App\Repositories\Serializers\ObjectSerializer;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,4 +45,11 @@ Route::get('/objects', function () {
     $objects = $repository->getBaseModel()->newQuery()->get();
     $serializer = new ObjectSerializer();
     return $serializer->serialize($objects);
+});
+
+Route::get('/tours', function () {
+    $repository = App::make(TourRepository::class);
+    $tours = $repository->getBaseModel()->newQuery()->visible()->published()->get();
+    $serializer = new TourSerializer();
+    return $serializer->serialize($tours);
 });
