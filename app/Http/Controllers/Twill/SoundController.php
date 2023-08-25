@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Twill;
 use A17\Twill\Services\Forms\BladePartial;
 use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Fields\Radios;
+use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\TableColumns;
@@ -52,14 +53,9 @@ class SoundController extends BaseApiController
     {
         return Form::make()
             ->add(
-                BladePartial::make()
-                    ->view('admin.fields.audio')
-                    ->withAdditionalParams(['src' => $apiSound->content])
-            )
-            ->add(
                 Input::make()
                     ->name('content')
-                    ->label('URL')
+                    ->label('Url')
                     ->placeholder($apiSound->content)
                     ->disabled()
                     ->note('readonly')
@@ -82,5 +78,20 @@ class SoundController extends BaseApiController
                     ->name('transcript')
                     ->type('textarea')
             );
+    }
+
+    public function getSideFieldSets($sound): Form
+    {
+        return parent::getSideFieldSets($sound)
+            ->addFieldset(
+                Fieldset::make()
+                    ->id('audio_player')
+                    ->title('Audio Player')
+                    ->fields([
+                        BladePartial::make()
+                            ->view('admin.fields.audio')
+                            ->withAdditionalParams(['src' => $sound->getApiModel()->content]),
+                    ])
+        );
     }
 }
