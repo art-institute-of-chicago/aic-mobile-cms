@@ -92,6 +92,6 @@ class SoundController extends BaseApiController
                             ->view('admin.fields.audio')
                             ->withAdditionalParams(['src' => $sound->getApiModel()->content]),
                     ])
-        );
+            );
     }
 }
