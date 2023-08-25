@@ -607,7 +607,7 @@ abstract class BaseApiModel implements TwillModelContract, ArrayAccess, Arrayabl
     /**
      * Get an attribute from the $attributes array.
      */
-    protected function getAttributeFromArray(string $key): mixed
+    protected function getAttributeFromArray(string $key)
     {
         if (array_key_exists($key, $this->attributes)) {
             return $this->attributes[$key];
