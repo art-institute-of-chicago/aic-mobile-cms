@@ -232,11 +232,40 @@ class BaseApiController extends ModuleController
     public function getForm(TwillModelContract $model): Form
     {
         $model->refreshApi();
-        $form = Form::make()
+        $content = Form::make()
+            ->add(Input::make()
+                    ->name('title')
+                    ->placeholder($model->getApiModel()->title ?? ''))
+            ->merge($this->additionalFormFields($model, $model->getApiModel()));
+        return parent::getForm($model)
             ->addFieldset(
                 Fieldset::make()
-                    ->title('Datahub')
+                    ->title('Content')
+                    ->id('content')
+                    ->fields($content->toArray())
+            );
+    }
+
+    protected function additionalFormFields($model, $apiModel): Form
+    {
+        return new Form();
+    }
+
+    public function getSideFieldSets(TwillModelContract $model): Form
+    {
+        return parent::getSideFieldSets($model)
+            // For some reason, the side form will not render unless there is a
+            // field in the default Content fieldset. 🤷
+            ->add(
+                Input::make()
+                    ->name('id')
+                    ->disabled()
+                    ->note('readonly')
+            )
+            ->addFieldset(
+                Fieldset::make()
                     ->id('datahub')
+                    ->title('Datahub')
                     ->closed()
                     ->fields([
                         Input::make()
@@ -251,8 +280,8 @@ class BaseApiController extends ModuleController
             )
             ->addFieldset(
                 Fieldset::make()
-                    ->title('Timestamps')
                     ->id('timestamps')
+                    ->title('Timestamps')
                     ->closed()
                     ->fields([
                         Input::make()
@@ -265,23 +294,6 @@ class BaseApiController extends ModuleController
                             ->note('readonly'),
                     ])
             );
-        $content = Form::make()
-            ->add(Input::make()
-                    ->name('title')
-                    ->placeholder($model->getApiModel()->title))
-            ->merge($this->additionalFormFields($model, $model->getApiModel()));
-        $form->addFieldset(
-            Fieldset::make()
-                ->title('Content')
-                ->id('content')
-                ->fields($content->toArray())
-        );
-        return $form;
-    }
-
-    protected function additionalFormFields($model, $apiModel): Form
-    {
-        return new Form();
     }
 
     /**

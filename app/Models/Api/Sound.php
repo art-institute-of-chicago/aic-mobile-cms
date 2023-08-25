@@ -2,7 +2,6 @@
 
 namespace App\Models\Api;
 
-use App\Helpers\StringHelpers;
 use App\Libraries\Api\Models\BaseApiModel;
 
 class Sound extends BaseApiModel
@@ -18,6 +17,16 @@ class Sound extends BaseApiModel
     public function getTypeAttribute()
     {
         return 'sound';
+    }
+
+    public function getLocaleAttribute()
+    {
+        return $this->getAugmentedModel()?->locale;
+    }
+
+    public function getTranscriptAttribute()
+    {
+        return $this->getAugmentedModel()?->transcript;
     }
 
     public function __toString(): string

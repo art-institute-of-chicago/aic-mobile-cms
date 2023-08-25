@@ -16,5 +16,7 @@ class Sound extends AbstractModel
         'datahub_id',
         'title',
         'content',
+        'locale',
+        'transcript',
     ];
 }
