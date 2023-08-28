@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Twill\Columns;
 
 use A17\Twill\Exceptions\ColumnMissingPropertyException;
 use A17\Twill\Models\Contracts\TwillModelContract;
-use A17\Twill\Services\Listings\Columns\Relation;
+use A17\Twill\Services\Listings\TableColumn;
+use Illuminate\Support\Str;
 
-class ApiRelation extends Relation
+class RelationCount extends TableColumn
 {
     private ?string $relation = null;
 
@@ -21,12 +22,7 @@ class ApiRelation extends Relation
         if (null === $this->relation) {
             throw new ColumnMissingPropertyException('Relation column missing relation value: ' . $this->field);
         }
-        if (method_exists($model, 'getAugmentedModel') && $augmentedModel = $model->getAugmentedModel()) {
-            if ($relation = $augmentedModel->{$this->relation}()) {
-                return $relation;
-            }
-        }
-        $relation = $model->{$this->relation};
-        return (string) $relation;
+        $count = $model->{$this->relation}()->count();
+        return $count . ' ' . ($count === 1 ? Str::singular($this->field) : Str::plural($this->field));
     }
 }

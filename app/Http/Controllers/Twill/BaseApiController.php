@@ -24,12 +24,10 @@ use App\Libraries\Api\Filters\Search;
 use App\Repositories\Api\BaseApiRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class BaseApiController extends ModuleController
 {
-    /**
-     * Option to setup links and the possibility of augmenting a model
-     */
     protected $hasAugmentedModel = false;
 
     protected $localElements = [];
@@ -37,6 +35,8 @@ class BaseApiController extends ModuleController
     protected $defaultFilters = [
         'search' => 'search',
     ];
+
+    protected $displayName;
 
     protected function setUpController(): void
     {
@@ -178,9 +178,8 @@ class BaseApiController extends ModuleController
         $columns->add(
             Text::make()
                 ->field('id')
-                ->title('Datahub Id')
+                ->title(($this->displayName ?: 'Datahub') . ' Id')
                 ->optional()
-                ->hide()
         );
         $columns->add(
             Text::make()
@@ -370,5 +369,18 @@ class BaseApiController extends ModuleController
         }
 
         return ['edit' => $editRoute];
+    }
+
+    /**
+     * Option to setup links and the possibility of augmenting a model
+     */
+    protected function enableAugmentedModel(): void
+    {
+        $this->hasAugmentedModel = true;
+    }
+
+    protected function setDisplayName(string $displayName): void
+    {
+        $this->displayName = $displayName;
     }
 }

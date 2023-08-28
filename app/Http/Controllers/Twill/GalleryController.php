@@ -12,16 +12,14 @@ use App\Models\Api\Gallery;
 
 class GalleryController extends BaseApiController
 {
-    protected $moduleName = 'galleries';
-    protected $hasAugmentedModel = true;
-
     public function setUpController(): void
     {
         parent::setUpController();
-
-        $this->setSearchColumns(['title', 'floor', 'number']);
-
         $this->disableIncludeScheduledInList();
+        $this->enableAugmentedModel();
+        $this->setDisplayName('Gallery');
+        $this->setModuleName('galleries');
+        $this->setSearchColumns(['title', 'floor', 'number']);
     }
 
     protected function additionalIndexTableColumns(): TableColumns

@@ -21,18 +21,16 @@ use Illuminate\Contracts\Database\Query\Builder;
 
 class ArtworkController extends BaseApiController
 {
-    protected $moduleName = 'artworks';
-    protected $hasAugmentedModel = true;
-
     private $galleries = [];
 
     protected function setUpController(): void
     {
         parent::setUpController();
-
-        $this->setSearchColumns(['title', 'artist_display', 'id', 'main_reference_number']);
-
         $this->eagerLoadListingRelations(['gallery']);
+        $this->enableAugmentedModel();
+        $this->setDisplayName('Object');
+        $this->setModuleName('artworks');
+        $this->setSearchColumns(['title', 'artist_display', 'datahub_id', 'main_reference_number']);
     }
 
     public function quickFilters(): QuickFilters
@@ -44,7 +42,6 @@ class ArtworkController extends BaseApiController
                 ->apply(fn (Builder $builder) => $builder->onView())
                 ->amount(fn () => Artwork::query()->onView()->count()));
     }
-
 
     protected function additionalIndexTableColumns(): TableColumns
     {

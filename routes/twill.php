@@ -19,3 +19,5 @@ TwillRoutes::module('stops');
 
 TwillRoutes::module('tours');
 TwillRoutes::module('tours.stops');
+
+TwillRoutes::module('stops');

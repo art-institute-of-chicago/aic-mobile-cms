@@ -2,7 +2,6 @@
 
 namespace App\Models\Api;
 
-use App\Helpers\StringHelpers;
 use App\Libraries\Api\Models\BaseApiModel;
 
 class Artwork extends BaseApiModel
@@ -18,11 +17,6 @@ class Artwork extends BaseApiModel
     public function getTypeAttribute()
     {
         return 'artwork';
-    }
-
-    public function getTitleSlugAttribute()
-    {
-        return StringHelpers::getUtf8Slug($this->title);
     }
 
     public function gallery()

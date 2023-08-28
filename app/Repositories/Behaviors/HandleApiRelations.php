@@ -3,6 +3,7 @@
 namespace App\Repositories\Behaviors;
 
 use A17\Twill\Models\RelatedItem;
+use App\Helpers\UrlHelpers;
 use App\Models\ApiRelation;
 
 trait HandleApiRelations
@@ -78,6 +79,54 @@ trait HandleApiRelations
             ]);
             $position++;
         });
+    }
+
+    /**
+     * Get all elements and return data filled with the API elements.
+     * This way we don't have to redesign the browser.
+     *
+     */
+    public function getFormFieldsForBrowserApi($object, $relation, $apiModel, $routePrefix = null, $titleKey = 'title', $moduleName = null)
+    {
+        if ($object->{$relation}->isEmpty()) {
+            return [];
+        }
+        // Get all datahub_id's
+        $ids = $object->{$relation}->pluck('datahub_id')->toArray();
+        // Use those to load API records
+        $apiElements = $apiModel::query()->ids($ids)->get();
+
+        // Find locally selected objects
+        $localApiMapping = $object->{$relation}->filter(function ($relatedElement) use ($apiElements) {
+            return $apiElements->where('id', $relatedElement->datahub_id)->first();
+        });
+
+        return $localApiMapping->map(function ($relatedElement) use ($titleKey, $routePrefix, $relation, $moduleName, $apiElements) {
+            $data = [];
+            // Get the API elements and use them to build the browser elements
+            $apiElement = $apiElements->where('id', $relatedElement->datahub_id)->first();
+
+            // If it contains an augmented model create an edit link
+            if ($apiElement->hasAugmentedModel() && $apiElement->getAugmentedModel()) {
+                $data['edit'] = moduleRoute($moduleName ?? $relation, $routePrefix ?? '', 'edit', [$apiElement->getAugmentedModel()->id]);
+
+                if (classHasTrait($apiElement->getAugmentedModel(), \App\Models\Behaviors\HasMedias::class)) {
+                    $data['thumbnail'] = $apiElement->getAugmentedModel()->defaultCmsImage(['w' => 100, 'h' => 100]);
+                }
+            } else {
+                // WEB-1187: This is reached after page refresh, if the model hasn't been augmented
+                if (UrlHelpers::moduleRouteExists($moduleName ?? $relation, $routePrefix ?? '', 'augment')) {
+                    $data['edit'] = moduleRoute($moduleName ?? $relation, $routePrefix ?? '', 'augment', [$apiElement->id]);
+                }
+
+                $data['thumbnail'] = DamsImageService::getTransparentFallbackUrl(['w' => 100, 'h' => 100]);
+            }
+
+            return [
+                'id' => $apiElement->id,
+                'name' => $apiElement->titleInBrowser ?? $apiElement->{$titleKey},
+            ] + $data;
+        })->values()->toArray();
     }
 
     public function getFormFieldsForMultiBrowserApi($object, $browser_name, $apiModelsDefinitions, $typeUsesApi)

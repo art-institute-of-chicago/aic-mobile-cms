@@ -2,7 +2,7 @@
 
 namespace App\Models\Behaviors;
 
-use App\Libraries\Api\Relations\ApiRelation;
+use App\Libraries\Api\Builders\Relations\BelongsTo;
 
 /**
  * TODO: Requires HasRelations. Shouldn't this just extend HasRelations, then?
@@ -16,9 +16,14 @@ trait HasApiRelations
 
     public function belongsToApi($modelClass, $foreignKey = null)
     {
-        if ($id = $this->getAttribute($foreignKey)) {
-            return $modelClass::query()->find($id);
-        }
+        $callingFunction = debug_backtrace()[0]['function'];
+        return new BelongsTo(
+            $modelClass::query(),
+            $this,
+            foreignKey: $foreignKey,
+            ownerKey: $this->id,
+            relationName: $callingFunction,
+        );
     }
 
     public function apiModels($relation, $model, $ttl = null)

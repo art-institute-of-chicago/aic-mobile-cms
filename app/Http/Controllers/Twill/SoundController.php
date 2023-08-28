@@ -12,13 +12,12 @@ use A17\Twill\Services\Listings\TableColumns;
 
 class SoundController extends BaseApiController
 {
-    protected $moduleName = 'sounds';
-    protected $hasAugmentedModel = true;
-
     protected function setUpController(): void
     {
         parent::setUpController();
-
+        $this->enableAugmentedModel();
+        $this->setDisplayName('Audio');
+        $this->setModuleName('sounds');
         $this->setSearchColumns(['title']);
     }
 

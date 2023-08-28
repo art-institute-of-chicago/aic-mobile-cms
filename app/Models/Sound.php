@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Behaviors\HasApiModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Sound extends AbstractModel
 {
@@ -19,4 +20,12 @@ class Sound extends AbstractModel
         'locale',
         'transcript',
     ];
+
+    public function stop()
+    {
+        return $this->morphTo(
+            'stop',
+            ApiRelation::class,
+        );
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use A17\Twill\Models\Behaviors\HasMedias;
 use A17\Twill\Models\Behaviors\HasPosition;
+use A17\Twill\Models\Behaviors\HasRelated;
 use A17\Twill\Models\Behaviors\HasRevisions;
 use A17\Twill\Models\Behaviors\HasTranslation;
 use A17\Twill\Models\Behaviors\Sortable;
@@ -11,13 +12,15 @@ use A17\Twill\Models\Model;
 use App\Models\Behaviors\HasApiRelations;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
 class Tour extends Model implements Sortable
 {
     use HasApiRelations;
     use HasFactory;
-    use HasMedias;
+    // use HasMedias;
     use HasPosition;
+    use HasRelated;
     use HasRevisions;
     use HasTranslation;
 
@@ -42,7 +45,14 @@ class Tour extends Model implements Sortable
     protected function durationInMinutes(): Attribute
     {
         return Attribute::make(
-            get: fn ($duration, $attributes) => $attributes['duration'] . ' minutes',
+            get: fn () => $this->getAttribute('duration') . ' minutes',
+        );
+    }
+
+    protected function truncatedTitle(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => Str::words($this->getAttribute('title'), 3)
         );
     }
 
@@ -58,6 +68,6 @@ class Tour extends Model implements Sortable
 
     public function stops()
     {
-        return $this->hasMany(TourStop::class);
+        return $this->belongsToMany(Stop::class, 'tour_stops')->orderByPivot('position');
     }
 }
