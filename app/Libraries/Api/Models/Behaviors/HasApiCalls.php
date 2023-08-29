@@ -47,6 +47,13 @@ trait HasApiCalls
     }
 
     /**
+     * Begin querying the model.
+     */
+    public static function rawSearch($value): ApiModelBuilder
+    {
+        return (new static())->newQuery()->rawSearch($value);
+    }
+    /**
      * Get a new query builder for the model's table.
      *
      * @return App\Libraries\Api\Builders\ApiModelBuilder

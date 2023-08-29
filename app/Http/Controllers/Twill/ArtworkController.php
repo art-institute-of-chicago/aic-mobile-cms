@@ -30,7 +30,7 @@ class ArtworkController extends BaseApiController
     {
         parent::setUpController();
 
-        $this->setSearchColumns(['title', 'artist_display', 'datahub_id', 'main_reference_number']);
+        $this->setSearchColumns(['title', 'artist_display', 'id', 'main_reference_number']);
 
         $this->eagerLoadListingRelations(['gallery']);
     }
