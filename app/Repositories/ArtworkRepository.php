@@ -7,15 +7,26 @@ use App\Repositories\Api\BaseApiRepository;
 
 class ArtworkRepository extends BaseApiRepository
 {
-    public function __construct(Artwork $model)
+    public function __construct(Artwork $artwork)
     {
-        $this->model = $model;
+        $this->model = $artwork;
     }
 
-    public function afterSave($object, $fields): void
+    public function getFormFields($artwork): array
     {
-        $this->updateMultiBrowserApiRelated($object, $fields, 'related_items', ['galleries' => true]);
+        $fields = parent::getFormFields($artwork);
+        $fields['browsers']['gallery'] = $this->getFormFieldsForBrowserApi(
+            $artwork,
+            relation: 'gallery',
+            apiModel: \App\Models\Api\Gallery::class,
+            moduleName: 'galleries',
+        );
+        return $fields;
+    }
 
-        parent::afterSave($object, $fields);
+    public function afterSave($artwork, $fields): void
+    {
+        // $this->updateBrowserApiRelated($artwork, $fields, 'gallery');
+        parent::afterSave($artwork, $fields);
     }
 }

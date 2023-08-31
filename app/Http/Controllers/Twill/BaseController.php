@@ -36,7 +36,7 @@ class BaseController extends ModuleController
     public function getForm(TwillModelContract $model): Form
     {
         $title = Input::make()
-            ->name('title')
+            ->name($this->titleColumnKey)
             ->required();
         if ($this->isTranslatable($model)) {
             $title->translatable();

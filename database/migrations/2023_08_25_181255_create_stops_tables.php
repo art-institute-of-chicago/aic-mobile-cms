@@ -15,7 +15,6 @@ return new class () extends Migration
 
         Schema::create('stops', function (Blueprint $table) {
             createDefaultTableFields($table, publishDates: true);
-            $table->integer('selector_number')->unique();
             $table->string('artwork_id')->nullable()->comment('Datahub foreign key');
         });
 

@@ -19,11 +19,6 @@ class Artwork extends BaseApiModel
         return 'artwork';
     }
 
-    public function gallery()
-    {
-        return $this->belongsToApi(\App\Models\Api\Gallery::class, 'gallery_id');
-    }
-
     public function scopeOnView($query)
     {
         return $query
@@ -32,6 +27,20 @@ class Artwork extends BaseApiModel
                     'must' => [
                         ['term' => ['is_on_view' => true]],
                     ],
+                ]
+            ]);
+    }
+
+    public function scopeBySoundIds($query, $soundIds)
+    {
+        $matches = [];
+        foreach ($soundIds as $soundId) {
+            $matches['match'] = ['sound_ids' => $soundId];
+        }
+        return $query
+            ->rawSearch([
+                'bool' => [
+                    'must' => $matches,
                 ]
             ]);
     }

@@ -22,6 +22,15 @@ class BelongsTo extends BaseBelongsTo
 
     public function getResults()
     {
-        return $this->query->find($this->child->getAttribute($this->foreignKey)) ?: collect();
+        if (in_array(\App\Models\Behaviors\HasApiModel::class, class_uses_recursive($this->child::class))) {
+            $this->child->refreshApi();
+            $id = $this->child->getApiModel()->{$this->foreignKey};
+        } else {
+            $id = $this->child->getAttribute($this->foreignKey);
+        }
+        if ($id) {
+            return $this->query->find($id);
+        }
+        return null;
     }
 }

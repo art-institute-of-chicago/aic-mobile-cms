@@ -22,11 +22,10 @@ class ApiRelation extends Relation
             throw new ColumnMissingPropertyException('Relation column missing relation value: ' . $this->field);
         }
         if (method_exists($model, 'getAugmentedModel') && $augmentedModel = $model->getAugmentedModel()) {
-            if ($relation = $augmentedModel->{$this->relation}()) {
-                return $relation;
-            }
+            $relation = $augmentedModel->{$this->relation};
+        } else {
+            $relation = $model->{$this->relation};
         }
-        $relation = $model->{$this->relation};
-        return (string) $relation;
+        return (string) $relation?->{$this->field};
     }
 }

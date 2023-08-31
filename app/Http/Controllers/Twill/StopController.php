@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Twill;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Services\Forms\Fields\Browser;
-use A17\Twill\Services\Listings\Columns\Text;
-use A17\Twill\Services\Listings\TableColumns;
-use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Relation;
+use A17\Twill\Services\Listings\TableColumns;
 use App\Http\Controllers\Twill\Columns\ApiRelation;
+use App\Models\Selector;
+use App\Models\Sound;
+use App\Models\Stop;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
 
 class StopController extends BaseController
 {
@@ -17,37 +20,21 @@ class StopController extends BaseController
     {
         parent::setUpController();
         $this->setModuleName('stops');
-        $this->setSearchColumns(['title', 'selector_number']);
-    }
-
-    /**
-     * Place the Selector Number before the title.
-     */
-    protected function getIndexTableColumns(): TableColumns
-    {
-        $columns = parent::getIndexTableColumns();
-        $after = $columns->splice(2);
-        $columns->push(
-            Text::make()
-                ->field('selector_number')
-                ->sortable()
-        );
-        return $columns->merge($after);
+        $this->setSearchColumns(['title']);
     }
 
     protected function additionalIndexTableColumns(): TableColumns
     {
         return parent::additionalIndexTableColumns()
             ->add(
-                ApiRelation::make()
-                    ->field('sound_id')
-                    ->title('Audio')
-                    ->relation('audio')
-                    ->sortable()
+                Relation::make()
+                    ->field('number')
+                    ->title('Selector Number')
+                    ->relation('selector')
             )
             ->add(
                 ApiRelation::make()
-                    ->field('artwork_id')
+                    ->field('title')
                     ->title('Object')
                     ->relation('object')
                     ->sortable()
@@ -58,6 +45,7 @@ class StopController extends BaseController
                     ->title('Tour(s)')
                     ->relation('tours')
                     ->optional()
+                    ->hide()
             );
     }
 
@@ -65,8 +53,10 @@ class StopController extends BaseController
     {
         return parent::additionalBrowserTableColumns()
             ->add(
-                Text::make()
-                    ->field('selector_number')
+                Relation::make()
+                    ->field('number')
+                    ->title('Selector Number')
+                    ->relation('selector')
             );
     }
 
@@ -74,33 +64,30 @@ class StopController extends BaseController
     {
         return parent::additionalFormFields($stop)
             ->add(
-                Input::make()
-                    ->name('selector_number')
-                    ->type('number')
-                    ->min(10)
-                    ->max(999)
-                    ->default(10)
-                    ->required()
+                Browser::make()
+                    ->name('selectors')
+                    ->label('Selector')
+                    ->modules([Selector::class])
+                    ->modulesCustom([
+                        [
+                            'name' => 'selectors',
+                            'params' => ['selector_id' => $stop->selector?->id],
+                            'routePrefix' => null,
+                        ]
+                    ])
             )
             ->add(
                 Browser::make()
-                    ->name('audios')
-                    ->modules([\App\Models\Api\Sound::class])
-                    ->note('Add audios to stop')
-                    ->sortable(false)
-                    ->max(99)
-            )
-            ->add(
-                Browser::make()
-                    ->name('object')
-                    ->modules([\App\Models\Artwork::class])
-            )
-            ->add(
-                Input::make()
-                    ->name('artwork_id')
-                    ->label('Object Id')
-                    ->required()
-                    ->note('Object Datahub Id')
+                    ->name('objects')
+                    ->label('Object')
+                    ->modulesCustom([
+                        [
+                            'name' => 'artworks',
+                            'label' => 'Objects',
+                            'params' => ['artwork_id' => $stop->artwork_id],
+                            'routePrefix' => null,
+                        ]
+                    ])
             )
             ->add(
                 Browser::make()
@@ -111,5 +98,19 @@ class StopController extends BaseController
                     ->sortable(false)
                     ->max(99)
             );
+    }
+
+    public function createWithArtwork()
+    {
+        $stop = Stop::create(['artwork_id' => $this->request->query('artwork_id')]);
+        return Redirect::to(moduleRoute($this->moduleName, $this->routePrefix, 'edit', ['stop' => $stop->id]));
+    }
+
+    public function createWithAudio()
+    {
+        $audio = Sound::find(request('sound_id'));
+        $stop = Stop::create();
+        $stop->selector()->save($audio->selector);
+        return Redirect::to(moduleRoute($this->moduleName, $this->routePrefix, 'edit', ['stop' => $stop->id]));
     }
 }

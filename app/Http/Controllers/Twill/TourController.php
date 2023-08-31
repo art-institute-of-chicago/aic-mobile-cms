@@ -5,10 +5,16 @@ namespace App\Http\Controllers\Twill;
 use A17\Twill\Services\Forms\Fields\Browser;
 use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Form;
+use A17\Twill\Services\Listings\Columns\Relation;
 use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\TableColumns;
 use App\Http\Controllers\Twill\Columns\ApiRelation;
 use App\Http\Controllers\Twill\Columns\RelationCount;
+use App\Models\Selector;
+use App\Models\Sound;
+use App\Models\Tour;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
 
 class TourController extends BaseController
 {
@@ -24,6 +30,12 @@ class TourController extends BaseController
     {
         return parent::additionalIndexTableColumns()
             ->add(
+                Relation::make()
+                    ->field('number')
+                    ->title('Selector Number')
+                    ->relation('selector')
+            )
+            ->add(
                 Text::make()
                     ->field('description')
                     ->optional()
@@ -34,20 +46,6 @@ class TourController extends BaseController
                     ->field('gallery_id')
                     ->title('Gallery')
                     ->relation('gallery')
-                    ->hide()
-            )
-            ->add(
-                Text::make()
-                    ->field('selector_number')
-                    ->optional()
-                    ->hide()
-            )
-            ->add(
-                ApiRelation::make()
-                    ->field('Sound_id')
-                    ->title('Audio')
-                    ->relation('audio')
-                    ->optional()
                     ->hide()
             )
             ->add(
@@ -64,9 +62,20 @@ class TourController extends BaseController
             );
     }
 
-    public function additionalFormFields($model): Form
+    protected function additionalBrowserTableColumns(): TableColumns
     {
-        return parent::additionalFormFields($model)
+        return parent::additionalBrowserTableColumns()
+            ->add(
+                Relation::make()
+                    ->field('number')
+                    ->title('Selector Number')
+                    ->relation('selector')
+            );
+    }
+
+    public function additionalFormFields($tour): Form
+    {
+        return parent::additionalFormFields($tour)
             ->add(
                 Input::make()
                     ->name('image_url')
@@ -83,23 +92,22 @@ class TourController extends BaseController
             )
             ->add(
                 Browser::make()
+                    ->name('selectors')
+                    ->label('Selector')
+                    ->modules([Selector::class])
+                    ->modulesCustom([
+                        [
+                            'name' => 'selectors',
+                            'params' => ['selector_id' => $tour->selector?->id],
+                            'routePrefix' => null,
+                        ]
+                    ])
+            )
+            ->add(
+                Browser::make()
                     ->name('gallery')
                     ->modules(['gallery'])
                     ->label('Gallery')
-            )
-            ->add(
-                Input::make()
-                    ->name('selector_number')
-                    ->type('number')
-                    ->required()
-            )
-            ->add(
-                Input::make()
-                    ->name('sound_id')
-                    ->label('Audio Id')
-                    ->translatable()
-                    ->required()
-                    ->note('Audio Id')
             )
             ->add(
                 Input::make()
@@ -118,5 +126,13 @@ class TourController extends BaseController
                     ->sortable()
                     ->max(99)
             );
+    }
+
+    public function creatWithAudio()
+    {
+        $audio = Sound::find(request('sound_id'));
+        $tour = Tour::create();
+        $tour->selector()->save($audio->selector);
+        return Redirect::to(moduleRoute($this->moduleName, $this->routePrefix, 'edit', ['tour' => $tour->id]));
     }
 }

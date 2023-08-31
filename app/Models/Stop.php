@@ -8,6 +8,10 @@ use A17\Twill\Models\Behaviors\HasTranslation;
 use A17\Twill\Models\Model;
 use App\Models\Behaviors\HasApiRelations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Stop extends Model
 {
@@ -22,7 +26,6 @@ class Stop extends Model
         'publish_end_date',
         'publish_start_date',
         'published',
-        'selector_number',
     ];
 
     public $casts = [
@@ -35,17 +38,17 @@ class Stop extends Model
         'title',
     ];
 
-    public function audios()
-    {
-        return $this->apiElements();
-    }
-
-    public function object()
+    public function object(): BelongsTo
     {
         return $this->belongsToApi(Api\Artwork::class, 'artwork_id');
     }
 
-    public function tours()
+    public function selector(): MorphOne
+    {
+        return $this->morphOne(Selector::class, 'selectable');
+    }
+
+    public function tours(): BelongsToMany
     {
         return $this->belongsToMany(Tour::class, 'tour_stops');
     }

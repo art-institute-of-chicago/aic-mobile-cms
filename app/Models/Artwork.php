@@ -8,6 +8,7 @@ use A17\Twill\Models\Behaviors\HasTranslation;
 use App\Models\Behaviors\HasApiModel;
 use App\Models\Behaviors\HasApiRelations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class Artwork extends AbstractModel
@@ -42,7 +43,7 @@ class Artwork extends AbstractModel
     protected $appends = [
         'latlng',
         'image_url',
-        'gallery_location',
+        // 'gallery_location',
     ];
 
     /**
@@ -58,7 +59,7 @@ class Artwork extends AbstractModel
      */
     public function getGalleryLocationAttribute(): ?string
     {
-        return $this->gallery()?->title;
+        return $this->gallery?->title;
     }
 
     /**
@@ -72,7 +73,7 @@ class Artwork extends AbstractModel
         ]);
     }
 
-    public function gallery()
+    public function gallery(): BelongsTo
     {
         return $this->belongsToApi(\App\Models\Api\Gallery::class, 'gallery_id');
     }
