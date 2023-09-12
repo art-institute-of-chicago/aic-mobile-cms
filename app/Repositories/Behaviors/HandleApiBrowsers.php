@@ -240,13 +240,13 @@ trait HandleApiBrowsers
                     'name' => $relatedElement->titleInBrowser ?? $relatedElement->$titleKey,
                     'endpointType' => $relatedElement->getMorphClass(),
             ] + $this->getDataEditAndThumbnailAttribute($relatedElement, null, $relation, null) : [];
-
         })->reject(function ($item) {
             return empty($item);
         })->values()->toArray();
     }
 
-    private function getDataEditAndThumbnailAttribute($relatedElement, $routePrefix, $relation, $moduleName) {
+    private function getDataEditAndThumbnailAttribute($relatedElement, $routePrefix, $relation, $moduleName)
+    {
         $data = [];
 
         // If it contains an augmented model create an edit link
@@ -259,7 +259,8 @@ trait HandleApiBrowsers
         } else {
             // WEB-1187: This is reached after page refresh, if the model hasn't been augmented
             $data['edit'] = moduleRoute(
-                $moduleName ?? $relation, $routePrefix ?? '',
+                $moduleName ?? $relation,
+                $routePrefix ?? '',
                 UrlHelpers::moduleRouteExists($moduleName ?? $relation, $routePrefix ?? '', 'augment') ? 'augment' : 'edit',
                 [$relatedElement->id]
             );
