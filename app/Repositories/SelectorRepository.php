@@ -11,7 +11,6 @@ use Illuminate\Support\Str;
 class SelectorRepository extends ModuleRepository
 {
     use Behaviors\HandleApiBrowsers;
-    use Behaviors\HandleApiRelations;
 
     public function __construct(Selector $selector)
     {
