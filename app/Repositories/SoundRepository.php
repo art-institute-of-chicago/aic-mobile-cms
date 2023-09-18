@@ -10,8 +10,6 @@ use App\Repositories\Api\BaseApiRepository;
 
 class SoundRepository extends BaseApiRepository
 {
-    private $selectorNumber;
-
     public function __construct(Sound $sound)
     {
         $this->model = $sound;
