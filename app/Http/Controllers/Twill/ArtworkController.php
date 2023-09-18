@@ -52,7 +52,7 @@ class ArtworkController extends BaseApiController
                 ->field('is_on_view'))
             ->add(
                 ApiRelation::make()
-                    ->field('gallery_id')
+                    ->field('title')
                     ->title('Gallery')
                     ->relation('gallery')
             )
@@ -180,8 +180,8 @@ class ArtworkController extends BaseApiController
                         BladePartial::make()
                             ->view('admin.fields.action')
                             ->withAdditionalParams([
-                                'action' => 'Create Stop for Object',
-                                'href' => route('twill.stops.store-with-artwork', parameters: [
+                                'action' => 'Create Stop with Object',
+                                'href' => route('twill.stops.create-with-artwork', parameters: [
                                     'artwork_id' => $artwork->datahub_id,
                                 ]),
                             ])

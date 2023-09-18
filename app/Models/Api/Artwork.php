@@ -2,6 +2,7 @@
 
 namespace App\Models\Api;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Libraries\Api\Models\BaseApiModel;
 
 class Artwork extends BaseApiModel
