@@ -58,13 +58,16 @@ class GalleryController extends BaseApiController
     protected function additionalBrowserTableColumns(): TableColumns
     {
         return parent::additionalBrowserTableColumns()
-            ->add(Text::make()
+            ->add(
+                Text::make()
                 ->field('floor')
             )
-            ->add(Text::make()
+            ->add(
+                Text::make()
                 ->field('number')
             )
-            ->add(Text::make()
+            ->add(
+                Text::make()
                 ->field('is_closed')
                 ->title('Is Open')
                 ->customRender(function (Gallery $gallery) {

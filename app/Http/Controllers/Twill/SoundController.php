@@ -71,17 +71,6 @@ class SoundController extends BaseApiController
             );
     }
 
-    /**
-     * Only sounds not already associated with selectors should be available in
-     * browsers.
-     */
-    protected function getBrowserItems(array $scopes = [])
-    {
-        return parent::getBrowserItems($scopes)
-            ->reject(fn ($sound) => $sound->selector)
-            ->sortBy('title');
-    }
-
     protected function additionalFormFields($sound, $apiSound): Form
     {
         return Form::make()
@@ -170,7 +159,6 @@ class SoundController extends BaseApiController
                         ]),
                     ]),
             ];
-
         }
         return [];
     }
