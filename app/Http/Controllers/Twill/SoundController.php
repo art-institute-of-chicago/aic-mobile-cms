@@ -146,7 +146,7 @@ class SoundController extends BaseApiController
                     ->view('admin.fields.action')
                     ->withAdditionalParams([
                         'action' => 'Create Stop with Audio',
-                        'href' => route('twill.stops.create-with-audio', parameters: [
+                        'href' => route('twill.stops.create-with-sound', parameters: [
                             'sound_id' => $sound->id,
                         ]),
                     ]),
@@ -154,7 +154,7 @@ class SoundController extends BaseApiController
                     ->view('admin.fields.action')
                     ->withAdditionalParams([
                         'action' => 'Create Tour with Intro Audio',
-                        'href' => route('twill.tours.create-with-audio', parameters: [
+                        'href' => route('twill.tours.create-with-sound', parameters: [
                             'sound_id' => $sound->id,
                         ]),
                     ]),

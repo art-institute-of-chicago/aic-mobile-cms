@@ -128,7 +128,7 @@ class TourController extends BaseController
             );
     }
 
-    public function creatWithAudio()
+    public function creatWithSoun
     {
         $audio = Sound::find(request('sound_id'));
         $tour = Tour::create();

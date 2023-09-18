@@ -20,10 +20,10 @@ Route::get('sounds/augment/{datahub_id}', [SoundController::class, 'augment'])->
 TwillRoutes::module('sounds');
 
 Route::get('stops/create-with-artwork', [StopController::class, 'createWithArtwork'])->name('stops.create-with-artwork');
-Route::get('stops/create-with-audio', [StopController::class, 'createWithAudio'])->name('stops.create-with-audio');
+Route::get('stops/create-with-sound', [StopController::class, 'createWithSound'])->name('stops.create-with-sound');
 TwillRoutes::module('stops');
 
-Route::get('tours/create-with-audio', [TourController::class, 'createWithAudio'])->name('tours.create-with-audio');
+Route::get('tours/create-with-sound', [TourController::class, 'createWithSound'])->name('tours.create-with-sound');
 TwillRoutes::module('tours');
 
 TwillRoutes::module('selectors');
