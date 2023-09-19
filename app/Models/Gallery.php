@@ -3,9 +3,7 @@
 namespace App\Models;
 
 use App\Models\Behaviors\HasApiModel;
-use App\Models\Behaviors\HasMedias;
 use App\Models\Behaviors\Transformable;
-use App\Helpers\StringHelpers;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 
@@ -13,7 +11,6 @@ class Gallery extends AbstractModel
 {
     use HasApiModel;
     use HasFactory;
-    use HasMedias;
     use Transformable;
 
     protected $apiModelClass = \App\Models\Api\Gallery::class;
@@ -40,22 +37,6 @@ class Gallery extends AbstractModel
     public $slugAttributes = [
         'title',
     ];
-
-    public $mediasParams = [
-        'hero' => [
-            'default' => [
-                [
-                    'name' => 'default',
-                    'ratio' => 16 / 9,
-                ],
-            ],
-        ],
-    ];
-
-    public function getSlugAttribute()
-    {
-        return ['en' => StringHelpers::getUtf8Slug($this->title)];
-    }
 
     /**
      * A custom attribute that returns JSON, used for the Map field on the form.

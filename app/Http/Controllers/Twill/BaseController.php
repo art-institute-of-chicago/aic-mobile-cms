@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Twill;
 
 use A17\Twill\Http\Controllers\Admin\ModuleController;
+use A17\Twill\Models\Behaviors\HasTranslation;
 use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Fieldset;
@@ -25,6 +26,7 @@ class BaseController extends ModuleController
         $columns->push(
             Text::make()
                 ->field('updated_at')
+                ->sortable()
                 ->optional()
                 ->hide()
         );
@@ -34,9 +36,9 @@ class BaseController extends ModuleController
     public function getForm(TwillModelContract $model): Form
     {
         $title = Input::make()
-            ->name('title')
+            ->name($this->titleColumnKey)
             ->required();
-        if (in_array(\A17\Twill\Models\Behaviors\HasTranslation::class, class_uses_recursive($model::class))) {
+        if ($this->isTranslatable($model)) {
             $title->translatable();
         }
         $content = Form::make()
@@ -82,5 +84,10 @@ class BaseController extends ModuleController
                             ->note('readonly'),
                     ])
             );
+    }
+
+    private function isTranslatable(TwillModelContract $class): bool
+    {
+        return in_array(HasTranslation::class, class_uses_recursive($class));
     }
 }

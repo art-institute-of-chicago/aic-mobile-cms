@@ -2,34 +2,40 @@
 
 namespace App\Http\Controllers\Twill;
 
+use A17\Twill\Services\Forms\Fields\Browser;
 use A17\Twill\Services\Forms\Fields\Input;
-use A17\Twill\Services\Forms\Fields\Medias;
-use A17\Twill\Services\Forms\Fields\Select;
 use A17\Twill\Services\Forms\Form;
-use A17\Twill\Services\Forms\Option;
-use A17\Twill\Services\Forms\Options;
-use A17\Twill\Services\Listings\Columns\NestedData;
+use A17\Twill\Services\Listings\Columns\Relation;
 use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\TableColumns;
 use App\Http\Controllers\Twill\Columns\ApiRelation;
-use Illuminate\Support\Str;
+use App\Http\Controllers\Twill\Columns\RelationCount;
+use App\Models\Selector;
+use App\Models\Sound;
+use App\Models\Tour;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
 
 class TourController extends BaseController
 {
-    protected $moduleName = 'tours';
-
-    private $galleries = [];
-
     protected function setUpController(): void
     {
         parent::setUpController();
         $this->enableReorder();
         $this->setModelName('Tour');
+        $this->setModuleName('tours');
     }
 
     protected function additionalIndexTableColumns(): TableColumns
     {
         return parent::additionalIndexTableColumns()
+            ->add(
+                Relation::make()
+                    ->field('number')
+                    ->title('Selector Number')
+                    ->relation('selector')
+            )
             ->add(
                 Text::make()
                     ->field('description')
@@ -41,37 +47,36 @@ class TourController extends BaseController
                     ->field('gallery_id')
                     ->title('Gallery')
                     ->relation('gallery')
-            )
-            ->add(
-                Text::make()
-                    ->field('selector_number')
-                    ->optional()
                     ->hide()
             )
             ->add(
-                ApiRelation::make()
-                    ->field('Sound_id')
-                    ->title('Audio')
-                    ->relation('audio')
+                RelationCount::make()
+                    ->field('stops')
+                    ->relation('stops')
                     ->optional()
-                    ->hide()
             )
             ->add(
                 Text::make()
                     ->field('duration_in_minutes')
                     ->title('Duration')
                     ->optional()
-            )
-            ->add(
-                NestedData::make()
-                    ->field('stops')
-                    ->title('Stops')
             );
     }
 
-    public function additionalFormFields($model): Form
+    protected function additionalBrowserTableColumns(): TableColumns
     {
-        return parent::additionalFormFields($model)
+        return parent::additionalBrowserTableColumns()
+            ->add(
+                Relation::make()
+                    ->field('number')
+                    ->title('Selector Number')
+                    ->relation('selector')
+            );
+    }
+
+    public function additionalFormFields($tour): Form
+    {
+        return parent::additionalFormFields($tour)
             ->add(
                 Input::make()
                     ->name('image_url')
@@ -87,47 +92,23 @@ class TourController extends BaseController
                     ->translatable()
             )
             ->add(
-                Select::make()
-                    ->name('gallery_id')
+                Browser::make()
+                    ->name('selectors')
+                    ->label('Selector')
+                    ->modules([Selector::class])
+                    ->modulesCustom([
+                        [
+                            'name' => 'selectors',
+                            'params' => ['selector_id' => $tour->selector?->id],
+                            'routePrefix' => null,
+                        ]
+                    ])
+            )
+            ->add(
+                Browser::make()
+                    ->name('gallery')
+                    ->modules(['gallery'])
                     ->label('Gallery')
-                    ->placeholder('Select Gallery')
-                    ->options(
-                        Options::make(
-                            [Option::make('', 'Unset Gallery')] +
-                            $this->galleryOptions()
-                        )
-                    )
-            )
-            ->add(
-                Input::make()
-                    ->name('gallery_id')
-            )
-            ->add(
-                Input::make()
-                    ->name('selector_number')
-                    ->type('number')
-                    ->required()
-            )
-            // ->add(
-            //     Select::make()
-            //         ->name('sound_id')
-            //         ->label('Audio')
-            //         ->translatable()
-            //         ->placeholder('Select Audio')
-            //         ->note('100 most recent')
-            //         ->options(
-            //             Options::make(
-            //                 $this->audioOptions()
-            //             )
-            //         ),
-            // )
-            ->add(
-                Input::make()
-                    ->name('sound_id')
-                    ->label('Audio Id')
-                    ->translatable()
-                    ->required()
-                    ->note('Datahub Sound Id')
             )
             ->add(
                 Input::make()
@@ -137,39 +118,22 @@ class TourController extends BaseController
                     ->default(1)
                     ->required()
                     ->note('in minutes')
+            )
+            ->add(
+                Browser::make()
+                    ->name('tour_stops')
+                    ->modules([\App\Models\Stop::class])
+                    ->note('Add stops to tour')
+                    ->sortable()
+                    ->max(99)
             );
     }
 
-    private function galleryOptions(): array
+    public function creatWithSound(): RedirectResponse
     {
-        $options = [];
-        if (!$this->galleries) {
-            $this->galleries = \App\Models\Api\Gallery::query()
-                ->orderBy('title')
-                ->limit(100)
-                ->get()
-                ->sortBy([
-                    ['floor', 'asc'],
-                    ['number', 'asc'],
-                    ['title', 'asc'],
-                ]);
-        }
-        foreach ($this->galleries as $gallery) {
-            $options[] = Option::make($gallery->id, $gallery);
-        }
-        return $options;
-    }
-
-    private function audioOptions(): array
-    {
-        $options = [];
-        $audios = \App\Models\Api\Sound::query()
-            ->limit(100)
-            ->get()
-            ->sortByDesc('source_updated_at');
-        foreach ($audios as $audio) {
-            $options[] = Option::make($audio->id, Str::words($audio->title, 5));
-        }
-        return $options;
+        $audio = Sound::find(request('sound_id'));
+        $tour = Tour::create();
+        $tour->selector()->save($audio->selector);
+        return Redirect::to(moduleRoute($this->moduleName, $this->routePrefix, 'edit', ['tour' => $tour->id]));
     }
 }

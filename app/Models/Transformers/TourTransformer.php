@@ -9,7 +9,7 @@ class TourTransformer extends TransformerAbstract
 {
     public function transform(TwillModelContract $tour)
     {
-        $gallery = $tour->gallery();
+        $gallery = $tour->gallery;
         return [
             'title' => $tour->title,
             'nid' => (string) $tour->id, // Legacy from Drupal

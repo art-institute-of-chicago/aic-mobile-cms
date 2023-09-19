@@ -2,23 +2,29 @@
 
 namespace App\Models\Behaviors;
 
-use App\Libraries\Api\Relations\ApiRelation;
+use App\Libraries\Api\Builders\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
  * TODO: Requires HasRelations. Shouldn't this just extend HasRelations, then?
  */
 trait HasApiRelations
 {
-    public function apiElements()
+    public function apiElements(): MorphToMany
     {
         return $this->morphToMany(\App\Models\ApiRelation::class, 'api_relatable')->withPivot(['position', 'relation'])->orderBy('position');
     }
 
-    public function belongsToApi($modelClass, $foreignKey = null)
+    public function belongsToApi($modelClass, $foreignKey = null): BelongsTo
     {
-        if ($id = $this->getAttribute($foreignKey)) {
-            return $modelClass::query()->find($id);
-        }
+        $callingFunction = debug_backtrace()[1]['function'];
+        return new BelongsTo(
+            $modelClass::query(),
+            $this,
+            foreignKey: $foreignKey,
+            ownerKey: $this->id,
+            relationName: $callingFunction,
+        );
     }
 
     public function apiModels($relation, $model, $ttl = null)

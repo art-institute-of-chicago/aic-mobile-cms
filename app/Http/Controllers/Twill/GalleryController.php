@@ -12,16 +12,14 @@ use App\Models\Api\Gallery;
 
 class GalleryController extends BaseApiController
 {
-    protected $moduleName = 'galleries';
-    protected $hasAugmentedModel = true;
-
     public function setUpController(): void
     {
         parent::setUpController();
-
-        $this->setSearchColumns(['title', 'floor', 'number']);
-
         $this->disableIncludeScheduledInList();
+        $this->enableAugmentedModel();
+        $this->setDisplayName('Gallery');
+        $this->setModuleName('galleries');
+        $this->setSearchColumns(['title', 'floor', 'number']);
     }
 
     protected function additionalIndexTableColumns(): TableColumns
@@ -57,6 +55,28 @@ class GalleryController extends BaseApiController
                 ->hide());
     }
 
+    protected function additionalBrowserTableColumns(): TableColumns
+    {
+        return parent::additionalBrowserTableColumns()
+            ->add(
+                Text::make()
+                ->field('floor')
+            )
+            ->add(
+                Text::make()
+                ->field('number')
+            )
+            ->add(
+                Text::make()
+                ->field('is_closed')
+                ->title('Is Open')
+                ->customRender(function (Gallery $gallery) {
+                    // It's more comprehensible to have "closed" be a big red X
+                    return $gallery->is_closed ? "❌" : "✅";
+                })
+            );
+    }
+
     public function additionalFormFields($gallery, $apiGallery): Form
     {
         return Form::make([
@@ -65,7 +85,7 @@ class GalleryController extends BaseApiController
                 ->placeholder($apiGallery->floor),
             Input::make()
                 ->name('number')
-                ->placeholder($apiGallery->number),
+                ->placeholder($apiGallery?->number ?? ''),
             Checkbox::make()
                 ->name('is_closed'),
             Map::make()
