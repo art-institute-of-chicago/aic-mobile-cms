@@ -13,6 +13,7 @@ use App\Http\Controllers\Twill\Columns\RelationCount;
 use App\Models\Selector;
 use App\Models\Sound;
 use App\Models\Tour;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
 
@@ -128,7 +129,7 @@ class TourController extends BaseController
             );
     }
 
-    public function creatWithSoun
+    public function creatWithSound(): RedirectResponse
     {
         $audio = Sound::find(request('sound_id'));
         $tour = Tour::create();
