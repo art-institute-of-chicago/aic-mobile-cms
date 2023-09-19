@@ -58,8 +58,7 @@ trait HandleApiBrowsers
                     $browser['relation'],
                     $browser['positionAttribute']
                 );
-            }
-            else {
+            } else {
                 $this->updateApiBrowser(
                     $object,
                     $fields,
@@ -226,8 +225,7 @@ trait HandleApiBrowsers
             $browserData = $related->map(function ($relatedElement) use ($relation, $titleKey, $moduleName) {
                 return $this->buildBrowserData($relation, $relatedElement, $titleKey, $moduleName);
             });
-        }
-        else {
+        } else {
             // Get all datahub_id's
             $ids = $related->pluck('datahub_id')->toArray();
             // Use those to load API records
@@ -510,5 +508,4 @@ trait HandleApiBrowsers
             return $browserItem['position'];
         })->values()->toArray();
     }
-
 }
