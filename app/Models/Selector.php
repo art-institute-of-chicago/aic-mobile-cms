@@ -46,7 +46,7 @@ class Selector extends Model
     public function locales(): Attribute
     {
         return Attribute::make(
-            get: fn (): string => $this->apiModels('audios', 'Sound')->pluck('locale')->join(', '),
+            get: fn (): string => $this->apiModels('audios', 'Audio')->pluck('locale')->join(', '),
         );
     }
 

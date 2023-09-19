@@ -8,11 +8,10 @@ use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Relation;
 use A17\Twill\Services\Listings\TableColumns;
 use App\Http\Controllers\Twill\Columns\ApiRelation;
+use App\Models\Audio;
 use App\Models\Selector;
-use App\Models\Sound;
 use App\Models\Stop;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Session;
 
 class StopController extends BaseController
 {
@@ -108,7 +107,7 @@ class StopController extends BaseController
 
     public function createWithSound()
     {
-        $audio = Sound::find(request('sound_id'));
+        $audio = Audio::find(request('sound_id'));
         $stop = Stop::create();
         $stop->selector()->save($audio->selector);
         return Redirect::to(moduleRoute($this->moduleName, $this->routePrefix, 'edit', ['stop' => $stop->id]));

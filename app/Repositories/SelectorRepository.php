@@ -2,8 +2,9 @@
 
 namespace App\Repositories;
 
+use A17\Twill\Repositories\ModuleRepository;
+use App\Models\Api\Audio;
 use App\Models\Selector;
-use App\Models\Api\Sound;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
@@ -41,6 +42,12 @@ class SelectorRepository extends ModuleRepository
     public function getFormFields($selector): array
     {
         $fields = parent::getFormFields($selector);
+        $fields['browsers']['audios'] = $this->getFormFieldsForBrowserApi(
+            $selector,
+            relation: 'audios',
+            apiModel: Audio::class,
+            moduleName: 'audios',
+        );
         $fields['browsers']['selectables'] = $this->getFormFieldsForSelectable($selector);
         return $fields;
     }

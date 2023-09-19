@@ -13,18 +13,16 @@ use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\TableColumns;
 use App\Http\Controllers\Twill\Columns\ApiRelation;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 
-class SoundController extends BaseApiController
+class AudioController extends BaseApiController
 {
     protected function setUpController(): void
     {
         parent::setUpController();
         $this->enableAugmentedModel();
         $this->setDisplayName('Audio');
-        $this->setModuleName('sounds');
+        $this->setModuleName('audios');
         $this->setSearchColumns(['title']);
     }
 
@@ -41,8 +39,8 @@ class SoundController extends BaseApiController
                 Text::make()
                     ->field('content')
                     ->title('Audio')
-                    ->customRender(function ($sound) {
-                        return view('admin.audio-controls', ['src' => $sound->content])->render();
+                    ->customRender(function ($audio) {
+                        return view('admin.audio-controls', ['src' => $audio->content])->render();
                     })
                     ->optional()
             )
@@ -71,7 +69,7 @@ class SoundController extends BaseApiController
             );
     }
 
-    protected function additionalFormFields($sound, $apiSound): Form
+    protected function additionalFormFields($audio, $apiSound): Form
     {
         return Form::make()
             ->add(
@@ -101,9 +99,9 @@ class SoundController extends BaseApiController
             );
     }
 
-    public function getSideFieldSets($sound): Form
+    public function getSideFieldSets($audio): Form
     {
-        return parent::getSideFieldSets($sound)
+        return parent::getSideFieldSets($audio)
             ->addFieldset(
                 Fieldset::make()
                     ->id('audio_player')
@@ -111,14 +109,14 @@ class SoundController extends BaseApiController
                     ->fields([
                         BladePartial::make()
                             ->view('admin.fields.audio')
-                            ->withAdditionalParams(['src' => $sound->getApiModel()->content]),
+                            ->withAdditionalParams(['src' => $audio->getApiModel()->content]),
                     ])
             )
             ->addFieldset(
                 Fieldset::make()
                     ->id('audio_actions')
                     ->title('Actions')
-                    ->fields($this->actions($sound))
+                    ->fields($this->actions($audio))
             );
     }
 
@@ -138,16 +136,16 @@ class SoundController extends BaseApiController
         return $response;
     }
 
-    protected function actions($sound): array
+    protected function actions($audio): array
     {
-        if ($sound->selector && !$sound->selector->selectable) {
+        if ($audio->selector && !$audio->selector->selectable) {
             return [
                 BladePartial::make()
                     ->view('admin.fields.action')
                     ->withAdditionalParams([
                         'action' => 'Create Stop with Audio',
                         'href' => route('twill.stops.createWithAudio', parameters: [
-                            'sound_id' => $sound->id,
+                            'sound_id' => $audio->id,
                         ]),
                     ]),
                 BladePartial::make()
@@ -155,7 +153,7 @@ class SoundController extends BaseApiController
                     ->withAdditionalParams([
                         'action' => 'Create Tour with Intro Audio',
                         'href' => route('twill.tours.createWithAudio', parameters: [
-                            'sound_id' => $sound->id,
+                            'sound_id' => $audio->id,
                         ]),
                     ]),
             ];

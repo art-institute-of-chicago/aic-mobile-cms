@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class Sound extends AbstractModel
+class Audio extends AbstractModel
 {
     use HasApiModel;
     use HasFactory;
 
-    protected $apiModelClass = \App\Models\Api\Sound::class;
+    protected $apiModelClass = \App\Models\Api\Audio::class;
+
+    protected $table = 'audios';
 
     protected $fillable = [
         'datahub_id',

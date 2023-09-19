@@ -40,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
         TwillNavigation::addLink(
-            NavigationLink::make()->title('Audio')->forModule('sounds')
+            NavigationLink::make()->forModule('audios')
         );
         TwillNavigation::addLink(
             NavigationLink::make()->forModule('galleries')
@@ -65,7 +65,7 @@ class AppServiceProvider extends ServiceProvider
             NavigationLink::make()->forModule('tours')
         );
         Relation::morphMap([
-            'audio' => Models\Sound::class,
+            'audio' => Models\Audio::class,
             'collectionObject' => Models\CollectionObject::class,
             'gallery' => Models\Gallery::class,
             'loanobject' => Models\LoanObject::class,

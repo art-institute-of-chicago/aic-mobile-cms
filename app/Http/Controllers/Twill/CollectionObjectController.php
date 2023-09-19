@@ -16,7 +16,6 @@ use A17\Twill\Services\Listings\Filters\QuickFilters;
 use A17\Twill\Services\Listings\TableColumns;
 use App\Http\Controllers\Twill\Columns\ApiRelation;
 use App\Models\Api\CollectionObject;
-use App\Models\Sound;
 use Illuminate\Contracts\Database\Query\Builder;
 
 class CollectionObjectController extends BaseApiController

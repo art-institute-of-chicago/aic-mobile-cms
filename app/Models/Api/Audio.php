@@ -4,7 +4,7 @@ namespace App\Models\Api;
 
 use App\Libraries\Api\Models\BaseApiModel;
 
-class Sound extends BaseApiModel
+class Audio extends BaseApiModel
 {
     protected array $endpoints = [
         'collection' => '/api/v1/sounds',
@@ -12,7 +12,7 @@ class Sound extends BaseApiModel
         'search' => '/api/v1/sounds/search',
     ];
 
-    protected $augmentedModelClass = \App\Models\Sound::class;
+    protected $augmentedModelClass = \App\Models\Audio::class;
 
     public function getTypeAttribute()
     {

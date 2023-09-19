@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Sound;
+use App\Models\Audio;
 use App\Repositories\Serializers\AudioSerializer;
 use Tests\TestCase;
 
@@ -11,7 +11,7 @@ class AudioSerializerTest extends TestCase
     public function test_serialize(): void
     {
         $serializer = new AudioSerializer();
-        $audios = Sound::factory()->count(3)->make();
+        $audios = Audio::factory()->count(3)->make();
         $serialized = $serializer->serialize($audios);
 
         $this->assertArrayHasKey('audio_files', $serialized);

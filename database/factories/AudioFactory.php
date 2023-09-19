@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class SoundFactory extends Factory
+class AudioFactory extends Factory
 {
     public function definition(): array
     {
