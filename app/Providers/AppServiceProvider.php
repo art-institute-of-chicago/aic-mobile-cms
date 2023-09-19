@@ -46,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
             NavigationLink::make()->forModule('galleries')
         );
         TwillNavigation::addLink(
-            NavigationLink::make()->title('Objects')->forModule('artworks')
+            NavigationLink::make()->title('Objects')->forModule('collectionObjects')
         );
         TwillNavigation::addLink(
             NavigationLink::make()->forModule('selectors')
@@ -60,7 +60,7 @@ class AppServiceProvider extends ServiceProvider
         Relation::morphMap([
             'audio' => Models\Sound::class,
             'gallery' => Models\Gallery::class,
-            'object' => Models\Artwork::class,
+            'collectionObject' => Models\CollectionObject::class,
             'selector' => Models\Selector::class,
             'stop' => Models\Stop::class,
             'tour' => Models\Tour::class,

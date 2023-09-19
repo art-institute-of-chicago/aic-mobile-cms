@@ -82,7 +82,7 @@ class StopController extends BaseController
                     ->label('Object')
                     ->modulesCustom([
                         [
-                            'name' => 'artworks',
+                            'name' => 'collectionObjects',
                             'label' => 'Objects',
                             'params' => ['artwork_id' => $stop->artwork_id],
                             'routePrefix' => null,
@@ -100,7 +100,7 @@ class StopController extends BaseController
             );
     }
 
-    public function createWithArtwork()
+    public function createWithCollectionObject()
     {
         $stop = Stop::create(['artwork_id' => $this->request->query('artwork_id')]);
         return Redirect::to(moduleRoute($this->moduleName, $this->routePrefix, 'edit', ['stop' => $stop->id]));

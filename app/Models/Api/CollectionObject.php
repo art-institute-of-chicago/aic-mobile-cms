@@ -2,10 +2,9 @@
 
 namespace App\Models\Api;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Libraries\Api\Models\BaseApiModel;
 
-class Artwork extends BaseApiModel
+class CollectionObject extends BaseApiModel
 {
     protected array $endpoints = [
         'collection' => '/api/v1/artworks',
@@ -13,7 +12,7 @@ class Artwork extends BaseApiModel
         'search' => '/api/v1/artworks/search',
     ];
 
-    protected $augmentedModelClass = \App\Models\Artwork::class;
+    protected $augmentedModelClass = \App\Models\CollectionObject::class;
 
     public function getTypeAttribute()
     {

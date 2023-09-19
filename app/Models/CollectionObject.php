@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
-class Artwork extends AbstractModel
+class CollectionObject extends AbstractModel
 {
     use HasApiModel;
     use HasApiRelations;
@@ -20,7 +20,7 @@ class Artwork extends AbstractModel
     use HasMedias;
     use HasTranslation;
 
-    protected $apiModelClass = \App\Models\Api\Artwork::class;
+    protected $apiModelClass = \App\Models\Api\CollectionObject::class;
 
     protected $fillable = [
         'datahub_id',

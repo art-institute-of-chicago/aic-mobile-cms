@@ -10,7 +10,6 @@ use App\Models\Behaviors\HasApiRelations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Stop extends Model
@@ -40,7 +39,7 @@ class Stop extends Model
 
     public function object(): BelongsTo
     {
-        return $this->belongsToApi(Api\Artwork::class, 'artwork_id');
+        return $this->belongsToApi(Api\CollectionObject::class, 'artwork_id');
     }
 
     public function selector(): MorphOne
