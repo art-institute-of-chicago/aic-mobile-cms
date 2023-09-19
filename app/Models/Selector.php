@@ -35,7 +35,7 @@ class Selector extends Model
 
     public function audios(): MorphToMany
     {
-        return $this->apiElements();
+        return $this->apiElements()->where('relation', 'audios');
     }
 
     public function selectable(): MorphTo
