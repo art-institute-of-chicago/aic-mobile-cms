@@ -54,7 +54,7 @@ class StopRepository extends ModuleRepository
 
     protected function updateObjectBrowser($stop, $fields): void
     {
-        if (isset($fields['browsers']['objects'])) {
+        if (isset($fields['browsers']['objects']) && !empty($fields['browsers']['objects'])) {
             $stop->artwork_id = collect($fields['browsers']['objects'])->first()['id'];
         } else {
             $stop->artwork_id = null;
