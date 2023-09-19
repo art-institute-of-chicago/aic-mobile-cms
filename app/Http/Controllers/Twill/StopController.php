@@ -100,7 +100,7 @@ class StopController extends BaseController
             );
     }
 
-    public function createWithCollectionObject()
+    public function createWithObject()
     {
         $stop = Stop::create(['artwork_id' => $this->request->query('artwork_id')]);
         return Redirect::to(moduleRoute($this->moduleName, $this->routePrefix, 'edit', ['stop' => $stop->id]));

@@ -28,7 +28,7 @@ class CollectionObjectController extends BaseApiController
         parent::setUpController();
         $this->eagerLoadListingRelations(['gallery']);
         $this->enableAugmentedModel();
-        $this->setDisplayName('Object');
+        $this->setDisplayName('Collection Object');
         $this->setModuleName('collectionObjects');
         $this->setSearchColumns(['title', 'artist_display', 'datahub_id', 'main_reference_number']);
     }

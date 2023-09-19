@@ -17,6 +17,8 @@ TwillRoutes::module('collectionObjects');
 Route::get('galleries/augment/{datahub_id}', [GalleryController::class, 'augment'])->name('galleries.augment');
 TwillRoutes::module('galleries');
 
+TwillRoutes::module('loanObjects');
+
 TwillRoutes::module('selectors');
 
 Route::get('sounds/augment/{datahub_id}', [SoundController::class, 'augment'])->name('sounds.augment');
@@ -28,5 +30,3 @@ TwillRoutes::module('stops');
 
 Route::get('tours/createWithAudio', [TourController::class, 'createWithAudio'])->name('tours.createWithAudio');
 TwillRoutes::module('tours');
-
-TwillRoutes::module('selectors');
