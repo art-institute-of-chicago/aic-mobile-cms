@@ -4,9 +4,12 @@ namespace App\Models;
 
 use A17\Twill\Models\Behaviors\HasMedias;
 use A17\Twill\Models\Model;
+use App\Models\Behaviors\HasApiRelations;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LoanObject extends Model
 {
+    use HasApiRelations;
     use HasMedias;
 
     protected $fillable = [
@@ -20,4 +23,9 @@ class LoanObject extends Model
         'main_reference_number',
         'title',
     ];
+
+    public function gallery(): BelongsTo
+    {
+        return $this->belongsToApi(\App\Models\Api\Gallery::class, 'gallery_id');
+    }
 }
