@@ -19,5 +19,4 @@ class LoanObjectRepository extends ModuleRepository
     {
         $this->model = $loan;
     }
-
 }
