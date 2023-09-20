@@ -9,26 +9,15 @@ class LoanObjectRepository extends ModuleRepository
 {
     // use HandleMedias;
 
+    protected $apiBrowsers = [
+        'gallery' => [
+            'moduleName' => 'galleries',
+        ]
+    ];
+
     public function __construct(LoanObject $loan)
     {
         $this->model = $loan;
     }
 
-    public function getFormFields($object): array
-    {
-        $fields = parent::getFormFields($object);
-        $fields['browsers']['gallery'] = $this->getFormFieldsForBrowserApi(
-            $object,
-            relation: 'gallery',
-            apiModel: \App\Models\Api\Gallery::class,
-            moduleName: 'galleries',
-        );
-        return $fields;
-    }
-
-    public function afterSave($object, array $fields): void
-    {
-        $this->updateBrowserApiRelated($object, $fields, 'gallery');
-        parent::afterSave($object, $fields);
-    }
 }
