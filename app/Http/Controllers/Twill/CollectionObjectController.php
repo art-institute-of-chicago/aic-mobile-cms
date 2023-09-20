@@ -103,7 +103,7 @@ class CollectionObjectController extends BaseApiController
     {
         if (array_key_exists('selector_id', $scopes)) {
             $selector = \App\Models\Selector::find($scopes['selector_id']);
-            $soundIds = $selector->audios->pluck('datahub_id');
+            $soundIds = $selector->audio->pluck('datahub_id');
             $results = CollectionObject::query()->bySoundIds($soundIds)->get();
             if ($results->isNotEmpty()) {
                 return $results;

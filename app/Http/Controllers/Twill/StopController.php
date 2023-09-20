@@ -71,7 +71,6 @@ class StopController extends BaseController
                         [
                             'name' => 'selectors',
                             'params' => ['selector_id' => $stop->selector?->id],
-                            'routePrefix' => null,
                         ]
                     ])
             )
@@ -81,11 +80,14 @@ class StopController extends BaseController
                     ->label('Object')
                     ->modulesCustom([
                         [
+                            'name' => 'loanObjects',
+                            'label' => 'Loan Objects',
+                        ],
+                        [
                             'name' => 'collectionObjects',
-                            'label' => 'Objects',
+                            'label' => 'Collection Objects',
                             'params' => ['artwork_id' => $stop->artwork_id],
-                            'routePrefix' => null,
-                        ]
+                        ],
                     ])
             )
             ->add(

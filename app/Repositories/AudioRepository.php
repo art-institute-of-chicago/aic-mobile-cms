@@ -32,7 +32,7 @@ class AudioRepository extends BaseApiRepository
                 $audio->apiRelation?->morph()->delete();
                 // We don't care about `position` for the selector / audio
                 // relationship, so give it an arbitrary one.
-                $selector->audios()->attach($apiRelation, ['relation' => 'audios', 'position' => 0]);
+                $selector->audio()->attach($apiRelation, ['relation' => 'audio', 'position' => 0]);
             }
         } else {
             $audio->apiRelation?->morph()->delete();

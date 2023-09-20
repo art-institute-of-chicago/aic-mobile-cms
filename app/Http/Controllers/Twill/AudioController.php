@@ -22,7 +22,7 @@ class AudioController extends BaseApiController
         parent::setUpController();
         $this->enableAugmentedModel();
         $this->setDisplayName('Audio');
-        $this->setModuleName('audios');
+        $this->setModuleName('audio');
         $this->setSearchColumns(['title']);
     }
 

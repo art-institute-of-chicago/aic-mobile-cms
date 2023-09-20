@@ -57,7 +57,7 @@ class SelectorController extends BaseController
         return parent::additionalFormFields($selector)
             ->add(
                 Browser::make()
-                    ->name('audios')
+                    ->name('audio')
                     ->modules([\App\Models\Api\Audio::class])
                     ->max(count(getLocales()))
                     ->sortable(false)

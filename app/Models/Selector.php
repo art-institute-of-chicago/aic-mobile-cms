@@ -33,9 +33,9 @@ class Selector extends Model
         return $this->morphMany(ApiRelatable::class, 'api_relatable');
     }
 
-    public function audios(): MorphToMany
+    public function audio(): MorphToMany
     {
-        return $this->apiElements()->where('relation', 'audios');
+        return $this->apiElements()->where('relation', 'audio');
     }
 
     public function selectable(): MorphTo
@@ -46,7 +46,7 @@ class Selector extends Model
     public function locales(): Attribute
     {
         return Attribute::make(
-            get: fn (): string => $this->apiModels('audios', 'Audio')->pluck('locale')->join(', '),
+            get: fn (): string => $this->apiModels('audio', 'Audio')->pluck('locale')->join(', '),
         );
     }
 

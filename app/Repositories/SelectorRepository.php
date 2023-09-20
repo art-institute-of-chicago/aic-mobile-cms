@@ -11,8 +11,8 @@ use Illuminate\Support\Str;
 class SelectorRepository extends ModuleRepository
 {
     protected $apiBrowsers = [
-        'audios' => [
-            'moduleName' => 'sounds',
+        'audio' => [
+            'moduleName' => 'audio',
             'isApiRelation' => true,
         ]
     ];
@@ -42,12 +42,6 @@ class SelectorRepository extends ModuleRepository
     public function getFormFields($selector): array
     {
         $fields = parent::getFormFields($selector);
-        $fields['browsers']['audios'] = $this->getFormFieldsForBrowserApi(
-            $selector,
-            relation: 'audios',
-            apiModel: Audio::class,
-            moduleName: 'audios',
-        );
         $fields['browsers']['selectables'] = $this->getFormFieldsForSelectable($selector);
         return $fields;
     }
