@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Stop extends Model
 {
@@ -21,7 +22,8 @@ class Stop extends Model
     use HasTranslation;
 
     protected $fillable = [
-        'artwork_id',
+        'object_id',
+        'object_type',
         'publish_end_date',
         'publish_start_date',
         'published',
@@ -37,9 +39,13 @@ class Stop extends Model
         'title',
     ];
 
-    public function object(): BelongsTo
+    public function object(): BelongsTo|MorphTo
     {
-        return $this->belongsToApi(Api\CollectionObject::class, 'artwork_id');
+        if ($this->object_type === 'collectionObject') {
+            return $this->belongsToApi(Api\CollectionObject::class, 'object_id');
+        } else {
+            return $this->morphTo();
+        }
     }
 
     public function selector(): MorphOne

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Pluralizer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,7 +41,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
         TwillNavigation::addLink(
-            NavigationLink::make()->forModule('audios')
+            NavigationLink::make()->forModule('audio')
         );
         TwillNavigation::addLink(
             NavigationLink::make()->forModule('galleries')
@@ -68,7 +69,7 @@ class AppServiceProvider extends ServiceProvider
             'audio' => Models\Audio::class,
             'collectionObject' => Models\CollectionObject::class,
             'gallery' => Models\Gallery::class,
-            'loanobject' => Models\LoanObject::class,
+            'loanObject' => Models\LoanObject::class,
             'selector' => Models\Selector::class,
             'stop' => Models\Stop::class,
             'tour' => Models\Tour::class,

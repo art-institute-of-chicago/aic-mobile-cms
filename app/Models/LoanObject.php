@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use A17\Twill\Models\Behaviors\HasMedias;
-use A17\Twill\Models\Model;
 use App\Models\Behaviors\HasApiRelations;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
-class LoanObject extends Model
+class LoanObject extends AbstractModel
 {
     use HasApiRelations;
     use HasMedias;
@@ -27,5 +27,10 @@ class LoanObject extends Model
     public function gallery(): BelongsTo
     {
         return $this->belongsToApi(\App\Models\Api\Gallery::class, 'gallery_id');
+    }
+
+    public function stop(): MorphOne
+    {
+        return $this->morphOne(Stop::class, 'object');
     }
 }

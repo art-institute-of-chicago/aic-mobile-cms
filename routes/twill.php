@@ -21,8 +21,8 @@ TwillRoutes::module('loanObjects');
 
 TwillRoutes::module('selectors');
 
-Route::get('audios/augment/{datahub_id}', [AudioController::class, 'augment'])->name('audios.augment');
-TwillRoutes::module('audios');
+Route::get('audio/augment/{datahub_id}', [AudioController::class, 'augment'])->name('audio.augment');
+TwillRoutes::module('audio');
 
 Route::get('stops/createWithObject', [StopController::class, 'createWithObject'])->name('stops.createWithObject');
 Route::get('stops/createWithAudio', [StopController::class, 'createWithAudio'])->name('stops.createWithAudio');

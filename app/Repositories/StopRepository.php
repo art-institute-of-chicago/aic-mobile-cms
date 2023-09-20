@@ -8,6 +8,7 @@ use A17\Twill\Repositories\Behaviors\HandleTranslations;
 use A17\Twill\Repositories\ModuleRepository;
 use App\Models\Selector;
 use App\Models\Stop;
+use Illuminate\Support\Str;
 
 class StopRepository extends ModuleRepository
 {
@@ -40,12 +41,14 @@ class StopRepository extends ModuleRepository
     protected function getFormFieldsForObject($stop): array
     {
         if ($object = $stop->object) {
+            $type = $stop->object_type;
+            $action = $type === 'collectionObject' ? 'augment' : 'edit';
             return [
                 [
                     'id' => $object->id,
                     'name' => $object->title,
-                    'edit' => moduleRoute('collectionObjects', null, 'augment', $object->id),
-                    'endpointType' => 'Object',
+                    'edit' => moduleRoute(Str::plural($type), null, $action, $object->id),
+                    'endpointType' => $type,
                 ]
             ];
         }
@@ -55,9 +58,12 @@ class StopRepository extends ModuleRepository
     protected function updateObjectBrowser($stop, $fields): void
     {
         if (isset($fields['browsers']['objects']) && !empty($fields['browsers']['objects'])) {
-            $stop->artwork_id = collect($fields['browsers']['objects'])->first()['id'];
+            $object = collect($fields['browsers']['objects'])->first();
+            $stop->object_id = $object['id'];
+            $stop->object_type = $object['endpointType'];
         } else {
-            $stop->artwork_id = null;
+            $stop->object_id = null;
+            $stop->object_type = null;
         }
         $stop->save();
     }
