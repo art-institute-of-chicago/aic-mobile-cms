@@ -1,6 +1,6 @@
 <?php
 
-use App\Repositories\Api\ArtworkRepository;
+use App\Repositories\Api\CollectionObjectRepository;
 use App\Repositories\Api\GalleryRepository;
 use App\Repositories\Api\SoundRepository;
 use App\Repositories\Serializers\AudioSerializer;
@@ -41,7 +41,7 @@ Route::get('/galleries', function () {
 });
 
 Route::get('/objects', function () {
-    $repository = App::make(ArtworkRepository::class);
+    $repository = App::make(CollectionObjectRepository::class);
     $objects = $repository->getBaseModel()->newQuery()->get();
     $serializer = new ObjectSerializer();
     return $serializer->serialize($objects);

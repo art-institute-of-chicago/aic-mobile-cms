@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Artwork;
+use App\Models\CollectionObject;
 use App\Repositories\Serializers\ObjectSerializer;
 use Tests\TestCase;
 
@@ -11,7 +11,7 @@ class ObjectSerializerTest extends TestCase
     public function test_serialize(): void
     {
         $serializer = new ObjectSerializer();
-        $objects = Artwork::factory()->count(3)->make();
+        $objects = CollectionObject::factory()->count(3)->make();
         $serialized = $serializer->serialize($objects);
 
         $this->assertArrayHasKey('objects', $serialized);

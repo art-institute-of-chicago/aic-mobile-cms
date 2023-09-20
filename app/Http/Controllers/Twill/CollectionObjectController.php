@@ -15,11 +15,10 @@ use A17\Twill\Services\Listings\Filters\QuickFilter;
 use A17\Twill\Services\Listings\Filters\QuickFilters;
 use A17\Twill\Services\Listings\TableColumns;
 use App\Http\Controllers\Twill\Columns\ApiRelation;
-use App\Models\Api\Artwork;
-use App\Models\Sound;
+use App\Models\Api\CollectionObject;
 use Illuminate\Contracts\Database\Query\Builder;
 
-class ArtworkController extends BaseApiController
+class CollectionObjectController extends BaseApiController
 {
     private $galleries = [];
 
@@ -28,8 +27,8 @@ class ArtworkController extends BaseApiController
         parent::setUpController();
         $this->eagerLoadListingRelations(['gallery']);
         $this->enableAugmentedModel();
-        $this->setDisplayName('Object');
-        $this->setModuleName('artworks');
+        $this->setDisplayName('Collection Object');
+        $this->setModuleName('collectionObjects');
         $this->setSearchColumns(['title', 'artist_display', 'datahub_id', 'main_reference_number']);
     }
 
@@ -40,7 +39,7 @@ class ArtworkController extends BaseApiController
                 ->queryString('is_on_view')
                 ->label('On View')
                 ->apply(fn (Builder $builder) => $builder->onView())
-                ->amount(fn () => Artwork::query()->onView()->count()));
+                ->amount(fn () => CollectionObject::query()->onView()->count()));
     }
 
     protected function additionalIndexTableColumns(): TableColumns
@@ -70,15 +69,15 @@ class ArtworkController extends BaseApiController
                 ->hide())
             ->add(Text::make()
                 ->field('latitude')
-                ->customRender(function (Artwork $artwork) {
-                    return $artwork->latitude ? number_format((float) $artwork->latitude, 13) : '';
+                ->customRender(function (CollectionObject $object) {
+                    return $object->latitude ? number_format((float) $object->latitude, 13) : '';
                 })
                 ->optional()
                 ->hide())
             ->add(Text::make()
                 ->field('longitude')
-                ->customRender(function (Artwork $artwork) {
-                    return $artwork->longitude ? number_format((float) $artwork->longitude, 13) : '';
+                ->customRender(function (CollectionObject $object) {
+                    return $object->longitude ? number_format((float) $object->longitude, 13) : '';
                 })
                 ->optional()
                 ->hide())
@@ -105,7 +104,7 @@ class ArtworkController extends BaseApiController
         if (array_key_exists('selector_id', $scopes)) {
             $selector = \App\Models\Selector::find($scopes['selector_id']);
             $soundIds = $selector->audios->pluck('datahub_id');
-            $results = Artwork::query()->bySoundIds($soundIds)->get();
+            $results = CollectionObject::query()->bySoundIds($soundIds)->get();
             if ($results->isNotEmpty()) {
                 return $results;
             }
@@ -114,11 +113,11 @@ class ArtworkController extends BaseApiController
     }
 
 
-    protected function additionalFormFields($artwork, $apiArtwork): Form
+    protected function additionalFormFields($object, $apiCollectionObject): Form
     {
         $apiValues = array_map(
             fn ($value) => $value ?? (string) $value,
-            $apiArtwork->getAttributes()
+            $apiCollectionObject->getAttributes()
         );
         return Form::make()
             ->add(
@@ -169,20 +168,20 @@ class ArtworkController extends BaseApiController
             );
     }
 
-    public function getSideFieldSets($artwork): Form
+    public function getSideFieldSets($object): Form
     {
-        return parent::getSideFieldSets($artwork)
+        return parent::getSideFieldSets($object)
             ->addFieldset(
                 Fieldset::make()
-                    ->id('artwork_actions')
+                    ->id('object_actions')
                     ->title('Actions')
                     ->fields([
                         BladePartial::make()
                             ->view('admin.fields.action')
                             ->withAdditionalParams([
                                 'action' => 'Create Stop with Object',
-                                'href' => route('twill.stops.create-with-artwork', parameters: [
-                                    'artwork_id' => $artwork->datahub_id,
+                                'href' => route('twill.stops.createWithObject', parameters: [
+                                    'artwork_id' => $object->datahub_id,
                                 ]),
                             ])
                     ])

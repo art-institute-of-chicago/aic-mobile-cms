@@ -40,13 +40,20 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
         TwillNavigation::addLink(
-            NavigationLink::make()->title('Audio')->forModule('sounds')
+            NavigationLink::make()->forModule('audios')
         );
         TwillNavigation::addLink(
             NavigationLink::make()->forModule('galleries')
         );
         TwillNavigation::addLink(
-            NavigationLink::make()->title('Objects')->forModule('artworks')
+            NavigationLink::make()
+                ->title('Objects')
+                ->forModule('collectionObjects')
+                ->doNotAddSelfAsFirstChild()
+                ->setChildren([
+                    NavigationLink::make()->title('Collection Objects')->forModule('collectionObjects'),
+                    NavigationLink::make()->title('Loan Objects')->forModule('loanObjects'),
+                ])
         );
         TwillNavigation::addLink(
             NavigationLink::make()->forModule('selectors')
@@ -58,9 +65,10 @@ class AppServiceProvider extends ServiceProvider
             NavigationLink::make()->forModule('tours')
         );
         Relation::morphMap([
-            'audio' => Models\Sound::class,
+            'audio' => Models\Audio::class,
+            'collectionObject' => Models\CollectionObject::class,
             'gallery' => Models\Gallery::class,
-            'object' => Models\Artwork::class,
+            'loanobject' => Models\LoanObject::class,
             'selector' => Models\Selector::class,
             'stop' => Models\Stop::class,
             'tour' => Models\Tour::class,

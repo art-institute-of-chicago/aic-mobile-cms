@@ -4,7 +4,7 @@ namespace App\Http\Requests\Twill;
 
 use A17\Twill\Http\Requests\Admin\Request;
 
-class SoundRequest extends Request
+class AudioRequest extends Request
 {
     public function rulesForCreate()
     {

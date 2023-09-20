@@ -58,7 +58,7 @@ class SelectorController extends BaseController
             ->add(
                 Browser::make()
                     ->name('audios')
-                    ->modules([\App\Models\Api\Sound::class])
+                    ->modules([\App\Models\Api\Audio::class])
                     ->max(count(getLocales()))
                     ->sortable(false)
             )

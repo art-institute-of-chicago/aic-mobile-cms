@@ -44,7 +44,7 @@ class StopRepository extends ModuleRepository
                 [
                     'id' => $object->id,
                     'name' => $object->title,
-                    'edit' => moduleRoute('artworks', null, 'augment', $object->id),
+                    'edit' => moduleRoute('collectionObjects', null, 'augment', $object->id),
                     'endpointType' => 'Object',
                 ]
             ];

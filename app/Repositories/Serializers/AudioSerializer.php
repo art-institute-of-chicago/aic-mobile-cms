@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Serializers;
 
-use App\Models\Api\Sound as ApiSound;
-use App\Models\Sound;
+use App\Models\Api\Audio as ApiAudio;
+use App\Models\Audio;
 use App\Models\Transformers\AudioTransformer;
 use League\Fractal\Manager;
 use League\Fractal\Resource;
@@ -21,9 +21,9 @@ class AudioSerializer
     public function serialize($audios)
     {
         $audios = collect($audios);
-        if ($audios instanceof ApiSound) {
+        if ($audios instanceof ApiAudio) {
             $audios->each->getAugmentedModel();
-        } elseif ($audios instanceof Sound) {
+        } elseif ($audios instanceof Audio) {
             $audios->each->refreshApi();
         }
         $resource = new Resource\Collection($audios, new AudioTransformer(), 'audio_files');

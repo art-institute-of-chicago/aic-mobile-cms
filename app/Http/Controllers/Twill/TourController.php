@@ -11,11 +11,10 @@ use A17\Twill\Services\Listings\TableColumns;
 use App\Http\Controllers\Twill\Columns\ApiRelation;
 use App\Http\Controllers\Twill\Columns\RelationCount;
 use App\Models\Selector;
-use App\Models\Sound;
+use App\Models\Audio;
 use App\Models\Tour;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Session;
 
 class TourController extends BaseController
 {
@@ -131,7 +130,7 @@ class TourController extends BaseController
 
     public function creatWithSound(): RedirectResponse
     {
-        $audio = Sound::find(request('sound_id'));
+        $audio = Audio::find(request('sound_id'));
         $tour = Tour::create();
         $tour->selector()->save($audio->selector);
         return Redirect::to(moduleRoute($this->moduleName, $this->routePrefix, 'edit', ['tour' => $tour->id]));

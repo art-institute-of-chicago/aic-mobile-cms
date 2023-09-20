@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Serializers;
 
-use App\Models\Api\Artwork as ApiArtwork;
-use App\Models\Artwork;
+use App\Models\Api\CollectionObject as ApiCollectionObject;
+use App\Models\CollectionObject;
 use App\Models\Transformers\ObjectTransformer;
 use League\Fractal\Manager;
 use League\Fractal\Resource;
@@ -21,9 +21,9 @@ class ObjectSerializer
     public function serialize($objects)
     {
         $objects = collect($objects);
-        if ($objects instanceof ApiArtwork) {
+        if ($objects instanceof ApiCollectionObject) {
             $objects->each->getAugmentedModel();
-        } elseif ($objects instanceof Artwork) {
+        } elseif ($objects instanceof CollectionObject) {
             $objects->each->refreshApi();
         }
         $resource = new Resource\Collection($objects, new ObjectTransformer(), 'objects');

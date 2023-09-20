@@ -4,7 +4,7 @@ namespace App\Http\Requests\Twill;
 
 use A17\Twill\Http\Requests\Admin\Request;
 
-class ArtworkRequest extends Request
+class CollectionObjectRequest extends Request
 {
     public function rulesForCreate()
     {
