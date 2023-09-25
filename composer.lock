@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c588ac1990a5dea5d03b844a269f22be",
+    "content-hash": "2c8cde68d6189476bcd7896771440c2e",
     "packages": [
         {
             "name": "aic/data-hub-foundation",
-            "version": "1.1",
+            "version": "2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/art-institute-of-chicago/data-hub-foundation.git",
-                "reference": "77a72f371be2e4882ca3d4fa844d240d2535d248"
+                "reference": "cc6d507a4ebdc5f46a578580158e589d738bc6ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/art-institute-of-chicago/data-hub-foundation/zipball/77a72f371be2e4882ca3d4fa844d240d2535d248",
-                "reference": "77a72f371be2e4882ca3d4fa844d240d2535d248",
+                "url": "https://api.github.com/repos/art-institute-of-chicago/data-hub-foundation/zipball/cc6d507a4ebdc5f46a578580158e589d738bc6ff",
+                "reference": "cc6d507a4ebdc5f46a578580158e589d738bc6ff",
                 "shasum": ""
             },
             "require": {
@@ -81,10 +81,10 @@
             ],
             "description": "Shared components for our data hub services.",
             "support": {
-                "source": "https://github.com/art-institute-of-chicago/data-hub-foundation/tree/1.1",
+                "source": "https://github.com/art-institute-of-chicago/data-hub-foundation/tree/2.3",
                 "issues": "https://github.com/art-institute-of-chicago/data-hub-foundation/issues"
             },
-            "time": "2023-05-03T19:36:57+00:00"
+            "time": "2023-09-20T21:14:09+00:00"
         },
         {
             "name": "area17/twill",
