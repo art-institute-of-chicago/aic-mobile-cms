@@ -17,7 +17,10 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - name: Install Chromium browser & chromedriver
-        run: sudo apt-get install chromium-browser chromium-chromedriver -y
+        run: |
+          sudo apt-get install chromium-browser chromium-chromedriver -y
+          chromium --version
+          chromedriver --version
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -29,28 +32,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Install PHP dependencies
-        run: composer install --no-interaction --no-progress --no-scripts --optimize-autoloader --prefer-dist
+        run: composer install --no-interaction --no-progress --no-scripts
       - name: Generate key
-        run: php artisan key:generate --env=dusk
+        run: php artisan key:generate --env=dusk.testing
       - name: Migrate database
-        run: php artisan migrate --env=dusk
+        run: php artisan migrate --env=dusk.testing
       - name: Build Twill assets
-        run: php artisan twill:build --env=dusk
-      #   - name: Start chromedriver
-      #     run: ./usr/bin/chromedriver &
-      #   - name: Run Laravel server
-      #     run: php artisan serve --no-reload &
-      - name: Run Dusk acceptance tests
-        run: php artisan dusk
-      - name: Upload Screenshots
+        run: php artisan twill:build --env=dusk.testing
+      # Dusk will use `.env.dusk`, but it requires `.env` to be present
+      - name: Create dummy .env
+        run: touch .env
+      - name: Start chromedriver
+        run: chromedriver &
+      - name: Start Laravel server
+        run: php artisan serve --no-reload &
+      - name: Run acceptance tests
+        run: php artisan dusk --env=testing
+      - name: Upload screenshots
         if: failure()
         uses: actions/upload-artifact@v2
         with:
           name: screenshots
-          path: tests/Browser/screenshots
-      - name: Upload Console Logs
+          path: tests/Browser/screenshots/*.png
+      - name: Upload console logs
         if: failure()
         uses: actions/upload-artifact@v2
         with:
           name: console
-          path: tests/Browser/console
+          path: tests/Browser/console/*.log
