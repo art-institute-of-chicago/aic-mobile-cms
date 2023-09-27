@@ -2,15 +2,19 @@
 
 namespace Tests;
 
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Laravel\Dusk\Browser;
 use Laravel\Dusk\TestCase as BaseTestCase;
 
 abstract class DuskTestCase extends BaseTestCase
 {
     use CreatesApplication;
+
+    protected ?User $user = null;
 
     /**
      * Prepare for Dusk test execution.
@@ -27,6 +31,25 @@ abstract class DuskTestCase extends BaseTestCase
         }
     }
 
+    public function user()
+    {
+        return $this->user ?? User::factory()->create();
+    }
+
+    /**
+     * TODO: Figure out how to get $this->login() and logout() to work with the
+     * Twill User model. This simulates the functionality of login() by
+     * manually visiting the long page and filling in the form.
+     */
+    protected function authenticate(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $browser->visit('/admin')
+                ->type('email', $this->user()->email)
+                ->type('password', 'password')
+                ->press('Login');
+        });
+    }
     /**
      * Create the RemoteWebDriver instance.
      */
