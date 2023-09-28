@@ -1,0 +1,62 @@
+name: Acceptance
+on: [push]
+jobs:
+  dusk:
+    runs-on: ubuntu-20.04
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_DATABASE: mobile-admin-dusk
+          MYSQL_USER: mobile-admin
+          MYSQL_PASSWORD: secret
+          MYSQL_ROOT_PASSWORD: secret
+        ports:
+          - 3306:3306
+        # See https://firefart.at/post/using-mysql-service-with-github-actions/
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - name: Install Chromium browser & chromedriver
+        run: |
+          sudo apt-get install chromium-browser chromium-chromedriver -y
+          chromium --version
+          chromedriver --version
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.1
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.13.0
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --no-progress --no-scripts
+      - name: Generate key
+        run: php artisan key:generate --env=dusk.testing
+      - name: Migrate database
+        run: php artisan migrate --env=dusk.testing
+      - name: Build Twill assets
+        run: php artisan twill:build --env=dusk.testing
+      # Dusk will use `.env.dusk`, but it requires `.env` to be present
+      - name: Create dummy .env
+        run: touch .env
+      - name: Start chromedriver
+        run: chromedriver &
+      - name: Start Laravel server
+        run: php artisan serve --no-reload &
+      - name: Run acceptance tests
+        run: php artisan dusk --env=testing
+      - name: Upload screenshots
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: screenshots
+          path: tests/Browser/screenshots/*.png
+      - name: Upload console logs
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: console
+          path: tests/Browser/console/*.log
