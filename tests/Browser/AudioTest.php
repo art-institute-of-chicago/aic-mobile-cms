@@ -11,17 +11,12 @@ class AudioTest extends DuskTestCase
 {
     use DatabaseTruncation;
 
-    public function setUp(): void
-    {
-        parent::setUp();
-        $this->authenticate();
-    }
-
     public function test_user_can_choose_an_audio_from_the_listing(): void
     {
         $test = Str::of(__FUNCTION__)->title()->replace('_', ' ');
         $this->browse(function (Browser $browser) use ($test) {
-            $browser->visit('/admin')
+            $browser->loginAs($this->user(), 'twill_users')
+                ->visit('/admin')
                 ->assertRouteIs('twill.dashboard')
                 ->clickLink('Audio')
                 ->assertRouteIs('twill.audio.index')

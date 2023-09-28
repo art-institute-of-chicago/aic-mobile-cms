@@ -15,18 +15,13 @@ class SelectorTest extends DuskTestCase
 
     const TWILL_DATA_LOADED = 'window["TWILL"].STORE.datatable != {}';
 
-    public function setUp(): void
-    {
-        parent::setUp();
-        $this->authenticate();
-    }
-
     public function test_user_can_choose_a_selector_from_the_listing(): void
     {
         $test = Str::of(__FUNCTION__)->title()->replace('_', ' ');
         $selector = Selector::factory()->count(3)->create()->first();
         $this->browse(function (Browser $browser) use ($selector, $test) {
-            $browser->visit('/admin')
+            $browser->loginAs($this->user(), 'twill_users')
+                ->visit('/admin')
                 ->assertRouteIs('twill.dashboard')
                 ->clickLink('Selectors')
                 ->assertRouteIs('twill.selectors.index')
@@ -45,7 +40,8 @@ class SelectorTest extends DuskTestCase
         $selector = Selector::factory()->create();
         $audio = Audio::query()->limit(1)->get()->first();
         $this->browse(function (Browser $browser) use ($selector, $audio, $test) {
-            $browser->visit("admin/selectors/$selector->id/edit")
+            $browser->loginAs($this->user(), 'twill_users')
+                ->visit("admin/selectors/$selector->id/edit")
                 ->waitUntil(self::TWILL_DATA_LOADED)
                 ->screenshot("$test 1 - Selector Edit No Audio")
                 ->press('Add audio')
