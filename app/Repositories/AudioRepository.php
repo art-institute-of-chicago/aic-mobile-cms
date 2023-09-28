@@ -34,8 +34,6 @@ class AudioRepository extends BaseApiRepository
                 // relationship, so give it an arbitrary one.
                 $selector->audio()->attach($apiRelation, ['relation' => 'audio', 'position' => 0]);
             }
-        } else {
-            $audio->apiRelation?->morph()->delete();
         }
         parent::afterSave($audio, $fields);
     }
