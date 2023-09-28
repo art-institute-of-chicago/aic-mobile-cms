@@ -2,6 +2,7 @@
 
 namespace Tests\Browser;
 
+use App\Models\Api\Audio;
 use App\Models\Selector;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Str;
@@ -42,7 +43,8 @@ class SelectorTest extends DuskTestCase
     {
         $test = Str::of(__FUNCTION__)->title()->replace('_', ' ');
         $selector = Selector::factory()->create();
-        $this->browse(function (Browser $browser) use ($selector, $test) {
+        $audio = Audio::query()->limit(1)->get()->first();
+        $this->browse(function (Browser $browser) use ($selector, $audio, $test) {
             $browser->visit("admin/selectors/$selector->id/edit")
                 ->waitUntil(self::TWILL_DATA_LOADED)
                 ->screenshot("$test 1 - Selector Edit No Audio")
@@ -52,11 +54,11 @@ class SelectorTest extends DuskTestCase
                 ->screenshot("$test 2 - Selector Edit Audio Select")
                 ->press('Attach audio')
                 ->press('Update')
-                ->assertSee('Podcast: Edward Hopper')
+                ->assertSee($audio->title)
                 ->screenshot("$test 3 - Selector Edit Audio Attach")
                 ->refresh()
                 ->waitUntil(self::TWILL_DATA_LOADED)
-                ->assertSee('Podcast: Edward Hopper')
+                ->assertSee($audio->title)
                 ->screenshot("$test 4 - Selector Edit Audio Refresh");
         });
     }
