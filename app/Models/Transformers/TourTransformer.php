@@ -23,7 +23,7 @@ class TourTransformer extends TransformerAbstract
             'large_image_full_path' => $tour->large_image_full_path,
             'selector_number' => (string) $tour->selector_number,
             'description' => $tour->description,
-            'intro' => $tour->transcript,
+            'intro' => $tour->intro,
             'tour_duration' => $tour->duration_in_minutes,
             'tour_audio' => $tour->sound_id,
             'category' => null, // Legacy from Drupal

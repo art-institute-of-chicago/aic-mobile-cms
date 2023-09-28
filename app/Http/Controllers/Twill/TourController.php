@@ -37,6 +37,12 @@ class TourController extends BaseController
             )
             ->add(
                 Text::make()
+                    ->field('intro')
+                    ->optional()
+                    ->hide()
+            )
+            ->add(
+                Text::make()
                     ->field('description')
                     ->optional()
                     ->hide()
@@ -82,6 +88,13 @@ class TourController extends BaseController
                     ->label('Image')
                     ->disabled()
                     ->note('Coming Soon!')
+            )
+            ->add(
+                Input::make()
+                    ->name('intro')
+                    ->type('textarea')
+                    ->required()
+                    ->translatable()
             )
             ->add(
                 Input::make()
