@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Twill;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Services\Forms\Fields\Browser;
+use A17\Twill\Services\Forms\Fields\Wysiwyg;
+use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Relation;
 use A17\Twill\Services\Listings\TableColumns;
@@ -57,6 +59,25 @@ class StopController extends BaseController
                     ->title('Selector Number')
                     ->relation('selector')
             );
+    }
+
+    public function getForm(TwillModelContract $stop): Form
+    {
+        $content = Form::make()
+            ->add(
+                Wysiwyg::make()
+                    ->name('title')
+                    ->required()
+                    ->translatable()
+                    ->toolbarOptions(['bold', 'italic'])
+            )
+            ->merge($this->additionalFormFields($stop));
+        return Form::make()->addFieldset(
+            Fieldset::make()
+                ->title('Content')
+                ->id('content')
+                ->fields($content->toArray())
+        );
     }
 
     public function additionalFormFields(TwillModelContract $stop): Form

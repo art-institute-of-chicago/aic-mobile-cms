@@ -7,6 +7,7 @@ use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Services\Forms\BladePartial;
 use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Fields\Radios;
+use A17\Twill\Services\Forms\Fields\Wysiwyg;
 use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Text;
@@ -93,9 +94,10 @@ class AudioController extends BaseApiController
                     ->border()
             )
             ->add(
-                Input::make()
+                Wysiwyg::make()
                     ->name('transcript')
                     ->type('textarea')
+                    ->toolbarOptions(['bold', 'italic'])
             );
     }
 

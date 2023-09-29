@@ -18,16 +18,17 @@ trait HasApiModel
      */
     public function refreshApi(): self
     {
-        if (!$this->apiModel) {
-            $this->apiModel = $this->apiModelClass::query()->find($this->datahub_id);
-            $this->augmentWithApiModel();
-        }
-
+        $this->getApiModel();
+        $this->augmentWithApiModel();
         return $this;
     }
 
+
     public function getApiModel()
     {
+        if (!$this->apiModel) {
+            $this->apiModel = $this->apiModelClass::query()->find($this->datahub_id);
+        }
         return $this->apiModel;
     }
 

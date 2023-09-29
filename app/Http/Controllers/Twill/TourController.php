@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Twill;
 
+use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Services\Forms\Fields\Browser;
 use A17\Twill\Services\Forms\Fields\Input;
+use A17\Twill\Services\Forms\Fields\Wysiwyg;
+use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Relation;
 use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\TableColumns;
 use App\Http\Controllers\Twill\Columns\ApiRelation;
 use App\Http\Controllers\Twill\Columns\RelationCount;
-use App\Models\Selector;
 use App\Models\Audio;
+use App\Models\Selector;
 use App\Models\Tour;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
@@ -79,6 +82,25 @@ class TourController extends BaseController
             );
     }
 
+    public function getForm(TwillModelContract $tour): Form
+    {
+        $content = Form::make()
+            ->add(
+                Wysiwyg::make()
+                    ->name('title')
+                    ->required()
+                    ->translatable()
+                    ->toolbarOptions(['bold', 'italic'])
+            )
+            ->merge($this->additionalFormFields($tour));
+        return Form::make()->addFieldset(
+            Fieldset::make()
+                ->title('Content')
+                ->id('content')
+                ->fields($content->toArray())
+        );
+    }
+
     public function additionalFormFields($tour): Form
     {
         return parent::additionalFormFields($tour)
@@ -90,18 +112,20 @@ class TourController extends BaseController
                     ->note('Coming Soon!')
             )
             ->add(
-                Input::make()
+                Wysiwyg::make()
                     ->name('intro')
                     ->type('textarea')
                     ->required()
                     ->translatable()
+                    ->toolbarOptions(['bold', 'italic'])
             )
             ->add(
-                Input::make()
+                Wysiwyg::make()
                     ->name('description')
                     ->type('textarea')
                     ->required()
                     ->translatable()
+                    ->toolbarOptions(['bold', 'italic'])
             )
             ->add(
                 Browser::make()
