@@ -21,7 +21,7 @@ class TourTransformer extends TransformerAbstract
             'image_url' => $tour->image_url,
             'thumbnail_full_path' => $tour->thumbnail_full_path,
             'large_image_full_path' => $tour->large_image_full_path,
-            'selector_number' => (string) $tour->selector_number,
+            'selector_number' => (string) $tour->selector->number,
             'description' => $tour->description,
             'intro' => $tour->intro,
             'tour_duration' => $tour->duration_in_minutes,
