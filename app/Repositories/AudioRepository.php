@@ -18,15 +18,8 @@ class AudioRepository extends BaseApiRepository
     public function getFormFields(TwillModelContract $audio): array
     {
         $fields = parent::getFormFields($audio);
-        $fields['title'] = $audio->title ?? $audio->getApiModel()?->title;
         $fields['selector_number'] = $audio->selector?->number;
         return $fields;
-    }
-
-    public function prepareFieldsBeforeSave($audio, $fields): array
-    {
-        $fields['title'] = $fields['title'] != $audio->getApiModel()?->title ? $fields['title'] : null;
-        return parent::prepareFieldsBeforeSave($audio, $fields);
     }
 
     public function afterSave(TwillModelContract $audio, array $fields): void
