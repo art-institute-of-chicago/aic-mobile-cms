@@ -40,6 +40,7 @@ class Tour extends Model implements Sortable
     public $translatedAttributes = [
         'active',
         'description',
+        'intro',
         'title',
     ];
 
