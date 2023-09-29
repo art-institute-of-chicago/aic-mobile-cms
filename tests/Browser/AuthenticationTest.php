@@ -26,9 +26,9 @@ class AuthenticationTest extends DuskTestCase
 
     public function test_user_can_logout(): void
     {
-        $this->authenticate();
         $this->browse(function (Browser $browser) {
-            $browser->visit('/admin')
+            $browser->loginAs($this->user(), 'twill_users')
+                ->visit('/admin')
                 ->assertRouteIs('twill.dashboard')
                 ->clickLink('Logout')
                 ->assertRouteIs('twill.login.form');

@@ -6,6 +6,7 @@ use A17\Twill\Models\Model;
 use App\Models\Behaviors\HasApiRelations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 class Selector extends Model
 {
     use HasApiRelations;
+    use HasFactory;
 
     protected $fillable = [
         'notes',
