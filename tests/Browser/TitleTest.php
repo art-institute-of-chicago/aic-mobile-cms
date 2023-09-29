@@ -9,9 +9,6 @@ use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
-/**
- * @group title
- */
 class TitleTest extends DuskTestCase
 {
     use DatabaseTruncation;
