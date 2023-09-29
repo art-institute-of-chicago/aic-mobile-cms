@@ -70,6 +70,24 @@ class AudioController extends BaseApiController
             );
     }
 
+    public function getForm(TwillModelContract $audio): Form
+    {
+        $content = Form::make()
+            ->add(
+                Wysiwyg::make()
+                    ->name('title')
+                    ->required()
+                    ->toolbarOptions(['bold', 'italic'])
+            )
+            ->merge($this->additionalFormFields($audio, $audio->getApiModel()));
+        return Form::make()->addFieldset(
+            Fieldset::make()
+                ->title('Content')
+                ->id('content')
+                ->fields($content->toArray())
+        );
+    }
+
     protected function additionalFormFields($audio, $apiSound): Form
     {
         return Form::make()
