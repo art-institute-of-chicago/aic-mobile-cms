@@ -128,7 +128,7 @@ class StopController extends BaseController
         return Redirect::to(moduleRoute($this->moduleName, $this->routePrefix, 'edit', ['stop' => $stop->id]));
     }
 
-    public function createWithSound()
+    public function createWithAudio()
     {
         $audio = Audio::find(request('sound_id'));
         $stop = Stop::create();
