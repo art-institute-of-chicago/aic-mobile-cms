@@ -13,6 +13,7 @@ use App\Http\Controllers\Twill\Columns\ApiRelation;
 use App\Models\Audio;
 use App\Models\Selector;
 use App\Models\Stop;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 
 class StopController extends BaseController
@@ -122,13 +123,13 @@ class StopController extends BaseController
             );
     }
 
-    public function createWithObject()
+    public function createWithObject(): RedirectResponse
     {
         $stop = Stop::create(['artwork_id' => $this->request->query('artwork_id')]);
         return Redirect::to(moduleRoute($this->moduleName, $this->routePrefix, 'edit', ['stop' => $stop->id]));
     }
 
-    public function createWithSound()
+    public function createWithAudio(): RedirectResponse
     {
         $audio = Audio::find(request('sound_id'));
         $stop = Stop::create();
