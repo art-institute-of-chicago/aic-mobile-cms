@@ -23,6 +23,10 @@ class Selector extends Model
         'number',
     ];
 
+    protected $casts = [
+        'number' => 'string',
+    ];
+
     protected $appends = [
         'locales',
         'selectable_title',
