@@ -11,7 +11,6 @@ use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Boolean;
 use A17\Twill\Services\Listings\Columns\FeaturedStatus;
-use A17\Twill\Services\Listings\Columns\Image;
 use A17\Twill\Services\Listings\Columns\Languages;
 use A17\Twill\Services\Listings\Columns\PublishStatus;
 use A17\Twill\Services\Listings\Columns\ScheduledStatus;
@@ -20,11 +19,11 @@ use A17\Twill\Services\Listings\Filters\BasicFilter;
 use A17\Twill\Services\Listings\Filters\QuickFilter;
 use A17\Twill\Services\Listings\TableColumns;
 use App\Helpers\UrlHelpers;
+use App\Http\Controllers\Twill\Columns\ApiImage;
 use App\Libraries\Api\Filters\Search;
 use App\Repositories\Api\BaseApiRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 
 class BaseApiController extends ModuleController
 {
@@ -156,7 +155,7 @@ class BaseApiController extends ModuleController
 
         if ($this->getIndexOption('showImage')) {
             $columns->add(
-                Image::make()
+                ApiImage::make()
                     ->field('thumbnail')
                     ->title(twillTrans('Image'))
             );

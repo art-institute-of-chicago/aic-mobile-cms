@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Twill;
 
 use A17\Twill\Services\Forms\BladePartial;
 use A17\Twill\Services\Forms\Fields\Browser;
+use A17\Twill\Services\Forms\Fields\Medias;
 use A17\Twill\Services\Forms\Fields\Checkbox;
 use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Fields\Map;
@@ -20,13 +21,12 @@ use Illuminate\Contracts\Database\Query\Builder;
 
 class CollectionObjectController extends BaseApiController
 {
-    private $galleries = [];
-
     protected function setUpController(): void
     {
         parent::setUpController();
         $this->eagerLoadListingRelations(['gallery']);
         $this->enableAugmentedModel();
+        $this->enableShowImage();
         $this->setDisplayName('Collection Object');
         $this->setModuleName('collectionObjects');
         $this->setSearchColumns(['title', 'artist_display', 'datahub_id', 'main_reference_number']);
@@ -121,12 +121,15 @@ class CollectionObjectController extends BaseApiController
         );
         return Form::make()
             ->add(
-                Input::make()
-                    ->name('image_id')
-                    ->label('Image')
-                    ->placeholder($apiValues['image_id'])
-                    ->disabled()
-                    ->note('Coming Soon!')
+                BladePartial::make()
+                    ->view('admin.fields.image')
+                    ->withAdditionalParams(['src' => $apiCollectionObject->imageFront('iiif')['src'] ?? ''])
+            )
+            ->add(
+                Medias::make()
+                    ->name('upload')
+                    ->label('Override Image')
+                    ->note('This will replace the image above')
             )
             ->add(
                 Input::make()

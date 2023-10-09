@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use A17\Twill\Repositories\Behaviors\HandleMedias;
 use A17\Twill\Repositories\Behaviors\HandleRevisions;
 use A17\Twill\Repositories\Behaviors\HandleTranslations;
 use App\Models\Selector;
@@ -9,10 +10,14 @@ use App\Models\Tour;
 
 class TourRepository extends ModuleRepository
 {
+    use HandleMedias;
     use HandleRevisions;
     use HandleTranslations;
 
-    protected $relatedBrowsers = ['stops'];
+    protected $relatedBrowsers = [
+        'stops'
+    ];
+
     protected $apiBrowsers = [
         'gallery'
     ];
