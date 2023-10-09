@@ -22,6 +22,17 @@ class CollectionObject extends AbstractModel
 
     protected $apiModelClass = \App\Models\Api\CollectionObject::class;
 
+    public $mediasParams = [
+        'upload' => [
+            'default' => [
+                [
+                    'name' => 'default',
+                    'ratio' => 'default',
+                ],
+            ]
+        ],
+    ];
+
     protected $fillable = [
         'datahub_id',
         'title',
@@ -42,17 +53,8 @@ class CollectionObject extends AbstractModel
 
     protected $appends = [
         'latlng',
-        'image_url',
         // 'gallery_location',
     ];
-
-    /**
-     * TODO: Implement Images from API
-     */
-    public function getImageUrlAttribute(): string
-    {
-        return '';
-    }
 
     /**
      * TODO: Does this belong in a serializer?

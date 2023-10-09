@@ -7,7 +7,7 @@ use App\Models\LoanObject;
 
 class LoanObjectRepository extends ModuleRepository
 {
-    // use HandleMedias;
+    use HandleMedias;
 
     protected $apiBrowsers = [
         'gallery' => [

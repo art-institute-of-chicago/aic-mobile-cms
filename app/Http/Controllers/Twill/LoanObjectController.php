@@ -6,6 +6,7 @@ use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Services\Forms\Fields\Browser;
 use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Fields\Map;
+use A17\Twill\Services\Forms\Fields\Medias;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\TableColumns;
@@ -18,6 +19,7 @@ class LoanObjectController extends BaseController
     {
         $this->disablePermalink();
         $this->disablePublish();
+        $this->enableShowImage();
         $this->setModuleName('loanObjects');
         $this->setSearchColumns(['main_reference_number', 'title', 'artist_display']);
     }
@@ -68,18 +70,17 @@ class LoanObjectController extends BaseController
                     })
                     ->optional()
                     ->hide()
-            )
-            ->add(
-                Text::make()
-                    ->optional()
-                    ->field('image')
-                    ->hide()
             );
     }
 
     public function additionalFormFields(TwillModelContract $object): Form
     {
         return parent::additionalFormFields($object)
+            ->add(
+                Medias::make()
+                    ->name('upload')
+                    ->label('Image')
+            )
             ->add(
                 Input::make()
                     ->name('artist_display')

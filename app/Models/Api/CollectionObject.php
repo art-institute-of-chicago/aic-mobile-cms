@@ -3,9 +3,12 @@
 namespace App\Models\Api;
 
 use App\Libraries\Api\Models\BaseApiModel;
+use App\Models\Behaviors\HasMediasApi;
 
 class CollectionObject extends BaseApiModel
 {
+    use HasMediasApi;
+
     protected array $endpoints = [
         'collection' => '/api/v1/artworks',
         'resource' => '/api/v1/artworks/{id}',
@@ -13,6 +16,17 @@ class CollectionObject extends BaseApiModel
     ];
 
     protected $augmentedModelClass = \App\Models\CollectionObject::class;
+
+    public $mediasParams = [
+        'iiif' => [
+            'default' => [
+                [
+                    'name' => 'default',
+                    'ratio' => 'default',
+                ],
+            ]
+        ],
+    ];
 
     public function getTypeAttribute()
     {

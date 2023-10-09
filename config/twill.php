@@ -3,6 +3,13 @@
 return [
     'dashboard' => [
         'modules' => [
+            \App\Models\LoanObject::class => [
+                'name' => 'loanObjects',
+                'activity' => true,
+                'count' => true,
+                'create' => true,
+                'search' => true,
+            ],
             \App\Models\Selector::class => [
                 'name' => 'selectors',
                 'activity' => true,

@@ -50,15 +50,27 @@ trait HasMediasApi
         }
     }
 
-    public function defaultCmsImage($params = [])
+    public function cmsImage($role, $crop = 'default', $params = [])
     {
-        $image = DamsImageService::getImage($this, 'image_id', 100, 100);
+        $image = DamsImageService::getImage($this, $this->getImageField($role, $crop), $params['w'], $params['h']);
 
         if ($image) {
             return $image['src'];
         }
 
         return ImageService::getTransparentFallbackUrl($params);
+    }
+
+    public function defaultCmsImage($params = [])
+    {
+        return $this->cmsImage('iiif', 'default', ['w' => 100, 'h' => 100]);
+    }
+
+    public function getMediasParams(): array
+    {
+        return (isset($this->mediasParams) && is_array($this->mediasParams))
+            ? $this->mediasParams
+            : config('twill.default_crops');
     }
 
     protected function getImageField($role, $crop)

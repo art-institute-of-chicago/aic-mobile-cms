@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Twill;
 use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Services\Forms\Fields\Browser;
 use A17\Twill\Services\Forms\Fields\Input;
+use A17\Twill\Services\Forms\Fields\Medias;
 use A17\Twill\Services\Forms\Fields\Wysiwyg;
 use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
@@ -25,6 +26,7 @@ class TourController extends BaseController
     {
         parent::setUpController();
         $this->enableReorder();
+        $this->enableShowImage();
         $this->setModelName('Tour');
         $this->setModuleName('tours');
     }
@@ -105,11 +107,9 @@ class TourController extends BaseController
     {
         return parent::additionalFormFields($tour)
             ->add(
-                Input::make()
-                    ->name('image_url')
+                Medias::make()
+                    ->name('upload')
                     ->label('Image')
-                    ->disabled()
-                    ->note('Coming Soon!')
             )
             ->add(
                 Wysiwyg::make()
