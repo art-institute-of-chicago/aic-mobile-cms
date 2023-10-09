@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d607aa1d5fa235616e6699bcc195ca1d",
+    "content-hash": "0a70a7baeb59bb1949fcc0013fb6cae9",
     "packages": [
         {
             "name": "aic/data-hub-foundation",
@@ -9095,6 +9095,24 @@
                 "source": "https://github.com/tijsverkoyen/CssToInlineStyles/tree/2.2.6"
             },
             "time": "2023-01-03T09:29:04+00:00"
+        },
+        {
+            "name": "vendor/package-patches",
+            "version": "0.0.1",
+            "require": {
+                "netresearch/composer-patches-plugin": "~1.2"
+            },
+            "type": "metapackage",
+            "extra": {
+                "patches": {
+                    "area17/twill": [
+                        {
+                            "title": "MA-129: Add limited formatting to CMS fields",
+                            "url": "patches/MA-129---add-limited-formatting-to-cms-fields.diff"
+                        }
+                    ]
+                }
+            }
         },
         {
             "name": "vlucas/phpdotenv",
