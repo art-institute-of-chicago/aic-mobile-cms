@@ -37,6 +37,7 @@ class Stop extends Model
     public $translatedAttributes = [
         'active',
         'title',
+        'title_markup',
     ];
 
     public function object(): BelongsTo|MorphTo
