@@ -4,6 +4,7 @@ use A17\Twill\Facades\TwillRoutes;
 use App\Http\Controllers\Twill\AudioController;
 use App\Http\Controllers\Twill\CollectionObjectController;
 use App\Http\Controllers\Twill\GalleryController;
+use App\Http\Controllers\Twill\MapController;
 use App\Http\Controllers\Twill\StopController;
 use App\Http\Controllers\Twill\TourController;
 use Illuminate\Support\Facades\Route;
@@ -30,3 +31,5 @@ TwillRoutes::module('stops');
 
 Route::get('tours/createWithAudio', [TourController::class, 'createWithAudio'])->name('tours.createWithAudio');
 TwillRoutes::module('tours');
+
+Route::get('map', [MapController::class, 'index'])->name('map.index');
