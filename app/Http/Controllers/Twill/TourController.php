@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\Twill;
 
-use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Services\Forms\Fields\Browser;
 use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Fields\Medias;
 use A17\Twill\Services\Forms\Fields\Wysiwyg;
-use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Relation;
 use A17\Twill\Services\Listings\Columns\Text;
@@ -27,6 +25,7 @@ class TourController extends BaseController
         parent::setUpController();
         $this->enableReorder();
         $this->enableShowImage();
+        $this->enableTitleMarkup();
         $this->setModelName('Tour');
         $this->setModuleName('tours');
     }
@@ -84,25 +83,6 @@ class TourController extends BaseController
             );
     }
 
-    public function getForm(TwillModelContract $tour): Form
-    {
-        $content = Form::make()
-            ->add(
-                Wysiwyg::make()
-                    ->name('title')
-                    ->required()
-                    ->translatable()
-                    ->toolbarOptions(['bold', 'italic'])
-            )
-            ->merge($this->additionalFormFields($tour));
-        return Form::make()->addFieldset(
-            Fieldset::make()
-                ->title('Content')
-                ->id('content')
-                ->fields($content->toArray())
-        );
-    }
-
     public function additionalFormFields($tour): Form
     {
         return parent::additionalFormFields($tour)
@@ -118,6 +98,7 @@ class TourController extends BaseController
                     ->required()
                     ->translatable()
                     ->toolbarOptions(['bold', 'italic'])
+                    ->allowSource()
             )
             ->add(
                 Wysiwyg::make()
@@ -126,6 +107,7 @@ class TourController extends BaseController
                     ->required()
                     ->translatable()
                     ->toolbarOptions(['bold', 'italic'])
+                    ->allowSource()
             )
             ->add(
                 Browser::make()

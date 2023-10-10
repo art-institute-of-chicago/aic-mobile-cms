@@ -52,6 +52,7 @@ class Tour extends Model implements Sortable
         'description',
         'intro',
         'title',
+        'title_markup',
     ];
 
     protected function durationInMinutes(): Attribute
