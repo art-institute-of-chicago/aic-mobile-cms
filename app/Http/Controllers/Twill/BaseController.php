@@ -6,7 +6,6 @@ use A17\Twill\Http\Controllers\Admin\ModuleController;
 use A17\Twill\Models\Behaviors\HasTranslation;
 use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Services\Forms\Fields\Input;
-use A17\Twill\Services\Forms\Fields\Wysiwyg;
 use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\FeaturedStatus;
@@ -16,23 +15,16 @@ use A17\Twill\Services\Listings\Columns\PublishStatus;
 use A17\Twill\Services\Listings\Columns\ScheduledStatus;
 use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\TableColumns;
+use App\Http\Controllers\Behaviors\HandlesTitleMarkup;
 
 class BaseController extends ModuleController
 {
-    protected bool $hasTitleMarkup = false;
+    use HandlesTitleMarkup;
 
     protected function setUpController(): void
     {
         $this->disablePermalink();
         $this->enableSkipCreateModal();
-    }
-
-    /**
-     * Toggle the title editor based on whether the title contains markup.
-     */
-    public function edit(TwillModelContract|int $id): mixed
-    {
-        return parent::edit($id)->with(['editableTitle' => !$this->hasTitleMarkup]);
     }
 
     protected function getIndexTableColumns(): TableColumns
@@ -58,20 +50,16 @@ class BaseController extends ModuleController
                     ->title(twillTrans('twill::lang.listing.columns.featured'))
             );
         }
-        $titleField = $this->hasTitleMarkup ? $this->titleColumnKey . '_markup' : $this->titleColumnKey;
-        $columns->add(
-            Text::make()
-                ->field($titleField)
-                ->title(ucfirst($this->titleColumnKey))
-                ->sortable()
-                ->linkToEdit()
-        );
         $columns->add(
             Text::make()
                 ->field('updated_at')
                 ->sortable()
                 ->optional()
                 ->hide()
+        );
+        $columns->add(
+            $this->getTitleColumn()
+                ->linkToEdit()
         );
         $columns = $columns->merge($this->additionalIndexTableColumns());
         if ($this->getIndexOption('includeScheduledInList') && $this->repository->isFillable('publish_start_date')) {
@@ -94,19 +82,7 @@ class BaseController extends ModuleController
 
     public function getForm(TwillModelContract $model): Form
     {
-        if ($this->hasTitleMarkup) {
-            $title = Wysiwyg::make()
-                ->name($this->titleColumnKey . '_markup')
-                ->label(ucfirst($this->titleColumnKey))
-                ->required()
-                ->translatable()
-                ->toolbarOptions(['bold', 'italic'])
-                ->allowSource();
-        } else {
-            $title = Input::make()
-                ->name($this->titleColumnKey)
-                ->required();
-        }
+        $title = $this->getTitleField();
         if (classHasTrait($model::class, HasTranslation::class)) {
             $title->translatable();
         }
@@ -153,15 +129,5 @@ class BaseController extends ModuleController
                             ->note('readonly'),
                     ])
             );
-    }
-
-    /**
-     * Allows for the title column on the index table to be displayed with
-     * formatting and the title on the edit page to be editable in a WYSIWYG
-     * field.
-     */
-    protected function enableTitleMarkup(bool $hasTitleMarkup = true): void
-    {
-        $this->hasTitleMarkup = $hasTitleMarkup;
     }
 }

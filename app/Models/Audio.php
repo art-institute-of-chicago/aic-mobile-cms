@@ -25,6 +25,25 @@ class Audio extends AbstractModel
         'transcript',
     ];
 
+    protected $appends = [
+        'title_markup',
+    ];
+
+    public function getTitleAttribute($title)
+    {
+        return strip_tags($this->attributes['title']);
+    }
+
+    public function getTitleMarkupAttribute()
+    {
+        return $this->attributes['title'];
+    }
+
+    public function setTitleMarkupAttribute($title)
+    {
+        return $this->attributes['title'] = $title;
+    }
+
     public function apiRelation(): HasOne
     {
         return $this->hasOne(ApiRelation::class, 'datahub_id', 'datahub_id');
