@@ -229,6 +229,24 @@ class BaseApiController extends ModuleController
         return $columns;
     }
 
+    protected function getBrowserTableColumns(): TableColumns
+    {
+        $columns = TableColumns::make();
+
+        if ($this->moduleHas('medias')) {
+            $columns->add(
+                ApiImage::make()
+                    ->field('thumbnail')
+                    ->rounded()
+                    ->title(twillTrans('Image'))
+            );
+        }
+
+        $columns = $columns->merge($this->additionalBrowserTableColumns());
+
+        return $columns;
+    }
+
     public function getForm(TwillModelContract $model): Form
     {
         $model->refreshApi();
