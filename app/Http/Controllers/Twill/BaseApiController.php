@@ -19,6 +19,7 @@ use A17\Twill\Services\Listings\Filters\BasicFilter;
 use A17\Twill\Services\Listings\Filters\QuickFilter;
 use A17\Twill\Services\Listings\TableColumns;
 use App\Helpers\UrlHelpers;
+use App\Http\Controllers\Behaviors\HandlesTitleMarkup;
 use App\Http\Controllers\Twill\Columns\ApiImage;
 use App\Libraries\Api\Filters\Search;
 use App\Repositories\Api\BaseApiRepository;
@@ -27,6 +28,8 @@ use Illuminate\Support\Collection;
 
 class BaseApiController extends ModuleController
 {
+    use HandlesTitleMarkup;
+
     protected $hasAugmentedModel = false;
 
     protected $localElements = [];
@@ -193,8 +196,7 @@ class BaseApiController extends ModuleController
                 ->hide()
         );
         $columns->add(
-            Text::make()
-                ->field($this->titleColumnKey)
+            $this->getTitleColumn()
                 ->linkCell(function (TwillModelContract $model) {
                     if ($model->is_augmented) {
                         $action =  'edit';
@@ -227,13 +229,33 @@ class BaseApiController extends ModuleController
         return $columns;
     }
 
+    protected function getBrowserTableColumns(): TableColumns
+    {
+        $columns = TableColumns::make();
+
+        if ($this->moduleHas('medias')) {
+            $columns->add(
+                ApiImage::make()
+                    ->field('thumbnail')
+                    ->rounded()
+                    ->title(twillTrans('Image'))
+            );
+        }
+
+        $columns = $columns->merge($this->additionalBrowserTableColumns());
+
+        return $columns;
+    }
+
     public function getForm(TwillModelContract $model): Form
     {
         $model->refreshApi();
+        $title = $this->getTitleField();
+        if (classHasTrait($model::class, HasTranslation::class)) {
+            $title->translatable();
+        }
         $content = Form::make()
-            ->add(Input::make()
-                    ->name('title')
-                    ->placeholder($model->getApiModel()->title ?? ''))
+            ->add($title)
             ->merge($this->additionalFormFields($model, $model->getApiModel()));
         return parent::getForm($model)
             ->addFieldset(

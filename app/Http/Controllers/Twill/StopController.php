@@ -21,6 +21,7 @@ class StopController extends BaseController
     protected function setUpController(): void
     {
         parent::setUpController();
+        $this->enableTitleMarkup();
         $this->setModuleName('stops');
         $this->setSearchColumns(['title']);
     }
@@ -60,25 +61,6 @@ class StopController extends BaseController
                     ->title('Selector Number')
                     ->relation('selector')
             );
-    }
-
-    public function getForm(TwillModelContract $stop): Form
-    {
-        $content = Form::make()
-            ->add(
-                Wysiwyg::make()
-                    ->name('title')
-                    ->required()
-                    ->translatable()
-                    ->toolbarOptions(['bold', 'italic'])
-            )
-            ->merge($this->additionalFormFields($stop));
-        return Form::make()->addFieldset(
-            Fieldset::make()
-                ->title('Content')
-                ->id('content')
-                ->fields($content->toArray())
-        );
     }
 
     public function additionalFormFields(TwillModelContract $stop): Form

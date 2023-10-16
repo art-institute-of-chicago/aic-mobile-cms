@@ -19,6 +19,16 @@ class Audio extends BaseApiModel
         return 'sound';
     }
 
+    public function getTitleMarkupAttribute()
+    {
+        return $this->getAttribute('title');
+    }
+
+    public function setTitleMarkupAttribute($title)
+    {
+        return $this->setAttribute('title', $title);
+    }
+
     public function getLocaleAttribute()
     {
         return $this->getAugmentedModel()?->locale;

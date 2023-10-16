@@ -8,11 +8,19 @@ use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
+use A17\Twill\Services\Listings\Columns\FeaturedStatus;
+use A17\Twill\Services\Listings\Columns\Image;
+use A17\Twill\Services\Listings\Columns\Languages;
+use A17\Twill\Services\Listings\Columns\PublishStatus;
+use A17\Twill\Services\Listings\Columns\ScheduledStatus;
 use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\TableColumns;
+use App\Http\Controllers\Behaviors\HandlesTitleMarkup;
 
 class BaseController extends ModuleController
 {
+    use HandlesTitleMarkup;
+
     protected function setUpController(): void
     {
         $this->disablePermalink();
@@ -21,24 +29,61 @@ class BaseController extends ModuleController
 
     protected function getIndexTableColumns(): TableColumns
     {
-        $columns = parent::getIndexTableColumns();
-        $after = $columns->splice(1);
-        $columns->push(
+        $columns = TableColumns::make();
+        $columns->add(
+            PublishStatus::make()
+                ->title(twillTrans('twill::lang.listing.columns.published'))
+                ->sortable()
+                ->optional()
+        );
+        // Add default columns.
+        if ($this->getIndexOption('showImage')) {
+            $columns->add(
+                Image::make()
+                    ->field('thumbnail')
+                    ->title(twillTrans('Image'))
+            );
+        }
+        if ($this->getIndexOption('feature') && $this->repository->isFillable('featured')) {
+            $columns->add(
+                FeaturedStatus::make()
+                    ->title(twillTrans('twill::lang.listing.columns.featured'))
+            );
+        }
+        $columns->add(
             Text::make()
                 ->field('updated_at')
                 ->sortable()
                 ->optional()
                 ->hide()
         );
-        return $columns->merge($after);
+        $columns->add(
+            $this->getTitleColumn()
+                ->linkToEdit()
+        );
+        $columns = $columns->merge($this->additionalIndexTableColumns());
+        if ($this->getIndexOption('includeScheduledInList') && $this->repository->isFillable('publish_start_date')) {
+            $columns->add(
+                ScheduledStatus::make()
+                    ->title(twillTrans('twill::lang.listing.columns.published'))
+                    ->optional()
+            );
+        }
+        if ($this->moduleHas('translations') && count(getLocales()) > 1) {
+            $columns->add(
+                Languages::make()
+                    ->title(twillTrans('twill::lang.listing.languages'))
+                    ->optional()
+            );
+        }
+
+        return $columns;
     }
 
     public function getForm(TwillModelContract $model): Form
     {
-        $title = Input::make()
-            ->name($this->titleColumnKey)
-            ->required();
-        if ($this->isTranslatable($model)) {
+        $title = $this->getTitleField();
+        if (classHasTrait($model::class, HasTranslation::class)) {
             $title->translatable();
         }
         $content = Form::make()
@@ -84,10 +129,5 @@ class BaseController extends ModuleController
                             ->note('readonly'),
                     ])
             );
-    }
-
-    private function isTranslatable(TwillModelContract $class): bool
-    {
-        return in_array(HasTranslation::class, class_uses_recursive($class));
     }
 }

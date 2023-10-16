@@ -22,6 +22,7 @@ class AudioController extends BaseApiController
     {
         parent::setUpController();
         $this->enableAugmentedModel();
+        $this->enableTitleMarkup();
         $this->setDisplayName('Audio');
         $this->setModuleName('audio');
         $this->setSearchColumns(['title']);
@@ -70,24 +71,6 @@ class AudioController extends BaseApiController
             );
     }
 
-    public function getForm(TwillModelContract $audio): Form
-    {
-        $content = Form::make()
-            ->add(
-                Wysiwyg::make()
-                    ->name('title')
-                    ->required()
-                    ->toolbarOptions(['bold', 'italic'])
-            )
-            ->merge($this->additionalFormFields($audio, $audio->getApiModel()));
-        return Form::make()->addFieldset(
-            Fieldset::make()
-                ->title('Content')
-                ->id('content')
-                ->fields($content->toArray())
-        );
-    }
-
     protected function additionalFormFields($audio, $apiSound): Form
     {
         return Form::make()
@@ -116,6 +99,7 @@ class AudioController extends BaseApiController
                     ->name('transcript')
                     ->type('textarea')
                     ->toolbarOptions(['bold', 'italic'])
+                    ->allowSource()
             );
     }
 

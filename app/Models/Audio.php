@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Audio extends AbstractModel
 {
-    use HasApiModel;
+    use HasApiModel {
+        getTitleAttribute as getTitle;
+    }
     use HasFactory;
 
     protected $apiModelClass = \App\Models\Api\Audio::class;
@@ -24,6 +26,25 @@ class Audio extends AbstractModel
         'locale',
         'transcript',
     ];
+
+    protected $appends = [
+        'title_markup',
+    ];
+
+    public function getTitleAttribute()
+    {
+        return strip_tags($this->getTitle());
+    }
+
+    public function getTitleMarkupAttribute()
+    {
+        return $this->getTitle();
+    }
+
+    public function setTitleMarkupAttribute($title)
+    {
+        return $this->attributes['title'] = $title;
+    }
 
     public function apiRelation(): HasOne
     {

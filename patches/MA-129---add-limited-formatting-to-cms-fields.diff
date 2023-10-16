@@ -1,0 +1,7 @@
+diff --git a/views/listings/columns/linked-cell.blade.php b/views/listings/columns/linked-cell.blade.php
+index 4b41209e..abff106a 100644
+--- a/views/listings/columns/linked-cell.blade.php
++++ b/views/listings/columns/linked-cell.blade.php
+@@ -1 +1 @@
+-<a href="{{$link}}" data-edit="{{$isEditLink ? 'true' : 'false'}}">{{$slot}}</a>
++<a href="{{$link}}" data-edit="{{$isEditLink ? 'true' : 'false'}}">{!!$slot!!}</a>

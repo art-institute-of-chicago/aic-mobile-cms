@@ -5,6 +5,7 @@ namespace Tests\Browser;
 use App\Models\Api\Audio as ApiAudio;
 use App\Models\Audio;
 use App\Models\Selector;
+use App\Models\Tour;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
@@ -44,6 +45,21 @@ class TitleTest extends DuskTestCase
                 ->assertDontSeeIn('.titleEditor h2', 'Missing Title')
                 ->assertSeeIn('.titleEditor h2', $selector->number)
                 ->screenshot("$test 1 - Selector Title");
+        });
+    }
+
+    public function test_title_doesnt_display_markup(): void
+    {
+        $test = Str::of(__FUNCTION__)->title()->replace('_', ' ');
+        $this->browse(function (Browser $browser) use ($test) {
+            $titleWithMarkup = '<p>Test <em>Title</em> with <strong>Markup</strong></p>';
+            $titleWithoutMarkup = strip_tags($titleWithMarkup);
+            $tour = Tour::factory(['title' => '<p>Test <em>Title</em> with <strong>Markup</strong></p>'])->create();
+            $browser->loginAs($this->user(), 'twill_users')
+                ->visit("/admin/tours/$tour->id/edit")
+                ->assertDontSeeIn('.titleEditor h2', $titleWithMarkup)
+                ->assertSeeIn('.titleEditor h2', $titleWithoutMarkup)
+                ->screenshot("$test 1 - No Markup in Title");
         });
     }
 }
