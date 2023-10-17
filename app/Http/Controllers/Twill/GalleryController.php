@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Twill;
 
+use A17\Twill\Services\Forms\BladePartial;
 use A17\Twill\Services\Forms\Fields\Checkbox;
 use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Fields\Map;
@@ -79,6 +80,8 @@ class GalleryController extends BaseApiController
 
     public function additionalFormFields($gallery, $apiGallery): Form
     {
+        $latitude = $gallery->latitude ?? $apiGallery->latitude;
+        $longitude = $gallery->longitude ?? $apiGallery->longitude;
         return Form::make([
             Input::make()
                 ->name('floor')
@@ -88,19 +91,21 @@ class GalleryController extends BaseApiController
                 ->placeholder($apiGallery?->number ?? ''),
             Checkbox::make()
                 ->name('is_closed'),
-            Map::make()
-                ->name('latlng')
-                ->label('Location (out of order)'),
-            Input::make()
-                ->name('latlng')
-                ->label("Location's map data")
-                ->type('textarea'),
+            BladePartial::make()
+                ->view('admin.fields.map')
+                ->withAdditionalParams([
+                    'src' => "/admin/map?latitude=$latitude&longitude=$longitude",
+                ]),
             Input::make()
                 ->name('latitude')
-                ->placeholder($apiGallery->latitude),
+                ->label('Latitude')
+                ->type('number')
+                ->placeholder($latitude),
             Input::make()
                 ->name('longitude')
-                ->placeholder($apiGallery->longitude),
+                ->label('Longitude')
+                ->type('number')
+                ->placeholder($longitude),
         ]);
     }
 }
