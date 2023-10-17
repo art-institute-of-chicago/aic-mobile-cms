@@ -65,10 +65,16 @@ class AppServiceProvider extends ServiceProvider
         TwillNavigation::addLink(
             NavigationLink::make()->forModule('tours')
         );
+        TwillNavigation::addLink(
+            NavigationLink::make()
+                ->title('UI Labels')
+                ->forModule('labels')
+        );
         Relation::morphMap([
             'audio' => Models\Audio::class,
             'collectionObject' => Models\CollectionObject::class,
             'gallery' => Models\Gallery::class,
+            'label' => Models\Label::class,
             'loanObject' => Models\LoanObject::class,
             'selector' => Models\Selector::class,
             'stop' => Models\Stop::class,

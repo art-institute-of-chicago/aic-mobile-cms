@@ -33,5 +33,6 @@ For local development, we run the CMS in a [Homestead](https://laravel.com/docs/
 11. Run `php artisan migrate` to migrate the database schema
 12. Run `php artisan twill:superadmin` to create a superadmin user
 13. Build all necessary Twill assets: `php artisan twill:build`
-14. Access the frontend at http://{your_dev_domain}.
-15. Access the CMS at http://{your_dev_domain}/admin.
+14. Initialize UI labels: `php artisan app:initialize-labels`
+15. Access the frontend at http://{your_dev_domain}.
+16. Access the CMS at http://{your_dev_domain}/admin.

@@ -41,7 +41,6 @@ trait HandlesTitleMarkup
 
     protected function getTitleField(): BaseFormField
     {
-        $field = $this->titleColumnKey . '_markup';
         if ($this->hasTitleMarkup) {
             $title = Wysiwyg::make()
                 ->name($this->titleColumnKey . '_markup')
