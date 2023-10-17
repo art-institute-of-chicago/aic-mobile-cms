@@ -33,3 +33,5 @@ Route::get('tours/createWithAudio', [TourController::class, 'createWithAudio'])-
 TwillRoutes::module('tours');
 
 Route::get('map', [MapController::class, 'index'])->name('map.index');
+
+TwillRoutes::module('labels');

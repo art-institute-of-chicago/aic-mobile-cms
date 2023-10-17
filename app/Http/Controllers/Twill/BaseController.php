@@ -30,12 +30,14 @@ class BaseController extends ModuleController
     protected function getIndexTableColumns(): TableColumns
     {
         $columns = TableColumns::make();
-        $columns->add(
-            PublishStatus::make()
-                ->title(twillTrans('twill::lang.listing.columns.published'))
-                ->sortable()
-                ->optional()
-        );
+        if ($this->getIndexOption('publish')) {
+            $columns->add(
+                PublishStatus::make()
+                    ->title(twillTrans('twill::lang.listing.columns.published'))
+                    ->sortable()
+                    ->optional()
+            );
+        }
         // Add default columns.
         if ($this->getIndexOption('showImage')) {
             $columns->add(
