@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Label;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,9 +17,6 @@ class CreateLabelsTables extends Migration
             createDefaultTranslationsTableFields($table, 'label');
             $table->text('text')->nullable();
         });
-        foreach (Label::KEYS as $key) {
-            Label::firstOrCreate(['key' => $key]);
-        }
     }
 
     public function down()
