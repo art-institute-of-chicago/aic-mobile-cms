@@ -48,6 +48,11 @@ class AppServiceProvider extends ServiceProvider
         );
         TwillNavigation::addLink(
             NavigationLink::make()
+                ->title('Map Floors')
+                ->forModule('mapFloors')
+        );
+        TwillNavigation::addLink(
+            NavigationLink::make()
                 ->title('Objects')
                 ->forModule('collectionObjects')
                 ->doNotAddSelfAsFirstChild()
