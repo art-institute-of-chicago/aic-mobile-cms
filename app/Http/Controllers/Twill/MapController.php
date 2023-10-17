@@ -11,8 +11,8 @@ class MapController extends Controller
     {
         return view('admin.map-controls')->with([
             'apiKey' => config('twill.google_maps_api_key'),
-            'lat' => $request->input('lat'),
-            'lng' => $request->input('lng'),
+            'latitude' => $request->input('latitude'),
+            'longitude' => $request->input('longitude'),
         ]);
     }
 }

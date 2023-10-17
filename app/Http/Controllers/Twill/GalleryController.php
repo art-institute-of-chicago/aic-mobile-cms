@@ -80,6 +80,8 @@ class GalleryController extends BaseApiController
 
     public function additionalFormFields($gallery, $apiGallery): Form
     {
+        $latitude = $gallery->latitude ?? $apiGallery->latitude;
+        $longitude = $gallery->longitude ?? $apiGallery->longitude;
         return Form::make([
             Input::make()
                 ->name('floor')
@@ -92,17 +94,18 @@ class GalleryController extends BaseApiController
             BladePartial::make()
                 ->view('admin.fields.map')
                 ->withAdditionalParams([
-                    'src' => '/admin/map?lat=41.8795425&lng=-87.6235470',
+                    'src' => "/admin/map?latitude=$latitude&longitude=$longitude",
                 ]),
-            Map::make()
-                ->name('latlng')
-                ->label('Location')
-                ->openMap()
-                ->saveExtendedData(),
             Input::make()
-                ->name('latlngstring')
-                ->label("Location's map data")
-                ->type('textarea'),
+                ->name('latitude')
+                ->label('Latitude')
+                ->type('number')
+                ->placeholder($latitude),
+            Input::make()
+                ->name('longitude')
+                ->label('Longitude')
+                ->type('number')
+                ->placeholder($longitude),
         ]);
     }
 }
