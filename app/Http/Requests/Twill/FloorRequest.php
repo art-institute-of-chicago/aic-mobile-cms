@@ -4,7 +4,7 @@ namespace App\Http\Requests\Twill;
 
 use A17\Twill\Http\Requests\Admin\Request;
 
-class MapFloorRequest extends Request
+class FloorRequest extends Request
 {
     public function rulesForCreate()
     {

@@ -37,3 +37,5 @@ Route::get('map', [MapController::class, 'index'])->name('map.index');
 TwillRoutes::module('labels');
 
 TwillRoutes::module('mapFloors');
+
+TwillRoutes::module('floors');

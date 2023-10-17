@@ -4,14 +4,14 @@ namespace App\Repositories;
 
 use A17\Twill\Repositories\Behaviors\HandleFiles;
 use A17\Twill\Repositories\ModuleRepository;
-use App\Models\MapFloor;
+use App\Models\Floor;
 
-class MapFloorRepository extends ModuleRepository
+class FloorRepository extends ModuleRepository
 {
     use HandleFiles;
 
-    public function __construct(MapFloor $mapFloor)
+    public function __construct(Floor $floor)
     {
-        $this->model = $mapFloor;
+        $this->model = $floor;
     }
 }

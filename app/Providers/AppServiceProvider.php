@@ -48,8 +48,12 @@ class AppServiceProvider extends ServiceProvider
         );
         TwillNavigation::addLink(
             NavigationLink::make()
-                ->title('Map Floors')
-                ->forModule('mapFloors')
+                ->title('Map')
+                ->forModule('floors')
+                ->doNotAddSelfAsFirstChild()
+                ->setChildren([
+                    NavigationLink::make()->forModule('floors'),
+                ])
         );
         TwillNavigation::addLink(
             NavigationLink::make()
@@ -78,6 +82,7 @@ class AppServiceProvider extends ServiceProvider
         Relation::morphMap([
             'audio' => Models\Audio::class,
             'collectionObject' => Models\CollectionObject::class,
+            'floor' => Models\Floor::class,
             'gallery' => Models\Gallery::class,
             'label' => Models\Label::class,
             'loanObject' => Models\LoanObject::class,
