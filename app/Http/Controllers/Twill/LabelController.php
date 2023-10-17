@@ -21,6 +21,14 @@ class LabelController extends BaseController
         $this->setModuleName('Labels');
     }
 
+    /**
+     * Disable title editor as the title is generated from the key.
+     */
+    public function edit(TwillModelContract|int $id): mixed
+    {
+        return parent::edit($id)->with(['editableTitle' => false]);
+    }
+
     protected function additionalIndexTableColumns(): TableColumns
     {
         return parent::additionalIndexTableColumns()
@@ -28,6 +36,23 @@ class LabelController extends BaseController
                 Text::make()
                     ->field('text')
             );
+    }
+
+    public function getForm(TwillModelContract $model): Form
+    {
+        $content = Form::make()
+            ->add(
+                Input::make()
+                    ->name($this->titleColumnKey)
+                    ->disabled()
+            )
+            ->merge($this->additionalFormFields($model));
+        return Form::make()->addFieldset(
+            Fieldset::make()
+                ->title('Content')
+                ->id('content')
+                ->fields($content->toArray())
+        );
     }
 
     public function additionalFormFields(TwillModelContract $label): Form
