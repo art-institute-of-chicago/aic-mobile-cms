@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Twill;
 
+use A17\Twill\Services\Forms\BladePartial;
 use A17\Twill\Models\Contracts\TwillModelContract;
 use A17\Twill\Services\Forms\Fields\Browser;
 use A17\Twill\Services\Listings\Columns\Text;
@@ -91,6 +92,17 @@ class AnnotationController extends BaseController
                     ->modules([\App\Models\AnnotationType::class])
                     ->sortable(false)
                     ->max(\App\Models\AnnotationType::count())
+            )
+            ->add(
+                BladePartial::make()
+                    ->view('admin.fields.map')
+                    ->withAdditionalParams([
+                        'src' => route('twill.map.index', [
+                            'latitude' => $object->latitude ?? '',
+                            'longitude' => $object->longitude ?? '',
+                            'floor' => $object->floor ?? '',
+                        ]),
+                    ])
             )
             ->add(
                 Input::make()

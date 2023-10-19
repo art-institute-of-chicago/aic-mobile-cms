@@ -11,18 +11,6 @@ class Floor extends Model
     use HasFiles;
     use HasTranslation;
 
-    /**
-     * Mapping of 'level' => 'geo_id'
-     *
-     * The geo_id is a reference to the geojson data for the map.
-     */
-    const LEVELS = [
-        'LL' => '0002',
-        '1' => '0003',
-        '2' => '0004',
-        '3' => '0005',
-    ];
-
     const ANCHOR_LOCATIONS = [
         '41.88002009571711,-87.62398928403854',
         '41.8800240897643,-87.62334823608397',
@@ -43,6 +31,12 @@ class Floor extends Model
     ];
 
     public $translatedAttributes = [
+        'title',
+    ];
+
+    protected $visible = [
+        'geo_id',
+        'level',
         'title',
     ];
 }

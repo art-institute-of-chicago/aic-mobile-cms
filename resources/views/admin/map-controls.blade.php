@@ -13,7 +13,7 @@
   </head>
   <body onload="initMap({{ $latitude }}, {{ $longitude }}, '{{ $floor }}')">
     <?php if ($apiKey): ?>
-        <div id="map"></div>
+        <div id="map" data-bounds="{{ $bounds }}" data-floors="{{ $floors }}"></div>
       <?php else: ?>
         <p>Google Maps API Key not configured</p>
       <?php endif; ?>

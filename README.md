@@ -34,5 +34,8 @@ For local development, we run the CMS in a [Homestead](https://laravel.com/docs/
 12. Run `php artisan twill:superadmin` to create a superadmin user
 13. Build all necessary Twill assets: `php artisan twill:build`
 14. Initialize UI labels: `php artisan app:initialize-labels`
-15. Access the frontend at http://{your_dev_domain}.
-16. Access the CMS at http://{your_dev_domain}/admin.
+15. Initialize floors: `php artisan app:initialize-floors`
+16. Initialize map annotation categories: `php artisan app:initialize-categories`
+17. Initialize map annotation types: `php artisan app:initialize-types`
+18. Access the frontend at http://{your_dev_domain}.
+19. Access the CMS at http://{your_dev_domain}/admin.
