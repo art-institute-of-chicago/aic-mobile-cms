@@ -17,7 +17,7 @@ class LoanObjectController extends BaseController
 {
     protected function setUpController(): void
     {
-        $this->disablePermalink();
+        parent::setUpController();
         $this->disablePublish();
         $this->enableShowImage();
         $this->setModuleName('loanObjects');

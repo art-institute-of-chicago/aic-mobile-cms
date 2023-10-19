@@ -11,7 +11,7 @@
     <script async defer src="https://maps.googleapis.com/maps/api/js?v=3&key={{ $apiKey }}&sensor=false"></script>
     <script src="/maps/map.js"></script>
   </head>
-  <body onload="initMap({{ $latitude }}, {{ $longitude }})">
+  <body onload="initMap({{ $latitude }}, {{ $longitude }}, '{{ $floor }}')">
     <?php if ($apiKey): ?>
         <div id="map"></div>
       <?php else: ?>
