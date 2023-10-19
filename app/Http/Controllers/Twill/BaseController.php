@@ -85,7 +85,7 @@ class BaseController extends ModuleController
     public function getForm(TwillModelContract $model): Form
     {
         $title = $this->getTitleField();
-        if (classHasTrait($model::class, HasTranslation::class) && $this->hasTitleMarkup) {
+        if (classHasTrait($model::class, HasTranslation::class)) {
             $title->translatable();
         }
         $content = Form::make()
