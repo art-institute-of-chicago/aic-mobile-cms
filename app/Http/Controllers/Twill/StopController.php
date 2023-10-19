@@ -82,13 +82,13 @@ class StopController extends BaseController
                     ->label('Object')
                     ->modulesCustom([
                         [
-                            'name' => 'loanObjects',
-                            'label' => 'Loan Objects',
-                        ],
-                        [
                             'name' => 'collectionObjects',
                             'label' => 'Collection Objects',
                             'params' => ['artwork_id' => $stop->artwork_id],
+                        ],
+                        [
+                            'name' => 'loanObjects',
+                            'label' => 'Loan Objects',
                         ],
                     ])
             )

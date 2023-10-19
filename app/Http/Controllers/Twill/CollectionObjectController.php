@@ -4,10 +4,9 @@ namespace App\Http\Controllers\Twill;
 
 use A17\Twill\Services\Forms\BladePartial;
 use A17\Twill\Services\Forms\Fields\Browser;
-use A17\Twill\Services\Forms\Fields\Medias;
 use A17\Twill\Services\Forms\Fields\Checkbox;
 use A17\Twill\Services\Forms\Fields\Input;
-use A17\Twill\Services\Forms\Fields\Map;
+use A17\Twill\Services\Forms\Fields\Medias;
 use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Boolean;
@@ -119,6 +118,9 @@ class CollectionObjectController extends BaseApiController
             fn ($value) => $value ?? (string) $value,
             $apiCollectionObject->getAttributes()
         );
+        $latitude = $object->latitude ?? $apiCollectionObject->latitude ?? '';
+        $longitude = $object->longitude ?? $apiCollectionObject->longitude ?? '';
+        $floor = $object->gallery?->floor ?? '';
         return Form::make()
             ->add(
                 BladePartial::make()
@@ -164,10 +166,29 @@ class CollectionObjectController extends BaseApiController
                     ->modules([\App\Models\Api\Gallery::class])
             )
             ->add(
-                Map::make()
-                    ->name('latlng')
-                    ->label('Location')
-                    ->note('Coming Soon!')
+                BladePartial::make()
+                    ->view('admin.fields.map')
+                    ->withAdditionalParams([
+                        'src' => route('twill.map.index', [
+                            'latitude' => $latitude,
+                            'longitude' => $longitude,
+                            'floor' => $floor
+                        ]),
+                    ])
+            )
+            ->add(
+                Input::make()
+                    ->name('latitude')
+                    ->label('Latitude')
+                    ->type('number')
+                    ->placeholder($latitude)
+            )
+            ->add(
+                Input::make()
+                    ->name('longitude')
+                    ->label('Longitude')
+                    ->type('number')
+                    ->placeholder($longitude)
             );
     }
 

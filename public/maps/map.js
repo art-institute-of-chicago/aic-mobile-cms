@@ -19,49 +19,36 @@ const TEXT_STYLE = {
     paddingLeft: '5px',
     paddingRight: '5px',
 };
-const IMAGE_BOUNDS = {
-    north: 41.88085384238198,
-    south: 41.8783542495326,
-    east: -87.6208768609257,
-    west: -87.62429309521068
-};
 const TWILL_APP = 'TWILL'
 const MAP_ELEMENT_ID = 'map'
+const DEFAULT_LEVEL = '1'
+
 var marker;
 var coords;
 var geojson;
 var current_level;
-let levels = {
-    'LL': {id: '0002', overlay: null, control: {}},
-    '1': {id: '0003', overlay: null, control: {}},
-    '2': {id: '0004', overlay: null, control: {}},
-    '3': {id: '0005', overlay: null, control: {}},
-}
-const LEVEL_ORDER = ['LL', '1', '2', '3']
-const DEFAULT_LEVEL = '1'
+var container;
+var floors;
 
-window.initMap = function initMap(latitude, longitude, level = DEFAULT_LEVEL) {
+window.initMap = function initMap(latitude, longitude, level) {
+    container = document.getElementById(MAP_ELEMENT_ID)
     detectBrowser();
     var myLatLng = { 'lat': latitude, 'lng': longitude };
-
     var mapOptions = {
         zoom: 20,
         center: myLatLng,
         disableDefaultUI: true
     }
-
-    var map = new google.maps.Map(document.getElementById(MAP_ELEMENT_ID), mapOptions);
-
-    levels = loadOverlays(levels)
-
+    var map = new google.maps.Map(container, mapOptions);
+    floors = JSON.parse(container.dataset.floors)
+    loadOverlays(floors)
     marker = new google.maps.Marker({
         position: myLatLng,
         map: map,
         title: 'Marker',
-        draggable:true,
-        zIndex:100
+        draggable: true,
+        zIndex: 100
     });
-
     marker.addListener('mouseup', function() {
         coords = marker.position.toString().slice(1);
         coords = coords.slice(0, coords.indexOf(')'));
@@ -102,29 +89,29 @@ window.initMap = function initMap(latitude, longitude, level = DEFAULT_LEVEL) {
 
 function detectBrowser() {
     var useragent = navigator.userAgent;
-    var mapdiv = document.getElementById(MAP_ELEMENT_ID);
 
     if (useragent.indexOf('iPhone') != -1 || useragent.indexOf('Android') != -1 ) {
-        mapdiv.style.width = '100%';
-        mapdiv.style.height = '100%';
+        container.style.width = '100%';
+        container.style.height = '100%';
     } else {
-        mapdiv.style.width = '650px';
-        mapdiv.style.height = '550px';
+        container.style.width = '650px';
+        container.style.height = '550px';
     }
 }
 
-function loadOverlays(levels) {
-    for (const level in levels) {
-        if (level === DEFAULT_LEVEL) { // The default level uses the default gmap layer
-            continue;
+function loadOverlays(floors) {
+    let bounds = JSON.parse(container.dataset.bounds)
+    for (const floor of floors) {
+        if (floor.level === DEFAULT_LEVEL) { // The default level uses the default gmap overlay
+            floor.overlay = null
+        } else {
+            floor.overlay = new google.maps.GroundOverlay(`/maps/map-level-${floor.level}.jpg`, bounds)
         }
-        levels[level].overlay = new google.maps.GroundOverlay(`/maps/map-level-${level}.jpg`, IMAGE_BOUNDS)
     }
-    return levels
 }
 
 function loadPolys(geojson, current_level, map) {
-    let current_level_id = levels[current_level].id
+    let current_level_id = floors.filter(floor => floor.level == current_level)[0].geo_id
     //remove all current features/polygons
     map.data.forEach(function(feature) {
         map.data.remove(feature);
@@ -156,35 +143,34 @@ function loadPolys(geojson, current_level, map) {
 * It takes the controlDiv (there are 4, one for each floor) as argument.
 **/
 function FloorControl(controlDiv, map, geojson, current_level) {
-    for (const level of LEVEL_ORDER) {
+    for (const floor of floors) {
         ui = document.createElement('div')
         Object.assign(ui.style, UI_STYLE)
-        ui.title = `Floor ${level}`
-        levels[level].control.ui = ui
+        ui.title = floor.title
         text = document.createElement('div')
         Object.assign(text.style, TEXT_STYLE)
-        if (level === current_level) {
+        if (floor.level === current_level) {
             text.style.fontWeight = 'bold'
         }
-        text.innerHTML = level
-        levels[level].control.text = text
+        text.innerHTML = floor.level
+        floor.control = {ui: ui, text: text}
         ui.addEventListener('click', function() {
-            for (otherLevel in levels) {
-                if (otherLevel === level) {
-                    if (levels[level].overlay !== null) {
-                        levels[level].overlay.setMap(map);
+            for (otherFloor of floors) {
+                if (otherFloor.level === floor.level) {
+                    if (floor.overlay !== null) {
+                        floor.overlay.setMap(map);
                     }
-                    levels[level].control.text.style.fontWeight = 'bold'
+                    floor.control.text.style.fontWeight = 'bold'
                 } else {
-                    if (levels[otherLevel].overlay !== null) {
-                        levels[otherLevel].overlay.setMap(null);
+                    if (otherFloor.overlay !== null) {
+                        otherFloor.overlay.setMap(null);
                     }
-                    levels[otherLevel].control.text.style.fontWeight = 'normal'
+                    otherFloor.control.text.style.fontWeight = 'normal'
                 }
             }
-            loadPolys(geojson, level, map)
-        });
-        ui.appendChild(levels[level].control.text)
+            loadPolys(geojson, floor.level, map)
+        })
+        ui.appendChild(floor.control.text)
         controlDiv.appendChild(ui)
     }
 }
