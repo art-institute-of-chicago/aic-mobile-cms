@@ -45,13 +45,13 @@ class Annotation extends Model
                 foreach ($this->types as $type) {
                     $title = [];
                     if ($this->floor) {
-                        $title []= $this->floor->title;
+                        $title[] = $this->floor->title;
                     }
-                    $title []= $type->title;
+                    $title[] = $type->title;
                     if ($this->label) {
-                        $title []= $this->label;
+                        $title[] = $this->label;
                     }
-                    $titles []= Arr::join($title, ' - ');
+                    $titles[] = Arr::join($title, ' - ');
                 }
                 return Arr::join($titles, ', ');
             },

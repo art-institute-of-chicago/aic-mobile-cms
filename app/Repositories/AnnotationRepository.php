@@ -9,7 +9,8 @@ use App\Models\Annotation;
 
 class AnnotationRepository extends ModuleRepository
 {
-    use HandleTranslations, HandleMedias;
+    use HandleMedias;
+    use HandleTranslations;
 
     public function __construct(Annotation $annotation)
     {

@@ -56,7 +56,6 @@ return new class extends Migration
             createDefaultTranslationsTableFields($table, 'floor');
             $table->string('title')->nullable();
         });
-
     }
 
     public function down()
