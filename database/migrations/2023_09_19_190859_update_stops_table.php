@@ -17,7 +17,7 @@ return new class () extends Migration {
     {
         Schema::table('stops', function (Blueprint $table) {
             $table->string('artwork_id')->nullable()->comment('Datahub foreign key');
-            $table->dropColumns(['object_id', 'object_type']);
+            $table->dropColumn(['object_id', 'object_type']);
         });
     }
 };
