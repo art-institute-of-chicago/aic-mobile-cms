@@ -49,9 +49,12 @@ class AppServiceProvider extends ServiceProvider
         TwillNavigation::addLink(
             NavigationLink::make()
                 ->title('Map')
-                ->forModule('floors')
+                ->forModule('annotations')
                 ->doNotAddSelfAsFirstChild()
                 ->setChildren([
+                    NavigationLink::make()->forModule('annotations'),
+                    NavigationLink::make()->title('Annotation Categories')->forModule('annotationCategories'),
+                    NavigationLink::make()->title('Annotation Types')->forModule('annotationTypes'),
                     NavigationLink::make()->forModule('floors'),
                 ])
         );
@@ -80,6 +83,9 @@ class AppServiceProvider extends ServiceProvider
                 ->forModule('labels')
         );
         Relation::morphMap([
+            'annotation' => Models\Annotation::class,
+            'annotationCategory' => Models\AnnotationCategory::class,
+            'annotationType' => Models\AnnotationType::class,
             'audio' => Models\Audio::class,
             'collectionObject' => Models\CollectionObject::class,
             'floor' => Models\Floor::class,

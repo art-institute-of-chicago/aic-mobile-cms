@@ -13,6 +13,7 @@ class MapController extends Controller
             'apiKey' => config('twill.google_maps_api_key'),
             'latitude' => $request->input('latitude'),
             'longitude' => $request->input('longitude'),
+            'floor' => $request->input('floor') ?? '1', // Default to floor 1
         ]);
     }
 }

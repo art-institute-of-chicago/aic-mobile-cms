@@ -32,13 +32,15 @@ var coords;
 var geojson;
 var current_level;
 let levels = {
-    'B1': {id: '0002', overlay: null, control: {}},
-    '0': {id: '0003', overlay: null, control: {}},
-    '1': {id: '0004', overlay: null, control: {}},
-    '2': {id: '0005', overlay: null, control: {}},
+    'LL': {id: '0002', overlay: null, control: {}},
+    '1': {id: '0003', overlay: null, control: {}},
+    '2': {id: '0004', overlay: null, control: {}},
+    '3': {id: '0005', overlay: null, control: {}},
 }
+const LEVEL_ORDER = ['LL', '1', '2', '3']
+const DEFAULT_LEVEL = '1'
 
-window.initMap = function initMap(latitude, longitude) {
+window.initMap = function initMap(latitude, longitude, level = DEFAULT_LEVEL) {
     detectBrowser();
     var myLatLng = { 'lat': latitude, 'lng': longitude };
 
@@ -80,11 +82,9 @@ window.initMap = function initMap(latitude, longitude) {
     fetch('/maps/Units.geojson')
         .then(response => response.json())
         .then(geojson => {
-            //default level to start with
-            let current_level = levels['0'].id;
             //load polygon for level
-            loadPolys(geojson, current_level, map);
-            new FloorControl(controlDiv, map, geojson);
+            loadPolys(geojson, level, map);
+            new FloorControl(controlDiv, map, geojson, level);
         })
         .catch(data => {
             if (data.status == 404) {
@@ -115,7 +115,7 @@ function detectBrowser() {
 
 function loadOverlays(levels) {
     for (const level in levels) {
-        if (level === '0') { //0 is the default gmap layer
+        if (level === DEFAULT_LEVEL) { // The default level uses the default gmap layer
             continue;
         }
         levels[level].overlay = new google.maps.GroundOverlay(`/maps/map-level-${level}.jpg`, IMAGE_BOUNDS)
@@ -124,15 +124,16 @@ function loadOverlays(levels) {
 }
 
 function loadPolys(geojson, current_level, map) {
+    let current_level_id = levels[current_level].id
     //remove all current features/polygons
     map.data.forEach(function(feature) {
         map.data.remove(feature);
     })
     //draw new feature
     for (var i = 0; i < geojson.features.length; i++) {
-        var levels = geojson.features[i].properties.LEVEL_ID;
+        var level_id = geojson.features[i].properties.LEVEL_ID;
         var coords = geojson.features[i].geometry.coordinates;
-        if (levels == current_level) {
+        if (level_id == current_level_id) {
             for (var j = 0; j < coords.length; j++) {
                 var poly = coords[j];
                 var level_poly = [];
@@ -154,15 +155,15 @@ function loadPolys(geojson, current_level, map) {
 * The FloorControl adds a control that switches to a different floor of the museum on the map.
 * It takes the controlDiv (there are 4, one for each floor) as argument.
 **/
-function FloorControl(controlDiv, map, geojson) {
-    for (const level in levels) {
+function FloorControl(controlDiv, map, geojson, current_level) {
+    for (const level of LEVEL_ORDER) {
         ui = document.createElement('div')
         Object.assign(ui.style, UI_STYLE)
         ui.title = `Floor ${level}`
         levels[level].control.ui = ui
         text = document.createElement('div')
         Object.assign(text.style, TEXT_STYLE)
-        if (level === '0') {
+        if (level === current_level) {
             text.style.fontWeight = 'bold'
         }
         text.innerHTML = level
@@ -181,7 +182,7 @@ function FloorControl(controlDiv, map, geojson) {
                     levels[otherLevel].control.text.style.fontWeight = 'normal'
                 }
             }
-            loadPolys(geojson, levels[level].id, map)
+            loadPolys(geojson, level, map)
         });
         ui.appendChild(levels[level].control.text)
         controlDiv.appendChild(ui)

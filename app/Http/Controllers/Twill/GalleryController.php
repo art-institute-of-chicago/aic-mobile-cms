@@ -82,6 +82,7 @@ class GalleryController extends BaseApiController
     {
         $latitude = $gallery->latitude ?? $apiGallery->latitude;
         $longitude = $gallery->longitude ?? $apiGallery->longitude;
+        $floor = $gallery->floor ?? $apiGallery->floor;
         return Form::make([
             Input::make()
                 ->name('floor')
@@ -94,7 +95,7 @@ class GalleryController extends BaseApiController
             BladePartial::make()
                 ->view('admin.fields.map')
                 ->withAdditionalParams([
-                    'src' => "/admin/map?latitude=$latitude&longitude=$longitude",
+                    'src' => "/admin/map?latitude=$latitude&longitude=$longitude&floor=$floor",
                 ]),
             Input::make()
                 ->name('latitude')
