@@ -43,6 +43,7 @@ class Floor extends Model
     ];
 
     public $translatedAttributes = [
+        'active',
         'title',
     ];
 
