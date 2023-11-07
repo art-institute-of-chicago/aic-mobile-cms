@@ -36,5 +36,29 @@ return [
             ],
         ],
     ],
+    'default_crops' => [
+        'upload' => [
+            'default' => [
+                [
+                    'name' => 'default',
+                    'ratio' => 9 / 5,
+                    'minValues' => [
+                        'width' => 364,
+                        'height' => 200,
+                    ],
+                ],
+            ],
+            'thumbnail' => [
+                [
+                    'name' => 'thumbnail',
+                    'ratio' => 1,
+                    'minValues' => [
+                        'width' => 90,
+                        'height' => 90,
+                    ],
+                ],
+            ],
+        ],
+    ],
     'locale' => 'en',
 ];

@@ -12,17 +12,6 @@ class LoanObject extends AbstractModel
     use HasApiRelations;
     use HasMedias;
 
-    public $mediasParams = [
-        'upload' => [
-            'default' => [
-                [
-                    'name' => 'default',
-                    'ratio' => 'default',
-                ],
-            ]
-        ],
-    ];
-
     protected $fillable = [
         'artist_display',
         'copyright_notice',

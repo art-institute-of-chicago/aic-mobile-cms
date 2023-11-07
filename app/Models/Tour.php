@@ -27,17 +27,6 @@ class Tour extends Model implements Sortable
     use HasRevisions;
     use HasTranslation;
 
-    public $mediasParams = [
-        'upload' => [
-            'default' => [
-                [
-                    'name' => 'default',
-                    'ratio' => 'default',
-                ],
-            ]
-        ],
-    ];
-
     protected $fillable = [
         'duration',
         'gallery_id',
