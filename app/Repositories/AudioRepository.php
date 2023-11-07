@@ -24,6 +24,10 @@ class AudioRepository extends BaseApiRepository
 
     public function afterSave(TwillModelContract $audio, array $fields): void
     {
+        if (isset($fields['title_markup'])) {
+            $audio->title = $fields['title_markup'];
+            $audio->save();
+        }
         if (isset($fields['selector_number'])) {
             $selector = Selector::firstOrCreate(['number' => $fields['selector_number']]);
             $apiRelation = ApiRelation::firstOrCreate(['datahub_id' => $audio->datahub_id]);
