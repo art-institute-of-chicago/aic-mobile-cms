@@ -41,11 +41,6 @@ class Audio extends AbstractModel
         return $this->getTitle();
     }
 
-    public function setTitleMarkupAttribute($title)
-    {
-        return $this->attributes['title'] = $title;
-    }
-
     public function apiRelation(): HasOne
     {
         return $this->hasOne(ApiRelation::class, 'datahub_id', 'datahub_id');
