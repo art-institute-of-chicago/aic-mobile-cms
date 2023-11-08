@@ -36,7 +36,7 @@ Route::get('/audio_files', function () {
 
 Route::get('/dashboard', function () {
     $tourRepository = App::make(TourRepository::class);
-    $featuredTours = $tourRepository->getBaseModel()->newQuery()->visible()->published()->featured()->select('id')->get();
+    $featuredTours = $tourRepository->getBaseModel()->newQuery()->visible()->published()->featured()->get();
     $dashboardSerializer = new DashboardSerializer();
     return $dashboardSerializer->serialize($featuredTours);
 });
