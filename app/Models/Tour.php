@@ -10,6 +10,7 @@ use A17\Twill\Models\Behaviors\HasTranslation;
 use A17\Twill\Models\Behaviors\Sortable;
 use A17\Twill\Models\Model;
 use App\Models\Behaviors\HasApiRelations;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -40,6 +41,7 @@ class Tour extends Model implements Sortable
 
     protected $fillable = [
         'duration',
+        'featured',
         'gallery_id',
         'position',
         'publish_end_date',
@@ -82,5 +84,10 @@ class Tour extends Model implements Sortable
     public function stops(): BelongsToMany
     {
         return $this->belongsToMany(Stop::class, 'tour_stops')->orderByPivot('position');
+    }
+
+    public function scopeFeatured($query): Builder
+    {
+        return $query->where('featured', true);
     }
 }
