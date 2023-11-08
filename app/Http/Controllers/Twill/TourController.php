@@ -23,6 +23,8 @@ class TourController extends BaseController
     protected function setUpController(): void
     {
         parent::setUpController();
+        $this->enableBulkFeature();
+        $this->enableFeature();
         $this->enableReorder();
         $this->enableShowImage();
         $this->enableTitleMarkup();
