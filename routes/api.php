@@ -41,6 +41,14 @@ Route::get('/dashboard', function () {
     return $dashboardSerializer->serialize($featuredTours);
 });
 
+Route::get('/data', function () {
+    return ['data' => config('uris')];
+});
+
+Route::get('/exhibitions', function () {
+    return ['exhibitions' => []];  // Legacy from Drupal
+});
+
 Route::get('/galleries', function () {
     $repository = App::make(GalleryRepository::class);
     $galleries = $repository->getBaseModel()->newQuery()->get();
@@ -48,11 +56,19 @@ Route::get('/galleries', function () {
     return $serializer->serialize($galleries);
 });
 
+Route::get('/messages', function () {
+    return ['messages' => []];  // Legacy from Drupal
+});
+
 Route::get('/objects', function () {
     $repository = App::make(CollectionObjectRepository::class);
     $objects = $repository->getBaseModel()->newQuery()->get();
     $serializer = new ObjectSerializer();
     return $serializer->serialize($objects);
+});
+
+Route::get('/tour_categories', function () {
+    return ['tour_categories' => []];  // Legacy from Drupal
 });
 
 Route::get('/tours', function () {
