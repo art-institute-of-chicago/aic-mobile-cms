@@ -16,17 +16,6 @@ class Annotation extends Model
     use HasMedias;
     use HasTranslation;
 
-    public $mediasParams = [
-        'upload' => [
-            'default' => [
-                [
-                    'name' => 'default',
-                    'ratio' => 'default',
-                ],
-            ]
-        ],
-    ];
-
     protected $fillable = [
         'latitude',
         'longitude',

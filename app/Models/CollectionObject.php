@@ -22,17 +22,6 @@ class CollectionObject extends AbstractModel
 
     protected $apiModelClass = \App\Models\Api\CollectionObject::class;
 
-    public $mediasParams = [
-        'upload' => [
-            'default' => [
-                [
-                    'name' => 'default',
-                    'ratio' => 'default',
-                ],
-            ]
-        ],
-    ];
-
     protected $fillable = [
         'datahub_id',
         'title',
@@ -50,30 +39,6 @@ class CollectionObject extends AbstractModel
         'latitude' => 'decimal:13',
         'longitude' => 'decimal:13',
     ];
-
-    protected $appends = [
-        'latlng',
-        // 'gallery_location',
-    ];
-
-    /**
-     * TODO: Does this belong in a serializer?
-     */
-    public function getGalleryLocationAttribute(): ?string
-    {
-        return $this->gallery?->title;
-    }
-
-    /**
-     * A custom attribute that returns JSON, used for the Map field on the form.
-     * It is derived from the `latlon` attribute from the API resource.
-     */
-    public function getLatlngAttribute(): string
-    {
-        return json_encode([
-            'latlng' => Str::replace(',', '|', $this->latlon),
-        ]);
-    }
 
     public function gallery(): BelongsTo
     {
