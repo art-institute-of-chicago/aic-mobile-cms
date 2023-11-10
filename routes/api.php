@@ -4,10 +4,11 @@ use App\Repositories\Api\CollectionObjectRepository;
 use App\Repositories\Api\GalleryRepository;
 use App\Repositories\Api\SoundRepository;
 use App\Repositories\Serializers\AudioSerializer;
-use App\Repositories\TourRepository;
+use App\Repositories\Serializers\DashboardSerializer;
 use App\Repositories\Serializers\GallerySerializer;
 use App\Repositories\Serializers\ObjectSerializer;
 use App\Repositories\Serializers\TourSerializer;
+use App\Repositories\TourRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,13 @@ Route::get('/audio_files', function () {
     $audios = $repository->getBaseModel()->newQuery()->get();
     $serializer = new AudioSerializer();
     return $serializer->serialize($audios);
+});
+
+Route::get('/dashboard', function () {
+    $tourRepository = App::make(TourRepository::class);
+    $featuredTours = $tourRepository->getBaseModel()->newQuery()->visible()->published()->featured()->get();
+    $dashboardSerializer = new DashboardSerializer();
+    return $dashboardSerializer->serialize($featuredTours);
 });
 
 Route::get('/galleries', function () {
