@@ -56,6 +56,13 @@ Route::get('/galleries', function () {
     return $serializer->serialize($galleries);
 });
 
+Route::get('/general_info', function () {
+    $repository = App::make(LabelRepository::class);
+    $labels = $repository->getBaseModel()->newQuery()->get();
+    $serializer = new GeneralInfoSerializer();
+    return $serializer->serialize($labels);
+});
+
 Route::get('/messages', function () {
     return ['messages' => []];  // Legacy from Drupal
 });
