@@ -6,10 +6,12 @@ use A17\Twill\Models\Behaviors\HasTranslation;
 use A17\Twill\Models\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 
 class Label extends Model
 {
+    use HasFactory;
     use HasTranslation;
 
     public const KEYS = [
