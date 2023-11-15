@@ -6,8 +6,10 @@ use App\Repositories\Api\SoundRepository;
 use App\Repositories\Serializers\AudioSerializer;
 use App\Repositories\Serializers\DashboardSerializer;
 use App\Repositories\Serializers\GallerySerializer;
+use App\Repositories\Serializers\GeneralInfoSerializer;
 use App\Repositories\Serializers\ObjectSerializer;
 use App\Repositories\Serializers\TourSerializer;
+use App\Repositories\LabelRepository;
 use App\Repositories\TourRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -41,6 +43,14 @@ Route::get('/dashboard', function () {
     return $dashboardSerializer->serialize($featuredTours);
 });
 
+Route::get('/data', function () {
+    return ['data' => config('uris')];
+});
+
+Route::get('/exhibitions', function () {
+    return ['exhibitions' => []];  // Legacy from Drupal
+});
+
 Route::get('/galleries', function () {
     $repository = App::make(GalleryRepository::class);
     $galleries = $repository->getBaseModel()->newQuery()->get();
@@ -48,11 +58,26 @@ Route::get('/galleries', function () {
     return $serializer->serialize($galleries);
 });
 
+Route::get('/general_info', function () {
+    $repository = App::make(LabelRepository::class);
+    $labels = $repository->getBaseModel()->newQuery()->get();
+    $serializer = new GeneralInfoSerializer();
+    return $serializer->serialize($labels);
+});
+
+Route::get('/messages', function () {
+    return ['messages' => []];  // Legacy from Drupal
+});
+
 Route::get('/objects', function () {
     $repository = App::make(CollectionObjectRepository::class);
     $objects = $repository->getBaseModel()->newQuery()->get();
     $serializer = new ObjectSerializer();
     return $serializer->serialize($objects);
+});
+
+Route::get('/tour_categories', function () {
+    return ['tour_categories' => []];  // Legacy from Drupal
 });
 
 Route::get('/tours', function () {
