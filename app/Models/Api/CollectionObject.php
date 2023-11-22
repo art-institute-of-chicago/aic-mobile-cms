@@ -4,6 +4,7 @@ namespace App\Models\Api;
 
 use App\Libraries\Api\Models\BaseApiModel;
 use App\Models\Behaviors\HasMediasApi;
+use Illuminate\Database\Eloquent\Builder;
 
 class CollectionObject extends BaseApiModel
 {
@@ -33,7 +34,7 @@ class CollectionObject extends BaseApiModel
         return 'artwork';
     }
 
-    public function scopeOnView($query)
+    public function scopeOnView(Builder $query): Builder
     {
         return $query
             ->rawSearch([
@@ -45,7 +46,7 @@ class CollectionObject extends BaseApiModel
             ]);
     }
 
-    public function scopeBySoundIds($query, $soundIds)
+    public function scopeBySoundIds(Builder $query, array $soundIds): Builder
     {
         $matches = [];
         foreach ($soundIds as $soundId) {
@@ -57,6 +58,20 @@ class CollectionObject extends BaseApiModel
                     'must' => $matches,
                 ]
             ]);
+    }
+
+    public function scopeMostViewed(Builder $query): Builder
+    {
+        return $query
+            ->rawSearch([
+                'bool' => [
+                    'must' => [
+                        ['term' => ['is_boosted' => true]],
+                    ],
+                ],
+            ])
+            ->orderBy('pageviews', 'desc')
+            ->limit(8);
     }
 
     public function __toString(): string
