@@ -8,8 +8,8 @@ use App\Repositories\Serializers\DashboardSerializer;
 use App\Repositories\Serializers\GallerySerializer;
 use App\Repositories\Serializers\GeneralInfoSerializer;
 use App\Repositories\Serializers\ObjectSerializer;
+use App\Repositories\Serializers\SearchSerializer;
 use App\Repositories\Serializers\TourSerializer;
-use App\Repositories\LabelRepository;
 use App\Repositories\TourRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -74,6 +74,13 @@ Route::get('/objects', function () {
     $objects = $repository->getBaseModel()->newQuery()->get();
     $serializer = new ObjectSerializer();
     return $serializer->serialize($objects);
+});
+
+Route::get('/search', function () {
+    $repository = App::make(CollectionObjectRepository::class);
+    $suggestedObjects = $repository->getBaseModel()->newQuery()->mostViewed()->get();
+    $serializer = new SearchSerializer();
+    return $serializer->serialize($suggestedObjects);
 });
 
 Route::get('/tour_categories', function () {
