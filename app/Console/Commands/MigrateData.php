@@ -138,5 +138,4 @@ class MigrateData extends Command
             $tour->stops()->attach($stop, ['position' => $index]);
         }
     }
-
 }
