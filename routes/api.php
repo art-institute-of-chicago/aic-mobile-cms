@@ -1,10 +1,15 @@
 <?php
 
+use App\Repositories\AnnotationRepository;
 use App\Repositories\Api\CollectionObjectRepository;
 use App\Repositories\Api\GalleryRepository;
 use App\Repositories\Api\SoundRepository;
+use App\Repositories\FloorRepository;
+use App\Repositories\LabelRepository;
+use App\Repositories\Serializers\AnnotationSerializer;
 use App\Repositories\Serializers\AudioSerializer;
 use App\Repositories\Serializers\DashboardSerializer;
+use App\Repositories\Serializers\FloorSerializer;
 use App\Repositories\Serializers\GallerySerializer;
 use App\Repositories\Serializers\GeneralInfoSerializer;
 use App\Repositories\Serializers\ObjectSerializer;
@@ -63,6 +68,29 @@ Route::get('/general_info', function () {
     $labels = $repository->getBaseModel()->newQuery()->get();
     $serializer = new GeneralInfoSerializer();
     return $serializer->serialize($labels);
+});
+
+Route::get('/map_annotations', function () {
+    $repository = App::make(AnnotationRepository::class);
+    $annotations = $repository
+        ->getBaseModel()
+        ->newQuery()
+        ->distinctByType()
+        ->get()
+        ->map(function ($annotation) {
+            return $annotation->load(['types' => function ($query) use ($annotation) {
+                $query->where('id', $annotation->annotation_type_id);
+            }]);
+        });
+    $serializer = new AnnotationSerializer();
+    return $serializer->serialize($annotations);
+});
+
+Route::get('/map_floors', function () {
+    $repository = App::make(FloorRepository::class);
+    $floors = $repository->getBaseModel()->newQuery()->get();
+    $serializer = new FloorSerializer();
+    return $serializer->serialize($floors);
 });
 
 Route::get('/messages', function () {

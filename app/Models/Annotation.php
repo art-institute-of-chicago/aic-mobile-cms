@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
-use A17\Twill\Models\Behaviors\HasTranslation;
 use A17\Twill\Models\Behaviors\HasMedias;
+use A17\Twill\Models\Behaviors\HasTranslation;
 use A17\Twill\Models\Model;
 use App\Models\AnnotationType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Arr;
 
 class Annotation extends Model
@@ -23,7 +25,13 @@ class Annotation extends Model
 
     public $translatedAttributes = [
         'active',
+        'description',
         'label',
+    ];
+
+    protected $casts = [
+        'latitude' => 'decimal:13',
+        'longitude' => 'decimal:13',
     ];
 
     public function title(): Attribute
@@ -55,5 +63,14 @@ class Annotation extends Model
     public function types(): BelongsToMany
     {
         return $this->belongsToMany(AnnotationType::class);
+    }
+
+    public function scopeDistinctByType(Builder $query): Builder
+    {
+        return $query
+            ->rightJoin('annotation_annotation_type', function (JoinClause $join) {
+                $join->on('annotations.id', '=', 'annotation_annotation_type.annotation_id');
+            })
+            ->select('annotations.*', 'annotation_annotation_type.annotation_type_id');
     }
 }

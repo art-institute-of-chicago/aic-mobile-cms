@@ -38,6 +38,10 @@ class AnnotationType extends Model
         'title',
     ];
 
+    protected $with = [
+        'category',
+    ];
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(AnnotationCategory::class, 'annotation_category_id');
