@@ -10,8 +10,11 @@ use App\Models\Stop;
 use App\Models\Tour;
 use App\Models\Translations\FloorTranslation;
 use App\Models\Translations\LabelTranslation;
+use App\Models\Translations\StopTranslation;
 use App\Models\Translations\TourTranslation;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class MigrateData extends Command
@@ -33,6 +36,11 @@ class MigrateData extends Command
 
     public function migrateGeneralInfo()
     {
+        if (Schema::disableForeignKeyConstraints()) {
+            Label::truncate();
+            LabelTranslation::truncate();
+            Schema::enableForeignKeyConstraints();
+        };
         $data = $this->appData['general_info'];
         $nonLabels = ['title', 'status', 'nid', 'type', 'translations', 'language'];
         $translations = $data['translations'];
@@ -46,7 +54,7 @@ class MigrateData extends Command
                     continue;
                 }
                 $label = Label::firstOrCreate(['key' => $key]);
-                $translation = LabelTranslation::firstOrNew([
+                $translation = LabelTranslation::make([
                     'active' => true,
                     'label_id' => $label->id,
                     'locale' => $locale,
@@ -59,6 +67,16 @@ class MigrateData extends Command
 
     public function migrateTours()
     {
+        if (Schema::disableForeignKeyConstraints()) {
+            Selector::truncate();
+            Tour::truncate();
+            TourTranslation::truncate();
+            DB::table('tour_stops')->truncate();
+            Stop::truncate();
+            StopTranslation::truncate();
+            LoanObject::truncate();
+            Schema::enableForeignKeyConstraints();
+        };
         $data = $this->appData['tours'];
         foreach ($data as $index => $datum) {
             $translations = $datum['translations'];
@@ -80,6 +98,10 @@ class MigrateData extends Command
                 'publish_start_date' => now(),
                 'published' => true,
             ]);
+            if ($datum['selector_number']) {
+                $selector = Selector::create(['number' => $datum['selector_number']]);
+                $tour->selector()->save($selector);
+            }
             foreach ($translations as $translation) {
                 $tourTranslation = TourTranslation::make([
                     'active' => true,
@@ -90,12 +112,6 @@ class MigrateData extends Command
                     'tour_id' => $tour->id,
                 ]);
                 $tour->translation()->save($tourTranslation);
-                if ($datum['selector_number']) {
-                    $selector = Selector::firstOrCreate([
-                        'number' => $datum['selector_number'],
-                    ]);
-                    $tour->selector()->save($selector);
-                }
             }
             $this->migrateTourStops($tour, $datum['tour_stops']);
         }
@@ -131,9 +147,7 @@ class MigrateData extends Command
                 'published' => true,
                 'title' => $object['title'],
             ]);
-            $selector = Selector::firstOrCreate([
-                'number' => $object['audio_commentary'][0]['object_selector_number'],
-            ]);
+            $selector = Selector::create(['number' => $object['audio_commentary'][0]['object_selector_number']]);
             $stop->selector()->save($selector);
             $tour->stops()->attach($stop, ['position' => $index]);
         }
