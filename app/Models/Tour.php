@@ -38,6 +38,11 @@ class Tour extends Model implements Sortable
         'published',
     ];
 
+    protected $casts = [
+        'publish_end_date' => 'datetime',
+        'publish_start_date' => 'datetime',
+    ];
+
     public $translatedAttributes = [
         'active',
         'description',
@@ -49,7 +54,11 @@ class Tour extends Model implements Sortable
     protected function durationInMinutes(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('duration') . ' minutes',
+            get: fn () => trans_choice(
+                "{1} :minutes minute|[2,*] :minutes minutes",
+                $this->getAttribute('duration'),
+                ['minutes' => $this->getAttribute('duration')],
+            ),
         );
     }
 
@@ -72,7 +81,7 @@ class Tour extends Model implements Sortable
 
     public function stops(): BelongsToMany
     {
-        return $this->belongsToMany(Stop::class, 'tour_stops')->orderByPivot('position');
+        return $this->belongsToMany(Stop::class, 'tour_stops')->orderByPivot('position')->withPivot('position');
     }
 
     public function scopeFeatured($query): Builder
