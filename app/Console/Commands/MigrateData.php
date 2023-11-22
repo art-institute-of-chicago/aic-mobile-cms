@@ -2,12 +2,17 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Annotation;
+use App\Models\AnnotationCategory;
+use App\Models\AnnotationType;
 use App\Models\Floor;
 use App\Models\Label;
 use App\Models\LoanObject;
 use App\Models\Selector;
 use App\Models\Stop;
 use App\Models\Tour;
+use App\Models\Translations\AnnotationCategoryTranslation;
+use App\Models\Translations\AnnotationTypeTranslation;
 use App\Models\Translations\FloorTranslation;
 use App\Models\Translations\LabelTranslation;
 use App\Models\Translations\StopTranslation;
@@ -32,6 +37,7 @@ class MigrateData extends Command
         $this->appData = json_decode(file_get_contents(self::APP_DATA_FILE), associative: true);
         $this->migrateGeneralInfo();
         $this->migrateTours();
+        $this->migrateMapAnnotations();
     }
 
     public function migrateGeneralInfo()
@@ -150,6 +156,78 @@ class MigrateData extends Command
             $selector = Selector::create(['number' => $object['audio_commentary'][0]['object_selector_number']]);
             $stop->selector()->save($selector);
             $tour->stops()->attach($stop, ['position' => $index]);
+        }
+    }
+
+    public function migrateMapAnnotations()
+    {
+        foreach ($this->appData['map_annontations'] as $mapAnnotation) {
+            $level = $mapAnnotation['floor'] == '0' ? 'LL' : $mapAnnotation['floor'];
+            if ($level) {
+                $floor = Floor::firstOrCreate([
+                    'geo_id' => Floor::LEVELS[$level],
+                    'level' => $level,
+                ]);
+                $floorTranslation = FloorTranslation::firstOrNew([
+                    'active' => true,
+                    'floor_id' => $floor->id,
+                    'locale' => config('app.locale'),
+                    'title' => "Floor $level",
+                ]);
+                $floor->translations()->save($floorTranslation);
+            }
+            switch ($mapAnnotation['annotation_type']) {
+                case 'Amenity':
+                    $categoryTitle = $mapAnnotation['annotation_type'];
+                    $typeTitle = $mapAnnotation['amenity_type'];
+                    break;
+                case 'Department':
+                    $categoryTitle = $mapAnnotation['annotation_type'];
+                    $typeTitle = $mapAnnotation['annotation_type'];
+                    break;
+                case 'Text':
+                    $categoryTitle = 'Area';
+                    $typeTitle = $mapAnnotation['text_type'];
+                    break;
+                case 'Image':
+                default:
+                    continue 2;
+            }
+            $annotationCategoryTranslation = AnnotationCategoryTranslation::firstOrNew([
+                'active' => true,
+                'locale' => config('app.locale'),
+                'title' => $categoryTitle,
+            ]);
+            if ($annotationCategoryId = $annotationCategoryTranslation->annotation_category_id) {
+                $annotationCategory = AnnotationCategory::find($annotationCategoryId);
+            } else {
+                $annotationCategory = AnnotationCategory::create();
+                $annotationCategory->translations()->save($annotationCategoryTranslation);
+            }
+            $annotationTypeTranslation = AnnotationTypeTranslation::firstOrNew([
+                'active' => true,
+                'locale' => config('app.locale'),
+                'title' => $typeTitle,
+            ]);
+            if ($annotationTypeId = $annotationTypeTranslation->annotation_type_id) {
+                $annotationType = AnnotationType::find($annotationTypeId);
+            } else {
+                $annotationType = AnnotationType::make();
+                $annotationType->category()->associate($annotationCategory);
+                $annotationType->save();
+                $annotationType->translations()->save($annotationTypeTranslation);
+            }
+            $annotation = Annotation::create([
+                'active' => true,
+                'description' => $mapAnnotation['description'],
+                'label' => $mapAnnotation['label'],
+                'latitude' => $mapAnnotation['latitude'],
+                'longitude' => $mapAnnotation['longitude'],
+                'locale' => config('app.locale'),
+            ]);
+            $annotation->floor()->associate($floor);
+            $annotation->types()->attach($annotationType);
+            $annotation->save();
         }
     }
 }
