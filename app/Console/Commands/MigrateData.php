@@ -12,6 +12,7 @@ use App\Models\Selector;
 use App\Models\Stop;
 use App\Models\Tour;
 use App\Models\Translations\AnnotationCategoryTranslation;
+use App\Models\Translations\AnnotationTranslation;
 use App\Models\Translations\AnnotationTypeTranslation;
 use App\Models\Translations\FloorTranslation;
 use App\Models\Translations\LabelTranslation;
@@ -161,6 +162,17 @@ class MigrateData extends Command
 
     public function migrateMapAnnotations()
     {
+        if (Schema::disableForeignKeyConstraints()) {
+            Floor::truncate();
+            FloorTranslation::truncate();
+            Annotation::truncate();
+            AnnotationTranslation::truncate();
+            AnnotationType::truncate();
+            AnnotationTypeTranslation::truncate();
+            AnnotationCategory::truncate();
+            AnnotationCategoryTranslation::truncate();
+            Schema::enableForeignKeyConstraints();
+        };
         foreach ($this->appData['map_annontations'] as $mapAnnotation) {
             $level = $mapAnnotation['floor'] == '0' ? 'LL' : $mapAnnotation['floor'];
             if ($level) {
