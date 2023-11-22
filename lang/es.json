@@ -1,0 +1,3 @@
+{
+    "{1} :minutes minute|[2,*] :minutes minutes": "{1} :minutes minuto|[2,*] :minutes minutos"
+}

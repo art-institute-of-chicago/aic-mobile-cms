@@ -7,13 +7,17 @@ use League\Fractal\TransformerAbstract;
 
 class TourTransformer extends TransformerAbstract
 {
-    public function transform(TwillModelContract $tour)
+    protected $defaultIncludes = [
+        'tour_stops',
+        'translations',
+    ];
+
+    public function transform(TwillModelContract $tour): array
     {
         $gallery = $tour->gallery;
         return [
             'title' => $tour->title,
-            'nid' => (string) $tour->id, // Legacy from Drupal
-            'translations' => $tour->translations, // TODO transform translations
+            'nid' => (string) $tour->id,
             'location' => $gallery?->latlon,
             'latitude' => (string) $gallery?->latitude,
             'longitude' => (string) $gallery?->longitude,
@@ -25,10 +29,32 @@ class TourTransformer extends TransformerAbstract
             'description' => $tour->description,
             'intro' => $tour->intro,
             'tour_duration' => $tour->duration_in_minutes,
-            'tour_audio' => $tour->sound_id,
+            'tour_audio' => $tour->selector?->locales,
             'category' => null, // Legacy from Drupal
             'weight' => $tour->position,
-            'tour_stops' => $tour->stops, // TODO transform tour stops
         ];
+    }
+
+    protected function includeTourStops($tour)
+    {
+        return $this->collection($tour->stops, new StopTransformer());
+    }
+
+    protected function includeTranslations($tour)
+    {
+        $translations = $tour->translations()
+            ->where('active', true)
+            ->whereNot('locale', config('app.locale'))
+            ->get()
+            ->map(function ($translation) use ($tour) {
+                $translation->duration = trans_choice(
+                    "{1} :minutes minute|[2,*] :minutes minutes",
+                    $tour->duration,
+                    ['minutes' => $tour->duration],
+                    locale: $translation->locale,
+                );
+                return $translation;
+            });
+        return $this->collection($translations, new TourTranslationTransformer());
     }
 }

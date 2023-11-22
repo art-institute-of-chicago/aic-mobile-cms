@@ -5,7 +5,6 @@ namespace App\Repositories\Serializers;
 use App\Models\Transformers\TourTransformer;
 use League\Fractal\Manager;
 use League\Fractal\Resource;
-use League\Fractal\Serializer\ArraySerializer;
 
 class TourSerializer
 {
@@ -14,7 +13,7 @@ class TourSerializer
     public function __construct()
     {
         $this->manager = new Manager();
-        $this->manager->setSerializer(new ArraySerializer());
+        $this->manager->setSerializer(new ArrayWithIncludesSerializer());
     }
 
     public function serialize($tours)
