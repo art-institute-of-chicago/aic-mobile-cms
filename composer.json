@@ -14,7 +14,7 @@
             "package": {
                 "type": "metapackage",
                 "name": "vendor/package-patches",
-                "version": "0.0.1",
+                "version": "0.0.2",
                 "require": {
                     "netresearch/composer-patches-plugin": "~1.2"
                 },
@@ -24,6 +24,10 @@
                             {
                                 "title": "MA-129: Add limited formatting to CMS fields",
                                 "url": "patches/MA-129---add-limited-formatting-to-cms-fields.diff"
+                            },
+                            {
+                                "title": "MA-150: Allow updateBrowser() to handle morphOne relationships",
+                                "url": "patches/MA-150---allow-update-browser-morphs.diff"
                             }
                         ]
                     }
@@ -41,7 +45,7 @@
         "laravel/tinker": "^2.8",
         "league/fractal": "^0.16.0",
         "michelf/php-smartypants": "^1.8",
-        "vendor/package-patches": "0.0.1"
+        "vendor/package-patches": "0.0.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
@@ -95,6 +99,9 @@
     },
     "config": {
         "optimize-autoloader": true,
+        "platform": {
+            "php": "8.1"
+        },
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {

@@ -1,0 +1,26 @@
+diff --git a/src/Repositories/Behaviors/HandleBrowsers.php b/src/Repositories/Behaviors/HandleBrowsers.php
+index c84fbbbf..4ffecd79 100644
+--- a/src/Repositories/Behaviors/HandleBrowsers.php
++++ b/src/Repositories/Behaviors/HandleBrowsers.php
+@@ -5,8 +5,7 @@ namespace A17\Twill\Repositories\Behaviors;
+ use A17\Twill\Models\Behaviors\HasMedias;
+ use Illuminate\Database\Eloquent\Model as EloquentModel;
+ use Illuminate\Database\Eloquent\Relations\BelongsTo;
+-use Illuminate\Database\Eloquent\Relations\HasMany;
+-use Illuminate\Database\Eloquent\Relations\HasOne;
++use Illuminate\Database\Eloquent\Relations\HasOneOrMany;
+ use Illuminate\Database\Eloquent\Relations\MorphTo;
+ use Illuminate\Support\Arr;
+ use Illuminate\Support\Str;
+@@ -119,10 +118,7 @@ trait HandleBrowsers
+             }
+
+             $object->save();
+-        } elseif (
+-            $object->$relationship() instanceof HasOne ||
+-            $object->$relationship() instanceof HasMany
+-        ) {
++        } elseif ($object->$relationship() instanceof HasOneOrMany) {
+             $this->updateBelongsToInverseBrowser($object, $relationship, $relatedElements);
+         } else {
+             $object->$relationship()->sync($relatedElementsWithPosition);
