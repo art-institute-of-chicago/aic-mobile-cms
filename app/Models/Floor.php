@@ -16,19 +16,19 @@ class Floor extends Model
      *
      * The geo_id is a reference to the geojson data for the map.
      */
-    const LEVELS = [
+    public const LEVELS = [
         'LL' => '0002',
         '1' => '0003',
         '2' => '0004',
         '3' => '0005',
     ];
 
-    const ANCHOR_LOCATIONS = [
+    public const ANCHOR_LOCATIONS = [
         '41.88002009571711,-87.62398928403854',
         '41.8800240897643,-87.62334823608397',
     ];
 
-    const ANCHOR_PIXELS = [
+    public const ANCHOR_PIXELS = [
         '855.955,1338.365',
         '1011.94,1338.365',
     ];

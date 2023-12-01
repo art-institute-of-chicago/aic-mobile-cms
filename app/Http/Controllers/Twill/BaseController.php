@@ -97,7 +97,8 @@ class BaseController extends ModuleController
         if (classHasTrait($model::class, HasTranslation::class)) {
             $title->translatable();
         }
-        if (!($this->repository->isFillable($this->titleColumnKey)
+        if (
+            !($this->repository->isFillable($this->titleColumnKey)
             || $this->repository->isTranslatable($this->titleColumnKey))
         ) {
             $title->disabled();
