@@ -7,9 +7,9 @@ use App\Models\Behaviors\HasApiRelations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
 
@@ -72,8 +72,6 @@ class Selector extends Model
         );
     }
 
-    public function selectableTitle(): Attribute
-    {
     public function objectDatahubId(): Attribute
     {
         return Attribute::make(
