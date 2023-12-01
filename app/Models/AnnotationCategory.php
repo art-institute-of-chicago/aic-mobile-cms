@@ -10,12 +10,6 @@ class AnnotationCategory extends Model
 {
     use HasTranslation;
 
-    const TITLES = [
-        'Amenity',
-        'Area',  // Formerly 'Text'
-        'Department',
-    ];
-
     public $fillable = [
         'id',
     ];

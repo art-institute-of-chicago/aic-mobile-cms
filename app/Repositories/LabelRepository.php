@@ -18,6 +18,10 @@ class LabelRepository extends ModuleRepository
 
     public function order(Builder $query, array $orderBy = []): Builder
     {
+        // Default sort by key instead of creation date.
+        $orderBy['key'] ??= 'asc';
+        unset($orderBy['created_at']);
+
         if (array_key_exists('title', $orderBy)) {
             $query->orderByTitle($orderBy['title']);
             unset($orderBy['title']);

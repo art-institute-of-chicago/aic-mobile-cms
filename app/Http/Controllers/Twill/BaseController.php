@@ -27,6 +27,15 @@ class BaseController extends ModuleController
         $this->enableSkipCreateModal();
     }
 
+    public function edit(TwillModelContract|int $id): mixed
+    {
+        return parent::edit($id)->with([
+            'editableTitle' =>
+                $this->repository->isFillable($this->titleColumnKey)
+                || $this->repository->isTranslatable($this->titleColumnKey),
+        ]);
+    }
+
     protected function getIndexTableColumns(): TableColumns
     {
         $columns = TableColumns::make();
@@ -87,6 +96,11 @@ class BaseController extends ModuleController
         $title = $this->getTitleField();
         if (classHasTrait($model::class, HasTranslation::class)) {
             $title->translatable();
+        }
+        if (!($this->repository->isFillable($this->titleColumnKey)
+            || $this->repository->isTranslatable($this->titleColumnKey))
+        ) {
+            $title->disabled();
         }
         $content = Form::make()
             ->add($title)

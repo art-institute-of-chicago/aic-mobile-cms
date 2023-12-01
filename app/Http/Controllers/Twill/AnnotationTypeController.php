@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Twill;
 
-use A17\Twill\Services\Forms\Fields\Browser;
-use A17\Twill\Services\Listings\Columns\Relation;
 use A17\Twill\Models\Contracts\TwillModelContract;
-use A17\Twill\Services\Listings\TableColumns;
+use A17\Twill\Services\Forms\Fields\Browser;
 use A17\Twill\Services\Forms\Form;
+use A17\Twill\Services\Listings\Columns\Relation;
+use A17\Twill\Services\Listings\TableColumns;
 
 class AnnotationTypeController extends BaseController
 {
