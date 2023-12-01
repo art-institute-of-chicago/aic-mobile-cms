@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0a70a7baeb59bb1949fcc0013fb6cae9",
+    "content-hash": "e199cc8c27df6214425ee6adc94b9476",
     "packages": [
         {
             "name": "aic/data-hub-foundation",
@@ -9098,7 +9098,7 @@
         },
         {
             "name": "vendor/package-patches",
-            "version": "0.0.1",
+            "version": "0.0.2",
             "require": {
                 "netresearch/composer-patches-plugin": "~1.2"
             },
@@ -9109,6 +9109,10 @@
                         {
                             "title": "MA-129: Add limited formatting to CMS fields",
                             "url": "patches/MA-129---add-limited-formatting-to-cms-fields.diff"
+                        },
+                        {
+                            "title": "MA-150: Allow updateBrowser() to handle morphOne relationships",
+                            "url": "patches/MA-150---allow-update-browser-morphs.diff"
                         }
                     ]
                 }
@@ -11836,5 +11840,8 @@
         "php": "^8.1"
     },
     "platform-dev": [],
+    "platform-overrides": {
+        "php": "8.1"
+    },
     "plugin-api-version": "2.6.0"
 }
