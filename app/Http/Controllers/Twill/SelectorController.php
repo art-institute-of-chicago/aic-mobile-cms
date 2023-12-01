@@ -9,7 +9,6 @@ use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Relation;
 use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\TableColumns;
-use App\Http\Controllers\Twill\Columns\ApiRelation;
 
 class SelectorController extends BaseController
 {
@@ -43,10 +42,8 @@ class SelectorController extends BaseController
             )
             ->add(
                 Text::make()
-                    ->field('locales')
-                    ->title('Languages')
-                    ->optional()
-                    ->hide()
+                    ->field('audio_title')
+                    ->title('Audio')
             )
             ->add(
                 Text::make()
@@ -56,12 +53,24 @@ class SelectorController extends BaseController
             );
     }
 
+    protected function additionalBrowserTableColumns(): TableColumns
+    {
+        return parent::additionalBrowserTableColumns()
+            ->add(
+                Relation::make()
+                    ->field('title')
+                    ->relation('selectable')
+                    ->sortable()
+            );
+    }
+
     protected function additionalFormFields(TwillModelContract $selector): Form
     {
         return parent::additionalFormFields($selector)
             ->add(
                 Browser::make()
-                    ->name('audio')
+                    ->name('apiAudios')
+                    ->label('Audio')
                     ->modules([\App\Models\Api\Audio::class])
                     ->max(count(getLocales()))
                     ->sortable(false)
