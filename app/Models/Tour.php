@@ -32,7 +32,6 @@ class Tour extends Model implements Sortable
         'duration',
         'featured',
         'gallery_id',
-        'position',
         'publish_end_date',
         'publish_start_date',
         'published',
