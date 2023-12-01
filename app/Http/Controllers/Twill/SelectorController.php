@@ -27,9 +27,13 @@ class SelectorController extends BaseController
         return parent::additionalIndexTableColumns()
             ->add(
                 Text::make()
-                    ->field('selectable_title')
-                    ->title('Title')
-                    ->sortable()
+                    ->field('object_datahub_id')
+                    ->title('Object Id')
+            )
+            ->add(
+                Text::make()
+                    ->field('object_title')
+                    ->title('Object')
             )
             ->add(
                 Text::make()
@@ -69,6 +73,22 @@ class SelectorController extends BaseController
                     ->modules([\App\Models\Tour::class, \App\Models\Stop::class])
                     ->note('Associate with a tour or a stop')
                     ->sortable(false)
+            )
+            ->add(
+                Browser::make()
+                    ->name('objects')
+                    ->label('Object')
+                    ->modulesCustom([
+                        [
+                            'name' => 'collectionObjects',
+                            'label' => 'Collection Objects',
+                            'params' => ['artwork_id' => $selector->object_id],
+                        ],
+                        [
+                            'name' => 'loanObjects',
+                            'label' => 'Loan Objects',
+                        ],
+                    ])
             )
             ->add(
                 Input::make()

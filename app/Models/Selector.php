@@ -21,6 +21,8 @@ class Selector extends Model
     protected $fillable = [
         'notes',
         'number',
+        'object_id',
+        'object_type',
     ];
 
     protected $casts = [
@@ -28,9 +30,8 @@ class Selector extends Model
     ];
 
     protected $appends = [
-        'locales',
-        'selectable_title',
-        'title',
+        'object_datahub_id',
+        'object_title',
         'tour_title',
     ];
 
@@ -39,9 +40,13 @@ class Selector extends Model
         return $this->morphMany(ApiRelatable::class, 'api_relatable');
     }
 
-    public function audio(): MorphToMany
+    public function object(): BelongsTo|MorphTo
     {
-        return $this->apiElements()->where('relation', 'audio');
+        if ($this->object_type === 'collectionObject') {
+            return $this->belongsToApi(Api\CollectionObject::class, 'object_id');
+        } else {
+            return $this->morphTo();
+        }
     }
 
     public function selectable(): MorphTo
@@ -49,31 +54,45 @@ class Selector extends Model
         return $this->morphTo();
     }
 
-    public function locales(): Attribute
+    public function number(): Attribute
     {
         return Attribute::make(
-            get: fn (): string => $this->apiModels('audio', 'Audio')->pluck('locale')->join(', '),
+            get: fn ($number): string => (string) ($number ?? '--'),
+            set: fn ($number) => intval($number) ? $number : null,
         );
     }
 
+    /**
+     * Alias of number
+     */
     public function title(): Attribute
     {
         return Attribute::make(
-            get: fn (): string => (string) $this->number,
+            get: fn (): string => $this->number,
         );
     }
 
     public function selectableTitle(): Attribute
     {
-        $selectable = $this->selectable;
+    public function objectDatahubId(): Attribute
+    {
         return Attribute::make(
-            get: function () use ($selectable): string {
-                $title = $selectable?->title;
-                if ($selectable instanceof Tour) {
-                    $title .= ' Intro';
+            get: function (): string {
+                $id = null;
+                if ($this->object && $this->object_type == 'collectionObject') {
+                    $id = $this->object_id;
+                } elseif ($this->object) {
+                    $id = '(loan)';
                 }
-                return (string) $title;
+                return (string) $id;
             }
+        );
+    }
+
+    public function objectTitle(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): string => (string) $this->object?->title,
         );
     }
 
