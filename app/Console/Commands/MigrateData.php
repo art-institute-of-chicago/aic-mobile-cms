@@ -5,9 +5,17 @@ namespace App\Console\Commands;
 use App\Models\Annotation;
 use App\Models\AnnotationCategory;
 use App\Models\AnnotationType;
+use App\Models\ApiRelatable;
+use App\Models\ApiRelation;
+use App\Models\Api\CollectionObject as ApiCollectionObject;
+use App\Models\Api\Gallery as ApiGallery;
+use App\Models\Audio;
+use App\Models\CollectionObject;
 use App\Models\Floor;
+use App\Models\Gallery;
 use App\Models\Label;
 use App\Models\LoanObject;
+use App\Models\Revisions\TourRevision;
 use App\Models\Selector;
 use App\Models\Stop;
 use App\Models\Tour;
@@ -16,7 +24,6 @@ use App\Models\Translations\AnnotationTranslation;
 use App\Models\Translations\AnnotationTypeTranslation;
 use App\Models\Translations\FloorTranslation;
 use App\Models\Translations\LabelTranslation;
-use App\Models\Translations\StopTranslation;
 use App\Models\Translations\TourTranslation;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +32,7 @@ use Illuminate\Support\Str;
 
 class MigrateData extends Command
 {
-    const APP_DATA_FILE = 'https://aic-mobile-tours.artic.edu/sites/default/files/appData-v3.json';
+    public const APP_DATA_FILE = 'https://aic-mobile-tours.artic.edu/sites/default/files/appData-v3.json';
 
     protected $signature = 'app:migrate-data';
 
@@ -33,16 +40,23 @@ class MigrateData extends Command
 
     protected $appData = [];
 
+    protected $annotationProgress;
+
+    protected $labelProgress;
+
+    protected $tourProgress;
+
     public function handle()
     {
         $this->appData = json_decode(file_get_contents(self::APP_DATA_FILE), associative: true);
+        $this->migrateMapAnnotations();
         $this->migrateGeneralInfo();
         $this->migrateTours();
-        $this->migrateMapAnnotations();
     }
 
     public function migrateGeneralInfo()
     {
+        $this->info('Labels');
         if (Schema::disableForeignKeyConstraints()) {
             Label::truncate();
             LabelTranslation::truncate();
@@ -54,6 +68,10 @@ class MigrateData extends Command
         $defaultTranslation = $data;
         $defaultTranslation['language'] = config('app.locale');
         $translations[] = $defaultTranslation;
+        $translations = collect($translations);
+        $this->labelProgress = $this->output->createProgressBar($translations->flatten()->count());
+        $this->labelProgress->setFormat('verbose');
+        $this->labelProgress->start();
         foreach ($translations as $labels) {
             $locale = $labels['language'];
             foreach ($labels as $key => $text) {
@@ -69,27 +87,34 @@ class MigrateData extends Command
                 ]);
                 $label->translations()->save($translation);
             }
+            $this->labelProgress->advance();
         }
+        $this->labelProgress->finish();
+        $this->newLine();
     }
 
     public function migrateTours()
     {
+        $this->info('Tours & Stops');
         if (Schema::disableForeignKeyConstraints()) {
             Selector::truncate();
             Tour::truncate();
             TourTranslation::truncate();
+            TourRevision::truncate();
             DB::table('tour_stops')->truncate();
             Stop::truncate();
-            StopTranslation::truncate();
+            CollectionObject::truncate();
             LoanObject::truncate();
+            Audio::truncate();
+            ApiRelatable::truncate();
+            ApiRelation::truncate();
             Schema::enableForeignKeyConstraints();
         };
-        $data = $this->appData['tours'];
+        $data = collect($this->appData['tours']);
+        $this->tourProgress = $this->output->createProgressBar($data->flatten()->count());
+        $this->tourProgress->setFormat('verbose');
+        $this->tourProgress->start();
         foreach ($data as $index => $datum) {
-            $translations = $datum['translations'];
-            $defaultTranslation = $datum;
-            $defaultTranslation['language'] = config('app.locale');
-            $translations[] = $defaultTranslation;
             $duration = Str::of($datum['tour_duration']);
             if ($duration->contains(':')) {
                 $duration = $duration->before(':');
@@ -105,10 +130,17 @@ class MigrateData extends Command
                 'publish_start_date' => now(),
                 'published' => true,
             ]);
-            if ($datum['selector_number']) {
-                $selector = Selector::create(['number' => $datum['selector_number']]);
-                $tour->selector()->save($selector);
+            $number = $datum['selector_number'];
+            if ($number && !$this->isKnownDuplicate($number, $datum['title'])) {
+                $selector = Selector::firstOrCreate(['number' => (integer) $number]);
+            } else {
+                $selector = Selector::create();
             }
+            $tour->selector()->save($selector);
+            $translations = $datum['translations'];
+            $defaultTranslation = $datum;
+            $defaultTranslation['language'] = config('app.locale');
+            $translations[] = $defaultTranslation;
             foreach ($translations as $translation) {
                 $tourTranslation = TourTranslation::make([
                     'active' => true,
@@ -120,48 +152,60 @@ class MigrateData extends Command
                 ]);
                 $tour->translation()->save($tourTranslation);
             }
+            $tour->save();
             $this->migrateTourStops($tour, $datum['tour_stops']);
         }
+        $this->tourProgress->finish();
+        $this->newLine();
     }
 
     public function migrateTourStops($tour, array $tourStops)
     {
         foreach ($tourStops as $index => $tourStop) {
-            $object = $this->appData['objects'][$tourStop['object']] ?? null;
-            if (is_null($object)) {
+            $objectData = $this->appData['objects'][$tourStop['object']] ?? null;
+            if (is_null($objectData)) {
                 continue;
             }
-            if ($object['id']) {
-                $objectId = $object['id'];
-                $objectType = 'collectionObject';
-            } else {
-                $loanObject = LoanObject::create([
-                    'artist_display' => $object['artist_culture_place_delim'],
-                    'copyright_notice' => $object['copyright_notice'],
-                    'credit_line' => $object['credit_line'],
-                    'latitude' => $object['latitude'],
-                    'longitude' => $object['longitude'],
-                    'title' => $object['title'],
-                ]);
-                $objectId = $loanObject->id;
-                $objectType = 'loanObject';
+            if ($gallery = ApiGallery::search($objectData['gallery_location'])->limit(1)->get()->first()) {
+                Gallery::firstOrCreate(['datahub_id' => $gallery?->id]);
             }
+            if ($objectData['id']) {
+                CollectionObject::firstOrCreate(['datahub_id' => $objectData['id']]);
+                $object = new ApiCollectionObject(['id' => $objectData['id']]);
+            } else {
+                $object = LoanObject::create([
+                    'artist_display' => $objectData['artist_culture_place_delim'],
+                    'copyright_notice' => $objectData['copyright_notice'],
+                    'credit_line' => $objectData['credit_line'],
+                    'latitude' => $objectData['latitude'],
+                    'longitude' => $objectData['longitude'],
+                    'title' => $objectData['title'],
+                    'gallery_id' => $gallery?->id,
+                ]);
+            }
+            $selectorData = collect($objectData['audio_commentary'])->firstWhere('audio', $tourStop['audio_id']);
+            $selector = Selector::firstOrCreate(['number' => (integer) $selectorData['object_selector_number']]);
+            $selector->fill([
+                'object_id' => $object->id,
+                'object_type' => Str::of(class_basename($object))->lcfirst(),
+            ]);
+            $selector->save();
             $stop = Stop::create([
                 'active' => true,
-                'object_id' => $objectId,
-                'object_type' => $objectType,
                 'publish_start_date' => now(),
                 'published' => true,
-                'title' => $object['title'],
+                'title' => Str::of($objectData['title'])->trim(),
             ]);
-            $selector = Selector::create(['number' => $object['audio_commentary'][0]['object_selector_number']]);
             $stop->selector()->save($selector);
             $tour->stops()->attach($stop, ['position' => $index]);
+            $stop->save();
+            $this->tourProgress->advance();
         }
     }
 
     public function migrateMapAnnotations()
     {
+        $this->info('Annotations');
         if (Schema::disableForeignKeyConstraints()) {
             Floor::truncate();
             FloorTranslation::truncate();
@@ -169,11 +213,16 @@ class MigrateData extends Command
             AnnotationTranslation::truncate();
             AnnotationType::truncate();
             AnnotationTypeTranslation::truncate();
+            DB::table('annotation_annotation_type')->truncate();
             AnnotationCategory::truncate();
             AnnotationCategoryTranslation::truncate();
             Schema::enableForeignKeyConstraints();
         };
-        foreach ($this->appData['map_annontations'] as $mapAnnotation) {
+        $mapAnnotations = collect($this->appData['map_annontations']);
+        $this->annotationProgress = $this->output->createProgressBar($mapAnnotations->count());
+        $this->annotationProgress->setFormat('verbose');
+        $this->annotationProgress->start();
+        foreach ($mapAnnotations as $id => $mapAnnotation) {
             $level = $mapAnnotation['floor'] == '0' ? 'LL' : $mapAnnotation['floor'];
             if ($level) {
                 $floor = Floor::firstOrCreate([
@@ -240,6 +289,20 @@ class MigrateData extends Command
             $annotation->floor()->associate($floor);
             $annotation->types()->attach($annotationType);
             $annotation->save();
+            $this->annotationProgress->advance();
         }
+        $this->annotationProgress->finish();
+        $this->newLine();
+    }
+
+    /**
+     * A couple of the verbal description tours have the same selector number as
+     * the regular version.
+     */
+    private function isKnownDuplicate($number, $title)
+    {
+        $knownDuplicateNumbers = ['388', '639'];
+        $title = Str::of($title);
+        return in_array($number, $knownDuplicateNumbers) && $title->contains('Verbal Description');
     }
 }
