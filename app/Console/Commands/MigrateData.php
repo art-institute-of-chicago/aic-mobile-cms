@@ -132,7 +132,7 @@ class MigrateData extends Command
             ]);
             $number = $datum['selector_number'];
             if ($number && !$this->isKnownDuplicate($number, $datum['title'])) {
-                $selector = Selector::firstOrCreate(['number' => (integer) $number]);
+                $selector = Selector::firstOrCreate(['number' => (int) $number]);
             } else {
                 $selector = Selector::create();
             }
@@ -184,7 +184,7 @@ class MigrateData extends Command
                 ]);
             }
             $selectorData = collect($objectData['audio_commentary'])->firstWhere('audio', $tourStop['audio_id']);
-            $selector = Selector::firstOrCreate(['number' => (integer) $selectorData['object_selector_number']]);
+            $selector = Selector::firstOrCreate(['number' => (int) $selectorData['object_selector_number']]);
             $selector->fill([
                 'object_id' => $object->id,
                 'object_type' => Str::of(class_basename($object))->lcfirst(),
