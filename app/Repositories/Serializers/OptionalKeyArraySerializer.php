@@ -5,11 +5,10 @@ namespace App\Repositories\Serializers;
 use League\Fractal\Serializer\ArraySerializer;
 
 /**
- * When including collections inside a resource, do not nest under a resource
- * key unless specified. This prevents the default `data` resource key from being
- * used.
+ * Does not include a resource key unless specified. This prevents the default
+ * `data` resource key from being used.
  */
-class ArrayWithIncludesSerializer extends ArraySerializer
+class OptionalKeyArraySerializer extends ArraySerializer
 {
     public function collection($resourceKey, array $data): array
     {
