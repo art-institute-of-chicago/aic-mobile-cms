@@ -22,10 +22,18 @@ class CollectionObject extends BaseApiModel
         'iiif' => [
             'default' => [
                 [
-                    'name' => 'default',
-                    'ratio' => 'default',
+                    'name' => 'full',
+                    'height' => 800,
+                    'width' => 800,
                 ],
-            ]
+            ],
+            'thumbnail' => [
+                [
+                    'name' => 'thumbnail',
+                    'height' => 112,
+                    'width' => 112,
+                ],
+            ],
         ],
     ];
 

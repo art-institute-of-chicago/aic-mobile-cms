@@ -2,8 +2,7 @@
 
 namespace App\Repositories\Serializers;
 
-use App\Models\Api\CollectionObject as ApiCollectionObject;
-use App\Models\CollectionObject;
+use App\Models\Api\CollectionObject;
 use App\Models\Transformers\ObjectTransformer;
 use League\Fractal\Manager;
 use League\Fractal\Resource;
@@ -20,12 +19,12 @@ class ObjectSerializer
 
     public function serialize($objects)
     {
-        $objects = collect($objects);
-        if ($objects instanceof ApiCollectionObject) {
-            $objects->each->getAugmentedModel();
-        } elseif ($objects instanceof CollectionObject) {
-            $objects->each->refreshApi();
-        }
+        $objects = $objects->map(function ($object) {
+            if ($object instanceof CollectionObject) {
+                $object = $object->getAugmentedModel()->refreshApi();
+            }
+            return $object;
+        });
         $resource = new Resource\Collection($objects, new ObjectTransformer(), 'objects');
         return $this->manager->createData($resource)->toArray();
     }

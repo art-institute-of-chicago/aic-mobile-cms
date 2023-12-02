@@ -15,9 +15,11 @@ use App\Repositories\Serializers\GeneralInfoSerializer;
 use App\Repositories\Serializers\ObjectSerializer;
 use App\Repositories\Serializers\SearchSerializer;
 use App\Repositories\Serializers\TourSerializer;
+use App\Repositories\StopRepository;
 use App\Repositories\TourRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -98,10 +100,48 @@ Route::get('/messages', function () {
 });
 
 Route::get('/objects', function () {
-    $repository = App::make(CollectionObjectRepository::class);
-    $objects = $repository->getBaseModel()->newQuery()->get();
+    $publishedStops = App::Make(StopRepository::class)
+        ->getBaseModel()
+        ->newQuery()
+        ->visible()
+        ->published()
+        ->select(DB::raw(1))
+        ->whereColumn('stops.id', 'selectors.selectable_id')
+        ->where('selectors.selectable_type', 'stop');
+    $selectorRepository = App::make(SelectorRepository::class);
+    $loanObjects = $selectorRepository
+        ->getBaseModel()
+        ->newQuery()
+        ->with(['object']) // This can only preload the LoanObjects
+        ->whereExists($publishedStops)
+        ->get()
+        ->map(fn ($selector) => $selector->object)
+        ->filter();
+    // Since api models cannot be preloaded, bulk retrieve CollectionObjects
+    $collectionObjectIds = $selectorRepository
+        ->getBaseModel()
+        ->newQuery()
+        ->whereExists($publishedStops)
+        ->where('object_type', 'collectionObject')
+        ->get()
+        ->pluck('object_id')
+        ->unique()
+        ->chunk(100); // The api only allows retrieving 100 records at a time
+    $collectionObjectRepository = App::make(CollectionObjectRepository::class);
+    $collectionObjects = $collectionObjectIds->reduce(function ($objects, $chunk) use ($collectionObjectRepository) {
+        return $objects->concat(
+            $collectionObjectRepository
+                ->getBaseModel()
+                ->newQuery()
+                ->with(['gallery'])
+                ->whereIn('id', $chunk->toArray())
+                ->where('is_on_view', true)
+                ->get()
+        );
+    }, collect());
+    $allObjects = collect()->concat($collectionObjects)->concat($loanObjects);
     $serializer = new ObjectSerializer();
-    return $serializer->serialize($objects);
+    return $serializer->serialize($allObjects);
 });
 
 Route::get('/search', function () {
