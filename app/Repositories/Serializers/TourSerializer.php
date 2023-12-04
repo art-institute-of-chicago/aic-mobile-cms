@@ -13,7 +13,7 @@ class TourSerializer
     public function __construct()
     {
         $this->manager = new Manager();
-        $this->manager->setSerializer(new ArrayWithIncludesSerializer());
+        $this->manager->setSerializer(new OptionalKeyArraySerializer());
     }
 
     public function serialize($tours)
