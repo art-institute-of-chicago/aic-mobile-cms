@@ -3,9 +3,9 @@
 use App\Repositories\AnnotationRepository;
 use App\Repositories\Api\CollectionObjectRepository;
 use App\Repositories\Api\GalleryRepository;
-use App\Repositories\Api\SoundRepository;
 use App\Repositories\FloorRepository;
 use App\Repositories\LabelRepository;
+use App\Repositories\SelectorRepository;
 use App\Repositories\Serializers\AnnotationSerializer;
 use App\Repositories\Serializers\AudioSerializer;
 use App\Repositories\Serializers\DashboardSerializer;
@@ -37,8 +37,22 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('/audio_files', function () {
-    $repository = App::make(SoundRepository::class);
-    $audios = $repository->getBaseModel()->newQuery()->get();
+    $publishedStops = App::Make(StopRepository::class)
+        ->getBaseModel()
+        ->newQuery()
+        ->visible()
+        ->published()
+        ->select(DB::raw(1))
+        ->whereColumn('stops.id', 'selectors.selectable_id')
+        ->where('selectors.selectable_type', 'stop');
+    $selectorRepository = App::make(SelectorRepository::class);
+    $audios = $selectorRepository
+        ->getBaseModel()
+        ->newQuery()
+        ->whereExists($publishedStops)
+        ->get()
+        ->map(fn ($selector) => $selector->audios->isEmpty() ? null : $selector->audios)
+        ->filter();
     $serializer = new AudioSerializer();
     return $serializer->serialize($audios);
 });
