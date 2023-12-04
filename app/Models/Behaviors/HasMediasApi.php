@@ -31,7 +31,8 @@ trait HasMediasApi
      *      ]
      *  ];
      */
-    public function image($role, $crop = 'default', $params = []) {
+    public function image($role, $crop = 'default', $params = [])
+    {
         $cropParams = $this->getMediasParams()[$role][$crop][0];
         $imageField = $cropParams['field'] ?? 'image_id';
         return DamsImageService::getUrl($this->{$imageField}, $cropParams + $params);

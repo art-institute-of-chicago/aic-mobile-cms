@@ -4,10 +4,12 @@ namespace App\Models\Api;
 
 use App\Libraries\Api\Models\BaseApiModel;
 use App\Models\Behaviors\HasMediasApi;
+use Database\Factories\Api\HasApiFactory;
 use Illuminate\Database\Eloquent\Builder;
 
 class CollectionObject extends BaseApiModel
 {
+    use HasApiFactory;
     use HasMediasApi;
 
     protected array $endpoints = [

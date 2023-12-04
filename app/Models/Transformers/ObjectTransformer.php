@@ -3,7 +3,7 @@
 namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
-use App\Repositories\Serializers\OptionalKeyArraysSerializer;
+use App\Repositories\Serializers\OptionalKeyArraySerializer;
 use League\Fractal\TransformerAbstract;
 
 class ObjectTransformer extends TransformerAbstract
@@ -11,12 +11,12 @@ class ObjectTransformer extends TransformerAbstract
     use CustomIncludes;
 
     public $customIncludes = [
-        'selectors' => OptionalKeyArraysSerializer::class,
+        'selectors' => OptionalKeyArraySerializer::class,
     ];
 
     public function transform(TwillModelContract $object): array
     {
-        $objectType = str(class_basename($object))->lcfirst();
+        $objectType = lcfirst(class_basename($object));
         $latitude = $object->latitude ?? $object->gallery?->latitude;
         $longitude = $object->longitude ?? $object->gallery?->longitude;
         return [

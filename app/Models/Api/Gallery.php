@@ -2,11 +2,13 @@
 
 namespace App\Models\Api;
 
-use App\Helpers\StringHelpers;
 use App\Libraries\Api\Models\BaseApiModel;
+use Database\Factories\Api\HasApiFactory;
 
 class Gallery extends BaseApiModel
 {
+    use HasApiFactory;
+
     protected array $endpoints = [
         'collection' => '/api/v1/galleries',
         'resource' => '/api/v1/galleries/{id}',

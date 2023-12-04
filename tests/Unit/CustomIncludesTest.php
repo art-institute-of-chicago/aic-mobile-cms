@@ -4,8 +4,6 @@ namespace Tests\Unit;
 
 use A17\Twill\Models\Model;
 use App\Models\Transformers\CustomIncludes;
-use League\Fractal\Serializer\ArraySerializer;
-use League\Fractal\Serializer\SerializerAbstract;
 use League\Fractal\TransformerAbstract;
 use PHPUnit\Framework\TestCase;
 
@@ -48,6 +46,7 @@ class CustomIncludesTest extends TestCase
     }
 }
 
+// phpcs:disable PSR1.Classes.ClassDeclaration.MultipleClasses,PSR2.Classes.ClassDeclaration.OpenBraceNewLine,Squiz
 class FakeModel extends Model {
     public $data = ['fake', 'model'];
 }
@@ -80,3 +79,4 @@ class FakeTransformer {
 
     public function includeNotConfigured($model) {}
 }
+// phpcs:enable

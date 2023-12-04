@@ -19,6 +19,7 @@ class LoanObject extends AbstractModel
         'copyright_notice',
         'credit_line',
         'gallery_id',
+        'is_on_view',
         'latitude',
         'longitude',
         'main_reference_number',
