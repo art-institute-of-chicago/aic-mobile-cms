@@ -19,8 +19,8 @@ class TourTransformer extends TransformerAbstract
             'title' => $tour->title,
             'nid' => (string) $tour->id,
             'location' => $gallery?->latlon,
-            'latitude' => (string) $gallery?->latitude,
-            'longitude' => (string) $gallery?->longitude,
+            'latitude' => $gallery?->latitude,
+            'longitude' => $gallery?->longitude,
             'floor' => $gallery?->floor,
             'image_url' => $tour->image_url,
             'thumbnail_full_path' => $tour->thumbnail_full_path,
@@ -37,7 +37,10 @@ class TourTransformer extends TransformerAbstract
 
     protected function includeTourStops($tour)
     {
-        return $this->collection($tour->stops, new StopTransformer());
+        $stops = $tour->stops->filter(function ($stop) {
+            return $stop->selector?->object?->is_on_view;
+        });
+        return $this->collection($stops, new StopTransformer());
     }
 
     protected function includeTranslations($tour)
