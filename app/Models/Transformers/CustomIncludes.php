@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
  *
  * Usage:
  *  protected $customIncludes = [
- *      'some_data' => DifferentSerializer::class,
+ *      'related_models' => DifferentSerializer::class,
  *  ];
  *
  *  public function transform($model)
@@ -21,9 +21,9 @@ use Illuminate\Support\Str;
  *      ]);
  *  }
  *
- *  protected includeSomeData($models)
+ *  protected includeRelatedModels($models)
  *  {
- *      return $this->collection($models, new ModelTransformer(), 'optional_key');
+ *      return $this->collection($models->related_models, new ModelTransformer(), 'optional_key');
  *  }
  */
 trait CustomIncludes
