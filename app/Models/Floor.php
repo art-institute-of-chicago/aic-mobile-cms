@@ -5,9 +5,11 @@ namespace App\Models;
 use A17\Twill\Models\Behaviors\HasFiles;
 use A17\Twill\Models\Behaviors\HasTranslation;
 use A17\Twill\Models\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Floor extends Model
 {
+    use HasFactory;
     use HasFiles;
     use HasTranslation;
 
