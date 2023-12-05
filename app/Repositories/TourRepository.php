@@ -14,10 +14,6 @@ class TourRepository extends ModuleRepository
     use HandleRevisions;
     use HandleTranslations;
 
-    protected $relatedBrowsers = [
-        'stops'
-    ];
-
     protected $apiBrowsers = [
         'gallery'
     ];
@@ -37,35 +33,8 @@ class TourRepository extends ModuleRepository
 
     public function afterSave($tour, array $fields): void
     {
-        $this->updateSelectorBrowser($tour, $fields);
-        $this->updateTourStopsBrowser($tour, $fields);
+        $this->updateBrowser($tour, $fields, 'selector', browserName: 'selectors');
+        $this->updateBrowser($tour, $fields, 'stops', browserName: 'tour_stops');
         parent::afterSave($tour, $fields);
-    }
-
-    protected function updateSelectorBrowser($tour, $fields): void
-    {
-        if (isset($fields['browsers']['selectors'])) {
-            if ($originalSelector = $tour->selector) {
-                $originalSelector->selectable()->dissociate();
-                $originalSelector->save();
-            };
-            if ($selectorData = collect($fields['browsers']['selectors'])->first()) {
-                $newSelector = Selector::find($selectorData['id']);
-                $newSelector->selectable()->associate($tour);
-                $newSelector->save();
-            }
-        } else {
-            $originalSelector = $tour->selector;
-            $originalSelector?->selectable()->dissociate();
-            $originalSelector?->save();
-        }
-    }
-
-    protected function updateTourStopsBrowser($tour, $fields): void
-    {
-        $stops = collect($fields['browsers']['tour_stops'])->mapWithKeys(function (array $stop, int $index) {
-            return [$stop['id'] => ['position' => $index + 1]];
-        });
-        $tour->stops()->sync($stops);
     }
 }

@@ -148,12 +148,4 @@ class TourController extends BaseController
                     ->max(99)
             );
     }
-
-    public function createWithAudio(): RedirectResponse
-    {
-        $audio = Audio::find(request('sound_id'));
-        $tour = Tour::create();
-        $tour->selector()->save($audio->selector);
-        return Redirect::to(moduleRoute($this->moduleName, $this->routePrefix, 'edit', ['tour' => $tour->id]));
-    }
 }
