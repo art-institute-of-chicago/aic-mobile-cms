@@ -36,7 +36,6 @@ class SelectorTest extends DuskTestCase
 
     public function test_user_can_add_audio_to_selector(): void
     {
-        $this->markTestSkipped('Temporarily skipped');
         $test = Str::of(__FUNCTION__)->title()->replace('_', ' ');
         $selector = Selector::factory()->create();
         $audio = Audio::query()->limit(1)->get()->first();
