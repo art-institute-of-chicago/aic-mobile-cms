@@ -3,6 +3,8 @@
 namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
+use App\Models\CollectionObject;
+use App\Models\LoanObject;
 use App\Repositories\Serializers\OptionalKeyArraySerializer;
 use League\Fractal\TransformerAbstract;
 
@@ -19,6 +21,19 @@ class ObjectTransformer extends TransformerAbstract
         $objectType = lcfirst(class_basename($object));
         $latitude = $object->latitude ?? $object->gallery?->latitude;
         $longitude = $object->longitude ?? $object->gallery?->longitude;
+        switch (get_class($object)) {
+            case CollectionObject::class:
+                $thumbnail = $object->getApiModel()->image('iiif', 'thumbnail');
+                $image = $object->getApiModel()->image('iiif');
+                break;
+            case LoanObject::class:
+                $thumbnail = $object->image('upload', 'thumbnail');
+                $image = $object->image('upload');
+                break;
+            default:
+                $thumbnail = null;
+                $image = null;
+        }
         return [
             "$objectType:$object->id" => $this->withCustomIncludes($object, [
                 'title' => $object->title,
@@ -34,9 +49,9 @@ class ObjectTransformer extends TransformerAbstract
                 'location' => $latitude . ',' . $longitude,
                 'image_url' => $object->image_id, // Legacy from Drupal
                 'thumbnail_crop_v2' => null, // Legacy from Drupal
-                'thumbnail_full_path' => $object->image('iiif', 'thumbnail'),
+                'thumbnail_full_path' => $thumbnail,
                 'large_image_crop_v2' => null, // Legacy from Drupal
-                'large_image_full_path' => $object->image('iiif'),
+                'large_image_full_path' => $image,
                 'gallery_location' => $object->gallery?->title,
             ])
         ];
