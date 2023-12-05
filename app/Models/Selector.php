@@ -8,10 +8,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Query\JoinClause;
-use Illuminate\Support\Facades\DB;
 
 class Selector extends Model
 {
@@ -30,14 +29,16 @@ class Selector extends Model
     ];
 
     protected $appends = [
+        'audio_title',
+        'default_audio',
         'object_datahub_id',
         'object_title',
         'tour_title',
     ];
 
-    public function apiRelatables(): MorphMany
+    public function apiAudios(): MorphToMany
     {
-        return $this->morphMany(ApiRelatable::class, 'api_relatable');
+        return $this->apiElements()->where('relation', 'apiAudios');
     }
 
     public function object(): BelongsTo|MorphTo
@@ -52,6 +53,20 @@ class Selector extends Model
     public function selectable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function audios(): Attribute
+    {
+        return Attribute::make(
+            get: fn() =>  $this->apiAudios?->map(fn ($audio) => Audio::firstWhere('datahub_id', $audio->datahub_id)),
+        );
+    }
+
+    public function defaultAudio(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): ?Audio => $this->audios?->firstWhere('locale', config('app.locale')),
+        );
     }
 
     public function number(): Attribute
@@ -69,6 +84,13 @@ class Selector extends Model
     {
         return Attribute::make(
             get: fn (): string => $this->number,
+        );
+    }
+
+    public function audioTitle(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): string => (string) $this->default_audio?->title,
         );
     }
 
@@ -107,25 +129,6 @@ class Selector extends Model
         );
     }
 
-    public function scopeOrderBySelectableTitle(Builder $query, string $direction = 'asc'): Builder
-    {
-        return $query
-            ->select(
-                'selectors.*',
-                DB::raw('COALESCE(stop_translations.title, tour_translations.title) as selectable_title'),
-            )
-            ->leftJoin('stop_translations', function (JoinClause $join) {
-                $join->on('selectors.selectable_id', '=', 'stop_translations.stop_id')
-                    ->where('selectors.selectable_type', '=', 'stop')
-                    ->where('stop_translations.locale', '=', config('app.locale'));
-            })
-            ->leftJoin('tour_translations', function (JoinClause $join) {
-                $join->on('selectors.selectable_id', '=', 'tour_translations.tour_id')
-                    ->where('selectors.selectable_type', '=', 'tour')
-                    ->where('tour_translations.locale', '=', config('app.locale'));
-            })
-            ->orderBy('selectable_title', $direction);
-    }
 
     public function scopeOrderByTourTitle(Builder $query, string $direction = 'asc'): Builder
     {

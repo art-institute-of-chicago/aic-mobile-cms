@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\Audio;
 use App\Models\CollectionObject;
 use App\Models\Selector;
 use App\Repositories\ModuleRepository;
@@ -11,7 +12,7 @@ use Illuminate\Support\Str;
 class SelectorRepository extends ModuleRepository
 {
     protected $apiBrowsers = [
-        'audio' => [
+        'apiAudios' => [
             'moduleName' => 'audio',
             'isApiRelation' => true,
         ]
@@ -28,10 +29,6 @@ class SelectorRepository extends ModuleRepository
         $orderBy['number'] ??= 'asc';
         unset($orderBy['created_at']);
 
-        if (array_key_exists('selectable_title', $orderBy)) {
-            $query->orderBySelectableTitle($orderBy['selectable_title']);
-            unset($orderBy['selectable_title']);
-        }
         if (array_key_exists('tour_title', $orderBy)) {
             $query->orderByTourTitle($orderBy['tour_title']);
             unset($orderBy['tour_title']);
@@ -51,6 +48,7 @@ class SelectorRepository extends ModuleRepository
     {
         $this->updateObjectBrowser($selector, $fields);
         $this->updateSelectableBrowser($selector, $fields);
+        $this->updateAudioBrowser($selector, $fields);
         parent::afterSave($selector, $fields);
     }
 
@@ -118,5 +116,18 @@ class SelectorRepository extends ModuleRepository
             $selector->selectable()->dissociate();
         }
         $selector->save();
+    }
+
+    protected function updateAudioBrowser($selector, $fields)
+    {
+        if (isset($fields['browsers']['apiAudios'])) {
+            foreach ($fields['browsers']['apiAudios'] as $audio) {
+                $audio = Audio::firstOrCreate([
+                    'datahub_id' => $audio['id'],
+                    'selector_id' => $selector->id,
+                ]);
+                $audio->save();
+            }
+        }
     }
 }

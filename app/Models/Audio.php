@@ -25,6 +25,7 @@ class Audio extends AbstractModel
         'content',
         'locale',
         'transcript',
+        'selector_id',
     ];
 
     protected $appends = [
