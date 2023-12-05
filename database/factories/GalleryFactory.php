@@ -16,7 +16,7 @@ class GalleryFactory extends Factory
             'number' => fake()->randomNumber(3, strict: true),
             'is_closed' => fake()->boolean(),
             'latitude' => fake()->randomFloat(nbMaxDecimals: 13, min: -90, max: 90),
-            'longitude' => fake()->randomFloat(nbMaxDecimals: 10, min: -80, max: 80),
+            'longitude' => fake()->randomFloat(nbMaxDecimals: 10, min: -180, max: 180),
         ];
     }
 }

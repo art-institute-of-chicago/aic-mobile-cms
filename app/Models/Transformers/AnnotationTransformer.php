@@ -27,13 +27,12 @@ class AnnotationTransformer extends TransformerAbstract
                 'annotation_type' => $category->title == 'Area' ? 'Text' : $category->title,
                 'text_type' => $category->title == 'Area' ? $type->title : null,
                 'amenity_type' => $category->title == 'Amenity' ? $type->title : null,
-                // TODO include image data
-                'image_filename' => null,
-                'image_url' => null,
-                'image_filemime' => null,
-                'image_filesize' => null,
-                'image_width' => null,
-                'image_height' => null,
+                'image_filename' => null, // Legacy from Drupal
+                'image_url' => $annotation->image('upload'),
+                'image_filemime' => null, // Legacy from Drupal
+                'image_filesize' => null, // Legacy from Drupal
+                'image_width' => null, // Legacy from Drupal
+                'image_height' => null, // Legacy from Drupal
             ]
         ];
     }

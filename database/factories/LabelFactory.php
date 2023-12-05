@@ -10,8 +10,8 @@ class LabelFactory extends Factory
     {
         return [
             'active' => true, // Simulates an active translation
-            'key' => fake()->word(),
-            'text' => fake()->words(10, asText: true),
+            'key' => fake()->unique()->word(),
+            'text' => ucfirst(fake()->words(10, asText: true)),
         ];
     }
 }
