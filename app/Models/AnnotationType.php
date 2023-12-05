@@ -10,25 +10,6 @@ class AnnotationType extends Model
 {
     use HasTranslation;
 
-    const TITLES = [
-        'Audio Guide',
-        'Check Room',
-        'Department',
-        'Dining',
-        'Elevator',
-        'Family Restroom',
-        'Garden',
-        'Gift Shop',
-        'Landmark',
-        'Information',
-        'Members Lounge',
-        "Men's Room",
-        'Space',
-        'Tickets',
-        'Wheelchair Ramp',
-        "Women's Room",
-    ];
-
     protected $fillable = [
         'id',
     ];

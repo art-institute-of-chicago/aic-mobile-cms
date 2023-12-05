@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Twill;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
-use A17\Twill\Services\Listings\Columns\Text;
-use A17\Twill\Services\Listings\TableColumns;
 use A17\Twill\Services\Forms\Fields\Input;
+use A17\Twill\Services\Forms\Fields\Wysiwyg;
 use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
-use A17\Twill\Services\Forms\Fields\Wysiwyg;
+use A17\Twill\Services\Listings\Columns\Text;
+use A17\Twill\Services\Listings\TableColumns;
 
 class LabelController extends BaseController
 {
@@ -18,15 +18,8 @@ class LabelController extends BaseController
         $this->disableCreate();
         $this->disableDelete();
         $this->disablePublish();
-        $this->setModuleName('Labels');
-    }
-
-    /**
-     * Disable title editor as the title is generated from the key.
-     */
-    public function edit(TwillModelContract|int $id): mixed
-    {
-        return parent::edit($id)->with(['editableTitle' => false]);
+        $this->setModuleName('labels');
+        $this->setSearchColumns(['key', 'text']);
     }
 
     protected function additionalIndexTableColumns(): TableColumns

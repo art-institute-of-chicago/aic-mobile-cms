@@ -14,24 +14,6 @@ class Label extends Model
     use HasFactory;
     use HasTranslation;
 
-    public const KEYS = [
-        'audio_subtitle',
-        'audio_title',
-        'gift_shops_text',
-        'gift_shops_title',
-        'home_member_prompt_text',
-        'info_subtitle',
-        'info_title',
-        'map_subtitle',
-        'map_title',
-        'members_lounge_text',
-        'members_lounge_title',
-        'museum_hours',
-        'restrooms_subtitle',
-        'restrooms_title',
-        'see_all_tours_intro',
-    ];
-
     protected $fillable = [
         'key',
     ];
