@@ -21,7 +21,7 @@ class AnnotationFactory extends Factory
             'label' => ucfirst(fake()->words(nb: 2, asText: true)),
             'description' => fake()->sentences(asText: true),
             'latitude' => fake()->randomFloat(13, -90, 90),
-            'longitude' => fake()->randomFloat(13, -80, 80),
+            'longitude' => fake()->randomFloat(13, -180, 180),
         ];
     }
 }

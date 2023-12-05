@@ -18,7 +18,7 @@ class CollectionObjectFactory extends Factory
             'credit_line' => fake()->sentence(),
             'copyright_notice' => fake()->words(10, asText: true),
             'latitude' => fake()->randomFloat(nbMaxDecimals: 13, min: -90, max: 90),
-            'longitude' => fake()->randomFloat(nbMaxDecimals: 13, min: -80, max: 80),
+            'longitude' => fake()->randomFloat(nbMaxDecimals: 13, min: -180, max: 180),
             'gallery_id' => Gallery::factory(),
         ];
     }
