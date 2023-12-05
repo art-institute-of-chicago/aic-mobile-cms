@@ -103,6 +103,7 @@ class AicConnection implements ApiConnectionInterface
         if (config('api.logger')) {
             \Log::info($verb . ' ' . $endpoint);
             \Log::info(print_r($options, true));
+            $responseTimerStart = microtime(true);
         }
 
         // Perform API request and caching
@@ -114,6 +115,7 @@ class AicConnection implements ApiConnectionInterface
 
             if ($decacheHash && config('api.cache_buster') && $decacheHash === config('api.cache_buster')) {
                 \Cache::forget($cacheKey);
+                \Log::warning('cache busted');
             }
 
             // Use default TTL if no explicit has been defined
@@ -126,6 +128,9 @@ class AicConnection implements ApiConnectionInterface
                 }
                 return $response;
             });
+            if (config('api.logger')) {
+                \Log::info('response time = ' . microtime(true) - $responseTimerStart . ' seconds');
+            }
             if (isset($response->status) && $response->status != 200) {
                 \Cache::forget($cacheKey);
             }
@@ -133,6 +138,7 @@ class AicConnection implements ApiConnectionInterface
         }
         $response = $this->client->request($verb, $endpoint, $options);
         if (config('api.logger')) {
+            \Log::info('response time = ' . microtime(true) - $responseTimerStart . ' seconds');
             \Log::info((array) $response->body);
         }
         return $response;
