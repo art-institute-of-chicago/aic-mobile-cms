@@ -8,6 +8,7 @@ use A17\Twill\Models\Model;
 use App\Models\AnnotationType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Query\JoinClause;
@@ -15,6 +16,7 @@ use Illuminate\Support\Arr;
 
 class Annotation extends Model
 {
+    use HasFactory;
     use HasMedias;
     use HasTranslation;
 

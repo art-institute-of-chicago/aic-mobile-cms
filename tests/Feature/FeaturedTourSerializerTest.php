@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Tour;
 use App\Repositories\Serializers\FeaturedTourSerializer;
-use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
