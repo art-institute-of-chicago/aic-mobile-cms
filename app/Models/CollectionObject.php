@@ -9,7 +9,7 @@ use App\Models\Behaviors\HasApiModel;
 use App\Models\Behaviors\HasApiRelations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class CollectionObject extends AbstractModel
 {
@@ -43,5 +43,10 @@ class CollectionObject extends AbstractModel
     public function gallery(): BelongsTo
     {
         return $this->belongsToApi(\App\Models\Api\Gallery::class, 'gallery_id');
+    }
+
+    public function selectors(): MorphMany
+    {
+        return $this->morphMany(Selector::class, 'object', localKey: 'datahub_id');
     }
 }

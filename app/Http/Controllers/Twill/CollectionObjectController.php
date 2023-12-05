@@ -7,7 +7,6 @@ use A17\Twill\Services\Forms\Fields\Browser;
 use A17\Twill\Services\Forms\Fields\Checkbox;
 use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Fields\Medias;
-use A17\Twill\Services\Forms\Fieldset;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Boolean;
 use A17\Twill\Services\Listings\Columns\Text;
@@ -189,26 +188,6 @@ class CollectionObjectController extends BaseApiController
                     ->label('Longitude')
                     ->type('number')
                     ->placeholder($longitude)
-            );
-    }
-
-    public function getSideFieldSets($object): Form
-    {
-        return parent::getSideFieldSets($object)
-            ->addFieldset(
-                Fieldset::make()
-                    ->id('object_actions')
-                    ->title('Actions')
-                    ->fields([
-                        BladePartial::make()
-                            ->view('admin.fields.action')
-                            ->withAdditionalParams([
-                                'action' => 'Create Stop with Object',
-                                'href' => route('twill.stops.createWithObject', parameters: [
-                                    'artwork_id' => $object->datahub_id,
-                                ]),
-                            ])
-                    ])
             );
     }
 }

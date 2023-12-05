@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\CollectionObject;
 use App\Models\Selector;
 use App\Repositories\ModuleRepository;
 use Illuminate\Database\Eloquent\Builder;
@@ -41,14 +42,33 @@ class SelectorRepository extends ModuleRepository
     public function getFormFields($selector): array
     {
         $fields = parent::getFormFields($selector);
+        $fields['browsers']['objects'] = $this->getFormFieldsForObject($selector);
         $fields['browsers']['selectables'] = $this->getFormFieldsForSelectable($selector);
         return $fields;
     }
 
     public function afterSave($selector, array $fields): void
     {
+        $this->updateObjectBrowser($selector, $fields);
         $this->updateSelectableBrowser($selector, $fields);
         parent::afterSave($selector, $fields);
+    }
+
+    protected function getFormFieldsForObject($selector): array
+    {
+        if ($object = $selector->object) {
+            $type = $selector->object_type;
+            $action = $type === 'collectionObject' ? 'augment' : 'edit';
+            return [
+                [
+                    'id' => $object->id,
+                    'name' => $object->title,
+                    'edit' => moduleRoute(Str::plural($type), null, $action, $object->id),
+                    'endpointType' => $type,
+                ]
+            ];
+        }
+        return [];
     }
 
     protected function getFormFieldsForSelectable($selector): array
@@ -64,6 +84,26 @@ class SelectorRepository extends ModuleRepository
             ];
         }
         return [];
+    }
+
+    protected function updateObjectBrowser($selector, $fields): void
+    {
+        if (isset($fields['browsers']['objects']) && !empty($fields['browsers']['objects'])) {
+            $object = collect($fields['browsers']['objects'])->first();
+            $selector->fill([
+                'object_id' => $object['id'],
+                'object_type' => $object['endpointType'],
+            ]);
+            if ($object['endpointType'] == 'collectionObject') {
+                CollectionObject::firstOrCreate(['datahub_id' => $object['id']]);
+            }
+        } else {
+            $selector->fill([
+                'object_id' => null,
+                'object_type' => null,
+            ]);
+        }
+        $selector->save();
     }
 
     protected function updateSelectableBrowser($selector, $fields): void
