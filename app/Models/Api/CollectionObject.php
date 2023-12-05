@@ -4,10 +4,12 @@ namespace App\Models\Api;
 
 use App\Libraries\Api\Models\BaseApiModel;
 use App\Models\Behaviors\HasMediasApi;
+use Database\Factories\Api\HasApiFactory;
 use Illuminate\Database\Eloquent\Builder;
 
 class CollectionObject extends BaseApiModel
 {
+    use HasApiFactory;
     use HasMediasApi;
 
     protected array $endpoints = [
@@ -22,10 +24,18 @@ class CollectionObject extends BaseApiModel
         'iiif' => [
             'default' => [
                 [
-                    'name' => 'default',
-                    'ratio' => 'default',
+                    'name' => 'full',
+                    'height' => 800,
+                    'width' => 800,
                 ],
-            ]
+            ],
+            'thumbnail' => [
+                [
+                    'name' => 'thumbnail',
+                    'height' => 112,
+                    'width' => 112,
+                ],
+            ],
         ],
     ];
 

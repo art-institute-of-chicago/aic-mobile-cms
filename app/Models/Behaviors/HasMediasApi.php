@@ -7,6 +7,40 @@ use DamsImageService;
 trait HasMediasApi
 {
     /**
+     * Replaces `imageFront()`. This more closely resembles Twill 3's
+     * `HasMedias::image()` method, see:
+     * https://twillcms.com/docs/api/3.x/A17/Twill/Models/Behaviors/HasMedias.html#method_image
+     *
+     * Define $mediasParams as they are defined in the Twill documentation:
+     * https://twillcms.com/docs/form-fields/medias.html#content-example
+     *
+     * An additional `field` key may be defined for a crop that specifies the field
+     * on the API record that contains the image ID. The default is `image_id`.
+     *
+     * Example:
+     *  public $mediasParams = [
+     *      'iiif' => [
+     *          'default' => [
+     *              [
+     *                  'name' => 'default',
+     *                  'field' => 'image_id',
+     *                  'height' => 800,
+     *                  'width' => 800,
+     *              ]
+     *          ]
+     *      ]
+     *  ];
+     */
+    public function image($role, $crop = 'default', $params = [])
+    {
+        $cropParams = $this->getMediasParams()[$role][$crop][0];
+        $imageField = $cropParams['field'] ?? 'image_id';
+        return DamsImageService::getUrl($this->{$imageField}, $cropParams + $params);
+    }
+
+    /**
+     * DEPRECATED
+     *
      * You have to define roles and crop on the API model.
      *
      * 'field': Optional, API field with the image ID (if not defined, default to image_id)

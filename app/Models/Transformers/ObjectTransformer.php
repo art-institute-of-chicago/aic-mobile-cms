@@ -3,17 +3,27 @@
 namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
+use App\Repositories\Serializers\OptionalKeyArraySerializer;
 use League\Fractal\TransformerAbstract;
 
 class ObjectTransformer extends TransformerAbstract
 {
-    public function transform(TwillModelContract $object)
+    use CustomIncludes;
+
+    public $customIncludes = [
+        'selectors' => OptionalKeyArraySerializer::class,
+    ];
+
+    public function transform(TwillModelContract $object): array
     {
+        $objectType = lcfirst(class_basename($object));
+        $latitude = $object->latitude ?? $object->gallery?->latitude;
+        $longitude = $object->longitude ?? $object->gallery?->longitude;
         return [
-            $object->id => [
+            "$objectType:$object->id" => $this->withCustomIncludes($object, [
                 'title' => $object->title,
-                'nid' => (string) $object->id, // Legacy from Drupal
-                'id' => $object->id,
+                'nid' => "$objectType:$object->id", // Legacy from Drupal
+                'id' => $object->datahub_id ? (int) $object->datahub_id : null,
                 'artist_culture_place_delim' => $object->artist_display,
                 'credit_line' => $object->credit_line,
                 'catalogue_display' => $object->catalogue_display,
@@ -21,19 +31,20 @@ class ObjectTransformer extends TransformerAbstract
                 'fiscal_year_deaccession' => $object->fiscal_year_deaccession,
                 'copyright_notice' => $object->copyright_notice,
                 'on_loan_display' => $object->on_loan_display,
-                'location' => $object->latlon,
-                'image_url' => $object->image_url,
-                'thumbnail_full_path' => null, // TODO load images from iiif
-                'large_image_crop_v2' => [ // TODO crop images
-                    'x' => null,
-                    'y' => null,
-                    'width' => null,
-                    'height' => null,
-                ],
-                'large_image_full_path' => null,
-                'gallery_location' => null, // TODO fake retrieving the gallery relation in a testing env
-                'audio_commentary' => [], // TODO Tours and Audio files
-            ]
+                'location' => $latitude . ',' . $longitude,
+                'image_url' => $object->image_id, // Legacy from Drupal
+                'thumbnail_crop_v2' => null, // Legacy from Drupal
+                'thumbnail_full_path' => $object->image('iiif', 'thumbnail'),
+                'large_image_crop_v2' => null, // Legacy from Drupal
+                'large_image_full_path' => $object->image('iiif'),
+                'gallery_location' => $object->gallery?->title,
+            ])
         ];
+    }
+
+    public function includeSelectors($object)
+    {
+        $selectors = $object->selectors;
+        return $this->collection($selectors, new SelectorTransformer(), 'audio_commentary');
     }
 }
