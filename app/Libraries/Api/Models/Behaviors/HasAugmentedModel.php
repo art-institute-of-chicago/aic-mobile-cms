@@ -27,6 +27,7 @@ trait HasAugmentedModel
         }
         if ($this->augmentedModel = $this->augmentedModelClass::where('datahub_id', $this->id)->first()) {
             $this->setAttribute('is_augmented', true);
+            $this->augmentedModel->setApiModel($this);
             return $this->augmentedModel;
         }
         return $this->augmentedModel;

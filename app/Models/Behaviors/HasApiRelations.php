@@ -12,7 +12,9 @@ trait HasApiRelations
 {
     public function apiElements(): MorphToMany
     {
-        return $this->morphToMany(\App\Models\ApiRelation::class, 'api_relatable')->withPivot(['position', 'relation'])->orderBy('position');
+        return $this->morphToMany(\App\Models\ApiRelation::class, 'api_relatable')
+            ->withPivot(['position', 'relation'])
+            ->orderBy('position');
     }
 
     public function belongsToApi($modelClass, $foreignKey = null): BelongsTo

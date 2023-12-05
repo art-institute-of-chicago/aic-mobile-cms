@@ -3,6 +3,7 @@
 namespace App\Libraries\Api\Models\Behaviors;
 
 use App\Libraries\Api\Builders\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 trait HasRelationships
@@ -117,6 +118,10 @@ trait HasRelationships
 
         if (!empty($morphMap) && in_array(static::class, $morphMap)) {
             return array_search(static::class, $morphMap, true);
+        }
+
+        if (static::class === Pivot::class) {
+            return static::class;
         }
 
         return static::class;

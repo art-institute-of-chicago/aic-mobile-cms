@@ -2,6 +2,8 @@
 
 namespace App\Models\Behaviors;
 
+use A17\Twill\Models\Contracts\TwillModelContract;
+
 /**
  * Trait used to augment the local entity with Data coming from the API.
  * This is only to be used at the CMS when editing an augmented resource
@@ -26,9 +28,14 @@ trait HasApiModel
     public function getApiModel()
     {
         if (!$this->apiModel) {
-            $this->apiModel = $this->apiModelClass::query()->find($this->datahub_id);
+            $this->setApiModel($this->apiModelClass::query()->find($this->datahub_id));
         }
         return $this->apiModel;
+    }
+
+    public function setApiModel(TwillModelContract $model)
+    {
+        $this->apiModel = $model;
     }
 
     public function getTitleAttribute(): string
@@ -55,7 +62,7 @@ trait HasApiModel
 
     public function hasAttribute($attr): bool
     {
-        return array_key_exists($attr, $this->attributes);
+        return array_key_exists($attr, $this->attributes) && !is_null($this->attributes[$attr]);
     }
 
     public function getApiField($field)
