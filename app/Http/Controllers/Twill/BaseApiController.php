@@ -43,6 +43,7 @@ class BaseApiController extends ModuleController
     protected function setUpController(): void
     {
         $this->setFeatureField('is_featured');
+        $this->setResultsPerPage(5);
 
         $this->disableBulkDelete();
         $this->disableBulkEdit();
