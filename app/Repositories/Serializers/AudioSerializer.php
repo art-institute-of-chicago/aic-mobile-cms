@@ -20,12 +20,17 @@ class AudioSerializer
 
     public function serialize($audios)
     {
-        $audios = collect($audios);
-        if ($audios instanceof ApiAudio) {
-            $audios->each->getAugmentedModel();
-        } elseif ($audios instanceof Audio) {
-            $audios->each->refreshApi();
-        }
+        $audios = $audios->map(function ($translations) {
+            $translations = $translations->map(function ($audio) {
+                if ($audio instanceof ApiAudio) {
+                    $audio = $audio->getAugmentedModel();
+                }
+                return $audio->refreshApi();
+            });
+            $defaultTranslation = $translations->firstWhere('locale', config('app.locale'));
+            $defaultTranslation->translations = $translations->whereNotIn('locale', [config('app.locale')]);
+            return $defaultTranslation;
+        });
         $resource = new Resource\Collection($audios, new AudioTransformer(), 'audio_files');
         return $this->manager->createData($resource)->toArray();
     }

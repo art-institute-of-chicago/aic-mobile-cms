@@ -3,9 +3,12 @@
 namespace App\Models\Api;
 
 use App\Libraries\Api\Models\BaseApiModel;
+use Database\Factories\Api\HasApiFactory;
 
 class Audio extends BaseApiModel
 {
+    use HasApiFactory;
+
     protected array $endpoints = [
         'collection' => '/api/v1/sounds',
         'resource' => '/api/v1/sounds/{id}',
