@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-Route::get('/appData-v3.json', function () {
+Route::get('/appData-v3', function () {
     // Listed in the order the sections appear in the Drupal appData.json
     $controllers = collect([
         Dashboard::class,
