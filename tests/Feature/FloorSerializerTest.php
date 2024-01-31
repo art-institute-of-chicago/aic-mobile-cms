@@ -4,10 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\Floor;
 use App\Repositories\Serializers\FloorSerializer;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class FloorSerializerTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_serialize(): void
     {
         $floors = Floor::factory()->count(count(Floor::LEVELS))->make();
@@ -26,5 +29,14 @@ class FloorSerializerTest extends TestCase
             $this->assertArrayHasKey('anchor_location_2', $floor);
             $this->assertArrayHasKey('tile_images', $floor);
         }
+    }
+
+    public function test_floor_plan_url(): void
+    {
+        $floor = Floor::factory()->withFloorPlan()->create();
+        $serializer = new FloorSerializer();
+        $serialized = $serializer->serialize([$floor]);
+        $floorPlanUrl = $serialized['map_floors']['map_floor' . $floor->level]['floor_plan'];
+        $this->assertStringStartsWith('https://', $floorPlanUrl, 'The floor plan url uses the https scheme');
     }
 }

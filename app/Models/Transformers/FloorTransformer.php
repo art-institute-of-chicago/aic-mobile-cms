@@ -10,10 +10,11 @@ class FloorTransformer extends TransformerAbstract
 {
     public function transform(TwillModelContract $floor)
     {
+        $floorPlan = $floor->fileObject('floor_plan');
         return [
             "map_floor$floor->level" => [
                 'label' => $floor->level,
-                'floor_plan' => $floor->file('floor_plan'),
+                'floor_plan' => $floorPlan ? secure_url('storage/uploads/' . $floorPlan?->uuid) : null,
                 'anchor_pixel_1' => Floor::ANCHOR_PIXELS[0],
                 'anchor_pixel_2' => Floor::ANCHOR_PIXELS[1],
                 'anchor_location_1' => FLOOR::ANCHOR_LOCATIONS[0],
