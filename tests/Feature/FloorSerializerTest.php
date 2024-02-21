@@ -20,7 +20,15 @@ class FloorSerializerTest extends TestCase
         $this->assertArrayHasKey('map_floors', $serialized);
         foreach ($serialized['map_floors'] as $id => $floor) {
             $this->assertStringStartsWith('map_floor', $id);
-            $this->assertStringEndsWith($floor['label'], $id);
+            if ($floor['label'] == 'LL') {
+                $this->assertStringEndsWith(
+                    '0',
+                    $id,
+                    'For backward compatibility, the key for level LL must end in "0"'
+                );
+            } else {
+                $this->assertStringEndsWith($floor['label'], $id);
+            }
             $this->assertArrayHasKey('label', $floor);
             $this->assertArrayHasKey('floor_plan', $floor);
             $this->assertArrayHasKey('anchor_pixel_1', $floor);
