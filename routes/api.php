@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Search;
 use App\Http\Controllers\Api\TourCategories;
 use App\Http\Controllers\Api\Tours;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Cache;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,10 +43,12 @@ Route::get('/appData-v3', function () {
         Data::class,
         Search::class,
     ]);
-    return $controllers->reduce(function ($output, $controller) {
-        // Instantiate and invoke each controller, then merge into the output
-        return $output->merge((new $controller())());
-    }, collect());
+    return Cache::remember('apiData', 3600, function () use ($controllers) { // 3600 = 1 hour
+        return $controllers->reduce(function ($output, $controller) {
+            // Instantiate and invoke each controller, then merge into the output
+            return $output->merge((new $controller())());
+        }, collect());
+    });
 });
 Route::get('/audio_files', AudioFiles::class)->name('audio_files');
 Route::get('/dashboard', Dashboard::class)->name('dashboard');
