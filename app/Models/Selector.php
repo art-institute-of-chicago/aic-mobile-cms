@@ -58,7 +58,7 @@ class Selector extends Model
     public function audios(): Attribute
     {
         return Attribute::make(
-            get: fn() =>  $this->apiAudios?->map(fn ($audio) => Audio::firstWhere('datahub_id', $audio->datahub_id)),
+            get: fn () =>  $this->apiAudios?->map(fn ($audio) => Audio::firstWhere('datahub_id', $audio->datahub_id)),
         );
     }
 

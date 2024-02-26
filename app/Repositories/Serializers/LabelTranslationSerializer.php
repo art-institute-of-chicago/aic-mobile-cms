@@ -19,7 +19,7 @@ class LabelTranslationSerializer
     public function serialize($labels)
     {
         $translations = [];
-        $locales = collect(getLocales())->reject(fn($locale) => $locale == config('app.locale'));
+        $locales = collect(getLocales())->reject(fn ($locale) => $locale == config('app.locale'));
         foreach ($locales as $locale) {
             $resource = new Resource\Collection($labels, new LabelTransformer($locale), 'labels');
             $translations[] = array_merge(

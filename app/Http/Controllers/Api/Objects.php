@@ -8,6 +8,7 @@ use App\Repositories\SelectorRepository;
 use App\Repositories\Serializers\ObjectSerializer;
 use App\Repositories\StopRepository;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class Objects extends Controller
@@ -44,13 +45,16 @@ class Objects extends Controller
         $collectionObjectRepository = App::make(CollectionObjectRepository::class);
         $collectionObjects = $collectionObjectIds->reduce(function ($objects, $chunk) use ($collectionObjectRepository) {
             return $objects->concat(
-                $collectionObjectRepository
-                    ->getBaseModel()
-                    ->newQuery()
-                    ->with(['gallery'])
-                    ->whereIn('id', $chunk->toArray())
-                    ->where('is_on_view', true)
-                    ->get()
+                // 300 = 5 minutes
+                Cache::remember('collectionRepo-on-view-' . hash('sha256', serialize($chunk)), 300, function () use ($collectionObjectRepository, $chunk) {
+                    return $collectionObjectRepository
+                        ->getBaseModel()
+                        ->newQuery()
+                        ->with(['gallery'])
+                        ->whereIn('id', $chunk->toArray())
+                        ->where('is_on_view', true)
+                        ->get();
+                })
             );
         }, collect());
         $allObjects = collect()->concat($collectionObjects)->concat($loanObjects);

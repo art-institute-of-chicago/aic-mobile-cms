@@ -13,7 +13,7 @@ class SelectorTest extends DuskTestCase
 {
     use DatabaseTruncation;
 
-    const TWILL_DATA_LOADED = 'window["TWILL"].STORE.datatable != {}';
+    public const TWILL_DATA_LOADED = 'window["TWILL"].STORE.datatable != {}';
 
     public function test_user_can_choose_a_selector_from_the_listing(): void
     {
