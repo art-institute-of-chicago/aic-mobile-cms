@@ -45,7 +45,8 @@ class Objects extends Controller
         $collectionObjectRepository = App::make(CollectionObjectRepository::class);
         $collectionObjects = $collectionObjectIds->reduce(function ($objects, $chunk) use ($collectionObjectRepository) {
             return $objects->concat(
-                Cache::remember('collectionRepo-on-view-' . hash('sha256', serialize($chunk)), 300, function () use ($collectionObjectRepository, $chunk) { // 300 = 5 minutes
+                // 300 = 5 minutes
+                Cache::remember('collectionRepo-on-view-' . hash('sha256', serialize($chunk)), 300, function () use ($collectionObjectRepository, $chunk) {
                     return $collectionObjectRepository
                         ->getBaseModel()
                         ->newQuery()

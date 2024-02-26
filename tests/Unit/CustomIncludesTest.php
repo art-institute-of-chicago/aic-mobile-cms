@@ -47,25 +47,29 @@ class CustomIncludesTest extends TestCase
 }
 
 // phpcs:disable PSR1.Classes.ClassDeclaration.MultipleClasses,PSR2.Classes.ClassDeclaration.OpenBraceNewLine,Squiz
-class FakeModel extends Model {
+class FakeModel extends Model
+{
     public $data = ['fake', 'model'];
 }
 
-class FakeChildTransformer extends TransformerAbstract {
+class FakeChildTransformer extends TransformerAbstract
+{
     public function transform($data)
     {
         return $data;
     }
 }
 
-class FakeSerializer {
+class FakeSerializer
+{
     public function collection($resourceKey, $data)
     {
         return [$resourceKey => $data];
     }
 }
 
-class FakeTransformer {
+class FakeTransformer
+{
     use CustomIncludes;
 
     public $customIncludes = [
@@ -77,6 +81,8 @@ class FakeTransformer {
         return $this->collection($model->data, new FakeChildTransformer());
     }
 
-    public function includeNotConfigured($model) {}
+    public function includeNotConfigured($model)
+    {
+    }
 }
 // phpcs:enable
