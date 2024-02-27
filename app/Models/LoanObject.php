@@ -26,6 +26,10 @@ class LoanObject extends AbstractModel
         'title',
     ];
 
+    protected $attributes = [
+        'is_on_view' => true,
+    ];
+
     public function gallery(): BelongsTo
     {
         return $this->belongsToApi(\App\Models\Api\Gallery::class, 'gallery_id');
