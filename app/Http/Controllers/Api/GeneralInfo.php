@@ -15,7 +15,7 @@ class GeneralInfo extends Controller
         $repository = App::make(LabelRepository::class);
         $labels = $repository->getBaseModel()->newQuery()->get();
         $serializer = new GeneralInfoSerializer();
-        $nid = new Label;
+        $nid = new Label();
         $nid->key = 'nid';
         $nid->text = '1';
         return $serializer->serialize($labels->concat([$nid]));
