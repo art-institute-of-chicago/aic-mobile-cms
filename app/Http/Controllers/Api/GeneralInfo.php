@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Label;
 use App\Http\Controllers\Controller;
 use App\Repositories\LabelRepository;
 use App\Repositories\Serializers\GeneralInfoSerializer;
@@ -14,6 +15,9 @@ class GeneralInfo extends Controller
         $repository = App::make(LabelRepository::class);
         $labels = $repository->getBaseModel()->newQuery()->get();
         $serializer = new GeneralInfoSerializer();
-        return $serializer->serialize($labels);
+        $nid = new Label;
+        $nid->key = 'nid';
+        $nid->text = '1';
+        return $serializer->serialize($labels->concat([$nid]));
     }
 }
