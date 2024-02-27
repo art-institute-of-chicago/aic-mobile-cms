@@ -4,6 +4,9 @@ namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
 use League\Fractal\TransformerAbstract;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
+use App\Repositories\Api\GalleryRepository;
 
 class TourTransformer extends TransformerAbstract
 {
@@ -14,7 +17,13 @@ class TourTransformer extends TransformerAbstract
 
     public function transform(TwillModelContract $tour): array
     {
-        $gallery = $tour->gallery;
+        $repository = App::make(GalleryRepository::class);
+        $gallery = null;
+        if ($tour->gallery_id) {
+            $gallery = Cache::remember('galleryRepo-one-' . $tour->gallery_id, 300, function () use ($repository, $tour) {
+                return $repository->getBaseModel()->newQuery()->getSingle($tour->gallery_id);
+            });
+        }
         $thumbnail = $tour->image('upload', 'thumbnail');
         $image = $tour->image('upload');
 
