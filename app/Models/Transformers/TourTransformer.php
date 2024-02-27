@@ -15,6 +15,9 @@ class TourTransformer extends TransformerAbstract
     public function transform(TwillModelContract $tour): array
     {
         $gallery = $tour->gallery;
+        $thumbnail = $tour->image('upload', 'thumbnail');
+        $image = $tour->image('upload');
+
         return [
             'title' => $tour->title,
             'nid' => (string) $tour->id,
@@ -23,8 +26,8 @@ class TourTransformer extends TransformerAbstract
             'longitude' => $gallery?->longitude,
             'floor' => $gallery?->floor,
             'image_url' => $tour->image_url,
-            'thumbnail_full_path' => $tour->thumbnail_full_path,
-            'large_image_full_path' => $tour->large_image_full_path,
+            'thumbnail_full_path' => $thumbnail,
+            'large_image_full_path' => $image,
             'selector_number' => (string) $tour->selector?->number,
             'description' => $tour->description,
             'intro' => $tour->intro,
