@@ -9,6 +9,8 @@ use App\Libraries\DamsImageService;
 use App\Models;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Pluralizer;
@@ -39,6 +41,11 @@ class AppServiceProvider extends ServiceProvider
     {
         if (App::environment(['test', 'production'])) {
             URL::forceScheme('https');
+
+            // Manual cachebusting
+            if (Request::input('nocache') && config('api.cache_buster') && Request::input('nocache') === config('api.cache_buster')) {
+                Cache::flush();
+            }
         }
         TwillNavigation::addLink(
             NavigationLink::make()->forModule('audio')
