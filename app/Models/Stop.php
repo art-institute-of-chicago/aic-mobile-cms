@@ -34,6 +34,13 @@ class Stop extends Model
         );
     }
 
+    public function objectId(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): string => $this->selector?->object->datahub_id ?? $this->selector?->object->id,
+        );
+    }
+
     public function selector(): MorphOne
     {
         return $this->morphOne(Selector::class, 'selectable');
