@@ -34,7 +34,7 @@ class TourTransformer extends TransformerAbstract
             'latitude' => $gallery?->latitude,
             'longitude' => $gallery?->longitude,
             'floor' => $gallery?->floor,
-            'image_url' => $tour->image_url,
+            'image_url' => $image,
             'thumbnail_full_path' => $thumbnail,
             'large_image_full_path' => $image,
             'selector_number' => (string) $tour->selector?->number,
