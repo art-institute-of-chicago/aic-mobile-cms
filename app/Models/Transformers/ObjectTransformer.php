@@ -3,6 +3,7 @@
 namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
+use App\Helpers\Util;
 use App\Models\CollectionObject;
 use App\Models\LoanObject;
 use App\Repositories\Serializers\OptionalKeyArraySerializer;
@@ -18,26 +19,30 @@ class ObjectTransformer extends TransformerAbstract
 
     public function transform(TwillModelContract $object): array
     {
-        $objectType = lcfirst(class_basename($object));
         $latitude = $object->latitude ?? $object->gallery?->latitude;
         $longitude = $object->longitude ?? $object->gallery?->longitude;
         switch (get_class($object)) {
             case CollectionObject::class:
                 $thumbnail = $object->getApiModel()->image('iiif', 'thumbnail');
                 $image = $object->getApiModel()->image('iiif');
+                $objectType = Util::COLLECTION_OBJECT;
                 break;
             case LoanObject::class:
                 $thumbnail = $object->image('upload', 'thumbnail');
                 $image = $object->image('upload');
+                $objectType = Util::LOAN_OBJECT;
                 break;
             default:
                 $thumbnail = null;
                 $image = null;
+                $objectType = 0;
         }
+        $nid = Util::cantorPair($objectType, $object->id);
+
         return [
-            "$objectType:$object->id" => $this->withCustomIncludes($object, [
+            $nid => $this->withCustomIncludes($object, [
                 'title' => $object->title,
-                'nid' => "$objectType:$object->id", // Legacy from Drupal
+                'nid' => $nid, // Legacy from Drupal
                 'id' => $object->datahub_id ? (int) $object->datahub_id : null,
                 'artist_culture_place_delim' => $object->artist_display,
                 'credit_line' => $object->credit_line,
