@@ -44,7 +44,7 @@ class FloorSerializerTest extends TestCase
         $floor = Floor::factory()->withFloorPlan()->create();
         $serializer = new FloorSerializer();
         $serialized = $serializer->serialize([$floor]);
-        $floorPlanUrl = $serialized['map_floors']['map_floor' . $floor->level]['floor_plan'];
+        $floorPlanUrl = $serialized['map_floors']['map_floor' . ($floor->level == 'LL' ? '0' : $floor->level)]['floor_plan'];
         $this->assertStringStartsWith('https://', $floorPlanUrl, 'The floor plan url uses the https scheme');
     }
 }
