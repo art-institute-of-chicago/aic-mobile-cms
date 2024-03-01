@@ -15,7 +15,6 @@ class SelectorController extends BaseController
     protected function setUpController(): void
     {
         parent::setUpController();
-        $this->disablePublish();
         $this->setModuleName('selectors');
         $this->setSearchColumns(['number']);
         $this->setTitleColumnKey('number');

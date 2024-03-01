@@ -22,6 +22,7 @@ class Selector extends Model
         'number',
         'object_id',
         'object_type',
+        'published',
     ];
 
     protected $casts = [
