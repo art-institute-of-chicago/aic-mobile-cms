@@ -24,6 +24,7 @@ class LoanObject extends AbstractModel
         'longitude',
         'main_reference_number',
         'title',
+        'published',
     ];
 
     protected $attributes = [
