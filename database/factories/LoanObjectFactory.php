@@ -19,6 +19,7 @@ class LoanObjectFactory extends Factory
             'longitude' => fake()->randomFloat(nbMaxDecimals: 13, min: -180, max: 180),
             'main_reference_number' => fake()->year() . fake()->randomNumber(nbDigits: 5),
             'gallery_id' => Gallery::factory(),
+            'published' => true,
         ];
     }
 }

@@ -10,6 +10,7 @@ class SelectorFactory extends Factory
     {
         return [
             'number' => fake()->unique()->randomNumber(nbDigits: 3),
+            'published' => true,
         ];
     }
 }
