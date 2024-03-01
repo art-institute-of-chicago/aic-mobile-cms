@@ -4,6 +4,7 @@ namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
 use League\Fractal\TransformerAbstract;
+use App\Helpers\Util;
 
 class AnnotationTransformer extends TransformerAbstract
 {
@@ -11,11 +12,12 @@ class AnnotationTransformer extends TransformerAbstract
     {
         $type = $annotation->types->first();
         $category = $type->category;
+        $nid = Util::cantorPair($annotation->id, $annotation->annotation_type_id);
         return [
-            "$annotation->id:$annotation->annotation_type_id" => [
+            $nid => [
                 'title' => $annotation->title,
                 'status' => "1", // Legacy from Drupal
-                'nid' => (string) "$annotation->id:$annotation->annotation_type_id", // Legacy from Drupal
+                'nid' => $nid, // Legacy from Drupal
                 'type' => 'map_annotation', // Legacy from Drupal
                 'translations' => [], // TODO Determine what data the mobile app requires
                 'location' => "$annotation->latitude,$annotation->longitude",

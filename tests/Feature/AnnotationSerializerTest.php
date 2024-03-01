@@ -33,7 +33,6 @@ class AnnotationSerializerTest extends TestCase
 
         $this->assertArrayHasKey('map_annontations', $serialized, 'The key is intentionally misspelled for backwards compatibility');
         foreach ($serialized['map_annontations'] as $id => $annotation) {
-            $this->assertStringContainsString(':', $id);
             $this->assertArrayHasKey('title', $annotation);
             $this->assertArrayHasKey('status', $annotation);
             $this->assertArrayHasKey('nid', $annotation);
