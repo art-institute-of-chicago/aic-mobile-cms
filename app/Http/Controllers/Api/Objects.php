@@ -27,6 +27,8 @@ class Objects extends Controller
         $loanObjects = $selectorRepository
             ->getBaseModel()
             ->newQuery()
+            ->visible()
+            ->published()
             ->with(['object']) // This can only preload the LoanObjects
             ->whereExists($publishedStops)
             ->get()
@@ -36,6 +38,8 @@ class Objects extends Controller
         $collectionObjectIds = $selectorRepository
             ->getBaseModel()
             ->newQuery()
+            ->visible()
+            ->published()
             ->whereExists($publishedStops)
             ->where('object_type', 'collectionObject')
             ->get()
