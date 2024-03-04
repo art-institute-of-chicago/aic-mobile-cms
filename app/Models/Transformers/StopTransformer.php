@@ -25,7 +25,7 @@ class StopTransformer extends TransformerAbstract
         $nid = Util::cantorPair($objectType, $stop->object_id);
         return [
             'object' => $nid,
-            'audio_id' => (string) $stop->selector?->number,
+            'audio_id' => (string) $stop->selector?->audios->first()?->id,
             'audio_bumper' => null, // Legacy from Drupal
             'sort' => $stop->pivot->position,
         ];
