@@ -41,7 +41,7 @@ class TourTransformer extends TransformerAbstract
             'description' => $tour->description,
             'intro' => $tour->intro,
             'tour_duration' => $tour->duration_in_minutes,
-            'tour_audio' => $tour->selector?->audios->first()?->id,
+            'tour_audio' => $tour->selector?->defaultAudio?->id,
             'category' => null, // Legacy from Drupal
             'weight' => $tour->position,
         ];
