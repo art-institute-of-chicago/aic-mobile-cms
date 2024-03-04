@@ -9,7 +9,7 @@ class StopFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'published' => true,
         ];
     }
 }

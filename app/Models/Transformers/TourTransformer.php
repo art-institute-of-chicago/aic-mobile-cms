@@ -50,7 +50,10 @@ class TourTransformer extends TransformerAbstract
     protected function includeTourStops($tour)
     {
         $stops = $tour->stops->filter(function ($stop) {
-            return $stop->selector?->object?->is_on_view;
+            return $stop->selector?->object?->is_on_view
+                && $stop->published
+                && $stop->selector?->published
+                && ($stop->selector?->object?->published ?? true);
         });
         return $this->collection($stops, new StopTransformer());
     }

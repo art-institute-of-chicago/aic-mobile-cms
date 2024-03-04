@@ -15,7 +15,7 @@ class TourFactory extends Factory
             'featured' => fake()->boolean(),
             'intro' => fake()->words(100, asText: true),
             'position' => fake()->unique()->numberBetween(0, 20),
-            'published' => fake()->boolean(),
+            'published' => true,
             'title' => fake()->words(5, asText: true),
         ];
     }
