@@ -5,6 +5,7 @@ namespace App\Models\Transformers;
 use A17\Twill\Models\Contracts\TwillModelContract;
 use League\Fractal\TransformerAbstract;
 use App\Helpers\Util;
+use App\Models\Api\CollectionObject as ApiCollectionObject;
 use App\Models\CollectionObject;
 use App\Models\LoanObject;
 
@@ -12,9 +13,14 @@ class StopTransformer extends TransformerAbstract
 {
     public function transform(TwillModelContract $stop): array
     {
-        switch (get_class($stop->selector?->object)) {
+        $object = $stop->selector?->object;
+        switch (get_class($object)) {
             case CollectionObject::class:
                 $objectType = Util::COLLECTION_OBJECT;
+                break;
+            case ApiCollectionObject::class:
+                $objectType = Util::COLLECTION_OBJECT;
+                $object = $stop->selector?->object->getAugmentedModel();
                 break;
             case LoanObject::class:
                 $objectType = Util::LOAN_OBJECT;
@@ -22,7 +28,7 @@ class StopTransformer extends TransformerAbstract
             default:
                 $objectType = 0;
         }
-        $nid = Util::cantorPair($objectType, $stop->object_id);
+        $nid = Util::cantorPair($objectType, $object->id);
         return [
             'object' => $nid,
             'audio_id' => (string) $stop->selector?->defaultAudio?->id,
