@@ -288,7 +288,8 @@ class StringHelpers
         }
     }
 
-    public static function convertHtmlParagraphsToNewlines($text) {
+    public static function convertHtmlParagraphsToNewlines($text)
+    {
         $return = preg_replace('/<p[^>]*>/', '', $text);
         $return = str_replace('</p>', "\r\n", $return);
         $return = preg_replace('/<br[^>]*>/', "\r\n", $return);
