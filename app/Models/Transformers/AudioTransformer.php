@@ -4,6 +4,7 @@ namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
 use App\Repositories\Serializers\OptionalKeyArraySerializer;
+use App\Helpers\StringHelpers;
 use League\Fractal\TransformerAbstract;
 
 class AudioTransformer extends TransformerAbstract
@@ -21,7 +22,7 @@ class AudioTransformer extends TransformerAbstract
                 'title' => $audio->title,
                 'nid' => (string) $audio->id, // Legacy from Drupal
                 'audio_file_url' => $audio->content,
-                'audio_transcript' => $audio->transcript,
+                'audio_transcript' => StringHelpers::convertHtmlParagraphsToNewlines($audio->transcript),
                 'track_title' => null, // Legacy from Drupal
             ])
         ];

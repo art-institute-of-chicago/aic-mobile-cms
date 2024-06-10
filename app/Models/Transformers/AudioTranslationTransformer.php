@@ -4,6 +4,7 @@ namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
 use League\Fractal\TransformerAbstract;
+use App\Helpers\StringHelpers;
 
 class AudioTranslationTransformer extends TransformerAbstract
 {
@@ -17,7 +18,7 @@ class AudioTranslationTransformer extends TransformerAbstract
             'audio_file_url' => $translation->content,
             'audio_filemime' => null, // Legacy from Drupal
             'audio_filesize' => null, // Legacy from Drupal
-            'audio_transcript' => $translation->transcript,
+            'audio_transcript' => StringHelpers::convertHtmlParagraphsToNewlines($translation->transcript),
             'credits' => null, // Legacy from Drupal
         ];
     }
