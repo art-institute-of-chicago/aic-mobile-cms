@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use A17\Twill\Facades\TwillNavigation;
 use A17\Twill\View\Components\Navigation\NavigationLink;
-use App\Libraries\Api\Consumers\GuzzleApiConsumer;
+use Aic\Hub\Foundation\Library\Api\Consumers\GuzzleApiConsumer;
 use App\Libraries\DamsImageService;
 use App\Models;
 use Illuminate\Database\Eloquent\Relations\Relation;

@@ -35,6 +35,7 @@ class ObjectSerializerTest extends TestCase
         $objects = collect()->concat($collectionObjects)->concat($loanObjects);
         $serializer = new ObjectSerializer();
         $serialized = $serializer->serialize($objects);
+        dump($serialized, $objects);
 
         $this->assertArrayHasKey('objects', $serialized);
         $this->assertCount($collectionObjectCount + $loanObjectCount, $serialized['objects']);

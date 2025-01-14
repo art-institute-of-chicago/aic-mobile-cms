@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\Behaviors\HasApiModel;
+use Aic\Hub\Foundation\Library\Api\Models\AbstractModel;
+use Aic\Hub\Foundation\Library\Api\Models\Behaviors\HasApiModel;
 use App\Models\Behaviors\Transformable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

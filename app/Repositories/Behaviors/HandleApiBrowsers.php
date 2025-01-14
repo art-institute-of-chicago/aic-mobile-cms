@@ -4,7 +4,7 @@ namespace App\Repositories\Behaviors;
 
 use A17\Twill\Models\RelatedItem;
 use App\Models\ApiRelation;
-use App\Libraries\Api\Models\BaseApiModel;
+use Aic\Hub\Foundation\Library\Api\Models\BaseApiModel;
 use App\Helpers\UrlHelpers;
 use DamsImageService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -44,7 +44,7 @@ trait HandleApiBrowsers
     protected $apiBrowsers = [];
 
     /**
-     * @param \App\Libraries\Api\Models\BaseApiModel $object
+     * @param \Aic\Hub\Foundation\Library\Api\Models\BaseApiModel $object
      * @param array $fields
      * @return void
      */
@@ -71,7 +71,7 @@ trait HandleApiBrowsers
     }
 
     /**
-     * @param \App\Libraries\Api\Models\BaseApiModel $object
+     * @param \Aic\Hub\Foundation\Library\Api\Models\BaseApiModel $object
      * @param array $fields
      * @return array
      */

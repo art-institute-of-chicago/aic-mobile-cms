@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Aic\Hub\Foundation\Library\Api\Models\AbstractModel;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ApiRelation extends AbstractModel
