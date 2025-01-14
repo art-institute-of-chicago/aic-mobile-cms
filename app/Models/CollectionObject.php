@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
+use Aic\Hub\Foundation\Library\Api\Models\AbstractModel;
 use A17\Twill\Models\Behaviors\HasBlocks;
 use A17\Twill\Models\Behaviors\HasMedias;
 use A17\Twill\Models\Behaviors\HasTranslation;
-use App\Models\Behaviors\HasApiModel;
+use Aic\Hub\Foundation\Library\Api\Models\Behaviors\HasApiModel;
 use App\Models\Behaviors\HasApiRelations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

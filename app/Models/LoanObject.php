@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Aic\Hub\Foundation\Library\Api\Models\AbstractModel;
 use A17\Twill\Models\Behaviors\HasMedias;
 use App\Models\Behaviors\HasApiRelations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

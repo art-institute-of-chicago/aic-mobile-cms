@@ -178,7 +178,7 @@ class StringHelpers
 
     public static function convertReferenceLinks($text, $_collectedReferences)
     {
-        $codes = \App\Libraries\ShortcodeService::parse_ref($text);
+        $codes = \Aic\Hub\Foundation\Library\ShortcodeService::parse_ref($text);
 
         foreach ($codes as $index => $code) {
             if (isset($code['name']) && ($code['name'] == 'ref')) {
