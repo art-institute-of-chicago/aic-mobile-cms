@@ -55,8 +55,8 @@ trait HasApiModel
                 // Something like ['id' => 'datahub_id']
             } else {
                 $this->setAttribute($key, $value);
-                array_push($this->apiFields, $key);
             }
+            array_push($this->apiFields, $key);
         }
     }
 
@@ -67,7 +67,7 @@ trait HasApiModel
 
     public function getApiField($field)
     {
-        return $this->getApiFields[$field];
+        return $this->getApiFields()->{$field} ?? null;
     }
 
     /**
@@ -75,10 +75,6 @@ trait HasApiModel
      */
     public function getApiFields(): object
     {
-        return (object) array_reduce($this->apiFields, function ($result, $field) {
-            $result[$field] = $this->{$field};
-
-            return $result;
-        }, []);
+        return (object) $this->apiModel->toArray();
     }
 }

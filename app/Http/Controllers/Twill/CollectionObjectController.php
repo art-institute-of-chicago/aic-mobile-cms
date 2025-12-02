@@ -7,6 +7,7 @@ use A17\Twill\Services\Forms\Fields\Browser;
 use A17\Twill\Services\Forms\Fields\Checkbox;
 use A17\Twill\Services\Forms\Fields\Input;
 use A17\Twill\Services\Forms\Fields\Medias;
+use A17\Twill\Services\Forms\Columns;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Boolean;
 use A17\Twill\Services\Listings\Columns\Text;
@@ -46,13 +47,21 @@ class CollectionObjectController extends BaseApiController
             ->add(Text::make()
                 ->field('artist_display'))
             ->add(Boolean::make()
-                ->field('is_on_view'))
-            ->add(
-                ApiRelation::make()
-                    ->field('title')
-                    ->title('Gallery')
-                    ->relation('gallery')
-            )
+                ->field('is_on_view')
+                ->title('Is On View (CITI / Override)')
+                ->customRender(function (CollectionObject $object) {
+                    $object->refreshApi();
+                    $augmentedObject = $object->getAugmentedModel();
+                    $render = $augmentedObject?->getApiField('is_on_view') ? "✅" : "🙈";
+                    if ($augmentedObject?->is_on_view) {
+                        $render .= " / ✅";
+                    }
+                    return $render;
+                }))
+            ->add(ApiRelation::make()
+                ->field('title')
+                ->title('Galleries')
+                ->relation('gallery'))
             ->add(Text::make()
                 ->field('main_reference_number')
                 ->optional()
@@ -138,9 +147,19 @@ class CollectionObjectController extends BaseApiController
                     ->placeholder($apiValues['artist_display'])
             )
             ->add(
-                Checkbox::make()
-                    ->name('is_on_view')
-                    ->default($apiValues['is_on_view'])
+                Columns::make()
+                    ->left([
+                        Input::make()
+                            ->name('citi_on_view_status')
+                            ->label('CITI On View Status 🦁')
+                            ->placeholder($apiValues['is_on_view'] ? '👀 On View' : '🙈 Not On View')
+                            ->disabled()
+                    ])
+                    ->right([
+                        Checkbox::make()
+                            ->name('is_on_view')
+                            ->label('Force On View 📱')
+                    ])
             )
             ->add(
                 Input::make()
