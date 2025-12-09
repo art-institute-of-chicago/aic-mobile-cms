@@ -1,0 +1,15 @@
+diff --git a/src/Services/Listings/Columns/Boolean.php b/src/Services/Listings/Columns/Boolean.php
+index 6f2f97f8..e86a70bf 100644
+--- a/src/Services/Listings/Columns/Boolean.php
++++ b/src/Services/Listings/Columns/Boolean.php
+@@ -9,6 +9,10 @@ class Boolean extends TableColumn
+ {
+     protected function getRenderValue(TwillModelContract $model): string
+     {
++        if (($renderFunction = $this->render) !== null) {
++            return $renderFunction($model);
++        }
++
+         return parent::getRenderValue($model) ? "✅" : "❌";
+     }
+ }

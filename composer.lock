@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e199cc8c27df6214425ee6adc94b9476",
+    "content-hash": "7939fd3afd461ebae56e7a4cb3e607c9",
     "packages": [
         {
             "name": "aic/data-hub-foundation",
@@ -9098,7 +9098,7 @@
         },
         {
             "name": "vendor/package-patches",
-            "version": "0.0.2",
+            "version": "0.0.3",
             "require": {
                 "netresearch/composer-patches-plugin": "~1.2"
             },
@@ -9113,6 +9113,10 @@
                         {
                             "title": "MA-150: Allow updateBrowser() to handle morphOne relationships",
                             "url": "patches/MA-150---allow-update-browser-morphs.diff"
+                        },
+                        {
+                            "title": "MA-161: Create 'Force On View' flag",
+                            "url": "patches/MA-161---create-force-on-view-flag.diff"
                         }
                     ]
                 }
@@ -11833,15 +11837,15 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.1"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "platform-overrides": {
         "php": "8.1"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
