@@ -88,71 +88,70 @@
         },
         {
             "name": "area17/twill",
-            "version": "3.0.2",
+            "version": "3.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/area17/twill.git",
-                "reference": "4ff9d9694adfe10842f7324ed9cc03e98f33146a"
+                "reference": "19d8c043fdb41c803d54d238feea39d856394a1f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/area17/twill/zipball/4ff9d9694adfe10842f7324ed9cc03e98f33146a",
-                "reference": "4ff9d9694adfe10842f7324ed9cc03e98f33146a",
+                "url": "https://api.github.com/repos/area17/twill/zipball/19d8c043fdb41c803d54d238feea39d856394a1f",
+                "reference": "19d8c043fdb41c803d54d238feea39d856394a1f",
                 "shasum": ""
             },
             "require": {
                 "astrotomic/laravel-translatable": "^v11.12",
-                "cartalyst/tags": "^12.0|^13.0",
-                "doctrine/dbal": "^3.0",
+                "cartalyst/tags": "^12.0 || ^13.0 || ^14.0",
+                "doctrine/dbal": "^3.0 || ^4.0",
                 "ext-json": "*",
                 "ext-pdo": "*",
                 "guzzlehttp/guzzle": "^7.0",
                 "imgix/imgix-php": "^3.0",
                 "kalnoy/nestedset": "^6.0",
-                "laravel/framework": "^9.0|^10.0",
+                "laravel/framework": "^9.0 || ^10.0 || ^11.0",
                 "laravel/socialite": "^5.3",
                 "laravel/ui": "^4.0",
                 "league/flysystem-aws-s3-v3": "^3.0",
-                "league/glide-laravel": "^1.0",
+                "league/glide-symfony": "^1.0 || ^2.0",
                 "matthewbdaly/laravel-azure-storage": "^2.0",
                 "myclabs/php-enum": "^1.5",
                 "php": "^8.0",
                 "pragmarx/google2fa-qrcode": "^2.0",
                 "spatie/laravel-activitylog": "^4.0",
-                "spatie/laravel-analytics": "^4.0",
+                "spatie/laravel-analytics": "^4.0 || ^5.0",
                 "spatie/once": "^3.0"
             },
             "require-dev": {
                 "area17/phptorch": "dev-main",
                 "chillerlan/php-qrcode": "~4.0",
                 "friendsofphp/php-cs-fixer": "^3.0",
-                "nette/php-generator": "v4.0.3",
-                "nunomaduro/collision": "^6.0",
-                "nunomaduro/larastan": "^2.0",
-                "orchestra/testbench": "^7.8|^8.0",
-                "orchestra/testbench-dusk": "^7.8|^8.0",
-                "phpunit/php-invoker": "^3.1",
-                "phpunit/phpunit": "~9.0",
-                "rector/rector": "^0.12.15",
+                "larastan/larastan": "^2.9",
+                "nette/php-generator": "^4.0.3",
+                "nunomaduro/collision": "^6.0 || ^7.0 || ^8.0",
+                "orchestra/testbench": "^7.8 || ^8.0 || ^9.0",
+                "orchestra/testbench-dusk": "^7.8 || ^8.0 || ^9.0",
+                "phpunit/php-invoker": "^3.1 || ^4.0",
+                "phpunit/phpunit": "~9.0 || ~10.0",
+                "rector/rector": "^0.19.2 || ^1.0 ",
                 "spatie/invade": "^1.1",
-                "squizlabs/php_codesniffer": "*",
-                "torchlight/torchlight-commonmark": "^0.5"
+                "squizlabs/php_codesniffer": "*"
             },
             "type": "library",
             "extra": {
                 "laravel": {
+                    "aliases": {
+                        "TwillUtil": "A17\\Twill\\Facades\\TwillUtil",
+                        "TwillBlocks": "A17\\Twill\\Facades\\TwillBlocks",
+                        "TwillRoutes": "A17\\Twill\\Facades\\TwillRoutes",
+                        "TwillCapsules": "A17\\Twill\\Facades\\TwillCapsules",
+                        "TwillNavigation": "A17\\Twill\\Facades\\TwillNavigation",
+                        "TwillAppSettings": "A17\\Twill\\Facades\\TwillAppSettings",
+                        "TwillPermissions": "A17\\Twill\\Facades\\TwillPermissions"
+                    },
                     "providers": [
                         "A17\\Twill\\TwillServiceProvider"
-                    ],
-                    "aliases": {
-                        "TwillCapsules": "A17\\Twill\\Facades\\TwillCapsules",
-                        "TwillRoutes": "A17\\Twill\\Facades\\TwillRoutes",
-                        "TwillBlocks": "A17\\Twill\\Facades\\TwillBlocks",
-                        "TwillUtil": "A17\\Twill\\Facades\\TwillUtil",
-                        "TwillAppSettings": "A17\\Twill\\Facades\\TwillAppSettings",
-                        "TwillNavigation": "A17\\Twill\\Facades\\TwillNavigation",
-                        "TwillPermissions": "A17\\Twill\\Facades\\TwillPermissions"
-                    }
+                    ]
                 }
             },
             "autoload": {
@@ -183,9 +182,9 @@
                 "chat": "https://discord.gg/cnWk7EFv8R",
                 "docs": "https://twillcms.com/docs/",
                 "issues": "https://github.com/area17/twill/issues/",
-                "source": "https://github.com/area17/twill/tree/3.0.2"
+                "source": "https://github.com/area17/twill/tree/3.5.2"
             },
-            "time": "2023-05-23T19:06:11+00:00"
+            "time": "2025-03-21T02:45:39+00:00"
         },
         {
             "name": "astrotomic/laravel-translatable",
@@ -3663,52 +3662,6 @@
                 "source": "https://github.com/thephpleague/glide/tree/2.2.4"
             },
             "time": "2023-04-18T18:42:22+00:00"
-        },
-        {
-            "name": "league/glide-laravel",
-            "version": "1.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/thephpleague/glide-laravel.git",
-                "reference": "b525e33e32940f3b047d6ca357131aba0e973e72"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/glide-laravel/zipball/b525e33e32940f3b047d6ca357131aba0e973e72",
-                "reference": "b525e33e32940f3b047d6ca357131aba0e973e72",
-                "shasum": ""
-            },
-            "require": {
-                "league/glide-symfony": "^1.0"
-            },
-            "require-dev": {
-                "mockery/mockery": "^0.9",
-                "phpunit/phpunit": "^4.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "League\\Glide\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jonathan Reinink",
-                    "email": "jonathan@reinink.ca",
-                    "homepage": "http://reinink.ca"
-                }
-            ],
-            "description": "Glide adapter for Laravel",
-            "homepage": "http://glide.thephpleague.com",
-            "support": {
-                "issues": "https://github.com/thephpleague/glide-laravel/issues",
-                "source": "https://github.com/thephpleague/glide-laravel/tree/master"
-            },
-            "time": "2015-12-26T15:40:35+00:00"
         },
         {
             "name": "league/glide-symfony",
