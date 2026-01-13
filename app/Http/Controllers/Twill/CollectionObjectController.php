@@ -28,7 +28,7 @@ class CollectionObjectController extends BaseApiController
         $this->enableShowImage();
         $this->setDisplayName('Collection Object');
         $this->setModuleName('collectionObjects');
-        $this->setSearchColumns(['title', 'artist_display', 'datahub_id', 'main_reference_number']);
+        $this->setSearchColumns(['id', 'title', 'artist_display', 'main_reference_number']);
     }
 
     public function quickFilters(): QuickFilters
