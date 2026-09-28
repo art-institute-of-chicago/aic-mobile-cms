@@ -174,6 +174,7 @@ class MigrateData extends Command
                 $object = new ApiCollectionObject(['id' => $objectData['id']]);
             } else {
                 $object = LoanObject::create([
+                    'published' => true,
                     'artist_display' => $objectData['artist_culture_place_delim'],
                     'copyright_notice' => $objectData['copyright_notice'],
                     'credit_line' => $objectData['credit_line'],
@@ -186,6 +187,7 @@ class MigrateData extends Command
             $selectorData = collect($objectData['audio_commentary'])->firstWhere('audio', $tourStop['audio_id']);
             $selector = Selector::firstOrCreate(['number' => (int) $selectorData['object_selector_number']]);
             $selector->fill([
+                'published' => true,
                 'object_id' => $object->id,
                 'object_type' => Str::of(class_basename($object))->lcfirst(),
             ]);
