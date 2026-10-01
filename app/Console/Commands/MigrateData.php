@@ -333,14 +333,14 @@ class MigrateData extends Command
             $locale = config('app.locale');
             preg_match('/T\d\d (?<language>\S*) .*/', $audio->title, $matches);
             if (isset($matches['language'])) {
-                $title = str($matches['language']);
-                if ($title->contains('spanish', ignoreCase: true)) {
+                $language = str($matches['language']);
+                if ($language->contains('spanish', ignoreCase: true)) {
                     $locale = 'es';
-                } elseif ($title->contains('french', ignoreCase: true)) {
+                } elseif ($language->contains('french', ignoreCase: true)) {
                     $locale = 'fr';
-                } elseif ($title->contains('korean', ignoreCase: true)) {
+                } elseif ($language->contains('korean', ignoreCase: true)) {
                     $locale = 'ko';
-                } elseif ($title->contains('chinese', ignoreCase: true)) {
+                } elseif ($language->contains('chinese', ignoreCase: true)) {
                     $locale = 'zh-hant';
                 }
             }
