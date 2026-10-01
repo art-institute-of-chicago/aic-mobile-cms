@@ -53,7 +53,7 @@ class TourTransformer extends TransformerAbstract
             return $stop->selector?->object?->is_on_view
                 && $stop->published
                 && $stop->selector?->published
-                && ($stop->selector?->object?->published ?? true);
+                && ($stop->selector?->object?->is_on_view ?? true);
         });
         return $this->collection($stops, new StopTransformer());
     }
