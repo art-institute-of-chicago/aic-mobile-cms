@@ -12,11 +12,7 @@ use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\TableColumns;
 use App\Http\Controllers\Twill\Columns\ApiRelation;
 use App\Http\Controllers\Twill\Columns\RelationCount;
-use App\Models\Audio;
 use App\Models\Selector;
-use App\Models\Tour;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Redirect;
 
 class TourController extends BaseController
 {

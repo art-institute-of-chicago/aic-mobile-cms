@@ -3,7 +3,6 @@
 namespace App\Repositories\Serializers;
 
 use App\Models\Api\Audio as ApiAudio;
-use App\Models\Audio;
 use App\Models\Transformers\AudioTransformer;
 use League\Fractal\Manager;
 use League\Fractal\Resource;

@@ -7,6 +7,7 @@ use App\Models\AnnotationCategory;
 use App\Models\AnnotationType;
 use App\Models\ApiRelatable;
 use App\Models\ApiRelation;
+use App\Models\Api\Audio as ApiAudio;
 use App\Models\Api\CollectionObject as ApiCollectionObject;
 use App\Models\Api\Gallery as ApiGallery;
 use App\Models\Audio;
@@ -115,11 +116,9 @@ class MigrateData extends Command
         $this->tourProgress->setFormat('verbose');
         $this->tourProgress->start();
         foreach ($data as $index => $datum) {
-            $duration = Str::of($datum['tour_duration']);
-            if ($duration->contains(':')) {
-                $duration = $duration->before(':');
-            } elseif ($duration->contains('min')) {
-                $duration = $duration->before('min')->trim();
+            preg_match('/\D*(?<minutes>\d*)\D*/', $datum['tour_duration'], $matches);
+            if (isset($matches['minutes'])) {
+                $duration = $matches['minutes'];
             } else {
                 $duration = 0;
             }
@@ -137,6 +136,7 @@ class MigrateData extends Command
                 $selector = Selector::create();
             }
             $tour->selector()->save($selector);
+            $this->findAudiosForSelector($selector, $datum['title'], confidence: 18); // Arbitrarily high confidence
             $translations = $datum['translations'];
             $defaultTranslation = $datum;
             $defaultTranslation['language'] = config('app.locale');
@@ -159,48 +159,53 @@ class MigrateData extends Command
         $this->newLine();
     }
 
-    public function migrateTourStops($tour, array $tourStops)
+    public function migrateTourStops(Tour $tour, array $tourStops)
     {
         foreach ($tourStops as $index => $tourStop) {
-            $objectData = $this->appData['objects'][$tourStop['object']] ?? null;
-            if (is_null($objectData)) {
-                continue;
-            }
-            if ($gallery = ApiGallery::search($objectData['gallery_location'])->limit(1)->get()->first()) {
-                Gallery::firstOrCreate(['datahub_id' => $gallery?->id]);
-            }
-            if ($objectData['id']) {
-                CollectionObject::firstOrCreate(['datahub_id' => $objectData['id']]);
-                $object = new ApiCollectionObject(['id' => $objectData['id']]);
-            } else {
-                $object = LoanObject::create([
-                    'published' => true,
-                    'artist_display' => $objectData['artist_culture_place_delim'],
-                    'copyright_notice' => $objectData['copyright_notice'],
-                    'credit_line' => $objectData['credit_line'],
-                    'latitude' => $objectData['latitude'],
-                    'longitude' => $objectData['longitude'],
-                    'title' => $objectData['title'],
-                    'gallery_id' => $gallery?->id,
+            $selector = null;
+            if ($objectData = $this->appData['objects'][$tourStop['object']] ?? null) {
+                if ($gallery = ApiGallery::search($objectData['gallery_location'])->limit(1)->get()->first()) {
+                    Gallery::firstOrCreate(['datahub_id' => $gallery?->id]);
+                }
+                if ($objectData['id']) {
+                    CollectionObject::firstOrCreate(['datahub_id' => $objectData['id']]);
+                    $object = new ApiCollectionObject(['id' => $objectData['id']]);
+                } else {
+                    $object = LoanObject::create([
+                        'published' => true,
+                        'artist_display' => $objectData['artist_culture_place_delim'],
+                        'copyright_notice' => $objectData['copyright_notice'],
+                        'credit_line' => $objectData['credit_line'],
+                        'latitude' => $objectData['latitude'],
+                        'longitude' => $objectData['longitude'],
+                        'title' => $objectData['title'],
+                        'gallery_id' => $gallery?->id,
+                    ]);
+                }
+                $selectorData = collect($objectData['audio_commentary'])->firstWhere('audio', $tourStop['audio_id']);
+                $selector = Selector::firstOrCreate([
+                    'number' => (int) $selectorData['object_selector_number'],
                 ]);
+                $selector->fill([
+                    'object_id' => $object->id,
+                    'object_type' => Str::of(class_basename($object))->lcfirst(),
+                ]);
+                $selector->save();
+                $published = true;
+            } else {
+                $published = false;
             }
-            $selectorData = collect($objectData['audio_commentary'])->firstWhere('audio', $tourStop['audio_id']);
-            $selector = Selector::firstOrCreate(['number' => (int) $selectorData['object_selector_number']]);
-            $selector->fill([
-                'published' => true,
-                'object_id' => $object->id,
-                'object_type' => Str::of(class_basename($object))->lcfirst(),
-            ]);
-            $selector->save();
             $stop = Stop::create([
                 'active' => true,
                 'publish_start_date' => now(),
-                'published' => true,
-                'title' => Str::of($objectData['title'])->trim(),
+                'published' => $published,
             ]);
-            $stop->selector()->save($selector);
+            if ($selector) {
+                $stop->selector()->save($selector);
+                $titleMatch = $objectData['id'] ?? $objectData['title'];
+                $this->findAudiosForSelector($selector, $titleMatch, confidence: 1); // Arbitrarily low confidence
+            }
             $tour->stops()->attach($stop, ['position' => $index]);
-            $stop->save();
             $this->tourProgress->advance();
         }
     }
@@ -306,5 +311,50 @@ class MigrateData extends Command
         $knownDuplicateNumbers = ['388', '639'];
         $title = Str::of($title);
         return in_array($number, $knownDuplicateNumbers) && $title->contains('Verbal Description');
+    }
+
+    /**
+     * Associate audios from the API with the given selector based on the title.
+     */
+    private function findAudiosForSelector(Selector $selector, string $title, int $confidence)
+    {
+        if ($selector->selectable_type == 'tour') {
+            $title = "BUMPER $title";
+        }
+        $audios = ApiAudio::query()
+            ->rawSearch(['bool' => ['must' => ['match' => ['title' => $title]]]])
+            ->get()
+            ->filter(fn ($audio) => $audio->_score  > $confidence);
+        if ($audios->count()) {
+            $selector->published = true;
+            $selector->save();
+        }
+        foreach ($audios as $audio) {
+            $locale = config('app.locale');
+            preg_match('/T\d\d (?<language>\S*) .*/', $audio->title, $matches);
+            if (isset($matches['language'])) {
+                $title = str($matches['language']);
+                if ($title->contains('spanish', ignoreCase: true)) {
+                    $locale = 'es';
+                } elseif ($title->contains('french', ignoreCase: true)) {
+                    $locale = 'fr';
+                } elseif ($title->contains('korean', ignoreCase: true)) {
+                    $locale = 'ko';
+                } elseif ($title->contains('chinese', ignoreCase: true)) {
+                    $locale = 'zh-hant';
+                }
+            }
+            if (str($audio->title)->contains('VD') && !str($selector->tourTitle)->contains('Verbal Description')) {
+                continue; // Only add VD audios to Verbal Description tours
+            }
+            $apiAudio = new ApiAudio(['id' => $audio->id]);
+            Audio::firstOrCreate([
+                'datahub_id' => $apiAudio->id,
+                'selector_id' => $selector->id,
+                'locale' => $locale,
+            ]);
+            $apiRelation = ApiRelation::firstOrCreate(['datahub_id' => $apiAudio->id]);
+            $selector->apiAudios()->attach($apiRelation, ['relation' => 'apiAudios', 'position' => 0]);
+        }
     }
 }
