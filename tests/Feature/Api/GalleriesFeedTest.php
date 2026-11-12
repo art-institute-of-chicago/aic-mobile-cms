@@ -58,4 +58,17 @@ class GalleriesFeedTest extends TestCase
         $this->assertApiRequestCount(1);
         $this->assertApiRequestReceived('GET', '/api/v1/galleries/2147');
     }
+
+    public function test_gallery_title_falls_back_to_the_api(): void
+    {
+        Gallery::factory()->create(['id' => 241, 'datahub_id' => 2148, 'title' => null]);
+        $this->addMockApiResponses($this->mockApiModelReponse(ApiGallery::factory()->make([
+            'id' => 2148,
+            'title' => 'Gallery 241',
+        ])));
+
+        $this->getJson('/api/galleries')
+            ->assertOk()
+            ->assertJsonPath('galleries.241.title', 'Gallery 241');
+    }
 }
