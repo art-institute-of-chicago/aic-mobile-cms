@@ -18,22 +18,22 @@ return new class () extends Migration {
         Schema::dropIfExists('stop_revisions');
         Schema::table('collection_objects', function (Blueprint $table) {
             $table->dropColumn(['published']);
-            $table->text('credit_line')->change();
+            $table->text('credit_line')->nullable()->change();
         });
         Schema::table('loan_objects', function (Blueprint $table) {
             $table->boolean('is_on_view')->nullable()->after('artist_display');
-            $table->text('credit_line')->change();
+            $table->text('credit_line')->nullable()->change();
         });
     }
 
     public function down(): void
     {
         Schema::table('loan_objects', function (Blueprint $table) {
-            $table->string('credit_line')->change();
+            $table->string('credit_line')->nullable()->change();
             $table->dropColumn(['is_on_view']);
         });
         Schema::table('collection_objects', function (Blueprint $table) {
-            $table->string('credit_line')->change();
+            $table->string('credit_line')->nullable()->change();
             $table->boolean('published')->default(false);
         });
         Schema::create('stop_revisions', function (Blueprint $table) {
