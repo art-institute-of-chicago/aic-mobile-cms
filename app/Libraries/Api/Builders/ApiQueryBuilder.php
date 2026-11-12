@@ -147,6 +147,11 @@ class ApiQueryBuilder
      */
     public $suggestionsData;
 
+    /**
+     * Connection to API
+     */
+    public $connection;
+
     public function __construct($connection, $grammar = null)
     {
         $this->connection = $connection;
