@@ -50,7 +50,7 @@ trait HasApiModel
     public function augmentWithApiModel()
     {
         foreach ($this->apiModel->toArray() as $key => $value) {
-            if ($this->hasAttribute($key)) {
+            if ($this->hasFilledAttribute($key)) {
                 // TODO: If the attribute already exists un-tie with a mapping array and set the attr.
                 // Something like ['id' => 'datahub_id']
             } else {
@@ -60,7 +60,13 @@ trait HasApiModel
         }
     }
 
-    public function hasAttribute($attr): bool
+    /**
+     * Whether the local model has a non-null value for the attribute.
+     *
+     * Not named `hasAttribute`: Laravel 11's Eloquent uses that method name
+     * in getAttribute() to decide whether to resolve an attribute.
+     */
+    public function hasFilledAttribute($attr): bool
     {
         return array_key_exists($attr, $this->attributes) && !is_null($this->attributes[$attr]);
     }
