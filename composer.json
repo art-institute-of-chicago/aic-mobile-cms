@@ -45,7 +45,7 @@
         }
     ],
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
         "aic/data-hub-foundation": "^2.3",
         "area17/twill": "^3.0",
         "guzzlehttp/guzzle": "^7.2",
@@ -109,7 +109,7 @@
     "config": {
         "optimize-autoloader": true,
         "platform": {
-            "php": "8.1"
+            "php": "8.2"
         },
         "preferred-install": "dist",
         "sort-packages": true,
