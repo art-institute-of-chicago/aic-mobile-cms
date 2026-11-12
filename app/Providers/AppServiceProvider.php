@@ -7,9 +7,11 @@ use A17\Twill\View\Components\Navigation\NavigationLink;
 use App\Libraries\Api\Consumers\GuzzleApiConsumer;
 use App\Libraries\DamsImageService;
 use App\Models;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -39,6 +41,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('api', function ($request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
         if (App::environment(['test', 'production'])) {
             URL::forceScheme('https');
 
