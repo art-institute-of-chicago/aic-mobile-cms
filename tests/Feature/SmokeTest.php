@@ -125,9 +125,10 @@ class SmokeTest extends TestCase
 
     public function test_unknown_route_returns_html_404(): void
     {
-        $this->get('/does-not-exist')
-            ->assertNotFound()
-            ->assertHeader('Content-Type', 'text/html; charset=UTF-8');
+        $response = $this->get('/does-not-exist')->assertNotFound();
+
+        // Charset names are case-insensitive
+        $this->assertSame('text/html; charset=utf-8', strtolower($response->headers->get('Content-Type')));
     }
 
     public function test_server_error_returns_json_500_without_details(): void
