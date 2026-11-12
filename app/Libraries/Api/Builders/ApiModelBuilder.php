@@ -557,7 +557,7 @@ class ApiModelBuilder extends Builder
      *
      * @throws \InvalidArgumentException
      */
-    public function paginate($perPage = null, $columns = [], $pageName = 'page', $page = null)
+    public function paginate($perPage = null, $columns = [], $pageName = 'page', $page = null, $total = null)
     {
         if ($this->performSearch) {
             return $this->getSearch($perPage, $columns, $pageName, $page);

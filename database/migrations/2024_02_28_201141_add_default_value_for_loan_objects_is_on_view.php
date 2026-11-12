@@ -8,14 +8,14 @@ return new class () extends Migration {
     public function up(): void
     {
         Schema::table('loan_objects', function (Blueprint $table) {
-            $table->boolean('is_on_view')->default(true)->change();
+            $table->boolean('is_on_view')->nullable()->default(true)->change();
         });
     }
 
     public function down(): void
     {
         Schema::table('loan_objects', function (Blueprint $table) {
-            $table->boolean('is_on_view')->default(null)->change();
+            $table->boolean('is_on_view')->nullable()->default(null)->change();
         });
     }
 };
