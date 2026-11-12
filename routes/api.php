@@ -16,16 +16,6 @@ use App\Http\Controllers\Api\Tours;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cache;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
 Route::get('/appData-v3', function () {
     // Listed in the order the sections appear in the Drupal appData.json
     $controllers = collect([
