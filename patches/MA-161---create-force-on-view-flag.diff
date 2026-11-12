@@ -10,6 +10,6 @@ index 6f2f97f8..e86a70bf 100644
 +            return $renderFunction($model);
 +        }
 +
-         return parent::getRenderValue($model) ? "✅" : "❌";
+         return parent::getRenderValue($model) ? '✅' : '❌';
      }
  }
