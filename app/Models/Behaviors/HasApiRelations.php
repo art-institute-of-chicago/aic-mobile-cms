@@ -2,7 +2,7 @@
 
 namespace App\Models\Behaviors;
 
-use App\Libraries\Api\Builders\Relations\BelongsTo;
+use Aic\Hub\Foundation\Library\Api\Builders\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**

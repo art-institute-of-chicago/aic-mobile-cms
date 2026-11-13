@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Api;
 
-use App\Libraries\Api\Models\BaseApiModel as ApiModel;
+use Aic\Hub\Foundation\Library\Api\Models\BaseApiModel as ApiModel;
 use Closure;
 use Faker\Generator as FakerGenerator;
 use Illuminate\Container\Container;

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Libraries\Api\Builders\Relations\NullRelation;
+use Aic\Hub\Foundation\Library\Api\Builders\Relations\NullRelation;
 use App\Models\Behaviors\HasApiModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphTo;

@@ -2,8 +2,8 @@
 
 namespace Tests;
 
-use App\Libraries\Api\Consumers\GuzzleApiConsumer;
-use App\Libraries\Api\Models\BaseApiModel as ApiModel;
+use Aic\Hub\Foundation\Library\Api\Consumers\GuzzleApiConsumer;
+use Aic\Hub\Foundation\Library\Api\Models\BaseApiModel as ApiModel;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Middleware;
