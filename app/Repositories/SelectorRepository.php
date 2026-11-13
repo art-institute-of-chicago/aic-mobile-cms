@@ -5,7 +5,6 @@ namespace App\Repositories;
 use App\Models\Audio;
 use App\Models\CollectionObject;
 use App\Models\Selector;
-use App\Repositories\ModuleRepository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
