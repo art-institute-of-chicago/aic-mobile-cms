@@ -31,6 +31,6 @@ class AudioTransformer extends TransformerAbstract
     public function includeTranslations($audio)
     {
         $translations = $audio->translations;
-        return $this->collection($translations, new AudioTranslationTransformer());
+        return $this->customCollection($translations, new AudioTranslationTransformer());
     }
 }

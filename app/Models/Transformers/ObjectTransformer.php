@@ -65,6 +65,6 @@ class ObjectTransformer extends TransformerAbstract
     public function includeSelectors($object)
     {
         $selectors = $object->selectors;
-        return $this->collection($selectors, new SelectorTransformer(), 'audio_commentary');
+        return $this->customCollection($selectors, new SelectorTransformer(), 'audio_commentary');
     }
 }

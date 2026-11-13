@@ -23,7 +23,7 @@ use Illuminate\Support\Str;
  *
  *  protected includeRelatedModels($models)
  *  {
- *      return $this->collection($models->related_models, new ModelTransformer(), 'optional_key');
+ *      return $this->customCollection($models->related_models, new ModelTransformer(), 'optional_key');
  *  }
  */
 trait CustomIncludes
@@ -49,8 +49,11 @@ trait CustomIncludes
 
     /**
      * Transforms the data according to the specified serializer.
+     *
+     * Not named `collection`: that would override
+     * TransformerAbstract::collection(), which returns a fractal resource.
      */
-    public function collection($data, $transformer, $resourceKey = null)
+    public function customCollection($data, $transformer, $resourceKey = null)
     {
         $collection = collect($data)->map(function ($datum) use ($transformer) {
             return $transformer->transform($datum);

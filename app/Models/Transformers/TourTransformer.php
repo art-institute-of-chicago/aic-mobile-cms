@@ -10,7 +10,7 @@ use App\Repositories\Api\GalleryRepository;
 
 class TourTransformer extends TransformerAbstract
 {
-    protected $defaultIncludes = [
+    protected array $defaultIncludes = [
         'tour_stops',
         'translations',
     ];
