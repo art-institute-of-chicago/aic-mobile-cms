@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\LoanObject;
 use App\Models\Selector;
 use App\Models\Stop;
 use App\Models\Tour;

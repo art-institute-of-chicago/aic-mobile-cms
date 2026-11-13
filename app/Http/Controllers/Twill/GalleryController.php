@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Twill;
 use A17\Twill\Services\Forms\BladePartial;
 use A17\Twill\Services\Forms\Fields\Checkbox;
 use A17\Twill\Services\Forms\Fields\Input;
-use A17\Twill\Services\Forms\Fields\Map;
 use A17\Twill\Services\Forms\Form;
 use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\TableColumns;

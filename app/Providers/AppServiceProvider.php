@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Pluralizer;
 
 class AppServiceProvider extends ServiceProvider
 {

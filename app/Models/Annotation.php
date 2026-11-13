@@ -5,7 +5,6 @@ namespace App\Models;
 use A17\Twill\Models\Behaviors\HasMedias;
 use A17\Twill\Models\Behaviors\HasTranslation;
 use A17\Twill\Models\Model;
-use App\Models\AnnotationType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
