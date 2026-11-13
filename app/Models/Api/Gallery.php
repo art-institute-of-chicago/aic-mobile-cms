@@ -2,7 +2,7 @@
 
 namespace App\Models\Api;
 
-use App\Libraries\Api\Models\BaseApiModel;
+use Aic\Hub\Foundation\Library\Api\Models\BaseApiModel;
 use Database\Factories\Api\HasApiFactory;
 
 class Gallery extends BaseApiModel

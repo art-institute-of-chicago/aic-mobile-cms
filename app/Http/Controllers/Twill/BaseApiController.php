@@ -21,7 +21,7 @@ use A17\Twill\Services\Listings\TableColumns;
 use App\Helpers\UrlHelpers;
 use App\Http\Controllers\Behaviors\HandlesTitleMarkup;
 use App\Http\Controllers\Twill\Columns\ApiImage;
-use App\Libraries\Api\Filters\Search;
+use Aic\Hub\Foundation\Library\Api\Filters\Search;
 use App\Repositories\Api\BaseApiRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
