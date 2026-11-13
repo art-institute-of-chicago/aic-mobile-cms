@@ -24,6 +24,6 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --no-interaction --no-progress --no-scripts
       - name: Generate key
-        run: php artisan key:generate --env=testing
+        run: php artisan key:generate --env=ci
       - name: Run PHPUnit
-        run: php artisan test
+        run: php artisan test --env=ci
