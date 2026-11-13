@@ -23,15 +23,15 @@ class CustomIncludesTest extends TestCase
         $mock->withCustomIncludes($model, array());
     }
 
-    public function test_collection_is_called(): void
+    public function test_custom_collection_is_called(): void
     {
         $model = new FakeModel();
         $childTransformer = new FakeChildTransformer();
         $mock = $this->getMockBuilder(FakeTransformer::class)
-            ->onlyMethods(['collection'])
+            ->onlyMethods(['customCollection'])
             ->getMock();
         $mock->expects($this->once())
-            ->method('collection')
+            ->method('customCollection')
             ->with($this->equalTo($model->data), $this->equalTo($childTransformer));
         $mock->withCustomIncludes($model, array());
     }
@@ -78,7 +78,7 @@ class FakeTransformer
 
     public function includeTestInclude($model)
     {
-        return $this->collection($model->data, new FakeChildTransformer());
+        return $this->customCollection($model->data, new FakeChildTransformer());
     }
 
     public function includeNotConfigured($model)
