@@ -184,8 +184,6 @@ class DamsImageService implements ImageServiceInterface
                     throw new \Exception(curl_error($ch));
                 }
 
-                curl_close($ch);
-
                 return json_decode($contents);
             } catch (\Exception $e) {
                 return null;
