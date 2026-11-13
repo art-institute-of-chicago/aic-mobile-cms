@@ -11,13 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware) {
+    ->withMiddleware(function (Middleware $middleware): void {
         // Rate limit the API with the `api` limiter defined in AppServiceProvider
         $middleware->throttleApi();
 
         // Where the `guest` middleware sends users who are already logged in
         $middleware->redirectUsersTo('/home');
     })
-    ->withExceptions(function (Exceptions $exceptions) {
+    ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
