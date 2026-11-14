@@ -2,8 +2,8 @@
 
 namespace App\Models\Api;
 
-use App\Libraries\Api\Models\BaseApiModel;
-use App\Models\Behaviors\HasMediasApi;
+use Aic\Hub\Foundation\Library\Api\Models\BaseApiModel;
+use Aic\Hub\Foundation\Library\Api\Models\Behaviors\HasMediasApi;
 use Database\Factories\Api\HasApiFactory;
 use Illuminate\Database\Eloquent\Builder;
 

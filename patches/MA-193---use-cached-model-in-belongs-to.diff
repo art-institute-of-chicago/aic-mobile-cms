@@ -1,0 +1,12 @@
+--- a/src/Library/Api/Builders/Relations/BelongsTo.php
++++ b/src/Library/Api/Builders/Relations/BelongsTo.php
+@@ -24,8 +24,7 @@
+     public function getResults()
+     {
+         if (in_array(HasApiModel::class, class_uses_recursive($this->child::class))) {
+-            $this->child->refreshApi();
+-            $id = $this->child->getApiModelFilled()->{$this->foreignKey};
++            $id = $this->child->getApiModelFilledCached()->{$this->foreignKey};
+         } else {
+             $id = $this->child->getAttribute($this->foreignKey);
+         }

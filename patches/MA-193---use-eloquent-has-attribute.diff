@@ -1,0 +1,14 @@
+--- a/src/Library/Api/Models/Behaviors/HasApiModel.php
++++ b/src/Library/Api/Models/Behaviors/HasApiModel.php
+@@ -104,11 +104,6 @@
+         $this->apiFilled = true;
+     }
+ 
+-    public function hasAttribute($attr)
+-    {
+-        return array_key_exists($attr, $this->attributes);
+-    }
+-
+     public function getApiField($field)
+     {
+         return $this->getApiFields[$field];

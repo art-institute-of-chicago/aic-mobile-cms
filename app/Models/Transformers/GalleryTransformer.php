@@ -13,14 +13,14 @@ class GalleryTransformer extends TransformerAbstract
             $gallery->id => [
                 'title' => $gallery->title,
                 'nid' => (string) $gallery->id, // Legacy from Drupal
-                'location' => $gallery->getApiModel()->latlon ?? $gallery->latlon,
-                'latitude' => $gallery->getApiModel()->latitude ?? $gallery->latitude,
-                'longitude' => $gallery->getApiModel()->longitude ?? $gallery->longitude,
+                'location' => $gallery->getApiModelFilledCached()->latlon ?? $gallery->latlon,
+                'latitude' => $gallery->getApiModelFilledCached()->latitude ?? $gallery->latitude,
+                'longitude' => $gallery->getApiModelFilledCached()->longitude ?? $gallery->longitude,
                 'gallery_id' => (string) $gallery->id,
                 'tgn_id' => null,// Legacy from Drupal
-                'closed' => $gallery->getApiModel()->is_closed ?? $gallery->is_closed,
-                'number' => $gallery->getApiModel()->number ?? $gallery->number,
-                'floor' => $gallery->getApiModel()->floor ?? $gallery->floor,
+                'closed' => $gallery->getApiModelFilledCached()->is_closed ?? $gallery->is_closed,
+                'number' => $gallery->getApiModelFilledCached()->number ?? $gallery->number,
+                'floor' => $gallery->getApiModelFilledCached()->floor ?? $gallery->floor,
                 'source_updated_at' => $gallery->source_updated_at,
                 'updated_at' => $gallery->updated_at,
             ]

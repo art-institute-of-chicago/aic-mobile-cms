@@ -109,7 +109,7 @@ class AudioController extends BaseApiController
                     ->fields([
                         BladePartial::make()
                             ->view('admin.fields.audio')
-                            ->withAdditionalParams(['src' => $audio->getApiModel()->content]),
+                            ->withAdditionalParams(['src' => $audio->getApiModelFilledCached()->content]),
                     ])
             );
     }
