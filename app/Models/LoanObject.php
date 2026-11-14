@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use A17\Twill\Models\Behaviors\HasMedias;
-use App\Models\Behaviors\HasApiRelations;
+use Aic\Hub\Foundation\Library\Api\Models\Behaviors\HasApiRelations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;

@@ -20,7 +20,7 @@
             "package": {
                 "type": "metapackage",
                 "name": "vendor/package-patches",
-                "version": "1.0.0",
+                "version": "1.0.2",
                 "require": {
                     "netresearch/composer-patches-plugin": "~1.2"
                 },
@@ -39,6 +39,16 @@
                                 "title": "MA-161: Create 'Force On View' flag",
                                 "url": "patches/MA-161---create-force-on-view-flag.diff"
                             }
+                        ],
+                        "aic/data-hub-foundation": [
+                            {
+                                "title": "MA-193: Use cached model in BelongsTo",
+                                "url": "patches/MA-193---use-cached-model-in-belongs-to.diff"
+                            },
+                            {
+                                "title": "MA-193: Use Eloquent's hasAttribute() in HasApiModel",
+                                "url": "patches/MA-193---use-eloquent-has-attribute.diff"
+                            }
                         ]
                     }
                 }
@@ -55,7 +65,7 @@
         "laravel/tinker": "^3.0",
         "league/fractal": "^0.20",
         "michelf/php-smartypants": "^1.8",
-        "vendor/package-patches": "1.0.0"
+        "vendor/package-patches": "1.0.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

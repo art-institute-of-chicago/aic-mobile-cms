@@ -23,8 +23,8 @@ class ObjectTransformer extends TransformerAbstract
         $longitude = $object->longitude ?? $object->gallery?->longitude;
         switch (get_class($object)) {
             case CollectionObject::class:
-                $thumbnail = $object->getApiModel()->image('iiif', 'thumbnail');
-                $image = $object->getApiModel()->image('iiif');
+                $thumbnail = $object->getApiModelFilledCached()->image('iiif', 'thumbnail');
+                $image = $object->getApiModelFilledCached()->image('iiif');
                 $objectType = Util::COLLECTION_OBJECT;
                 break;
             case LoanObject::class:

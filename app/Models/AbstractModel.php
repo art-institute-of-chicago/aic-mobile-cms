@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Behaviors\LintsAttributes;
+use Aic\Hub\Foundation\Library\Api\Models\Behaviors\LintsAttributes;
 use Aic\Hub\Foundation\Models\Concerns\HasByLastModScope;
 use A17\Twill\Models\Model;
 use Illuminate\Database\Eloquent\Builder;

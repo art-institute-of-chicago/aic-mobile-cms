@@ -21,7 +21,7 @@ class ObjectSerializer
     {
         $objects = $objects->map(function ($object) {
             if ($object instanceof CollectionObject) {
-                $object = $object->getAugmentedModel()->refreshApi();
+                $object = $object->getAugmentedModel();
             }
             return $object;
         });
