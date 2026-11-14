@@ -52,7 +52,7 @@ class CollectionObjectController extends BaseApiController
                 ->customRender(function (CollectionObject $object) {
                     $object->refreshApi();
                     $augmentedObject = $object->getAugmentedModel();
-                    $render = $augmentedObject?->getApiField('is_on_view') ? "✅" : "🙈";
+                    $render = $augmentedObject?->getApiModelFilledCached()?->is_on_view ? "✅" : "🙈";
                     if ($augmentedObject?->is_on_view) {
                         $render .= " / ✅";
                     }

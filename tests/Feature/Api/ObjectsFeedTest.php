@@ -86,9 +86,13 @@ class ObjectsFeedTest extends TestCase
             ->assertOk()
             ->assertExactJson(['objects' => []]);
         $this->assertApiRequestCount(1);
-        $this->assertApiRequestReceived('GET', '/api/v1/artworks');
-        parse_str($this->transactions[0]['request']->getUri()->getQuery(), $query);
-        $this->assertSame(['ids' => '27992'], json_decode($query['params'], true));
+        // data-hub-foundation requests all fields by default, which sends the
+        // parameters as a POST body rather than a GET query string.
+        $this->assertApiRequestReceived('POST', '/api/v1/artworks');
+        $this->assertSame(
+            ['ids' => '27992', 'fields' => true],
+            json_decode((string) $this->transactions[0]['request']->getBody(), true)
+        );
     }
 
     private const BLANK_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';

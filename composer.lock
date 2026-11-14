@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "72de3e1f7dbbe734510ea7096ac26ad2",
+    "content-hash": "efc826503fff5b6d440833d90a45f70e",
     "packages": [
         {
             "name": "aic/data-hub-foundation",
@@ -10896,7 +10896,7 @@
         },
         {
             "name": "vendor/package-patches",
-            "version": "1.0.0",
+            "version": "1.0.2",
             "require": {
                 "netresearch/composer-patches-plugin": "~1.2"
             },
@@ -10915,6 +10915,16 @@
                         {
                             "title": "MA-161: Create 'Force On View' flag",
                             "url": "patches/MA-161---create-force-on-view-flag.diff"
+                        }
+                    ],
+                    "aic/data-hub-foundation": [
+                        {
+                            "title": "MA-193: Use cached model in BelongsTo",
+                            "url": "patches/MA-193---use-cached-model-in-belongs-to.diff"
+                        },
+                        {
+                            "title": "MA-193: Use Eloquent's hasAttribute() in HasApiModel",
+                            "url": "patches/MA-193---use-eloquent-has-attribute.diff"
                         }
                     ]
                 }

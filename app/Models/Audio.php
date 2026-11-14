@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Aic\Hub\Foundation\Library\Api\Builders\Relations\NullRelation;
-use App\Models\Behaviors\HasApiModel;
+use Aic\Hub\Foundation\Library\Api\Models\Behaviors\HasApiModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;

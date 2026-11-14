@@ -257,7 +257,7 @@ class BaseApiController extends ModuleController
         }
         $content = Form::make()
             ->add($title)
-            ->merge($this->additionalFormFields($model, $model->getApiModel()));
+            ->merge($this->additionalFormFields($model, $model->getApiModelFilledCached()));
         return parent::getForm($model)
             ->addFieldset(
                 Fieldset::make()
