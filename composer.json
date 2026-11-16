@@ -47,7 +47,7 @@
     ],
     "require": {
         "php": "^8.5",
-        "aic/data-hub-foundation": "^6.0",
+        "aic/data-hub-foundation": "^13.0",
         "area17/twill": "^3.0",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^13.17",
