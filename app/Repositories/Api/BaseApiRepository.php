@@ -59,7 +59,7 @@ abstract class BaseApiRepository extends ModuleRepository
         $query = $this->model->newQuery();
         switch ($slug) {
             case 'all':
-                return $this->model->getApiModel()->newQuery()->count();
+                return $this->model->getApiModelFilled()->newQuery()->count();
             case 'published':
                 return $query->published()->count();
             case 'draft':
