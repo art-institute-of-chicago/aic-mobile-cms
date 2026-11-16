@@ -20,7 +20,7 @@
             "package": {
                 "type": "metapackage",
                 "name": "vendor/package-patches",
-                "version": "1.0.3",
+                "version": "1.0.4",
                 "require": {
                     "netresearch/composer-patches-plugin": "~1.2"
                 },
@@ -52,6 +52,10 @@
                             {
                                 "title": "MA-193: Move DamsImageService into the foundation",
                                 "url": "patches/MA-193---move-dams-image-service.diff"
+                            },
+                            {
+                                "title": "MA-193: Move helper classes into the foundation",
+                                "url": "patches/MA-193---move-helpers.diff"
                             }
                         ]
                     }
@@ -68,7 +72,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "league/fractal": "^0.20",
-        "vendor/package-patches": "1.0.3"
+        "vendor/package-patches": "1.0.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

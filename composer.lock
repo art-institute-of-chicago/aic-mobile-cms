@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1e398ed597eea11ccbb731c38e3f0f49",
+    "content-hash": "4c308b17729fd64529ad9eea372bd21a",
     "packages": [
         {
             "name": "aic/data-hub-foundation",
@@ -10841,7 +10841,7 @@
         },
         {
             "name": "vendor/package-patches",
-            "version": "1.0.3",
+            "version": "1.0.4",
             "require": {
                 "netresearch/composer-patches-plugin": "~1.2"
             },
@@ -10874,6 +10874,10 @@
                         {
                             "title": "MA-193: Move DamsImageService into the foundation",
                             "url": "patches/MA-193---move-dams-image-service.diff"
+                        },
+                        {
+                            "title": "MA-193: Move helper classes into the foundation",
+                            "url": "patches/MA-193---move-helpers.diff"
                         }
                     ]
                 }

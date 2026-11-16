@@ -5,7 +5,7 @@ namespace App\Repositories\Behaviors;
 use A17\Twill\Models\RelatedItem;
 use App\Models\ApiRelation;
 use Aic\Hub\Foundation\Library\Api\Models\BaseApiModel;
-use App\Helpers\UrlHelpers;
+use Aic\Hub\Foundation\Library\Helpers\UrlHelpers;
 use DamsImageService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
