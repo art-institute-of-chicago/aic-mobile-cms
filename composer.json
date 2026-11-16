@@ -64,7 +64,6 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "league/fractal": "^0.20",
-        "michelf/php-smartypants": "^1.8",
         "vendor/package-patches": "1.0.2"
     },
     "require-dev": {
