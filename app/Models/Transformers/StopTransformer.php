@@ -4,33 +4,15 @@ namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
 use League\Fractal\TransformerAbstract;
-use App\Helpers\Util;
-use App\Models\Api\CollectionObject as ApiCollectionObject;
-use App\Models\CollectionObject;
-use App\Models\LoanObject;
 
 class StopTransformer extends TransformerAbstract
 {
+    use HasNid;
+
     public function transform(TwillModelContract $stop): array
     {
-        $object = $stop->selector?->object;
-        switch (get_class($object)) {
-            case CollectionObject::class:
-                $objectType = Util::COLLECTION_OBJECT;
-                break;
-            case ApiCollectionObject::class:
-                $objectType = Util::COLLECTION_OBJECT;
-                $object = $stop->selector?->object->getAugmentedModel();
-                break;
-            case LoanObject::class:
-                $objectType = Util::LOAN_OBJECT;
-                break;
-            default:
-                $objectType = 0;
-        }
-        $nid = Util::cantorPair($objectType, $object->id);
         return [
-            'object' => $nid,
+            'object' => $this->calculateNid($stop->selector?->object),
             'audio_id' => (string) $stop->selector?->defaultAudio?->id,
             'audio_bumper' => null, // Legacy from Drupal
             'sort' => $stop->pivot->position,

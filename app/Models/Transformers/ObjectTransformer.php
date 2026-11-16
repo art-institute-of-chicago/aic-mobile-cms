@@ -3,7 +3,6 @@
 namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
-use App\Helpers\Util;
 use App\Models\CollectionObject;
 use App\Models\LoanObject;
 use App\Repositories\Serializers\OptionalKeyArraySerializer;
@@ -12,6 +11,7 @@ use League\Fractal\TransformerAbstract;
 class ObjectTransformer extends TransformerAbstract
 {
     use CustomIncludes;
+    use HasNid;
 
     public $customIncludes = [
         'selectors' => OptionalKeyArraySerializer::class,
@@ -25,19 +25,16 @@ class ObjectTransformer extends TransformerAbstract
             case CollectionObject::class:
                 $thumbnail = $object->getApiModelFilledCached()->image('iiif', 'thumbnail');
                 $image = $object->getApiModelFilledCached()->image('iiif');
-                $objectType = Util::COLLECTION_OBJECT;
                 break;
             case LoanObject::class:
                 $thumbnail = $object->image('upload', 'thumbnail');
                 $image = $object->image('upload');
-                $objectType = Util::LOAN_OBJECT;
                 break;
             default:
                 $thumbnail = null;
                 $image = null;
-                $objectType = 0;
         }
-        $nid = Util::cantorPair($objectType, $object->id);
+        $nid = $this->calculateNid($object);
 
         return [
             $nid => $this->withCustomIncludes($object, [
