@@ -6,6 +6,7 @@ use App\Models\Annotation;
 use App\Models\AnnotationCategory;
 use App\Models\AnnotationType;
 use App\Models\Floor;
+use App\Models\Transformers\HasNid;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\MockApi;
 use Tests\TestCase;
@@ -60,7 +61,7 @@ class MapFeedsTest extends TestCase
             'longitude' => -87.6237,
         ]);
         $annotation->types()->attach($amenity);
-        $nid = $this->cantorPair($annotation->id, $amenity->id);
+        $nid = HasNid::cantorPair($annotation->id, $amenity->id);
 
         $this->getJson('/api/map_annotations')
             ->assertOk()
@@ -102,7 +103,7 @@ class MapFeedsTest extends TestCase
         $annotations = $this->getJson('/api/map_annotations')->assertOk()->json('map_annontations');
 
         $this->assertEqualsCanonicalizing(
-            [$this->cantorPair($annotation->id, $area->id), $this->cantorPair($annotation->id, $amenity->id)],
+            [HasNid::cantorPair($area->id, $annotation->id), HasNid::cantorPair($amenity->id, $annotation->id)],
             array_keys($annotations),
         );
         $byType = collect($annotations)->keyBy('annotation_type');
@@ -110,10 +111,5 @@ class MapFeedsTest extends TestCase
         $this->assertNull($byType['Text']['amenity_type']);
         $this->assertSame('Elevator', $byType['Amenity']['amenity_type']);
         $this->assertNull($byType['Amenity']['text_type']);
-    }
-
-    private function cantorPair(int $x, int $y): int
-    {
-        return (($x + $y) * ($x + $y + 1)) / 2 + $y;
     }
 }

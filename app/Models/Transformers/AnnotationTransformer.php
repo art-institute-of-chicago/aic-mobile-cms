@@ -4,15 +4,16 @@ namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
 use League\Fractal\TransformerAbstract;
-use App\Helpers\Util;
 
 class AnnotationTransformer extends TransformerAbstract
 {
+    use HasNid;
+
     public function transform(TwillModelContract $annotation)
     {
         $type = $annotation->types->first();
         $category = $type->category;
-        $nid = Util::cantorPair($annotation->id, $annotation->annotation_type_id);
+        $nid = $this->calculateNid($annotation);
         return [
             $nid => [
                 'title' => $annotation->title,
