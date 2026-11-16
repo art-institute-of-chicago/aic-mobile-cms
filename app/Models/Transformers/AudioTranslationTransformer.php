@@ -4,7 +4,7 @@ namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
 use League\Fractal\TransformerAbstract;
-use App\Helpers\StringHelpers;
+use Aic\Hub\Foundation\Library\Helpers\StringHelpers;
 
 class AudioTranslationTransformer extends TransformerAbstract
 {

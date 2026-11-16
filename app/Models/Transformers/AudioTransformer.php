@@ -4,7 +4,7 @@ namespace App\Models\Transformers;
 
 use A17\Twill\Models\Contracts\TwillModelContract;
 use App\Repositories\Serializers\OptionalKeyArraySerializer;
-use App\Helpers\StringHelpers;
+use Aic\Hub\Foundation\Library\Helpers\StringHelpers;
 use League\Fractal\TransformerAbstract;
 
 class AudioTransformer extends TransformerAbstract

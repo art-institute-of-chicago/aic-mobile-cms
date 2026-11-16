@@ -5,7 +5,7 @@ namespace App\Repositories;
 use A17\Twill\Repositories\ModuleRepository as BaseModuleRepository;
 use A17\Twill\Repositories\Behaviors\HandleRelatedBrowsers;
 use App\Repositories\Behaviors\HandleApiBrowsers;
-use App\Helpers\StringHelpers;
+use Aic\Hub\Foundation\Library\Helpers\StringHelpers;
 
 abstract class ModuleRepository extends BaseModuleRepository
 {

@@ -18,7 +18,7 @@ use A17\Twill\Services\Listings\Columns\Text;
 use A17\Twill\Services\Listings\Filters\BasicFilter;
 use A17\Twill\Services\Listings\Filters\QuickFilter;
 use A17\Twill\Services\Listings\TableColumns;
-use App\Helpers\UrlHelpers;
+use Aic\Hub\Foundation\Library\Helpers\UrlHelpers;
 use App\Http\Controllers\Behaviors\HandlesTitleMarkup;
 use App\Http\Controllers\Twill\Columns\ApiImage;
 use Aic\Hub\Foundation\Library\Api\Filters\Search;
