@@ -12,9 +12,9 @@ class ApiImage extends Image
     protected function getRenderValue(TwillModelContract $model): string
     {
         if (method_exists($model, 'getApiModel')) {
-            $model = $model->getApiModel();
+            $model = $model->getApiModelFilled();
         }
-        if (!classHasTrait($model::class, HasMediasApi::class)) {
+        if (!classHasTrait($model, HasMediasApi::class)) {
             throw new InvalidArgumentException('Cannot use image column on model not implementing HasMediasApi trait');
         }
         if ($renderFunction = $this->render) {
