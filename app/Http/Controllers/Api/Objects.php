@@ -13,9 +13,22 @@ use Illuminate\Support\Facades\DB;
 
 class Objects extends Controller
 {
+    const int SECONDS_UNTIL_STALE = 300; # 5 minutes
+
     public function __invoke()
     {
-        $publishedStops = App::Make(StopRepository::class)
+        $objects = Cache::flexible(
+            self::class,
+            [self::SECONDS_UNTIL_STALE, config('cache.max_ttl')],
+            $this->getObjects(...)
+        );
+        $serializer = new ObjectSerializer();
+        return $serializer->serialize($objects);
+    }
+
+    private function getObjects()
+    {
+        $publishedStops = App::make(StopRepository::class)
             ->getBaseModel()
             ->newQuery()
             ->visible()
@@ -49,20 +62,15 @@ class Objects extends Controller
         $collectionObjectRepository = App::make(CollectionObjectRepository::class);
         $collectionObjects = $collectionObjectIds->reduce(function ($objects, $chunk) use ($collectionObjectRepository) {
             return $objects->concat(
-                // 300 = 5 minutes
-                Cache::remember('collectionRepo-on-view-' . hash('sha256', serialize($chunk)), 300, function () use ($collectionObjectRepository, $chunk) {
-                    return $collectionObjectRepository
-                        ->getBaseModel()
-                        ->newQuery()
-                        ->with(['gallery'])
-                        ->whereIn('id', $chunk->toArray())
-                        ->where('is_on_view', true)
-                        ->get();
-                })
+                $collectionObjectRepository
+                    ->getBaseModel()
+                    ->newQuery()
+                    ->with(['gallery'])
+                    ->whereIn('id', $chunk->toArray())
+                    ->where('is_on_view', true)
+                    ->get()
             );
         }, collect());
-        $allObjects = collect()->concat($collectionObjects)->concat($loanObjects);
-        $serializer = new ObjectSerializer();
-        return $serializer->serialize($allObjects);
+        return collect()->concat($collectionObjects)->concat($loanObjects);
     }
 }

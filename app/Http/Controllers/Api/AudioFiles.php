@@ -8,11 +8,25 @@ use App\Repositories\Serializers\AudioSerializer;
 use App\Repositories\StopRepository;
 use App\Repositories\TourRepository;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class AudioFiles extends Controller
 {
+    const int SECONDS_UNTIL_STALE = 300; # 5 minutes
+
     public function __invoke()
+    {
+        $audios = Cache::flexible(
+            self::class,
+            [self::SECONDS_UNTIL_STALE, config('cache.max_ttl')],
+            $this->getAudios(...)
+        );
+        $serializer = new AudioSerializer();
+        return $serializer->serialize($audios);
+    }
+
+    private function getAudios()
     {
         $publishedStops = App::Make(StopRepository::class)
             ->getBaseModel()
@@ -30,8 +44,8 @@ class AudioFiles extends Controller
             ->select(DB::raw(1))
             ->whereColumn('tours.id', 'selectors.selectable_id')
             ->where('selectors.selectable_type', 'tour');
-        $selectorRepository = App::make(SelectorRepository::class);
-        $audios = $selectorRepository
+
+        return App::make(SelectorRepository::class)
             ->getBaseModel()
             ->newQuery()
             ->whereExists($publishedStops)
@@ -39,7 +53,5 @@ class AudioFiles extends Controller
             ->get()
             ->map(fn ($selector) => $selector->audios->isEmpty() ? null : $selector->audios)
             ->filter();
-        $serializer = new AudioSerializer();
-        return $serializer->serialize($audios);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models\Api;
 
 use Aic\Hub\Foundation\Library\Api\Models\BaseApiModel;
 use Database\Factories\Api\HasApiFactory;
+use Illuminate\Database\Eloquent\Builder;
 
 class Audio extends BaseApiModel
 {
@@ -15,6 +16,7 @@ class Audio extends BaseApiModel
         'search' => '/api/v1/sounds/search',
     ];
 
+    protected $augmented = true;
     protected $augmentedModelClass = \App\Models\Audio::class;
 
     public function getTypeAttribute()
@@ -40,6 +42,11 @@ class Audio extends BaseApiModel
     public function getTranscriptAttribute()
     {
         return $this->getAugmentedModel()?->transcript;
+    }
+
+    public function scopeByTitle(Builder $query, string $title): Builder
+    {
+        return $query->rawSearch(['bool' => ['must' => ['term' => ['title' => $title]]]]);
     }
 
     public function __toString(): string

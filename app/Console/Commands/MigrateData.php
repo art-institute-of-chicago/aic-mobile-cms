@@ -43,6 +43,8 @@ class MigrateData extends Command
 
     protected $annotationProgress;
 
+    protected $galleryProgress;
+
     protected $labelProgress;
 
     protected $tourProgress;
@@ -50,9 +52,31 @@ class MigrateData extends Command
     public function handle()
     {
         $this->appData = json_decode(file_get_contents(self::APP_DATA_FILE), associative: true);
+        $this->migrateGalleries();
         $this->migrateMapAnnotations();
         $this->migrateGeneralInfo();
         $this->migrateTours();
+    }
+
+    public function migrateGalleries()
+    {
+        $this->info('Galleries');
+        if (Schema::disableForeignKeyConstraints()) {
+            Gallery::truncate();
+            Schema::enableForeignKeyConstraints();
+        };
+        $galleriesPagination = ApiGallery::query()->get()->getMetadata()['pagination'];
+        $this->galleryProgress = $this->output->createProgressBar($galleriesPagination->total);
+        $this->galleryProgress->setFormat('verbose');
+        $this->galleryProgress->start();
+        for ($page = 1; $page <= $galleriesPagination->total_pages; $page++) {
+            foreach (ApiGallery::query()->getPaginatedModel(page: $page) as $gallery) {
+                Gallery::firstOrCreate(['datahub_id' => $gallery->id]);
+                $this->galleryProgress->advance();
+            }
+        }
+        $this->galleryProgress->finish();
+        $this->newLine();
     }
 
     public function migrateGeneralInfo()
@@ -136,7 +160,7 @@ class MigrateData extends Command
                 $selector = Selector::create();
             }
             $tour->selector()->save($selector);
-            $this->findAudiosForSelector($selector, $datum['title'], confidence: 18); // Arbitrarily high confidence
+            $this->findAudiosForSelector($selector, $datum['title'], confidence: 8); // Arbitrarily high confidence
             $translations = $datum['translations'];
             $defaultTranslation = $datum;
             $defaultTranslation['language'] = config('app.locale');
@@ -164,7 +188,7 @@ class MigrateData extends Command
         foreach ($tourStops as $index => $tourStop) {
             $selector = null;
             if ($objectData = $this->appData['objects'][$tourStop['object']] ?? null) {
-                if ($gallery = ApiGallery::search($objectData['gallery_location'])->limit(1)->get()->first()) {
+                if ($gallery = ApiGallery::query()->byTitle($objectData['gallery_location'])->first()) {
                     Gallery::firstOrCreate(['datahub_id' => $gallery?->id]);
                 }
                 if ($objectData['id']) {
@@ -185,6 +209,7 @@ class MigrateData extends Command
                 $selectorData = collect($objectData['audio_commentary'])->firstWhere('audio', $tourStop['audio_id']);
                 $selector = Selector::firstOrCreate([
                     'number' => (int) $selectorData['object_selector_number'],
+                    'published' => true,
                 ]);
                 $selector->fill([
                     'object_id' => $object->id,
@@ -321,10 +346,7 @@ class MigrateData extends Command
         if ($selector->selectable_type == 'tour') {
             $title = "BUMPER $title";
         }
-        $audios = ApiAudio::query()
-            ->rawSearch(['bool' => ['must' => ['match' => ['title' => $title]]]])
-            ->get()
-            ->filter(fn ($audio) => $audio->_score  > $confidence);
+        $audios = ApiAudio::query()->byTitle($title)->get()->filter(fn ($audio) => $audio->_score  > $confidence);
         if ($audios->count()) {
             $selector->published = true;
             $selector->save();
