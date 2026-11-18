@@ -24,7 +24,7 @@ class AudioSerializer
                 if ($audio instanceof ApiAudio) {
                     $audio = $audio->getAugmentedModel();
                 }
-                return $audio->refreshApi();
+                return $audio;
             });
             $defaultTranslation = $translations->firstWhere('locale', config('app.locale'));
             $defaultTranslation->translations = $translations->whereNotIn('locale', [config('app.locale')]);

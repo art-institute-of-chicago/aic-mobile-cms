@@ -18,6 +18,7 @@ class CollectionObject extends BaseApiModel
         'search' => '/api/v1/artworks/search',
     ];
 
+    protected $augmented = true;
     protected $augmentedModelClass = \App\Models\CollectionObject::class;
 
     public $mediasParams = [

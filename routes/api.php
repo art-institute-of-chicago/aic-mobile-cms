@@ -33,8 +33,8 @@ Route::get('/appData-v3', function () {
         Data::class,
         Search::class,
     ]);
-    // 3600 = 1 hour
-    return Cache::remember('apiData', 3600, function () use ($controllers) {
+    // 600 = 10 minutes
+    return Cache::remember('apiData', 600, function () use ($controllers) {
         return $controllers->reduce(function ($output, $controller) {
             // Instantiate and invoke each controller, then merge into the output
             return $output->merge((new $controller())());

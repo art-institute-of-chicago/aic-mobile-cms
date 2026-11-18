@@ -20,12 +20,12 @@ class GallerySerializer
 
     public function serialize($galleries)
     {
-        $galleries = collect($galleries);
-        if ($galleries instanceof ApiGallery) {
-            $galleries->each->getAugmentedModel();
-        } elseif ($galleries instanceof Gallery) {
-            $galleries->each->refreshApi();
-        }
+        $galleries = $galleries->map(function ($gallery) {
+            if ($gallery instanceof ApiGallery) {
+                $gallery = $gallery->getAugmentedModel();
+            }
+            return $gallery;
+        });
         $resource = new Resource\Collection($galleries, new GalleryTransformer(), 'galleries');
         return $this->manager->createData($resource)->toArray();
     }

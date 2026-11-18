@@ -133,4 +133,16 @@ return [
 
     'serializable_classes' => true,
 
+    /*
+    |---
+    | Max TTL
+    |---
+    |
+    | The maximum number of seconds cache entries should live. The default is
+    | one hour.
+    |
+    */
+
+    'max_ttl' => env('CACHE_MAX_TTL', 3600),
+
 ];
